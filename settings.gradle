@@ -37,6 +37,7 @@ dependencyResolutionManagement {
          plugin('android-application', 'com.android.application').versionRef('android-plugin')
          plugin('android-library', 'com.android.library').versionRef('android-plugin')
          plugin('kotlin-android', 'org.jetbrains.kotlin.android').versionRef('kotlin')
+         plugin('kotlin-jvm', 'org.jetbrains.kotlin.jvm').versionRef('kotlin')
 
          library('junit', 'junit:junit:4.13.2')
 
@@ -48,3 +49,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Probosqis"
 include ':app'
+include ':modules:page'
