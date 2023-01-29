@@ -42,7 +42,7 @@ android {
 }
 
 dependencies {
-   testImplementation libs.junit
+   testImplementation libs.kotlin.test.junit
 
    androidTestImplementation libs.androidx.test.ext
    androidTestImplementation libs.androidx.test.espresso
