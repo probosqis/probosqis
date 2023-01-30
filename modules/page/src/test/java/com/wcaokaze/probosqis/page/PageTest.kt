@@ -17,32 +17,49 @@
 package com.wcaokaze.probosqis.page
 
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 @RunWith(JUnit4::class)
 class PageTest {
    @OptIn(ExperimentalSerializationApi::class)
    @Test
    fun serialization() {
-      val page = Page(42)
+      @Serializable
+      @SerialName("com.wcaokaze.probosqis.page.APage")
+      class APage(val i: Int) : Page()
 
+      val json = Json {
+         serializersModule = SerializersModule {
+            polymorphic(Page::class) {
+               subclass(APage::class)
+            }
+         }
+      }
+
+      val aPage = APage(42)
       val outputStream = ByteArrayOutputStream()
       outputStream.use { stream ->
-         Json.encodeToStream(page, stream)
+         json.encodeToStream(aPage as Page, stream)
       }
       val bytes = outputStream.toByteArray()
       val inputStream = ByteArrayInputStream(bytes)
-      val jsonElement = inputStream.use { stream ->
-         Json.decodeFromStream<JsonElement>(stream)
+      val deserializedPage = inputStream.use { stream ->
+         json.decodeFromStream<Page>(stream)
       }
-      val page2 = Json.decodeFromJsonElement<Page>(jsonElement)
 
-      assertEquals(page.value, page2.value)
+      assertIs<APage>(deserializedPage)
+      assertEquals(deserializedPage.i, aPage.i)
    }
 }

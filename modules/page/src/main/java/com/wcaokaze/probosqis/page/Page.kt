@@ -19,4 +19,4 @@ package com.wcaokaze.probosqis.page
 import kotlinx.serialization.Serializable
 
 @Serializable
-class Page(val value: Int)
+abstract class Page
