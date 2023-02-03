@@ -15,35 +15,11 @@
  */
 
 plugins {
-   alias libs.plugins.android.application
-   alias libs.plugins.kotlin.android
-}
-
-android {
-   namespace 'com.wcaokaze.probosqis'
-   compileSdk 33
-
-   defaultConfig {
-      applicationId "com.wcaokaze.probosqis"
-      minSdk 21
-      targetSdk 33
-      versionCode 1
-      versionName "0.0.0"
-
-      testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-   }
-
-   buildTypes {
-      release {
-         minifyEnabled false
-         proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-      }
-   }
+   alias libs.plugins.kotlin.jvm
+   alias libs.plugins.kotlinx.serialization
 }
 
 dependencies {
+   implementation libs.kotlinx.serialization
    testImplementation libs.kotlin.test.junit
-
-   androidTestImplementation libs.androidx.test.ext
-   androidTestImplementation libs.androidx.test.espresso
 }

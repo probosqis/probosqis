@@ -37,9 +37,12 @@ dependencyResolutionManagement {
          plugin('android-application', 'com.android.application').versionRef('android-plugin')
          plugin('android-library', 'com.android.library').versionRef('android-plugin')
          plugin('kotlin-android', 'org.jetbrains.kotlin.android').versionRef('kotlin')
+         plugin('kotlin-jvm', 'org.jetbrains.kotlin.jvm').versionRef('kotlin')
+         plugin('kotlinx-serialization', 'org.jetbrains.kotlin.plugin.serialization').versionRef('kotlin')
 
-         library('junit', 'junit:junit:4.13.2')
+         library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.4.1')
 
+         library('kotlin-test-junit', 'org.jetbrains.kotlin', 'kotlin-test-junit').versionRef('kotlin')
          library('androidx-test-ext', 'androidx.test.ext:junit:1.1.5')
          library('androidx-test-espresso', 'androidx.test.espresso:espresso-core:3.5.1')
       }
@@ -48,3 +51,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Probosqis"
 include ':app'
+include ':modules:page'
