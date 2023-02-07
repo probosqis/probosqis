@@ -34,10 +34,11 @@ dependencyResolutionManagement {
          version('kotlin', '1.7.20')
          version('android-plugin', '7.3.1')
 
+         plugin('kotlin-multiplatform', 'org.jetbrains.kotlin.multiplatform').versionRef('kotlin')
+         plugin('kotlin-jvm', 'org.jetbrains.kotlin.jvm').versionRef('kotlin')
+         plugin('kotlin-android', 'org.jetbrains.kotlin.android').versionRef('kotlin')
          plugin('android-application', 'com.android.application').versionRef('android-plugin')
          plugin('android-library', 'com.android.library').versionRef('android-plugin')
-         plugin('kotlin-android', 'org.jetbrains.kotlin.android').versionRef('kotlin')
-         plugin('kotlin-jvm', 'org.jetbrains.kotlin.jvm').versionRef('kotlin')
          plugin('kotlinx-serialization', 'org.jetbrains.kotlin.plugin.serialization').versionRef('kotlin')
 
          library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.4.1')
