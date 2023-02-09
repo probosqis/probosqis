@@ -16,7 +16,31 @@
 
 plugins {
    alias libs.plugins.android.application
-   alias libs.plugins.kotlin.android
+   alias libs.plugins.kotlin.multiplatform
+}
+
+kotlin {
+   android()
+
+   sourceSets {
+      androidMain {
+         dependencies {
+         }
+      }
+
+      androidTest {
+         dependencies {
+            implementation libs.kotlin.test.junit
+         }
+      }
+
+      androidAndroidTest {
+         dependencies {
+            implementation libs.androidx.test.ext
+            implementation libs.androidx.test.espresso
+         }
+      }
+   }
 }
 
 android {
@@ -39,11 +63,4 @@ android {
          proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
       }
    }
-}
-
-dependencies {
-   testImplementation libs.kotlin.test.junit
-
-   androidTestImplementation libs.androidx.test.ext
-   androidTestImplementation libs.androidx.test.espresso
 }
