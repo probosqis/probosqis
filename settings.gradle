@@ -51,5 +51,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Probosqis"
-include ':app'
+include ':androidApp'
 include ':modules:page'
