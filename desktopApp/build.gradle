@@ -38,10 +38,5 @@ kotlin {
             implementation project(':modules:app')
          }
       }
-
-      jvmTest {
-         dependencies {
-         }
-      }
    }
 }

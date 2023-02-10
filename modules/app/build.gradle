@@ -34,11 +34,6 @@ kotlin {
          }
       }
 
-      commonTest {
-         dependencies {
-         }
-      }
-
       androidMain {
          dependencies {
             implementation compose.uiTooling
@@ -50,11 +45,6 @@ kotlin {
          dependencies {
             implementation compose.uiTooling
             implementation compose.preview
-         }
-      }
-
-      jsMain {
-         dependencies {
          }
       }
    }

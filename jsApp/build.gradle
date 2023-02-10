@@ -36,10 +36,5 @@ kotlin {
             implementation project(':modules:app')
          }
       }
-
-      jsTest {
-         dependencies {
-         }
-      }
    }
 }
