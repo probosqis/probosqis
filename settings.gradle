@@ -38,8 +38,6 @@ dependencyResolutionManagement {
          version('compose', '1.3.0')
 
          plugin('kotlin-multiplatform', 'org.jetbrains.kotlin.multiplatform').versionRef('kotlin')
-         plugin('kotlin-jvm', 'org.jetbrains.kotlin.jvm').versionRef('kotlin')
-         plugin('kotlin-android', 'org.jetbrains.kotlin.android').versionRef('kotlin')
          plugin('android-application', 'com.android.application').versionRef('android-plugin')
          plugin('android-library', 'com.android.library').versionRef('android-plugin')
          plugin('compose', 'org.jetbrains.compose').versionRef('compose')
