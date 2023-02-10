@@ -16,53 +16,39 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.android.application
+   alias libs.plugins.android.library
    alias libs.plugins.compose
 }
 
 apply from: rootProject.file('gradle/androidModule.gradle')
 
-android {
-   namespace 'com.wcaokaze.probosqis'
-   sourceSets.main.manifest.srcFile 'src/main/AndroidManifest.xml'
-
-   defaultConfig {
-      applicationId "com.wcaokaze.probosqis"
-      versionCode 1
-      versionName "0.0.0"
-
-      testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-   }
-
-   buildTypes {
-      release {
-         minifyEnabled false
-         proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-      }
-   }
-}
-
 kotlin {
    android()
+   jvm()
 
    sourceSets {
-      androidMain {
+      commonMain {
          dependencies {
             implementation compose.material
+         }
+      }
+
+      commonTest {
+         dependencies {
+         }
+      }
+
+      androidMain {
+         dependencies {
+            implementation compose.uiTooling
             implementation compose.preview
          }
       }
 
-      androidTest {
+      jvmMain {
          dependencies {
-            implementation libs.kotlin.test.junit
-         }
-      }
-
-      androidAndroidTest {
-         dependencies {
-            implementation libs.androidx.test.ext
-            implementation libs.androidx.test.espresso
+            implementation compose.uiTooling
+            implementation compose.preview
          }
       }
    }
