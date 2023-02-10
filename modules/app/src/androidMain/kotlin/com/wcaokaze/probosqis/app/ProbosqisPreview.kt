@@ -21,6 +21,6 @@ import androidx.compose.ui.tooling.preview.Preview
 
 @Preview
 @Composable
-fun ProbosqisPreview() {
+private fun ProbosqisPreview() {
    Probosqis()
 }

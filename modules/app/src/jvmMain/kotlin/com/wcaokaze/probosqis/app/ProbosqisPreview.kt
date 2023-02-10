@@ -21,6 +21,6 @@ import androidx.compose.runtime.Composable
 
 @Preview
 @Composable
-fun ProbosqisPreview() {
+private fun ProbosqisPreview() {
    Probosqis()
 }
