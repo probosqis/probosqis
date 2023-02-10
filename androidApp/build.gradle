@@ -50,6 +50,8 @@ kotlin {
          dependencies {
             implementation compose.material
             implementation compose.preview
+            implementation libs.androidx.activity.compose
+            implementation project(':modules:app')
          }
       }
 

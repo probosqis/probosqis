@@ -43,6 +43,7 @@ dependencyResolutionManagement {
          plugin('compose', 'org.jetbrains.compose').versionRef('compose')
          plugin('kotlinx-serialization', 'org.jetbrains.kotlin.plugin.serialization').versionRef('kotlin')
 
+         library('androidx-activity-compose', 'androidx.activity', 'activity-compose').version('1.6.1')
          library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.4.1')
 
          library('kotlin-test-junit', 'org.jetbrains.kotlin', 'kotlin-test-junit').versionRef('kotlin')
