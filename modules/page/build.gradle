@@ -31,12 +31,7 @@ kotlin {
 
       commonTest {
          dependencies {
-         }
-      }
-
-      jvmTest {
-         dependencies {
-            implementation libs.kotlin.test.junit
+            implementation libs.kotlin.test
          }
       }
    }

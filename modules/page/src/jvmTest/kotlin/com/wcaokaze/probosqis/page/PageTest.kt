@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.page
 
-import com.wcaokaze.probosqis.page.Page
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -24,15 +23,12 @@ import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
-@RunWith(JUnit4::class)
 class PageTest {
    @OptIn(ExperimentalSerializationApi::class)
    @Test

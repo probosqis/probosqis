@@ -57,7 +57,7 @@ kotlin {
 
       androidTest {
          dependencies {
-            implementation libs.kotlin.test.junit
+            implementation libs.kotlin.test
          }
       }
 
