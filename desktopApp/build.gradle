@@ -16,22 +16,26 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.compose
+}
+
+compose.desktop {
+   application {
+      mainClass = "com.wcaokaze.probosqis.MainKt"
+   }
 }
 
 kotlin {
    jvm()
 
    sourceSets {
-      commonMain {
+      jvmMain {
          dependencies {
-            implementation libs.kotlinx.serialization
-         }
-      }
-
-      commonTest {
-         dependencies {
-            implementation libs.kotlin.test
+            implementation compose.desktop.linux_x64
+            implementation compose.material
+            implementation compose.uiTooling
+            implementation compose.preview
+            implementation project(':modules:app')
          }
       }
    }

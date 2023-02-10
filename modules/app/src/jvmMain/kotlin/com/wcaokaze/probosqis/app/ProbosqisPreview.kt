@@ -14,25 +14,13 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
-}
+package com.wcaokaze.probosqis.app
 
-kotlin {
-   jvm()
+import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.runtime.Composable
 
-   sourceSets {
-      commonMain {
-         dependencies {
-            implementation libs.kotlinx.serialization
-         }
-      }
-
-      commonTest {
-         dependencies {
-            implementation libs.kotlin.test
-         }
-      }
-   }
+@Preview
+@Composable
+private fun ProbosqisPreview() {
+   Probosqis()
 }

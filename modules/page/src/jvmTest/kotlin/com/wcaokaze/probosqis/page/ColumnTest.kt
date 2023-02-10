@@ -25,13 +25,10 @@ import kotlinx.serialization.json.encodeToStream
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import kotlin.test.*
 
-@RunWith(JUnit4::class)
 class ColumnTest {
    @Serializable
    @SerialName("com.wcaokaze.probosqis.page.IntPage")

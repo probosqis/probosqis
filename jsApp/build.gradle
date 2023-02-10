@@ -16,22 +16,24 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.compose
+}
+
+compose.experimental {
+   web.application {}
 }
 
 kotlin {
-   jvm()
+   js(IR) {
+      browser()
+      binaries.executable()
+   }
 
    sourceSets {
-      commonMain {
+      jsMain {
          dependencies {
-            implementation libs.kotlinx.serialization
-         }
-      }
-
-      commonTest {
-         dependencies {
-            implementation libs.kotlin.test
+            implementation compose.material
+            implementation project(':modules:app')
          }
       }
    }

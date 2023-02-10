@@ -16,22 +16,35 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.android.library
+   alias libs.plugins.compose
 }
 
+apply from: rootProject.file('gradle/androidModule.gradle')
+
 kotlin {
+   android()
    jvm()
+   js(IR) { browser() }
 
    sourceSets {
       commonMain {
          dependencies {
-            implementation libs.kotlinx.serialization
+            implementation compose.material
          }
       }
 
-      commonTest {
+      androidMain {
          dependencies {
-            implementation libs.kotlin.test
+            implementation compose.uiTooling
+            implementation compose.preview
+         }
+      }
+
+      jvmMain {
+         dependencies {
+            implementation compose.uiTooling
+            implementation compose.preview
          }
       }
    }
