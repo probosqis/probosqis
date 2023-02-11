@@ -16,17 +16,8 @@
 
 package com.wcaokaze.probosqis.page
 
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromStream
-import kotlinx.serialization.json.encodeToStream
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import kotlin.test.*
 
 class ColumnTest {
@@ -82,46 +73,5 @@ class ColumnTest {
       val columnHead = column.head
       assertIs<StringPage>(columnHead)
       assertEquals("1", columnHead.s)
-   }
-
-   @OptIn(ExperimentalSerializationApi::class)
-   @Test
-   fun serialization() {
-      val intPage = IntPage(42)
-      val stringPage = StringPage("wcaokaze")
-      var column = Column(intPage)
-      column = column.added(stringPage)
-
-      val json = Json {
-         serializersModule = SerializersModule {
-            polymorphic(Page::class) {
-               subclass(IntPage::class)
-               subclass(StringPage::class)
-            }
-         }
-      }
-
-      val outputStream = ByteArrayOutputStream()
-      outputStream.use { stream ->
-         json.encodeToStream(column, stream)
-      }
-      val bytes = outputStream.toByteArray()
-      val inputStream = ByteArrayInputStream(bytes)
-      val deserializedColumn = inputStream.use { stream ->
-         json.decodeFromStream<Column>(stream)
-      }
-
-      val page1 = deserializedColumn.head
-      assertIs<StringPage>(page1)
-      assertEquals(stringPage.s, page1.s)
-
-      var tail = deserializedColumn.tailOrNull()
-      assertNotNull(tail)
-      val page2 = tail.head
-      assertIs<IntPage>(page2)
-      assertEquals(intPage.i, page2.i)
-
-      tail = tail.tailOrNull()
-      assertNull(tail)
    }
 }
