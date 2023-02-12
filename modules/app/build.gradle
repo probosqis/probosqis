@@ -25,7 +25,6 @@ apply from: rootProject.file('gradle/androidModule.gradle')
 kotlin {
    android()
    jvm()
-   js(IR) { browser() }
 
    sourceSets {
       commonMain {

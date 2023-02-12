@@ -56,7 +56,7 @@ dependencyResolutionManagement {
 rootProject.name = "Probosqis"
 include ':androidApp'
 include ':desktopApp'
-include ':jsApp'
+// include ':jsApp'
 include ':modules:app'
 include ':modules:cache:core'
 include ':modules:cache:compose'
