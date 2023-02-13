@@ -53,5 +53,12 @@ kotlin {
             implementation compose.preview
          }
       }
+
+      jvmTest {
+         dependencies {
+            implementation compose.desktop.currentOs
+            implementation compose.uiTestJUnit4
+         }
+      }
    }
 }
