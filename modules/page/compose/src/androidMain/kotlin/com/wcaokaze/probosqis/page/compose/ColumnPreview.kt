@@ -18,16 +18,19 @@ package com.wcaokaze.probosqis.page.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.wcaokaze.probosqis.page.core.Column
 
 @Preview
 @Composable
-private fun PagePreview() {
+private fun ColumnPreview() {
    val metadataCollection = PageMetadataCollection(
       listOf(
          pageMetadata<PreviewPage> { PreviewPage(it) },
       )
    )
 
-   val page = PreviewPage("PreviewPage")
-   Page(page, metadataCollection)
+   var column = Column(PreviewPage("PreviewPage1"))
+   column = column.added(PreviewPage("PreviewPage2"))
+
+   Column(column, metadataCollection)
 }

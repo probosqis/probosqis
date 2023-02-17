@@ -16,18 +16,16 @@
 
 package com.wcaokaze.probosqis.page.compose
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.*
+import com.wcaokaze.probosqis.page.core.Page
 
-@Preview
+internal class SpyPage : Page() {
+   var recompositionCount: Int by mutableStateOf(0)
+}
+
 @Composable
-private fun PagePreview() {
-   val metadataCollection = PageMetadataCollection(
-      listOf(
-         pageMetadata<PreviewPage> { PreviewPage(it) },
-      )
-   )
-
-   val page = PreviewPage("PreviewPage")
-   Page(page, metadataCollection)
+internal fun SpyPage(page: SpyPage) {
+   SideEffect {
+      page.recompositionCount++
+   }
 }
