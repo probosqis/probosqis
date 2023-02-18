@@ -17,25 +17,26 @@
 package com.wcaokaze.probosqis.page.perpetuation
 
 import com.wcaokaze.probosqis.page.core.Column
+import com.wcaokaze.probosqis.page.core.ColumnBoard
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
 import java.io.File
 
-class JvmColumnRepository(
+class JvmColumnBoardRepository(
    allPageSerializers: List<PageSerializer<*>>,
    directory: File
-) : ColumnRepository(allPageSerializers) {
+) : ColumnBoardRepository(allPageSerializers) {
    private val file = File(directory, "U61Jfjj954X8OrvZ")
 
-   override fun writeColumn(column: Column) {
+   override fun writeColumnBoard(columnBoard: ColumnBoard) {
       file.outputStream().buffered().use {
          @OptIn(ExperimentalSerializationApi::class)
-         json.encodeToStream(column, it)
+         json.encodeToStream(columnBoard, it)
       }
    }
 
-   override fun loadColumn(): Column {
+   override fun loadColumnBoard(): ColumnBoard {
       return file.inputStream().buffered().use {
          @OptIn(ExperimentalSerializationApi::class)
          json.decodeFromStream(it)

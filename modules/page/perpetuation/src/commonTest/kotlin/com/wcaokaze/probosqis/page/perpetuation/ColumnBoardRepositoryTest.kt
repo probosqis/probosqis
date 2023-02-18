@@ -17,18 +17,21 @@
 package com.wcaokaze.probosqis.page.perpetuation
 
 import com.wcaokaze.probosqis.page.core.Column
+import com.wcaokaze.probosqis.page.core.ColumnBoard
 import com.wcaokaze.probosqis.page.core.Page
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.*
 
-expect fun createColumnRepository(
-   allPageClasses: List<ColumnRepository.PageSerializer<*>>
-): ColumnRepository
+expect fun createColumnBoardRepository(
+   allPageClasses: List<ColumnBoardRepository.PageSerializer<*>>
+): ColumnBoardRepository
 
-expect fun deleteColumnRepository(columnRepository: ColumnRepository)
+expect fun deleteColumnBoardRepository(
+   columnBoardRepository: ColumnBoardRepository
+)
 
-class ColumnRepositoryTest {
+class ColumnBoardRepositoryTest {
    @Serializable
    @SerialName("com.wcaokaze.probosqis.perpetuation.page.IntPage")
    class IntPage(val i: Int) : Page()
@@ -37,11 +40,11 @@ class ColumnRepositoryTest {
    @SerialName("com.wcaokaze.probosqis.perpetuation.page.StringPage")
    class StringPage(val s: String) : Page()
 
-   private lateinit var columnRepository: ColumnRepository
+   private lateinit var columnBoardRepository: ColumnBoardRepository
 
    @BeforeTest
    fun beforeTest() {
-      columnRepository = createColumnRepository(
+      columnBoardRepository = createColumnBoardRepository(
          listOf(
             pageSerializer<IntPage>(),
             pageSerializer<StringPage>(),
@@ -51,7 +54,7 @@ class ColumnRepositoryTest {
 
    @AfterTest
    fun afterTest() {
-      deleteColumnRepository(columnRepository)
+      deleteColumnBoardRepository(columnBoardRepository)
    }
 
    @Test
@@ -60,16 +63,19 @@ class ColumnRepositoryTest {
       val stringPage = StringPage("wcaokaze")
       var column = Column(intPage)
       column = column.added(stringPage)
+      val columnBoard = ColumnBoard(listOf(column))
 
-      columnRepository.writeColumn(column)
+      columnBoardRepository.writeColumnBoard(columnBoard)
 
-      val deserializedColumn = columnRepository.loadColumn()
+      val deserializedColumnBoard = columnBoardRepository.loadColumnBoard()
 
-      val page1 = deserializedColumn.head
+      assertEquals(deserializedColumnBoard.columnCount, 1)
+
+      val page1 = deserializedColumnBoard[0].head
       assertIs<StringPage>(page1)
       assertEquals(stringPage.s, page1.s)
 
-      var tail = deserializedColumn.tailOrNull()
+      var tail = deserializedColumnBoard[0].tailOrNull()
       assertNotNull(tail)
       val page2 = tail.head
       assertIs<IntPage>(page2)

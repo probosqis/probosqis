@@ -21,17 +21,19 @@ import java.io.IOException
 
 private val testDir = File(".columnRepositoryTest")
 
-actual fun createColumnRepository(
-   allPageClasses: List<ColumnRepository.PageSerializer<*>>
-): ColumnRepository {
+actual fun createColumnBoardRepository(
+   allPageClasses: List<ColumnBoardRepository.PageSerializer<*>>
+): ColumnBoardRepository {
    if (testDir.exists()) {
       if (!testDir.deleteRecursively()) { throw IOException() }
    }
    if (!testDir.mkdir()) { throw IOException() }
 
-   return JvmColumnRepository(allPageClasses, testDir)
+   return JvmColumnBoardRepository(allPageClasses, testDir)
 }
 
-actual fun deleteColumnRepository(columnRepository: ColumnRepository) {
+actual fun deleteColumnBoardRepository(
+   columnBoardRepository: ColumnBoardRepository
+) {
    testDir.deleteRecursively()
 }
