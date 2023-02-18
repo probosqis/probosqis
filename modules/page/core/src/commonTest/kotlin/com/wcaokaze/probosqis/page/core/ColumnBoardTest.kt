@@ -26,6 +26,9 @@ class ColumnBoardTest {
    @Serializable
    class PageImpl(val i: Int) : Page()
 
+   private val ColumnBoard.columns: List<Column>
+      get() = (0 until columnCount).map { this[it] }
+
    @Test
    fun insert() {
       var columnBoard = ColumnBoard(emptyList())
@@ -33,6 +36,8 @@ class ColumnBoardTest {
       columnBoard = columnBoard.inserted(0, Column(PageImpl(1)))
       columnBoard = columnBoard.inserted(1, Column(PageImpl(2)))
       columnBoard = columnBoard.inserted(3, Column(PageImpl(3)))
+
+      assertEquals(4, columnBoard.columnCount)
 
       assertContentEquals(
          listOf(1, 2, 0, 3),
@@ -70,6 +75,8 @@ class ColumnBoardTest {
 
       columnBoard = columnBoard.removed(1)
 
+      assertEquals(4, columnBoard.columnCount)
+
       assertContentEquals(
          listOf(0, 2, 3, 4),
          columnBoard.columns.map { (it.head as PageImpl).i }
@@ -98,12 +105,12 @@ class ColumnBoardTest {
       val columnBoard = ColumnBoard(emptyList())
 
       val addedColumnBoard = columnBoard.inserted(0, Column(PageImpl(0)))
-      assertEquals(0, columnBoard.columns.size)
-      assertEquals(1, addedColumnBoard.columns.size)
+      assertEquals(0, columnBoard.columnCount)
+      assertEquals(1, addedColumnBoard.columnCount)
 
       val removedColumnBoard = addedColumnBoard.removed(0)
-      assertEquals(0, columnBoard.columns.size)
-      assertEquals(1, addedColumnBoard.columns.size)
-      assertEquals(0, removedColumnBoard.columns.size)
+      assertEquals(0, columnBoard.columnCount)
+      assertEquals(1, addedColumnBoard.columnCount)
+      assertEquals(0, removedColumnBoard.columnCount)
    }
 }

@@ -19,9 +19,12 @@ package com.wcaokaze.probosqis.page.core
 import kotlinx.serialization.Serializable
 
 @Serializable
-class ColumnBoard(
-   internal val columns: List<Column> // internal for tests
-) {
+class ColumnBoard(private val columns: List<Column>) {
+   val columnCount: Int
+      get() = columns.size
+
+   operator fun get(index: Int): Column = columns[index]
+
    fun inserted(index: Int, column: Column): ColumnBoard {
       return ColumnBoard(
          buildList {
