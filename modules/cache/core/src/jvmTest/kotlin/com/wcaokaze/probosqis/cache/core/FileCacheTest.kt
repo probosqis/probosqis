@@ -26,6 +26,8 @@ import java.io.File
 import java.io.IOException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+import kotlin.test.fail
 
 @OptIn(TemporaryCacheApi::class)
 @RunWith(JUnit4::class)
@@ -65,5 +67,19 @@ class FileCacheTest {
       assertFailsWith<IOException> {
          loadCache<Int>(file, Json)
       }
+   }
+
+   @Test
+   fun loadOrDefault() {
+      val cache = loadCacheOrDefault(file, Json) { 42 }
+      assertEquals(42, cache.value)
+      assertTrue(file.exists())
+   }
+
+   @Test
+   fun loadOrDefault_functionNotCalledWhenLoadSucceed() {
+      saveCache(42, file, Json)
+      val cache = loadCacheOrDefault<Int>(file, Json) { fail() }
+      assertEquals(42, cache.value)
    }
 }
