@@ -26,6 +26,7 @@ kotlin {
          dependencies {
             def composeVersion = libs.versions.compose.get()
             implementation "org.jetbrains.compose.runtime:runtime:$composeVersion"
+            implementation libs.kotlinx.serialization
          }
       }
 
