@@ -18,8 +18,14 @@ package com.wcaokaze.probosqis.cache.core
 
 import androidx.compose.runtime.*
 
+@RequiresOptIn
+annotation class InternalCacheApi
+
 interface Cache<out T> {
    val value: T
+
+   @InternalCacheApi
+   val state: State<T>
 }
 
 @Suppress("FunctionName")
@@ -30,6 +36,9 @@ interface WritableCache<T> {
    var value: T
 
    fun asCache(): Cache<T>
+
+   @InternalCacheApi
+   val mutableState: MutableState<T>
 }
 
 @Suppress("FunctionName")
@@ -37,9 +46,15 @@ fun <T> WritableCache(initialValue: T): WritableCache<T>
       = CacheImpl(initialValue)
 
 private class CacheImpl<T>(initialValue: T) : Cache<T>, WritableCache<T> {
-   private val state = mutableStateOf(initialValue)
+   private val _state = mutableStateOf(initialValue)
 
-   override var value: T by state
+   @InternalCacheApi
+   override val state get() = _state
+
+   @InternalCacheApi
+   override val mutableState get() = _state
+
+   override var value: T by _state
 
    override fun asCache(): Cache<T> = this
 }

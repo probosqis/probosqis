@@ -94,12 +94,18 @@ private class FileCache<T>(
    private val json: Json,
    private val serializer: KSerializer<T>
 ) : Cache<T>, WritableCache<T> {
-   private val state = mutableStateOf(initialValue)
+   private val _state = mutableStateOf(initialValue)
+
+   @InternalCacheApi
+   override val state get() = _state
+
+   @InternalCacheApi
+   override val mutableState get() = _state
 
    override var value: T
-      get() = state.value
+      get() = _state.value
       set(value) {
-         state.value = value
+         _state.value = value
          saveCache(value)
       }
 
