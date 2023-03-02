@@ -26,6 +26,7 @@ import kotlin.reflect.KProperty
 
 fun <T> Cache<T>.asState() = CacheState(this)
 fun <T> WritableCache<T>.asMutableState() = WritableCacheState(this)
+fun <T> WritableCache<T>.asState(): CacheState<T> = asCache().asState()
 
 @Stable
 class CacheState<out T> internal constructor(cache: Cache<T>) {
