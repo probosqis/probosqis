@@ -16,11 +16,11 @@
 
 package com.wcaokaze.probosqis.page.perpetuation
 
-import com.wcaokaze.probosqis.page.core.Column
+import com.wcaokaze.probosqis.cache.core.TemporaryCacheApi
+import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.cache.core.loadCache
+import com.wcaokaze.probosqis.cache.core.saveCache
 import com.wcaokaze.probosqis.page.core.ColumnBoard
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.decodeFromStream
-import kotlinx.serialization.json.encodeToStream
 import java.io.File
 
 class JvmColumnBoardRepository(
@@ -29,17 +29,15 @@ class JvmColumnBoardRepository(
 ) : ColumnBoardRepository(allPageSerializers) {
    private val file = File(directory, "U61Jfjj954X8OrvZ")
 
-   override fun writeColumnBoard(columnBoard: ColumnBoard) {
-      file.outputStream().buffered().use {
-         @OptIn(ExperimentalSerializationApi::class)
-         json.encodeToStream(columnBoard, it)
-      }
+   @TemporaryCacheApi
+   override fun saveColumnBoard(
+      columnBoard: ColumnBoard
+   ): WritableCache<ColumnBoard> {
+      return saveCache(columnBoard, file, json)
    }
 
-   override fun loadColumnBoard(): ColumnBoard {
-      return file.inputStream().buffered().use {
-         @OptIn(ExperimentalSerializationApi::class)
-         json.decodeFromStream(it)
-      }
+   @TemporaryCacheApi
+   override fun loadColumnBoard(): WritableCache<ColumnBoard> {
+      return loadCache(file, json)
    }
 }

@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.page.perpetuation
 
+import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.core.ColumnBoard
 import com.wcaokaze.probosqis.page.core.Page
 import kotlinx.serialization.KSerializer
@@ -35,8 +36,11 @@ inline fun <reified P : Page>
 abstract class ColumnBoardRepository
    internal constructor(allPageSerializers: List<PageSerializer<*>>)
 {
-   abstract fun writeColumnBoard(columnBoard: ColumnBoard)
-   abstract fun loadColumnBoard(): ColumnBoard
+   abstract fun saveColumnBoard(
+      columnBoard: ColumnBoard
+   ): WritableCache<ColumnBoard>
+
+   abstract fun loadColumnBoard(): WritableCache<ColumnBoard>
 
    data class PageSerializer<P : Page>(
       val pageClass: KClass<P>,

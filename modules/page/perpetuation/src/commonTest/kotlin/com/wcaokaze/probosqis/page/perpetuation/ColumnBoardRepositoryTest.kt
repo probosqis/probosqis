@@ -65,17 +65,17 @@ class ColumnBoardRepositoryTest {
       column = column.added(stringPage)
       val columnBoard = ColumnBoard(listOf(column))
 
-      columnBoardRepository.writeColumnBoard(columnBoard)
+      columnBoardRepository.saveColumnBoard(columnBoard)
 
-      val deserializedColumnBoard = columnBoardRepository.loadColumnBoard()
+      val loadedCache = columnBoardRepository.loadColumnBoard()
 
-      assertEquals(deserializedColumnBoard.columnCount, 1)
+      assertEquals(loadedCache.value.columnCount, 1)
 
-      val page1 = deserializedColumnBoard[0].head
+      val page1 = loadedCache.value[0].head
       assertIs<StringPage>(page1)
       assertEquals(stringPage.s, page1.s)
 
-      var tail = deserializedColumnBoard[0].tailOrNull()
+      var tail = loadedCache.value[0].tailOrNull()
       assertNotNull(tail)
       val page2 = tail.head
       assertIs<IntPage>(page2)

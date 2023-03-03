@@ -27,6 +27,7 @@ kotlin {
          dependencies {
             implementation libs.kotlinx.serialization
             implementation project(':modules:page:core')
+            implementation project(':modules:cache:core')
          }
       }
 
