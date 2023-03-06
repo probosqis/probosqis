@@ -14,15 +14,26 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis
+package com.wcaokaze.probosqis.app
 
-import androidx.compose.runtime.remember
-import androidx.compose.ui.window.singleWindowApplication
-import com.wcaokaze.probosqis.app.Probosqis
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
+import com.wcaokaze.probosqis.page.core.Page
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-fun main() {
-   singleWindowApplication {
-      val di = remember { DesktopDI() }
-      Probosqis(di)
-   }
+@Serializable
+@SerialName("com.wcaokaze.probosqis.app.TestPage")
+class TestPage : Page()
+
+@Composable
+fun TestPage(page: TestPage) {
+   Text(
+      "TEST",
+      fontSize = 48.sp,
+      modifier = Modifier.fillMaxSize()
+   )
 }

@@ -44,6 +44,8 @@ dependencyResolutionManagement {
          plugin('compose', 'org.jetbrains.compose').versionRef('compose')
          plugin('kotlinx-serialization', 'org.jetbrains.kotlin.plugin.serialization').versionRef('kotlin')
 
+         library('kotlinx-collections-immutable', 'org.jetbrains.kotlinx', 'kotlinx-collections-immutable').version('0.3.5')
+
          library('androidx-activity-compose', 'androidx.activity', 'activity-compose').version('1.6.1')
          library('accompanist-pager', 'com.google.accompanist', 'accompanist-pager').versionRef('accompanist')
 

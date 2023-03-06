@@ -19,13 +19,18 @@ package com.wcaokaze.probosqis
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import com.wcaokaze.probosqis.app.Probosqis
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
       super.onCreate(savedInstanceState)
+
       setContent {
-         Probosqis()
+         val context = LocalContext.current
+         val di = remember(context) { AndroidDI(context) }
+         Probosqis(di)
       }
    }
 }

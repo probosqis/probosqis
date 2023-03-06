@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis
+package com.wcaokaze.probosqis.app
 
-import androidx.compose.runtime.remember
-import androidx.compose.ui.window.singleWindowApplication
-import com.wcaokaze.probosqis.app.Probosqis
+import androidx.compose.runtime.Stable
+import com.wcaokaze.probosqis.page.compose.PageMetadata
+import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
 
-fun main() {
-   singleWindowApplication {
-      val di = remember { DesktopDI() }
-      Probosqis(di)
-   }
+@Stable
+interface DI {
+   val allPageMetadata: List<PageMetadata<*>>
+   val columnBoardRepository: ColumnBoardRepository
 }

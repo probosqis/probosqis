@@ -48,10 +48,14 @@ kotlin {
    sourceSets {
       androidMain {
          dependencies {
+            implementation libs.kotlinx.collections.immutable
             implementation compose.material
             implementation compose.preview
             implementation libs.androidx.activity.compose
             implementation project(':modules:app')
+            implementation project(':modules:page:core')
+            implementation project(':modules:page:perpetuation')
+            implementation project(':modules:page:compose')
          }
       }
 

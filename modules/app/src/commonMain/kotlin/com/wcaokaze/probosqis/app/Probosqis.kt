@@ -16,11 +16,41 @@
 
 package com.wcaokaze.probosqis.app
 
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import com.wcaokaze.probosqis.page.compose.ColumnBoard
+import com.wcaokaze.probosqis.page.compose.ColumnBoardState
+import com.wcaokaze.probosqis.page.core.Column
+import com.wcaokaze.probosqis.page.core.ColumnBoard
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun Probosqis() {
-   Text("Probosqis")
+fun Probosqis(di: DI) {
+   val columnBoardState = remember {
+      val columnBoardRepository = di.columnBoardRepository
+      val columnBoardCache = try {
+         columnBoardRepository.loadColumnBoard()
+      } catch (e: Exception) {
+         val columnBoard = ColumnBoard(
+            columns = createDefaultColumns()
+         )
+         columnBoardRepository.saveColumnBoard(columnBoard)
+      }
+
+      ColumnBoardState(columnBoardCache, di.allPageMetadata)
+   }
+
+   ColumnBoard(
+      columnBoardState,
+      modifier = Modifier.fillMaxSize()
+   )
 }
 
+private fun createDefaultColumns(): List<Column> {
+   return persistentListOf(
+      Column(TestPage()),
+      Column(TestPage()),
+   )
+}
