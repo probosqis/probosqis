@@ -24,9 +24,9 @@ import com.wcaokaze.probosqis.page.core.ColumnBoard
 import java.io.File
 
 class JvmColumnBoardRepository(
-   allPageSerializers: List<PageSerializer<*>>,
+   allPageSerializers: List<ColumnBoardRepository.PageSerializer<*>>,
    directory: File
-) : ColumnBoardRepository(allPageSerializers) {
+) : AbstractColumnBoardRepository(allPageSerializers) {
    private val file = File(directory, "U61Jfjj954X8OrvZ")
 
    @TemporaryCacheApi

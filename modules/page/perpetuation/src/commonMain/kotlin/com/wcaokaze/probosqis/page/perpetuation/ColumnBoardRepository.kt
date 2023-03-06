@@ -33,22 +33,24 @@ inline fun <reified P : Page>
    return ColumnBoardRepository.PageSerializer(P::class, serializer())
 }
 
-abstract class ColumnBoardRepository
-   internal constructor(allPageSerializers: List<PageSerializer<*>>)
-{
-   abstract fun saveColumnBoard(
-      columnBoard: ColumnBoard
-   ): WritableCache<ColumnBoard>
-
-   abstract fun loadColumnBoard(): WritableCache<ColumnBoard>
-
+interface ColumnBoardRepository {
    data class PageSerializer<P : Page>(
       val pageClass: KClass<P>,
       val serializer: KSerializer<P>
    )
 
+   fun saveColumnBoard(columnBoard: ColumnBoard): WritableCache<ColumnBoard>
+   fun loadColumnBoard(): WritableCache<ColumnBoard>
+}
+
+abstract class AbstractColumnBoardRepository
+   internal constructor(
+      allPageSerializers: List<ColumnBoardRepository.PageSerializer<*>>
+   )
+   : ColumnBoardRepository
+{
    private fun <P : Page> PolymorphicModuleBuilder<Page>.subclass(
-      pageSerializer: PageSerializer<P>
+      pageSerializer: ColumnBoardRepository.PageSerializer<P>
    ) {
       subclass(pageSerializer.pageClass, pageSerializer.serializer)
    }
