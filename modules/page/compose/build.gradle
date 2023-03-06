@@ -30,6 +30,8 @@ kotlin {
       commonMain {
          dependencies {
             implementation compose.material
+            implementation project(':modules:cache:core')
+            implementation project(':modules:cache:compose')
             implementation project(':modules:page:core')
          }
       }
@@ -42,6 +44,8 @@ kotlin {
 
       androidMain {
          dependencies {
+            implementation libs.accompanist.pager
+
             implementation compose.uiTooling
             implementation compose.preview
          }

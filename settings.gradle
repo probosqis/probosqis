@@ -36,6 +36,7 @@ dependencyResolutionManagement {
          version('kotlin', '1.7.20')
          version('android-plugin', '7.3.1')
          version('compose', '1.3.0')
+         version('accompanist', '0.28.0')
 
          plugin('kotlin-multiplatform', 'org.jetbrains.kotlin.multiplatform').versionRef('kotlin')
          plugin('android-application', 'com.android.application').versionRef('android-plugin')
@@ -44,6 +45,8 @@ dependencyResolutionManagement {
          plugin('kotlinx-serialization', 'org.jetbrains.kotlin.plugin.serialization').versionRef('kotlin')
 
          library('androidx-activity-compose', 'androidx.activity', 'activity-compose').version('1.6.1')
+         library('accompanist-pager', 'com.google.accompanist', 'accompanist-pager').versionRef('accompanist')
+
          library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.4.1')
 
          library('kotlin-test', 'org.jetbrains.kotlin', 'kotlin-test').versionRef('kotlin')
