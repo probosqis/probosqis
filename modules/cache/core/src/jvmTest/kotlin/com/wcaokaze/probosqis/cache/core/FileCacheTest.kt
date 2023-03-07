@@ -82,4 +82,11 @@ class FileCacheTest {
       val cache = loadCacheOrDefault<Int>(file, Json) { fail() }
       assertEquals(42, cache.value)
    }
+
+   @Test
+   fun save_parentDirNotExists() {
+      val dir = file
+      dir.deleteRecursively()
+      saveCache(42, File(dir, "file"), Json)
+   }
 }
