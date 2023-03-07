@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform apply false
-   alias libs.plugins.android.application apply false
-   alias libs.plugins.android.library apply false
-   alias libs.plugins.compose apply false
-}
+package com.wcaokaze.probosqis
 
+import androidx.compose.runtime.remember
+import androidx.compose.ui.window.singleWindowApplication
+import com.wcaokaze.probosqis.app.Probosqis
+
+fun main() {
+   singleWindowApplication {
+      val di = remember { DesktopDI() }
+      Probosqis(di)
+   }
+}

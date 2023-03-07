@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform apply false
-   alias libs.plugins.android.application apply false
-   alias libs.plugins.android.library apply false
-   alias libs.plugins.compose apply false
-}
+android {
+   compileSdk 33
+   sourceSets.main.manifest.srcFile 'src/androidMain/AndroidManifest.xml'
 
+   defaultConfig {
+      minSdk 21
+      targetSdk 33
+   }
+
+   buildFeatures {
+      compose true
+   }
+
+   composeOptions {
+      kotlinCompilerExtensionVersion = libs.versions.compose
+   }
+}

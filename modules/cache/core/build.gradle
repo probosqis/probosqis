@@ -15,9 +15,25 @@
  */
 
 plugins {
-   alias libs.plugins.kotlin.multiplatform apply false
-   alias libs.plugins.android.application apply false
-   alias libs.plugins.android.library apply false
-   alias libs.plugins.compose apply false
+   alias libs.plugins.kotlin.multiplatform
 }
 
+kotlin {
+   jvm()
+
+   sourceSets {
+      commonMain {
+         dependencies {
+            def composeVersion = libs.versions.compose.get()
+            implementation "org.jetbrains.compose.runtime:runtime:$composeVersion"
+            implementation libs.kotlinx.serialization
+         }
+      }
+
+      commonTest {
+         dependencies {
+            implementation libs.kotlin.test
+         }
+      }
+   }
+}

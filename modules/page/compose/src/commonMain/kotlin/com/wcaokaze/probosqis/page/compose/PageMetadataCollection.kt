@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform apply false
-   alias libs.plugins.android.application apply false
-   alias libs.plugins.android.library apply false
-   alias libs.plugins.compose apply false
-}
+package com.wcaokaze.probosqis.page.compose
 
+import androidx.compose.runtime.Stable
+import com.wcaokaze.probosqis.page.core.Page
+
+@Stable
+internal class PageMetadataCollection(allMetadata: List<PageMetadata<*>>) {
+   private val map = buildMap {
+      for (m in allMetadata) {
+         put(m.pageClass, m)
+      }
+   }
+
+   @Stable
+   operator fun <P : Page> get(page: P): PageMetadata<P>? {
+      @Suppress("UNCHECKED_CAST")
+      return map[page::class] as PageMetadata<P>?
+   }
+}

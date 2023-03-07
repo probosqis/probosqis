@@ -15,9 +15,34 @@
  */
 
 plugins {
-   alias libs.plugins.kotlin.multiplatform apply false
-   alias libs.plugins.android.application apply false
-   alias libs.plugins.android.library apply false
-   alias libs.plugins.compose apply false
+   alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.compose
 }
 
+kotlin {
+   jvm()
+
+   sourceSets {
+      commonMain {
+         dependencies {
+            implementation compose.runtime
+            implementation project(':modules:cache:core')
+         }
+      }
+
+      commonTest {
+         dependencies {
+            implementation libs.kotlin.test
+         }
+      }
+
+      jvmTest {
+         dependencies {
+            implementation compose.material
+
+            implementation compose.desktop.currentOs
+            implementation compose.uiTestJUnit4
+         }
+      }
+   }
+}

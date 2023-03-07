@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform apply false
-   alias libs.plugins.android.application apply false
-   alias libs.plugins.android.library apply false
-   alias libs.plugins.compose apply false
-}
+package com.wcaokaze.probosqis.app
 
+import androidx.compose.runtime.Stable
+import com.wcaokaze.probosqis.page.compose.PageMetadata
+import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
+
+@Stable
+interface DI {
+   val allPageMetadata: List<PageMetadata<*>>
+   val columnBoardRepository: ColumnBoardRepository
+}

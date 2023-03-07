@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform apply false
-   alias libs.plugins.android.application apply false
-   alias libs.plugins.android.library apply false
-   alias libs.plugins.compose apply false
-}
+package com.wcaokaze.probosqis.page.compose
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
+import com.wcaokaze.probosqis.page.core.Page
+
+internal class PreviewPage(val text: String) : Page()
+
+@Composable
+internal fun PreviewPage(page: PreviewPage) {
+   Text(
+      page.text,
+      fontSize = 48.sp,
+      modifier = Modifier.fillMaxSize()
+   )
+}

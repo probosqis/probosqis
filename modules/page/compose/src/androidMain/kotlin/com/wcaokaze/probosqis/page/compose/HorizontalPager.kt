@@ -14,10 +14,21 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform apply false
-   alias libs.plugins.android.application apply false
-   alias libs.plugins.android.library apply false
-   alias libs.plugins.compose apply false
-}
+package com.wcaokaze.probosqis.page.compose
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+
+@Composable
+internal actual fun HorizontalPager(
+   count: Int,
+   modifier: Modifier,
+   content: @Composable (Int) -> Unit
+) {
+   @OptIn(ExperimentalPagerApi::class)
+   HorizontalPager(count, modifier) { page ->
+      content(page)
+   }
+}

@@ -15,9 +15,26 @@
  */
 
 plugins {
-   alias libs.plugins.kotlin.multiplatform apply false
-   alias libs.plugins.android.application apply false
-   alias libs.plugins.android.library apply false
-   alias libs.plugins.compose apply false
+   alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
 }
 
+kotlin {
+   jvm()
+
+   sourceSets {
+      commonMain {
+         dependencies {
+            implementation libs.kotlinx.serialization
+            implementation project(':modules:page:core')
+            implementation project(':modules:cache:core')
+         }
+      }
+
+      commonTest {
+         dependencies {
+            implementation libs.kotlin.test
+         }
+      }
+   }
+}

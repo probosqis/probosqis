@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform apply false
-   alias libs.plugins.android.application apply false
-   alias libs.plugins.android.library apply false
-   alias libs.plugins.compose apply false
-}
+package com.wcaokaze.probosqis.page.compose
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+
+@Composable
+internal expect fun HorizontalPager(
+   count: Int,
+   modifier: Modifier = Modifier,
+   content: @Composable (Int) -> Unit
+)

@@ -14,10 +14,16 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform apply false
-   alias libs.plugins.android.application apply false
-   alias libs.plugins.android.library apply false
-   alias libs.plugins.compose apply false
-}
+package com.wcaokaze.probosqis.main
 
+import androidx.compose.ui.window.Window
+import com.wcaokaze.probosqis.app.Probosqis
+import org.jetbrains.skiko.wasm.onWasmReady
+
+fun main() {
+   onWasmReady {
+      Window {
+         Probosqis()
+      }
+   }
+}
