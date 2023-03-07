@@ -37,9 +37,11 @@ fun ColumnBoard(
    modifier: Modifier = Modifier
 ) {
    val columnBoard = state.columnBoard
+   val pagerState = remember { PagerState() }
 
    HorizontalPager(
       columnBoard.columnCount,
+      pagerState,
       modifier
    ) { index ->
       val column = columnBoard[index]
