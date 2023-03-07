@@ -20,25 +20,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.compose.ColumnBoard
 import com.wcaokaze.probosqis.page.compose.ColumnBoardState
 import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
+import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun Probosqis(di: DI) {
    val columnBoardState = remember {
-      val columnBoardRepository = di.columnBoardRepository
-      val columnBoardCache = try {
-         columnBoardRepository.loadColumnBoard()
-      } catch (e: Exception) {
-         val columnBoard = ColumnBoard(
-            columns = createDefaultColumns()
-         )
-         columnBoardRepository.saveColumnBoard(columnBoard)
-      }
-
+      val columnBoardCache = loadColumnBoardOrDefault(di.columnBoardRepository)
       ColumnBoardState(columnBoardCache, di.allPageMetadata)
    }
 
@@ -46,6 +39,19 @@ fun Probosqis(di: DI) {
       columnBoardState,
       modifier = Modifier.fillMaxSize()
    )
+}
+
+internal fun loadColumnBoardOrDefault(
+   columnBoardRepository: ColumnBoardRepository
+): WritableCache<ColumnBoard> {
+   return try {
+      columnBoardRepository.loadColumnBoard()
+   } catch (e: Exception) {
+      val columnBoard = ColumnBoard(
+         columns = createDefaultColumns()
+      )
+      columnBoardRepository.saveColumnBoard(columnBoard)
+   }
 }
 
 private fun createDefaultColumns(): List<Column> {
