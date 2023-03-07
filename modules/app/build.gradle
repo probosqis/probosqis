@@ -23,6 +23,10 @@ plugins {
 
 apply from: rootProject.file('gradle/androidModule.gradle')
 
+android {
+   namespace 'com.wcaokaze.probosqis.app'
+}
+
 kotlin {
    android()
    jvm()
