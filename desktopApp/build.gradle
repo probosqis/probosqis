@@ -31,11 +31,15 @@ kotlin {
    sourceSets {
       jvmMain {
          dependencies {
+            implementation libs.kotlinx.collections.immutable
             implementation compose.desktop.linux_x64
             implementation compose.material
             implementation compose.uiTooling
             implementation compose.preview
             implementation project(':modules:app')
+            implementation project(':modules:page:core')
+            implementation project(':modules:page:perpetuation')
+            implementation project(':modules:page:compose')
          }
       }
    }

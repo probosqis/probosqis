@@ -16,11 +16,13 @@
 
 package com.wcaokaze.probosqis
 
+import androidx.compose.runtime.remember
 import androidx.compose.ui.window.singleWindowApplication
 import com.wcaokaze.probosqis.app.Probosqis
 
 fun main() {
    singleWindowApplication {
-      Probosqis()
+      val di = remember { DesktopDI() }
+      Probosqis(di)
    }
 }

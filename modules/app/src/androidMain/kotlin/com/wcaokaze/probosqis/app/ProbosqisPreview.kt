@@ -17,10 +17,38 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
+import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.page.compose.pageMetadata
+import com.wcaokaze.probosqis.page.core.Column
+import com.wcaokaze.probosqis.page.core.ColumnBoard
+import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
+import kotlinx.collections.immutable.persistentListOf
 
 @Preview
 @Composable
 private fun ProbosqisPreview() {
-   Probosqis()
+   val di = remember {
+      object : DI {
+         override val allPageMetadata = persistentListOf(
+            pageMetadata<TestPage> { TestPage(it) },
+         )
+
+         override val columnBoardRepository = object : ColumnBoardRepository {
+            override fun saveColumnBoard(columnBoard: ColumnBoard)
+                  = throw NotImplementedError()
+
+            override fun loadColumnBoard() = WritableCache(
+               ColumnBoard(
+                  columns = persistentListOf(
+                     Column(TestPage()),
+                  )
+               )
+            )
+         }
+      }
+   }
+
+   Probosqis(di)
 }

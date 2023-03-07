@@ -112,6 +112,11 @@ private class FileCache<T>(
    override fun asCache(): Cache<T> = this
 
    fun saveCache(value: T) {
+      val dir = file.absoluteFile.parentFile
+      if (!dir.exists()) {
+         dir.mkdirs()
+      }
+
       file.outputStream().buffered().use {
          @OptIn(ExperimentalSerializationApi::class)
          json.encodeToStream(serializer, value, it)
