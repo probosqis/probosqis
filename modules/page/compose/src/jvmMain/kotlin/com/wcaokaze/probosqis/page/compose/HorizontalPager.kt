@@ -30,6 +30,21 @@ import androidx.compose.ui.Modifier
 @Stable
 actual class PagerState {
    internal val lazyListState = LazyListState()
+
+   actual val currentPage: Int
+      get() {
+         val layoutInfo = lazyListState.layoutInfo
+         return layoutInfo.visibleItemsInfo
+            .maxByOrNull {
+               val start = maxOf(it.offset, 0)
+               val end = minOf(
+                  it.offset + it.size,
+                  layoutInfo.viewportEndOffset - layoutInfo.afterContentPadding
+               )
+               end - start
+            }
+            ?.index ?: 0
+      }
 }
 
 @Composable

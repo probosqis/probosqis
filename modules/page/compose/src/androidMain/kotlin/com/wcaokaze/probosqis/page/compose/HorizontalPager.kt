@@ -24,10 +24,13 @@ import com.google.accompanist.pager.HorizontalPager
 
 import com.google.accompanist.pager.PagerState as AccompanistPagerState
 
+@OptIn(ExperimentalPagerApi::class)
 @Stable
 actual class PagerState {
-   @OptIn(ExperimentalPagerApi::class)
    internal val accompanist = AccompanistPagerState()
+
+   actual val currentPage: Int
+      get() = accompanist.currentPage
 }
 
 @Composable

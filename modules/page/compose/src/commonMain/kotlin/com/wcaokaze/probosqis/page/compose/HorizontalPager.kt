@@ -21,7 +21,9 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 
 @Stable
-expect class PagerState()
+expect class PagerState() {
+   val currentPage: Int
+}
 
 @Composable
 internal expect fun HorizontalPager(
