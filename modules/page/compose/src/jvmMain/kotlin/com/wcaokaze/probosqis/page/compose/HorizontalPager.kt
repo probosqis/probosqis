@@ -45,6 +45,10 @@ actual class PagerState {
             }
             ?.index ?: 0
       }
+
+   actual suspend fun animateScrollToPage(page: Int) {
+      lazyListState.animateScrollToItem(page)
+   }
 }
 
 @Composable

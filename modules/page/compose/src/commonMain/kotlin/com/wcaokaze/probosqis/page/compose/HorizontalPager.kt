@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 @Stable
 expect class PagerState() {
    val currentPage: Int
+
+   suspend fun animateScrollToPage(page: Int)
 }
 
 @Composable

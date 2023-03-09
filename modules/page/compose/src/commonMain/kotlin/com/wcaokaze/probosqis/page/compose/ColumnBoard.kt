@@ -47,6 +47,10 @@ class ColumnBoardState(
     */
    val currentColumn: Int
       get() = pagerState.currentPage
+
+   suspend fun animateScrollTo(column: Int) {
+      pagerState.animateScrollToPage(column)
+   }
 }
 
 @Composable

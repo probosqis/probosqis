@@ -31,6 +31,10 @@ actual class PagerState {
 
    actual val currentPage: Int
       get() = accompanist.currentPage
+
+   actual suspend fun animateScrollToPage(page: Int) {
+      accompanist.animateScrollToPage(page)
+   }
 }
 
 @Composable
