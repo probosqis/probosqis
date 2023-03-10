@@ -39,14 +39,16 @@ class ColumnTest {
       var column = Column(page1)
       column = column.added(page2)
 
+      val columnState = ColumnState(column, columnBoardState = mockk())
+
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<SpyPage> { SpyPage(it) },
+            pageComposable<SpyPage> { page, _ -> SpyPage(page) },
          )
       )
 
       rule.setContent {
-         Column(column, pageComposableSwitcher)
+         Column(columnState, pageComposableSwitcher)
       }
       rule.waitForIdle()
 
@@ -63,14 +65,18 @@ class ColumnTest {
       var column by mutableStateOf(Column(page1))
       column = column.added(page2)
 
+      val columnState by derivedStateOf {
+         ColumnState(column)
+      }
+
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<SpyPage> { SpyPage(it) },
+            pageComposable<SpyPage> { page, _ -> SpyPage(page) },
          )
       )
 
       rule.setContent {
-         Column(column, pageComposableSwitcher)
+         Column(columnState, pageComposableSwitcher)
       }
       rule.waitForIdle()
 

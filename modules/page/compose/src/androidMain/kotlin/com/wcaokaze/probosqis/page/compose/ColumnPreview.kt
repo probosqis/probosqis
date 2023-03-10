@@ -17,20 +17,27 @@
 package com.wcaokaze.probosqis.page.compose
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.wcaokaze.probosqis.page.core.Column
 
 @Preview
 @Composable
 private fun ColumnPreview() {
-   val pageComposableSwitcher = PageComposableSwitcher(
-      listOf(
-         pageComposable<PreviewPage> { PreviewPage(it) },
+   val pageComposableSwitcher = remember {
+      PageComposableSwitcher(
+         listOf(
+            pageComposable<PreviewPage> { page, _ -> PreviewPage(page) },
+         )
       )
-   )
+   }
 
-   var column = Column(PreviewPage("PreviewPage1"))
-   column = column.added(PreviewPage("PreviewPage2"))
+   val column = remember {
+      Column(PreviewPage("PreviewPage1"))
+         .added(PreviewPage("PreviewPage2"))
+   }
 
-   Column(column, pageComposableSwitcher)
+   val columnState = remember { ColumnState(column) }
+
+   Column(columnState, pageComposableSwitcher)
 }

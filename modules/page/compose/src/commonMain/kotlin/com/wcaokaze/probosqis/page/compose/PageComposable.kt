@@ -22,11 +22,11 @@ import kotlin.reflect.KClass
 
 data class PageComposable<P : Page>(
    val pageClass: KClass<P>,
-   val composable: @Composable (P) -> Unit
+   val composable: @Composable (P, ColumnState) -> Unit
 )
 
 inline fun <reified P : Page> pageComposable(
-   noinline composable: @Composable (P) -> Unit
+   noinline composable: @Composable (P, ColumnState) -> Unit
 ) = PageComposable(
    P::class,
    composable

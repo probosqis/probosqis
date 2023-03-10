@@ -34,7 +34,7 @@ private fun ProbosqisPreview() {
       object : DI {
          override val pageComposableSwitcher = PageComposableSwitcher(
             allPageComposables = persistentListOf(
-               pageComposable<TestPage> { TestPage(it) },
+               pageComposable<TestPage> { page, _ -> TestPage(page) },
             )
          )
 

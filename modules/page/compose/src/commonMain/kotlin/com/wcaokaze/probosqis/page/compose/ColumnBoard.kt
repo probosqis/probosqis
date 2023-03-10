@@ -68,7 +68,10 @@ fun ColumnBoard(
             if (state.currentColumn == index) { Color.Cyan } else { Color.White }
          )
       ) {
-         Column(column, pageComposableSwitcher)
+         val columnState = remember {
+            ColumnState(column)
+         }
+         Column(columnState, pageComposableSwitcher)
       }
    }
 }

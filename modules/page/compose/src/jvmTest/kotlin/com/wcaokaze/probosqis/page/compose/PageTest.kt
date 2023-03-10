@@ -19,6 +19,7 @@ package com.wcaokaze.probosqis.page.compose
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.page.core.Page
+import io.mockk.mockk
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -43,12 +44,12 @@ class PageTest {
 
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<PageA> {
+            pageComposable<PageA> { _, _ ->
                SideEffect {
                   pageARecompositionCount++
                }
             },
-            pageComposable<PageB> {
+            pageComposable<PageB> { _, _ ->
                SideEffect {
                   pageBRecompositionCount++
                }
@@ -57,7 +58,7 @@ class PageTest {
       )
 
       rule.setContent {
-         Page(pageA, pageComposableSwitcher)
+         Page(pageA, pageComposableSwitcher, columnState = mockk())
       }
       rule.waitForIdle()
 
@@ -71,14 +72,14 @@ class PageTest {
 
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<PageA> { actual ->
+            pageComposable<PageA> { actual, _ ->
                assertSame(page, actual)
             },
          )
       )
 
       rule.setContent {
-         Page(page, pageComposableSwitcher)
+         Page(page, pageComposableSwitcher, columnState = mockk())
       }
       rule.waitForIdle()
    }
