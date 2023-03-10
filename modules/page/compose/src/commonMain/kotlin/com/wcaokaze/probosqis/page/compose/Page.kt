@@ -22,13 +22,13 @@ import com.wcaokaze.probosqis.page.core.Page
 @Composable
 internal fun <P : Page> Page(
    page: P,
-   metadataCollection: PageMetadataCollection
+   pageComposableSwitch: PageComposableSwitch
 ) {
-   val metadata = metadataCollection[page]
+   val pageComposable = pageComposableSwitch[page]
 
-   if (metadata == null) {
+   if (pageComposable == null) {
       TODO()
    } else {
-      metadata.composable(page)
+      pageComposable.composable(page)
    }
 }

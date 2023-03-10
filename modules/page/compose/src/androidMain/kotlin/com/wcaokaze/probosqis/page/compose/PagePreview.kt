@@ -22,12 +22,12 @@ import androidx.compose.ui.tooling.preview.Preview
 @Preview
 @Composable
 private fun PagePreview() {
-   val metadataCollection = PageMetadataCollection(
+   val pageComposableSwitch = PageComposableSwitch(
       listOf(
          pageComposable<PreviewPage> { PreviewPage(it) },
       )
    )
 
    val page = PreviewPage("PreviewPage")
-   Page(page, metadataCollection)
+   Page(page, pageComposableSwitch)
 }

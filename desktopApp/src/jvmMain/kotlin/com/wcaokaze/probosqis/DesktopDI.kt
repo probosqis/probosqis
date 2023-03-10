@@ -27,7 +27,7 @@ import java.io.File
 
 @Stable
 class DesktopDI : DI {
-   override val allPageMetadata = persistentListOf(
+   override val allPageComposables = persistentListOf(
       pageComposable<TestPage> { TestPage(it) },
    )
 

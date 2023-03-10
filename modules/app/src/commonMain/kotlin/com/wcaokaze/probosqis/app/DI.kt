@@ -22,6 +22,6 @@ import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
 
 @Stable
 interface DI {
-   val allPageMetadata: List<PageComposable<*>>
+   val allPageComposables: List<PageComposable<*>>
    val columnBoardRepository: ColumnBoardRepository
 }

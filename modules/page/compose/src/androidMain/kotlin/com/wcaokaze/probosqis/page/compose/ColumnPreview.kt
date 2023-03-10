@@ -23,7 +23,7 @@ import com.wcaokaze.probosqis.page.core.Column
 @Preview
 @Composable
 private fun ColumnPreview() {
-   val metadataCollection = PageMetadataCollection(
+   val pageComposableSwitch = PageComposableSwitch(
       listOf(
          pageComposable<PreviewPage> { PreviewPage(it) },
       )
@@ -32,5 +32,5 @@ private fun ColumnPreview() {
    var column = Column(PreviewPage("PreviewPage1"))
    column = column.added(PreviewPage("PreviewPage2"))
 
-   Column(column, metadataCollection)
+   Column(column, pageComposableSwitch)
 }

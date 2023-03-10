@@ -22,7 +22,7 @@ import com.wcaokaze.probosqis.page.core.Column
 @Composable
 internal fun Column(
    column: Column,
-   metadataCollection: PageMetadataCollection
+   pageComposableSwitch: PageComposableSwitch
 ) {
-   Page(column.head, metadataCollection)
+   Page(column.head, pageComposableSwitch)
 }

@@ -31,7 +31,7 @@ import kotlinx.collections.immutable.persistentListOf
 private fun ProbosqisPreview() {
    val di = remember {
       object : DI {
-         override val allPageMetadata = persistentListOf(
+         override val allPageComposables = persistentListOf(
             pageComposable<TestPage> { TestPage(it) },
          )
 

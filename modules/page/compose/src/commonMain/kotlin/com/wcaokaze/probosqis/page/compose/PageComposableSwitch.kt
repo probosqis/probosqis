@@ -20,9 +20,9 @@ import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.page.core.Page
 
 @Stable
-internal class PageMetadataCollection(allMetadata: List<PageComposable<*>>) {
+internal class PageComposableSwitch(allPageComposables: List<PageComposable<*>>) {
    private val map = buildMap {
-      for (m in allMetadata) {
+      for (m in allPageComposables) {
          put(m.pageClass, m)
       }
    }

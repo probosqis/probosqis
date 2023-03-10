@@ -28,10 +28,10 @@ import com.wcaokaze.probosqis.page.core.ColumnBoard
 @Stable
 class ColumnBoardState(
    columnBoardCache: WritableCache<ColumnBoard>,
-   allMetadata: List<PageComposable<*>>
+   allPageComposables: List<PageComposable<*>>
 ) {
    internal var columnBoard by columnBoardCache.asMutableState()
-   internal val metadataCollection = PageMetadataCollection(allMetadata)
+   internal val pageComposableSwitch = PageComposableSwitch(allPageComposables)
 
    internal val pagerState = PagerState()
 
@@ -71,7 +71,7 @@ fun ColumnBoard(
             if (state.currentColumn == index) { Color.Cyan } else { Color.White }
          )
       ) {
-         Column(column, state.metadataCollection)
+         Column(column, state.pageComposableSwitch)
       }
    }
 }

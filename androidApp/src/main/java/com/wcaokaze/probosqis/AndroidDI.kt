@@ -28,7 +28,7 @@ import java.io.File
 
 @Stable
 class AndroidDI(context: Context) : DI {
-   override val allPageMetadata = persistentListOf(
+   override val allPageComposables = persistentListOf(
       pageComposable<TestPage> { TestPage(it) },
    )
 
