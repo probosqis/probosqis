@@ -19,7 +19,8 @@ package com.wcaokaze.probosqis
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.app.DI
 import com.wcaokaze.probosqis.app.TestPage
-import com.wcaokaze.probosqis.page.compose.pageMetadata
+import com.wcaokaze.probosqis.page.compose.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.compose.pageComposable
 import com.wcaokaze.probosqis.page.perpetuation.JvmColumnBoardRepository
 import com.wcaokaze.probosqis.page.perpetuation.pageSerializer
 import kotlinx.collections.immutable.persistentListOf
@@ -27,8 +28,10 @@ import java.io.File
 
 @Stable
 class DesktopDI : DI {
-   override val allPageMetadata = persistentListOf(
-      pageMetadata<TestPage> { TestPage(it) },
+   override val pageComposableSwitcher = PageComposableSwitcher(
+      allPageComposables = persistentListOf(
+         pageComposable<TestPage> { TestPage(it) },
+      )
    )
 
    override val columnBoardRepository = JvmColumnBoardRepository(

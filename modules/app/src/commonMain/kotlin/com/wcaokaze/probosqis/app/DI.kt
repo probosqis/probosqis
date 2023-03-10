@@ -17,11 +17,11 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.runtime.Stable
-import com.wcaokaze.probosqis.page.compose.PageMetadata
+import com.wcaokaze.probosqis.page.compose.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
 
 @Stable
 interface DI {
-   val allPageMetadata: List<PageMetadata<*>>
+   val pageComposableSwitcher: PageComposableSwitcher
    val columnBoardRepository: ColumnBoardRepository
 }

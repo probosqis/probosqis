@@ -41,14 +41,14 @@ class PageTest {
 
       val pageA = PageA()
 
-      val metadataCollection = PageMetadataCollection(
+      val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageMetadata<PageA> {
+            pageComposable<PageA> {
                SideEffect {
                   pageARecompositionCount++
                }
             },
-            pageMetadata<PageB> {
+            pageComposable<PageB> {
                SideEffect {
                   pageBRecompositionCount++
                }
@@ -57,7 +57,7 @@ class PageTest {
       )
 
       rule.setContent {
-         Page(pageA, metadataCollection)
+         Page(pageA, pageComposableSwitcher)
       }
       rule.waitForIdle()
 
@@ -69,16 +69,16 @@ class PageTest {
    fun argument() {
       val page = PageA()
 
-      val metadataCollection = PageMetadataCollection(
+      val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageMetadata<PageA> { actual ->
+            pageComposable<PageA> { actual ->
                assertSame(page, actual)
             },
          )
       )
 
       rule.setContent {
-         Page(page, metadataCollection)
+         Page(page, pageComposableSwitcher)
       }
       rule.waitForIdle()
    }

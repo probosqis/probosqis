@@ -16,18 +16,20 @@
 
 package com.wcaokaze.probosqis.page.compose
 
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.page.core.Page
-import kotlin.reflect.KClass
 
-data class PageMetadata<P : Page>(
-   val pageClass: KClass<P>,
-   val compose: @Composable (P) -> Unit
-)
+@Stable
+class PageComposableSwitcher(allPageComposables: List<PageComposable<*>>) {
+   private val map = buildMap {
+      for (m in allPageComposables) {
+         put(m.pageClass, m)
+      }
+   }
 
-inline fun <reified P : Page> pageMetadata(
-   noinline compose: @Composable (P) -> Unit
-) = PageMetadata(
-   P::class,
-   compose
-)
+   @Stable
+   internal operator fun <P : Page> get(page: P): PageComposable<P>? {
+      @Suppress("UNCHECKED_CAST")
+      return map[page::class] as PageComposable<P>?
+   }
+}
