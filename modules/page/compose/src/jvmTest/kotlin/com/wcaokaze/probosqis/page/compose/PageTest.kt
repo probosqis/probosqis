@@ -41,7 +41,7 @@ class PageTest {
 
       val pageA = PageA()
 
-      val pageComposableSwitch = PageComposableSwitch(
+      val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
             pageComposable<PageA> {
                SideEffect {
@@ -57,7 +57,7 @@ class PageTest {
       )
 
       rule.setContent {
-         Page(pageA, pageComposableSwitch)
+         Page(pageA, pageComposableSwitcher)
       }
       rule.waitForIdle()
 
@@ -69,7 +69,7 @@ class PageTest {
    fun argument() {
       val page = PageA()
 
-      val pageComposableSwitch = PageComposableSwitch(
+      val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
             pageComposable<PageA> { actual ->
                assertSame(page, actual)
@@ -78,7 +78,7 @@ class PageTest {
       )
 
       rule.setContent {
-         Page(page, pageComposableSwitch)
+         Page(page, pageComposableSwitcher)
       }
       rule.waitForIdle()
    }

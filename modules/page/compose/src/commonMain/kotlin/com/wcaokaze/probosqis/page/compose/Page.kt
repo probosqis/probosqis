@@ -22,9 +22,9 @@ import com.wcaokaze.probosqis.page.core.Page
 @Composable
 internal fun <P : Page> Page(
    page: P,
-   pageComposableSwitch: PageComposableSwitch
+   pageComposableSwitcher: PageComposableSwitcher
 ) {
-   val pageComposable = pageComposableSwitch[page]
+   val pageComposable = pageComposableSwitcher[page]
 
    if (pageComposable == null) {
       TODO()

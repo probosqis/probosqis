@@ -39,14 +39,14 @@ class ColumnTest {
       var column = Column(page1)
       column = column.added(page2)
 
-      val pageComposableSwitch = PageComposableSwitch(
+      val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
             pageComposable<SpyPage> { SpyPage(it) },
          )
       )
 
       rule.setContent {
-         Column(column, pageComposableSwitch)
+         Column(column, pageComposableSwitcher)
       }
       rule.waitForIdle()
 
@@ -63,14 +63,14 @@ class ColumnTest {
       var column by mutableStateOf(Column(page1))
       column = column.added(page2)
 
-      val pageComposableSwitch = PageComposableSwitch(
+      val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
             pageComposable<SpyPage> { SpyPage(it) },
          )
       )
 
       rule.setContent {
-         Column(column, pageComposableSwitch)
+         Column(column, pageComposableSwitcher)
       }
       rule.waitForIdle()
 

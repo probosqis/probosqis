@@ -20,7 +20,7 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.page.compose.PageComposableSwitch
+import com.wcaokaze.probosqis.page.compose.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.compose.pageComposable
 import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
@@ -32,7 +32,7 @@ import kotlinx.collections.immutable.persistentListOf
 private fun ProbosqisPreview() {
    val di = remember {
       object : DI {
-         override val pageComposableSwitch = PageComposableSwitch(
+         override val pageComposableSwitcher = PageComposableSwitcher(
             allPageComposables = persistentListOf(
                pageComposable<TestPage> { TestPage(it) },
             )

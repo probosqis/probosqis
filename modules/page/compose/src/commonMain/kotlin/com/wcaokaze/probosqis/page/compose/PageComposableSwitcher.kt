@@ -20,7 +20,7 @@ import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.page.core.Page
 
 @Stable
-class PageComposableSwitch(allPageComposables: List<PageComposable<*>>) {
+class PageComposableSwitcher(allPageComposables: List<PageComposable<*>>) {
    private val map = buildMap {
       for (m in allPageComposables) {
          put(m.pageClass, m)

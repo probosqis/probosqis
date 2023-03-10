@@ -22,14 +22,14 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class PageComposableSwitchTest {
+class PageComposableSwitcherTest {
    private class PageA : Page()
    private class PageB : Page()
    private class PageC : Page()
 
    @Test
    fun getMetadata() {
-      val pageComposableSwitch = PageComposableSwitch(
+      val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
             pageComposable<PageA> {},
             pageComposable<PageB> {},
@@ -37,17 +37,17 @@ class PageComposableSwitchTest {
       )
 
       val pageA = PageA()
-      val pageComposableA = pageComposableSwitch[pageA]
+      val pageComposableA = pageComposableSwitcher[pageA]
       assertNotNull(pageComposableA)
       assertEquals(pageComposableA.pageClass, PageA::class)
 
       val pageB = PageB()
-      val pageComposableB = pageComposableSwitch[pageB]
+      val pageComposableB = pageComposableSwitcher[pageB]
       assertNotNull(pageComposableB)
       assertEquals(pageComposableB.pageClass, PageB::class)
 
       val pageC = PageC()
-      val pageComposableC = pageComposableSwitch[pageC]
+      val pageComposableC = pageComposableSwitcher[pageC]
       assertNull(pageComposableC)
    }
 }

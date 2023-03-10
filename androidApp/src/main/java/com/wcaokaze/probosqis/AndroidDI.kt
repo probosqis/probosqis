@@ -20,7 +20,7 @@ import android.content.Context
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.app.DI
 import com.wcaokaze.probosqis.app.TestPage
-import com.wcaokaze.probosqis.page.compose.PageComposableSwitch
+import com.wcaokaze.probosqis.page.compose.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.compose.pageComposable
 import com.wcaokaze.probosqis.page.perpetuation.JvmColumnBoardRepository
 import com.wcaokaze.probosqis.page.perpetuation.pageSerializer
@@ -29,7 +29,7 @@ import java.io.File
 
 @Stable
 class AndroidDI(context: Context) : DI {
-   override val pageComposableSwitch = PageComposableSwitch(
+   override val pageComposableSwitcher = PageComposableSwitcher(
       allPageComposables = persistentListOf(
          pageComposable<TestPage> { TestPage(it) },
       )
