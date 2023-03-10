@@ -31,12 +31,15 @@ fun ColumnBoardPreview() {
             .added(PreviewPage("$i - 1"))
       }
    )
-
-   val columnBoardState = ColumnBoardState(
-      WritableCache(columnBoard),
+   val pageComposableSwitch = PageComposableSwitch(
       allPageComposables = listOf(
          pageComposable<PreviewPage> { PreviewPage(it) },
       )
+   )
+
+   val columnBoardState = ColumnBoardState(
+      WritableCache(columnBoard),
+      pageComposableSwitch
    )
 
    ColumnBoard(columnBoardState)

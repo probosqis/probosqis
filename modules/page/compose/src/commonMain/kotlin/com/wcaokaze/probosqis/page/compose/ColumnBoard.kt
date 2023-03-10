@@ -28,10 +28,9 @@ import com.wcaokaze.probosqis.page.core.ColumnBoard
 @Stable
 class ColumnBoardState(
    columnBoardCache: WritableCache<ColumnBoard>,
-   allPageComposables: List<PageComposable<*>>
+   internal val pageComposableSwitch: PageComposableSwitch
 ) {
    internal var columnBoard by columnBoardCache.asMutableState()
-   internal val pageComposableSwitch = PageComposableSwitch(allPageComposables)
 
    internal val pagerState = PagerState()
 
