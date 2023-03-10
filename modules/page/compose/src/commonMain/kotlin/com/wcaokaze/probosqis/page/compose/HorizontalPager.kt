@@ -17,11 +17,20 @@
 package com.wcaokaze.probosqis.page.compose
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
+
+@Stable
+expect class PagerState() {
+   val currentPage: Int
+
+   suspend fun animateScrollToPage(page: Int)
+}
 
 @Composable
 internal expect fun HorizontalPager(
    count: Int,
+   state: PagerState,
    modifier: Modifier = Modifier,
    content: @Composable (Int) -> Unit
 )

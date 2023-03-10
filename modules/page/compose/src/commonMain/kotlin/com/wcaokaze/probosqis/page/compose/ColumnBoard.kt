@@ -16,8 +16,11 @@
 
 package com.wcaokaze.probosqis.page.compose
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.wcaokaze.probosqis.cache.compose.asMutableState
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.core.ColumnBoard
@@ -29,6 +32,25 @@ class ColumnBoardState(
 ) {
    internal var columnBoard by columnBoardCache.asMutableState()
    internal val metadataCollection = PageMetadataCollection(allMetadata)
+
+   internal val pagerState = PagerState()
+
+   /**
+    * ユーザーが最後に操作したカラム。
+    *
+    * ColumnBoardのスクロールによってcurrentColumnが画面外に出るとき、
+    * そのカラムに一番近い画面内のカラムが新たなcurrentColumnとなる。
+    *
+    * であるべきだが、ひとまず今はタブレットUIに対応するまでの間は
+    * 常に画面内に1カラムしか表示されないので
+    * 画面内にあるカラムがcurrentColumnとなる
+    */
+   val currentColumn: Int
+      get() = pagerState.currentPage
+
+   suspend fun animateScrollTo(column: Int) {
+      pagerState.animateScrollToPage(column)
+   }
 }
 
 @Composable
@@ -40,9 +62,16 @@ fun ColumnBoard(
 
    HorizontalPager(
       columnBoard.columnCount,
+      state.pagerState,
       modifier
    ) { index ->
       val column = columnBoard[index]
-      Column(column, state.metadataCollection)
+      Box(
+         Modifier.background(
+            if (state.currentColumn == index) { Color.Cyan } else { Color.White }
+         )
+      ) {
+         Column(column, state.metadataCollection)
+      }
    }
 }

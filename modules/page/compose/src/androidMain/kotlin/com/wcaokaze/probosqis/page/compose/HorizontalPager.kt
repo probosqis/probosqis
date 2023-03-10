@@ -17,18 +17,39 @@
 package com.wcaokaze.probosqis.page.compose
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 
+import com.google.accompanist.pager.PagerState as AccompanistPagerState
+
+@OptIn(ExperimentalPagerApi::class)
+@Stable
+actual class PagerState {
+   internal val accompanist = AccompanistPagerState()
+
+   actual val currentPage: Int
+      get() = accompanist.currentPage
+
+   actual suspend fun animateScrollToPage(page: Int) {
+      accompanist.animateScrollToPage(page)
+   }
+}
+
 @Composable
 internal actual fun HorizontalPager(
    count: Int,
+   state: PagerState,
    modifier: Modifier,
    content: @Composable (Int) -> Unit
 ) {
    @OptIn(ExperimentalPagerApi::class)
-   HorizontalPager(count, modifier) { page ->
+   HorizontalPager(
+      count,
+      state = state.accompanist,
+      modifier = modifier
+   ) { page ->
       content(page)
    }
 }

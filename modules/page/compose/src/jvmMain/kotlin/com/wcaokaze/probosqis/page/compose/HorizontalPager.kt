@@ -20,23 +20,47 @@ import androidx.compose.foundation.HorizontalScrollbar
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
+
+@Stable
+actual class PagerState {
+   internal val lazyListState = LazyListState()
+
+   actual val currentPage: Int
+      get() {
+         val layoutInfo = lazyListState.layoutInfo
+         return layoutInfo.visibleItemsInfo
+            .maxByOrNull {
+               val start = maxOf(it.offset, 0)
+               val end = minOf(
+                  it.offset + it.size,
+                  layoutInfo.viewportEndOffset - layoutInfo.afterContentPadding
+               )
+               end - start
+            }
+            ?.index ?: 0
+      }
+
+   actual suspend fun animateScrollToPage(page: Int) {
+      lazyListState.animateScrollToItem(page)
+   }
+}
 
 @Composable
 internal actual fun HorizontalPager(
    count: Int,
+   state: PagerState,
    modifier: Modifier,
    content: @Composable (Int) -> Unit
 ) {
    Column(modifier) {
-      val lazyListState = rememberLazyListState()
-
       LazyRow(
-         state = lazyListState,
+         state = state.lazyListState,
          modifier = Modifier
             .fillMaxWidth()
             .weight(1.0f)
@@ -49,7 +73,7 @@ internal actual fun HorizontalPager(
       }
 
       HorizontalScrollbar(
-         rememberScrollbarAdapter(lazyListState)
+         rememberScrollbarAdapter(state.lazyListState)
       )
    }
 }
