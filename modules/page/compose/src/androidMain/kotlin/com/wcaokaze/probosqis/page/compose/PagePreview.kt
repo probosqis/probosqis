@@ -24,7 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 private fun PagePreview() {
    val metadataCollection = PageMetadataCollection(
       listOf(
-         pageMetadata<PreviewPage> { PreviewPage(it) },
+         pageComposable<PreviewPage> { PreviewPage(it) },
       )
    )
 

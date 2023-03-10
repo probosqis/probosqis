@@ -31,8 +31,8 @@ class PageMetadataCollectionTest {
    fun getMetadata() {
       val metadataCollection = PageMetadataCollection(
          listOf(
-            pageMetadata<PageA> {},
-            pageMetadata<PageB> {},
+            pageComposable<PageA> {},
+            pageComposable<PageB> {},
          )
       )
 

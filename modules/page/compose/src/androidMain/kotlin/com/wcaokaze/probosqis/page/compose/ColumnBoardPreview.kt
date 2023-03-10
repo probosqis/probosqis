@@ -35,7 +35,7 @@ fun ColumnBoardPreview() {
    val columnBoardState = ColumnBoardState(
       WritableCache(columnBoard),
       allMetadata = listOf(
-         pageMetadata<PreviewPage> { PreviewPage(it) },
+         pageComposable<PreviewPage> { PreviewPage(it) },
       )
    )
 

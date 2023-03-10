@@ -28,7 +28,7 @@ import com.wcaokaze.probosqis.page.core.ColumnBoard
 @Stable
 class ColumnBoardState(
    columnBoardCache: WritableCache<ColumnBoard>,
-   allMetadata: List<PageMetadata<*>>
+   allMetadata: List<PageComposable<*>>
 ) {
    internal var columnBoard by columnBoardCache.asMutableState()
    internal val metadataCollection = PageMetadataCollection(allMetadata)

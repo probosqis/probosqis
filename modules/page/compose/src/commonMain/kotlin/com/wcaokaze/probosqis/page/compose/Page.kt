@@ -29,6 +29,6 @@ internal fun <P : Page> Page(
    if (metadata == null) {
       TODO()
    } else {
-      metadata.compose(page)
+      metadata.composable(page)
    }
 }

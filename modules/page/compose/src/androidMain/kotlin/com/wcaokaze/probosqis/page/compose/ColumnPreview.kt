@@ -25,7 +25,7 @@ import com.wcaokaze.probosqis.page.core.Column
 private fun ColumnPreview() {
    val metadataCollection = PageMetadataCollection(
       listOf(
-         pageMetadata<PreviewPage> { PreviewPage(it) },
+         pageComposable<PreviewPage> { PreviewPage(it) },
       )
    )
 

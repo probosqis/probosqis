@@ -20,7 +20,7 @@ import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.page.core.Page
 
 @Stable
-internal class PageMetadataCollection(allMetadata: List<PageMetadata<*>>) {
+internal class PageMetadataCollection(allMetadata: List<PageComposable<*>>) {
    private val map = buildMap {
       for (m in allMetadata) {
          put(m.pageClass, m)
@@ -28,8 +28,8 @@ internal class PageMetadataCollection(allMetadata: List<PageMetadata<*>>) {
    }
 
    @Stable
-   operator fun <P : Page> get(page: P): PageMetadata<P>? {
+   operator fun <P : Page> get(page: P): PageComposable<P>? {
       @Suppress("UNCHECKED_CAST")
-      return map[page::class] as PageMetadata<P>?
+      return map[page::class] as PageComposable<P>?
    }
 }

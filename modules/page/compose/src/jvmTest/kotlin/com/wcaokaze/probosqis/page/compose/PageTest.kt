@@ -43,12 +43,12 @@ class PageTest {
 
       val metadataCollection = PageMetadataCollection(
          listOf(
-            pageMetadata<PageA> {
+            pageComposable<PageA> {
                SideEffect {
                   pageARecompositionCount++
                }
             },
-            pageMetadata<PageB> {
+            pageComposable<PageB> {
                SideEffect {
                   pageBRecompositionCount++
                }
@@ -71,7 +71,7 @@ class PageTest {
 
       val metadataCollection = PageMetadataCollection(
          listOf(
-            pageMetadata<PageA> { actual ->
+            pageComposable<PageA> { actual ->
                assertSame(page, actual)
             },
          )

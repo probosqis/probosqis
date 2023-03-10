@@ -41,7 +41,7 @@ class ColumnTest {
 
       val metadataCollection = PageMetadataCollection(
          listOf(
-            pageMetadata<SpyPage> { SpyPage(it) },
+            pageComposable<SpyPage> { SpyPage(it) },
          )
       )
 
@@ -65,7 +65,7 @@ class ColumnTest {
 
       val metadataCollection = PageMetadataCollection(
          listOf(
-            pageMetadata<SpyPage> { SpyPage(it) },
+            pageComposable<SpyPage> { SpyPage(it) },
          )
       )
 

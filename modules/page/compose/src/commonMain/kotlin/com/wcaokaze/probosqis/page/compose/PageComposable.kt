@@ -20,14 +20,14 @@ import androidx.compose.runtime.Composable
 import com.wcaokaze.probosqis.page.core.Page
 import kotlin.reflect.KClass
 
-data class PageMetadata<P : Page>(
+data class PageComposable<P : Page>(
    val pageClass: KClass<P>,
-   val compose: @Composable (P) -> Unit
+   val composable: @Composable (P) -> Unit
 )
 
-inline fun <reified P : Page> pageMetadata(
-   noinline compose: @Composable (P) -> Unit
-) = PageMetadata(
+inline fun <reified P : Page> pageComposable(
+   noinline composable: @Composable (P) -> Unit
+) = PageComposable(
    P::class,
-   compose
+   composable
 )
