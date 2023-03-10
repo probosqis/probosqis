@@ -32,11 +32,12 @@ import kotlinx.collections.immutable.persistentListOf
 fun Probosqis(di: DI) {
    val columnBoardState = remember {
       val columnBoardCache = loadColumnBoardOrDefault(di.columnBoardRepository)
-      ColumnBoardState(columnBoardCache, di.pageComposableSwitcher)
+      ColumnBoardState(columnBoardCache)
    }
 
    ColumnBoard(
       columnBoardState,
+      di.pageComposableSwitcher,
       modifier = Modifier.fillMaxSize()
    )
 }

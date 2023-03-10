@@ -38,9 +38,8 @@ fun ColumnBoardPreview() {
    )
 
    val columnBoardState = ColumnBoardState(
-      WritableCache(columnBoard),
-      pageComposableSwitcher
+      WritableCache(columnBoard)
    )
 
-   ColumnBoard(columnBoardState)
+   ColumnBoard(columnBoardState, pageComposableSwitcher)
 }
