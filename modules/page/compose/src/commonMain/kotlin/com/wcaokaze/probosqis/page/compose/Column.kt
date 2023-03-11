@@ -22,8 +22,14 @@ import com.wcaokaze.probosqis.page.core.Column
 
 @Stable
 class ColumnState internal constructor(
-   internal val column: Column
-)
+   internal val column: Column,
+   private val columnBoardState: ColumnBoardState
+) {
+   suspend fun addColumn(column: Column) {
+      val index = columnBoardState.columnBoard.indexOf(this.column)
+      columnBoardState.addColumn(index + 1, column)
+   }
+}
 
 @Composable
 internal fun Column(

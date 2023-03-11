@@ -25,6 +25,9 @@ class ColumnBoard(private val columns: List<Column>) {
 
    operator fun get(index: Int): Column = columns[index]
 
+   fun indexOf(column: Column): Int
+      = columns.indexOfFirst { it === column }
+
    fun inserted(index: Int, column: Column): ColumnBoard {
       return ColumnBoard(
          buildList {

@@ -19,7 +19,9 @@ package com.wcaokaze.probosqis.page.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
+import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.core.Column
+import com.wcaokaze.probosqis.page.core.ColumnBoard
 
 @Preview
 @Composable
@@ -34,7 +36,13 @@ private fun PagePreview() {
 
    val page = remember { PreviewPage("PreviewPage") }
    val column = remember { Column(page) }
-   val columnState = remember { ColumnState(column) }
+   val columnBoardState = remember {
+      val columnBoard = ColumnBoard(listOf(column))
+      ColumnBoardState(
+         WritableCache(columnBoard)
+      )
+   }
+   val columnState = remember { ColumnState(column, columnBoardState) }
 
    Page(page, pageComposableSwitcher, columnState)
 }

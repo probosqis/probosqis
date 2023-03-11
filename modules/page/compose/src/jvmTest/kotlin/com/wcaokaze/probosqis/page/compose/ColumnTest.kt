@@ -19,6 +19,7 @@ package com.wcaokaze.probosqis.page.compose
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.page.core.Column
+import io.mockk.mockk
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,7 +67,7 @@ class ColumnTest {
       column = column.added(page2)
 
       val columnState by derivedStateOf {
-         ColumnState(column)
+         ColumnState(column, columnBoardState = mockk())
       }
 
       val pageComposableSwitcher = PageComposableSwitcher(

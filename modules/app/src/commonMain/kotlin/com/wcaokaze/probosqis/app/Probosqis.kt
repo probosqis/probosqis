@@ -57,7 +57,7 @@ internal fun loadColumnBoardOrDefault(
 
 private fun createDefaultColumns(): List<Column> {
    return persistentListOf(
-      Column(TestPage()),
-      Column(TestPage()),
+      Column(TestPage(0)),
+      Column(TestPage(1)),
    )
 }
