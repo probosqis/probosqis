@@ -51,10 +51,11 @@ class ColumnTest {
       rule.setContent {
          Column(columnState, pageComposableSwitcher)
       }
-      rule.waitForIdle()
 
-      assertEquals(0, page1.recompositionCount)
-      assertEquals(1, page2.recompositionCount)
+      rule.runOnIdle {
+         assertEquals(0, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+      }
    }
 
    @Test
@@ -79,24 +80,27 @@ class ColumnTest {
       rule.setContent {
          Column(columnState, pageComposableSwitcher)
       }
-      rule.waitForIdle()
 
-      assertEquals(0, page1.recompositionCount)
-      assertEquals(1, page2.recompositionCount)
-      assertEquals(0, page3.recompositionCount)
+      rule.runOnIdle {
+         assertEquals(0, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+         assertEquals(0, page3.recompositionCount)
+      }
 
       column = assertNotNull(column.tailOrNull())
-      rule.waitForIdle()
 
-      assertEquals(1, page1.recompositionCount)
-      assertEquals(1, page2.recompositionCount)
-      assertEquals(0, page3.recompositionCount)
+      rule.runOnIdle {
+         assertEquals(1, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+         assertEquals(0, page3.recompositionCount)
+      }
 
       column = column.added(page3)
-      rule.waitForIdle()
 
-      assertEquals(1, page1.recompositionCount)
-      assertEquals(1, page2.recompositionCount)
-      assertEquals(1, page3.recompositionCount)
+      rule.runOnIdle {
+         assertEquals(1, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+         assertEquals(1, page3.recompositionCount)
+      }
    }
 }

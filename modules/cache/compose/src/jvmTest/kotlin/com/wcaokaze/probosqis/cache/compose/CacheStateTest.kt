@@ -42,12 +42,14 @@ class CacheStateTest {
          }
       }
 
-      rule.waitForIdle()
-      assertEquals(1, recompositionCount)
+      rule.runOnIdle {
+         assertEquals(1, recompositionCount)
+      }
 
       cache.value++
-      rule.waitForIdle()
-      assertEquals(2, recompositionCount)
+      rule.runOnIdle {
+         assertEquals(2, recompositionCount)
+      }
    }
 
    @Test
@@ -64,12 +66,14 @@ class CacheStateTest {
          }
       }
 
-      rule.waitForIdle()
-      assertEquals(1, recompositionCount)
+      rule.runOnIdle {
+         assertEquals(1, recompositionCount)
+      }
 
       cacheState++
-      rule.waitForIdle()
-      assertEquals(2, recompositionCount)
+      rule.runOnIdle {
+         assertEquals(2, recompositionCount)
+      }
    }
 
    @Test

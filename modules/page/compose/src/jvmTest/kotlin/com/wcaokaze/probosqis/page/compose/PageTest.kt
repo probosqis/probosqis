@@ -60,20 +60,25 @@ class PageTest {
       rule.setContent {
          Page(pageA, pageComposableSwitcher, columnState = mockk())
       }
-      rule.waitForIdle()
 
-      assertEquals(1, pageARecompositionCount)
-      assertEquals(0, pageBRecompositionCount)
+      rule.runOnIdle {
+         assertEquals(1, pageARecompositionCount)
+         assertEquals(0, pageBRecompositionCount)
+      }
    }
 
    @Test
    fun argument() {
       val page = PageA()
 
+      var argument: PageA? = null
+
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<PageA> { actual, _ ->
-               assertSame(page, actual)
+            pageComposable<PageA> { p, _ ->
+               SideEffect {
+                  argument = p
+               }
             },
          )
       )
@@ -81,6 +86,9 @@ class PageTest {
       rule.setContent {
          Page(page, pageComposableSwitcher, columnState = mockk())
       }
-      rule.waitForIdle()
+
+      rule.runOnIdle {
+         assertSame(page, argument)
+      }
    }
 }
