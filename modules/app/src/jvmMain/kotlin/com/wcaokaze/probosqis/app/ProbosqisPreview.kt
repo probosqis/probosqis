@@ -26,6 +26,8 @@ import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
 import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Month
 
 @Preview
 @Composable
@@ -45,7 +47,10 @@ private fun ProbosqisPreview() {
             override fun loadColumnBoard() = WritableCache(
                ColumnBoard(
                   columns = persistentListOf(
-                     Column(TestPage(0)),
+                     Column(
+                        TestPage(0),
+                        createdTime = LocalDateTime(2000, Month.JANUARY, 1, 0, 0)
+                     ),
                   )
                )
             )

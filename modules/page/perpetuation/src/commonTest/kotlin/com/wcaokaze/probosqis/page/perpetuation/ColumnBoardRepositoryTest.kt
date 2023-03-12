@@ -19,6 +19,8 @@ package com.wcaokaze.probosqis.page.perpetuation
 import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
 import com.wcaokaze.probosqis.page.core.Page
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Month
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.*
@@ -61,7 +63,10 @@ class ColumnBoardRepositoryTest {
    fun readWrite() {
       val intPage = IntPage(42)
       val stringPage = StringPage("wcaokaze")
-      var column = Column(intPage)
+      var column = Column(
+         intPage,
+         createdTime = LocalDateTime(2000, Month.JANUARY, 1, 0, 0)
+      )
       column = column.added(stringPage)
       val columnBoard = ColumnBoard(listOf(column))
 

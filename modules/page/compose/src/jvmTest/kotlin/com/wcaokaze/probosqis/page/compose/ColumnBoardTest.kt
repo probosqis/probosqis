@@ -28,6 +28,8 @@ import com.wcaokaze.probosqis.page.core.ColumnBoard
 import com.wcaokaze.probosqis.page.core.Page
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Month
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,6 +40,8 @@ import kotlin.test.assertIs
 
 @RunWith(JUnit4::class)
 class ColumnBoardTest {
+   private val columnCreatedTime = LocalDateTime(2000, Month.JANUARY, 1, 0, 0)
+
    @get:Rule
    val rule = createComposeRule()
 
@@ -48,8 +52,8 @@ class ColumnBoardTest {
       val columnBoardCache = run {
          val columnBoard = ColumnBoard(
             listOf(
-               Column(TestPage(0)),
-               Column(TestPage(10)),
+               Column(TestPage(0), columnCreatedTime),
+               Column(TestPage(10), columnCreatedTime),
             )
          )
          WritableCache(columnBoard)
@@ -65,7 +69,7 @@ class ColumnBoardTest {
                Button(
                   onClick = {
                      coroutineScope.launch {
-                        val newColumn = Column(TestPage(page.i + 1))
+                        val newColumn = Column(TestPage(page.i + 1), columnCreatedTime)
                         columnState.addColumn(newColumn)
                      }
                   }
