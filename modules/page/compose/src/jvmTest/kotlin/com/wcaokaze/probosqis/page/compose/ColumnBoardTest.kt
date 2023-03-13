@@ -40,8 +40,8 @@ import kotlin.test.assertIs
 
 @RunWith(JUnit4::class)
 class ColumnBoardTest {
-   private val clock = object : Clock {
-      override fun now() = Instant.parse("2000-01-01T00:00:00.000Z")
+   private class MockClock(private val nowAsIso: String) : Clock {
+      override fun now() = Instant.parse(nowAsIso)
    }
 
    @get:Rule
@@ -54,8 +54,8 @@ class ColumnBoardTest {
       val columnBoardCache = run {
          val columnBoard = ColumnBoard(
             listOf(
-               Column(TestPage(0), clock),
-               Column(TestPage(10), clock),
+               Column(TestPage(0), MockClock("2000-01-01T00:00:00.000Z")),
+               Column(TestPage(10), MockClock("2000-01-01T00:01:00.000Z")),
             )
          )
          WritableCache(columnBoard)
@@ -71,7 +71,10 @@ class ColumnBoardTest {
                Button(
                   onClick = {
                      coroutineScope.launch {
-                        val newColumn = Column(TestPage(page.i + 1), clock)
+                        val newColumn = Column(
+                           TestPage(page.i + 1),
+                           MockClock("2000-01-01T00:02:00.000Z")
+                        )
                         columnState.addColumn(newColumn)
                      }
                   }

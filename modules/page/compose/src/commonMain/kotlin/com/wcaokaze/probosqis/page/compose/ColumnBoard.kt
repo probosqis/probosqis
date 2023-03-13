@@ -65,7 +65,8 @@ fun ColumnBoard(
    HorizontalPager(
       columnBoard.columnCount,
       state.pagerState,
-      modifier
+      key = { columnBoard[it].createdTime.toEpochMilliseconds() },
+      modifier = modifier
    ) { index ->
       val column = columnBoard[index]
       Box(

@@ -42,12 +42,14 @@ internal actual fun HorizontalPager(
    count: Int,
    state: PagerState,
    modifier: Modifier,
+   key: ((Int) -> Any)?,
    content: @Composable (Int) -> Unit
 ) {
    @OptIn(ExperimentalPagerApi::class)
    HorizontalPager(
       count,
       state = state.accompanist,
+      key = key,
       modifier = modifier
    ) { page ->
       content(page)

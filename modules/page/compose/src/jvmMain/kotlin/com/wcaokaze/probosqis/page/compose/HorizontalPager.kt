@@ -56,6 +56,7 @@ internal actual fun HorizontalPager(
    count: Int,
    state: PagerState,
    modifier: Modifier,
+   key: ((Int) -> Any)?,
    content: @Composable (Int) -> Unit
 ) {
    Column(modifier) {
@@ -65,7 +66,7 @@ internal actual fun HorizontalPager(
             .fillMaxWidth()
             .weight(1.0f)
       ) {
-         items(count) { index ->
+         items(count, key) { index ->
             Box(Modifier.fillParentMaxSize()) {
                content(index)
             }
