@@ -16,11 +16,17 @@
 
 package com.wcaokaze.probosqis.page.core
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable
-class Column private constructor(private val pages: List<Page>) {
-   constructor(page: Page) : this(listOf(page))
+class Column private constructor(
+   private val pages: List<Page>,
+   val createdTime: Instant
+) {
+   constructor(page: Page, clock: Clock = Clock.System)
+         : this(listOf(page), clock.now())
 
    /** このColumnの一番上の[Page] */
    val head: Page get() = pages.last()
@@ -32,8 +38,12 @@ class Column private constructor(private val pages: List<Page>) {
     */
    fun tailOrNull(): Column? {
       val tailPages = pages.dropLast(1)
-      return if (tailPages.isEmpty()) { null } else { Column(tailPages) }
+      return if (tailPages.isEmpty()) {
+         null
+      } else {
+         Column(tailPages, createdTime)
+      }
    }
 
-   fun added(page: Page) = Column(pages + page)
+   fun added(page: Page) = Column(pages + page, createdTime)
 }

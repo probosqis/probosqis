@@ -32,5 +32,6 @@ internal expect fun HorizontalPager(
    count: Int,
    state: PagerState,
    modifier: Modifier = Modifier,
+   key: ((Int) -> Any)? = null,
    content: @Composable (Int) -> Unit
 )

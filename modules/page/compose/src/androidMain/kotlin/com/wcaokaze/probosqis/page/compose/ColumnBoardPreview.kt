@@ -17,29 +17,43 @@
 package com.wcaokaze.probosqis.page.compose
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+
+private val clock = object : Clock {
+   override fun now() = Instant.parse("2000-01-01T00:00:00.000Z")
+}
 
 @Preview
 @Composable
 fun ColumnBoardPreview() {
-   val columnBoard = ColumnBoard(
-      List(3) { i ->
-         Column(PreviewPage("$i - 0"))
-            .added(PreviewPage("$i - 1"))
-      }
-   )
-   val pageComposableSwitcher = PageComposableSwitcher(
-      allPageComposables = listOf(
-         pageComposable<PreviewPage> { PreviewPage(it) },
+   val columnBoard = remember {
+      ColumnBoard(
+         List(3) { i ->
+            Column(PreviewPage("$i - 0"), clock)
+               .added(PreviewPage("$i - 1"))
+         }
       )
-   )
+   }
 
-   val columnBoardState = ColumnBoardState(
-      WritableCache(columnBoard)
-   )
+   val pageComposableSwitcher = remember {
+      PageComposableSwitcher(
+         allPageComposables = listOf(
+            pageComposable<PreviewPage> { page, _ -> PreviewPage(page) },
+         )
+      )
+   }
+
+   val columnBoardState = remember {
+      ColumnBoardState(
+         WritableCache(columnBoard)
+      )
+   }
 
    ColumnBoard(columnBoardState, pageComposableSwitcher)
 }

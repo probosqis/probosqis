@@ -33,6 +33,7 @@ kotlin {
    sourceSets {
       commonMain {
          dependencies {
+            implementation libs.kotlinx.datetime
             implementation compose.material
             implementation project(':modules:cache:core')
             implementation project(':modules:cache:compose')
@@ -43,6 +44,7 @@ kotlin {
       commonTest {
          dependencies {
             implementation libs.kotlin.test
+            implementation libs.mockk
          }
       }
 

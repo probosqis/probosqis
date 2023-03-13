@@ -16,6 +16,8 @@
 
 package com.wcaokaze.probosqis.page.core
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -23,6 +25,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
 class ColumnBoardTest {
+   private val clock = object : Clock {
+      override fun now() = Instant.parse("2000-01-01T00:00:00.000Z")
+   }
+
    @Serializable
    class PageImpl(val i: Int) : Page()
 
@@ -32,10 +38,10 @@ class ColumnBoardTest {
    @Test
    fun insert() {
       var columnBoard = ColumnBoard(emptyList())
-      columnBoard = columnBoard.inserted(0, Column(PageImpl(0)))
-      columnBoard = columnBoard.inserted(0, Column(PageImpl(1)))
-      columnBoard = columnBoard.inserted(1, Column(PageImpl(2)))
-      columnBoard = columnBoard.inserted(3, Column(PageImpl(3)))
+      columnBoard = columnBoard.inserted(0, Column(PageImpl(0), clock))
+      columnBoard = columnBoard.inserted(0, Column(PageImpl(1), clock))
+      columnBoard = columnBoard.inserted(1, Column(PageImpl(2), clock))
+      columnBoard = columnBoard.inserted(3, Column(PageImpl(3), clock))
 
       assertEquals(4, columnBoard.columnCount)
 
@@ -49,19 +55,19 @@ class ColumnBoardTest {
    fun insert_outOfBounds() {
       assertFails {
          val columnBoard = ColumnBoard(emptyList())
-         columnBoard.inserted(1, Column(PageImpl(0)))
+         columnBoard.inserted(1, Column(PageImpl(0), clock))
       }
 
       assertFails {
          val columnBoard = ColumnBoard(emptyList())
-         columnBoard.inserted(-1, Column(PageImpl(0)))
+         columnBoard.inserted(-1, Column(PageImpl(0), clock))
       }
 
       assertFails {
          val columnBoard = ColumnBoard(
-            listOf(Column(PageImpl(0)))
+            listOf(Column(PageImpl(0), clock))
          )
-         columnBoard.inserted(2, Column(PageImpl(1)))
+         columnBoard.inserted(2, Column(PageImpl(1), clock))
       }
    }
 
@@ -69,7 +75,7 @@ class ColumnBoardTest {
    fun remove() {
       var columnBoard = ColumnBoard(
          List(5) { i ->
-            Column(PageImpl(i))
+            Column(PageImpl(i), clock)
          }
       )
 
@@ -87,7 +93,7 @@ class ColumnBoardTest {
    fun remove_outOfBounds() {
       val columnBoard = ColumnBoard(
          List(5) { i ->
-            Column(PageImpl(i))
+            Column(PageImpl(i), clock)
          }
       )
 
@@ -104,7 +110,7 @@ class ColumnBoardTest {
    fun immutability() {
       val columnBoard = ColumnBoard(emptyList())
 
-      val addedColumnBoard = columnBoard.inserted(0, Column(PageImpl(0)))
+      val addedColumnBoard = columnBoard.inserted(0, Column(PageImpl(0), clock))
       assertEquals(0, columnBoard.columnCount)
       assertEquals(1, addedColumnBoard.columnCount)
 

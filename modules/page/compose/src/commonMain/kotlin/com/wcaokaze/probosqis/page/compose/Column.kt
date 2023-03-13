@@ -17,12 +17,28 @@
 package com.wcaokaze.probosqis.page.compose
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.page.core.Column
+
+@Stable
+class ColumnState internal constructor(
+   internal val column: Column,
+   private val columnBoardState: ColumnBoardState
+) {
+   suspend fun addColumn(column: Column) {
+      val index = columnBoardState.columnBoard.indexOf(this.column)
+      columnBoardState.addColumn(index + 1, column)
+   }
+}
 
 @Composable
 internal fun Column(
-   column: Column,
+   state: ColumnState,
    pageComposableSwitcher: PageComposableSwitcher
 ) {
-   Page(column.head, pageComposableSwitcher)
+   Page(
+      page = state.column.head,
+      pageComposableSwitcher,
+      columnState = state
+   )
 }

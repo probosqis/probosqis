@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.wcaokaze.probosqis.cache.compose.asMutableState
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
 
 @Stable
@@ -47,6 +48,10 @@ class ColumnBoardState(columnBoardCache: WritableCache<ColumnBoard>) {
    suspend fun animateScrollTo(column: Int) {
       pagerState.animateScrollToPage(column)
    }
+
+   suspend fun addColumn(index: Int, column: Column) {
+      columnBoard = columnBoard.inserted(index, column)
+   }
 }
 
 @Composable
@@ -60,7 +65,8 @@ fun ColumnBoard(
    HorizontalPager(
       columnBoard.columnCount,
       state.pagerState,
-      modifier
+      key = { columnBoard[it].createdTime.toEpochMilliseconds() },
+      modifier = modifier
    ) { index ->
       val column = columnBoard[index]
       Box(
@@ -68,7 +74,10 @@ fun ColumnBoard(
             if (state.currentColumn == index) { Color.Cyan } else { Color.White }
          )
       ) {
-         Column(column, pageComposableSwitcher)
+         val columnState = remember {
+            ColumnState(column, columnBoardState = state)
+         }
+         Column(columnState, pageComposableSwitcher)
       }
    }
 }

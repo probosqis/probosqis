@@ -19,6 +19,9 @@ package com.wcaokaze.probosqis.page.compose
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.page.core.Column
+import io.mockk.mockk
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,6 +31,10 @@ import kotlin.test.assertNotNull
 
 @RunWith(JUnit4::class)
 class ColumnTest {
+   private val clock = object : Clock {
+      override fun now() = Instant.parse("2000-01-01T00:00:00.000Z")
+   }
+
    @get:Rule
    val rule = createComposeRule()
 
@@ -36,22 +43,25 @@ class ColumnTest {
       val page1 = SpyPage()
       val page2 = SpyPage()
 
-      var column = Column(page1)
+      var column = Column(page1, clock)
       column = column.added(page2)
+
+      val columnState = ColumnState(column, columnBoardState = mockk())
 
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<SpyPage> { SpyPage(it) },
+            pageComposable<SpyPage> { page, _ -> SpyPage(page) },
          )
       )
 
       rule.setContent {
-         Column(column, pageComposableSwitcher)
+         Column(columnState, pageComposableSwitcher)
       }
-      rule.waitForIdle()
 
-      assertEquals(0, page1.recompositionCount)
-      assertEquals(1, page2.recompositionCount)
+      rule.runOnIdle {
+         assertEquals(0, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+      }
    }
 
    @Test
@@ -60,36 +70,43 @@ class ColumnTest {
       val page2 = SpyPage()
       val page3 = SpyPage()
 
-      var column by mutableStateOf(Column(page1))
+      var column by mutableStateOf(Column(page1, clock))
       column = column.added(page2)
+
+      val columnState by derivedStateOf {
+         ColumnState(column, columnBoardState = mockk())
+      }
 
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<SpyPage> { SpyPage(it) },
+            pageComposable<SpyPage> { page, _ -> SpyPage(page) },
          )
       )
 
       rule.setContent {
-         Column(column, pageComposableSwitcher)
+         Column(columnState, pageComposableSwitcher)
       }
-      rule.waitForIdle()
 
-      assertEquals(0, page1.recompositionCount)
-      assertEquals(1, page2.recompositionCount)
-      assertEquals(0, page3.recompositionCount)
+      rule.runOnIdle {
+         assertEquals(0, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+         assertEquals(0, page3.recompositionCount)
+      }
 
       column = assertNotNull(column.tailOrNull())
-      rule.waitForIdle()
 
-      assertEquals(1, page1.recompositionCount)
-      assertEquals(1, page2.recompositionCount)
-      assertEquals(0, page3.recompositionCount)
+      rule.runOnIdle {
+         assertEquals(1, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+         assertEquals(0, page3.recompositionCount)
+      }
 
       column = column.added(page3)
-      rule.waitForIdle()
 
-      assertEquals(1, page1.recompositionCount)
-      assertEquals(1, page2.recompositionCount)
-      assertEquals(1, page3.recompositionCount)
+      rule.runOnIdle {
+         assertEquals(1, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+         assertEquals(1, page3.recompositionCount)
+      }
    }
 }
