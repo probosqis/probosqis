@@ -20,8 +20,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.page.core.Column
 import io.mockk.mockk
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.Month
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,7 +31,9 @@ import kotlin.test.assertNotNull
 
 @RunWith(JUnit4::class)
 class ColumnTest {
-   private val columnCreatedTime = LocalDateTime(2000, Month.JANUARY, 1, 0, 0)
+   private val clock = object : Clock {
+      override fun now() = Instant.parse("2000-01-01T00:00:00.000Z")
+   }
 
    @get:Rule
    val rule = createComposeRule()
@@ -41,7 +43,7 @@ class ColumnTest {
       val page1 = SpyPage()
       val page2 = SpyPage()
 
-      var column = Column(page1, columnCreatedTime)
+      var column = Column(page1, clock)
       column = column.added(page2)
 
       val columnState = ColumnState(column, columnBoardState = mockk())
@@ -68,7 +70,7 @@ class ColumnTest {
       val page2 = SpyPage()
       val page3 = SpyPage()
 
-      var column by mutableStateOf(Column(page1, columnCreatedTime))
+      var column by mutableStateOf(Column(page1, clock))
       column = column.added(page2)
 
       val columnState by derivedStateOf {

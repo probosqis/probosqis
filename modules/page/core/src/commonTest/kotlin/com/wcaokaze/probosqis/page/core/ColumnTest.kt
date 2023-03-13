@@ -16,14 +16,16 @@
 
 package com.wcaokaze.probosqis.page.core
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.Month
 import kotlin.test.*
 
 class ColumnTest {
-   private val columnCreatedTime = LocalDateTime(2000, Month.JANUARY, 1, 0, 0)
+   private val clock = object : Clock {
+      override fun now() = Instant.parse("2000-01-01T00:00:00.000Z")
+   }
 
    @Serializable
    @SerialName("com.wcaokaze.probosqis.page.IntPage")
@@ -35,7 +37,7 @@ class ColumnTest {
 
    @Test
    fun add_pop() {
-      var column = Column(IntPage(0), columnCreatedTime)
+      var column = Column(IntPage(0), clock)
       column = column.added(StringPage("1"))
       column = column.added(StringPage("2"))
       column = column.added(IntPage(3))
@@ -65,7 +67,7 @@ class ColumnTest {
 
    @Test
    fun immutability() {
-      var column = Column(IntPage(0), columnCreatedTime)
+      var column = Column(IntPage(0), clock)
       column = column.added(StringPage("1"))
 
       val tail = column.tailOrNull()

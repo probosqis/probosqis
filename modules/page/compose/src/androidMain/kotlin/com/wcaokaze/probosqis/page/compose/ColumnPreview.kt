@@ -22,8 +22,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.Month
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+
+private val clock = object : Clock {
+   override fun now() = Instant.parse("2000-01-01T00:00:00.000Z")
+}
 
 @Preview
 @Composable
@@ -37,8 +41,7 @@ private fun ColumnPreview() {
    }
 
    val column = remember {
-      val createdTime = LocalDateTime(2000, Month.JANUARY, 1, 0, 0)
-      Column(PreviewPage("PreviewPage1"), createdTime)
+      Column(PreviewPage("PreviewPage1"), clock)
          .added(PreviewPage("PreviewPage2"))
    }
 

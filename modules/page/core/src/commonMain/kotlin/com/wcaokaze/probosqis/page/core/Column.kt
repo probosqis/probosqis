@@ -16,16 +16,17 @@
 
 package com.wcaokaze.probosqis.page.core
 
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable
 class Column private constructor(
    private val pages: List<Page>,
-   val createdTime: LocalDateTime
+   val createdTime: Instant
 ) {
-   constructor(page: Page, createdTime: LocalDateTime)
-         : this(listOf(page), createdTime)
+   constructor(page: Page, clock: Clock = Clock.System)
+         : this(listOf(page), clock.now())
 
    /** このColumnの一番上の[Page] */
    val head: Page get() = pages.last()

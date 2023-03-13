@@ -28,8 +28,7 @@ import com.wcaokaze.probosqis.page.core.ColumnBoard
 import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
@@ -60,18 +59,12 @@ internal fun loadColumnBoardOrDefault(
 }
 
 private fun createDefaultColumns(): List<Column> {
-   val currentTimeInstant = Clock.System.now()
+   class BehindClock(private val offset: Duration) : Clock {
+      override fun now() = Clock.System.now() + offset
+   }
 
    return persistentListOf(
-      Column(
-         TestPage(0),
-         createdTime = currentTimeInstant
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-      ),
-      Column(
-         TestPage(1),
-         createdTime = (currentTimeInstant + 1.milliseconds)
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-      ),
+      Column(TestPage(0), BehindClock(Duration.ZERO)),
+      Column(TestPage(1), BehindClock(1.milliseconds)),
    )
 }

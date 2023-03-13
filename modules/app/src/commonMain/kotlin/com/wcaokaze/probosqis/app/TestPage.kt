@@ -48,7 +48,8 @@ fun TestPage(page: TestPage, columnState: ColumnState) {
       Button(
          onClick = {
             coroutineScope.launch {
-               columnState.addColumn(TestPage(page.i + 1))
+               val newColumn = Column(TestPage(page.i + 1))
+               columnState.addColumn(newColumn)
             }
          }
       ) {

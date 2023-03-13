@@ -26,6 +26,8 @@ import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
 import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 
@@ -34,6 +36,10 @@ import kotlinx.datetime.Month
 private fun ProbosqisPreview() {
    val di = remember {
       object : DI {
+         private val clock = object : Clock {
+            override fun now() = Instant.parse("2000-01-01T00:00:00.000Z")
+         }
+
          override val pageComposableSwitcher = PageComposableSwitcher(
             allPageComposables = persistentListOf(
                pageComposable<TestPage> { page, columnState -> TestPage(page, columnState) },
@@ -47,10 +53,7 @@ private fun ProbosqisPreview() {
             override fun loadColumnBoard() = WritableCache(
                ColumnBoard(
                   columns = persistentListOf(
-                     Column(
-                        TestPage(0),
-                        createdTime = LocalDateTime(2000, Month.JANUARY, 1, 0, 0)
-                     ),
+                     Column(TestPage(0), clock),
                   )
                )
             )
