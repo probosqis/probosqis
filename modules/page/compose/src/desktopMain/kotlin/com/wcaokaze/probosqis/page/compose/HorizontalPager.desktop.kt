@@ -16,13 +16,9 @@
 
 package com.wcaokaze.probosqis.page.compose
 
-import androidx.compose.foundation.HorizontalScrollbar
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
@@ -59,22 +55,14 @@ internal actual fun HorizontalPager(
    key: ((Int) -> Any)?,
    content: @Composable (Int) -> Unit
 ) {
-   Column(modifier) {
-      LazyRow(
-         state = state.lazyListState,
-         modifier = Modifier
-            .fillMaxWidth()
-            .weight(1.0f)
-      ) {
-         items(count, key) { index ->
-            Box(Modifier.fillParentMaxSize()) {
-               content(index)
-            }
+   LazyRow(
+      state = state.lazyListState,
+      modifier = modifier
+   ) {
+      items(count, key) { index ->
+         Box(Modifier.fillParentMaxSize()) {
+            content(index)
          }
       }
-
-      HorizontalScrollbar(
-         rememberScrollbarAdapter(state.lazyListState)
-      )
    }
 }

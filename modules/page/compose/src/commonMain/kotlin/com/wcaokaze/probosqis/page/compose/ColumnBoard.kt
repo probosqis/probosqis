@@ -18,6 +18,8 @@ package com.wcaokaze.probosqis.page.compose
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,22 +64,28 @@ fun ColumnBoard(
 ) {
    val columnBoard = state.columnBoard
 
-   HorizontalPager(
-      columnBoard.columnCount,
-      state.pagerState,
-      key = { columnBoard[it].createdTime.toEpochMilliseconds() },
-      modifier = modifier
-   ) { index ->
-      val column = columnBoard[index]
-      Box(
-         Modifier.background(
-            if (state.currentColumn == index) { Color.Cyan } else { Color.White }
-         )
-      ) {
-         val columnState = remember {
-            ColumnState(column, columnBoardState = state)
+   Column(modifier) {
+      HorizontalPager(
+         columnBoard.columnCount,
+         state.pagerState,
+         key = { columnBoard[it].createdTime.toEpochMilliseconds() },
+         modifier = Modifier
+            .fillMaxWidth()
+            .weight(1.0f)
+      ) { index ->
+         val column = columnBoard[index]
+         Box(
+            Modifier.background(
+               if (state.currentColumn == index) { Color.Cyan } else { Color.White }
+            )
+         ) {
+            val columnState = remember {
+               ColumnState(column, columnBoardState = state)
+            }
+            Column(columnState, pageComposableSwitcher)
          }
-         Column(columnState, pageComposableSwitcher)
       }
+
+      ColumnBoardScrollBar(state.pagerState)
    }
 }
