@@ -35,7 +35,7 @@ kotlin {
             implementation compose.material
             implementation compose.uiTooling
             implementation compose.preview
-            implementation project(':modules:ext:platform')
+            implementation project(':modules:ext:commonMain')
             implementation project(':modules:app')
             implementation project(':modules:page:core')
             implementation project(':modules:page:perpetuation')

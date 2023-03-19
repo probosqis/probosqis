@@ -34,7 +34,7 @@ kotlin {
       commonMain {
          dependencies {
             implementation compose.material
-            implementation project(':modules:ext:platform')
+            implementation project(':modules:ext:commonMain')
             implementation project(':modules:cache:core')
             implementation project(':modules:cache:compose')
             implementation project(':modules:page:core')

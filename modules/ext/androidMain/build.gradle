@@ -17,23 +17,22 @@
 plugins {
    alias libs.plugins.kotlin.multiplatform
    alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.android.library
+}
+
+apply from: rootProject.file('gradle/androidModule.gradle')
+
+android {
+   namespace 'com.wcaokaze.probosqis.ext.androidMain'
 }
 
 kotlin {
-   jvm()
+   android()
 
    sourceSets {
       commonMain {
          dependencies {
-            implementation project(':modules:ext:commonMain')
-            implementation project(':modules:page:core')
-            implementation project(':modules:cache:core')
-         }
-      }
-
-      commonTest {
-         dependencies {
-            implementation libs.kotlin.test
+            api project(':modules:ext:commonMain')
          }
       }
    }
