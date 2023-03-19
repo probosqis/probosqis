@@ -25,6 +25,7 @@ kotlin {
    sourceSets {
       commonMain {
          dependencies {
+            implementation project(':modules:ext:platform')
             implementation compose.runtime
             implementation project(':modules:cache:core')
          }

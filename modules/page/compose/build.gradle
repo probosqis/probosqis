@@ -33,8 +33,8 @@ kotlin {
    sourceSets {
       commonMain {
          dependencies {
-            implementation libs.kotlinx.datetime
             implementation compose.material
+            implementation project(':modules:ext:platform')
             implementation project(':modules:cache:core')
             implementation project(':modules:cache:compose')
             implementation project(':modules:page:core')
