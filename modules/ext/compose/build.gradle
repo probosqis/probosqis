@@ -18,6 +18,7 @@ plugins {
    alias libs.plugins.kotlin.multiplatform
    alias libs.plugins.kotlinx.serialization
    alias libs.plugins.android.library
+   alias libs.plugins.compose
 }
 
 apply from: rootProject.file('gradle/androidModule.gradle')
@@ -31,5 +32,25 @@ kotlin {
    android()
 
    sourceSets {
+      commonMain {
+         dependencies {
+            api compose.material
+         }
+      }
+
+      androidMain {
+         dependencies {
+            api libs.androidx.activity.compose
+            api compose.uiTooling
+            api compose.preview
+         }
+      }
+
+      jvmMain {
+         dependencies {
+            api compose.uiTooling
+            api compose.preview
+         }
+      }
    }
 }

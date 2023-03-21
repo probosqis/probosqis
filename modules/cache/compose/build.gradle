@@ -35,7 +35,7 @@ kotlin {
       commonMain {
          dependencies {
             implementation project(':modules:ext:kotlin')
-            implementation compose.runtime
+            implementation project(':modules:ext:compose')
             implementation project(':modules:cache:core')
          }
       }
@@ -48,8 +48,6 @@ kotlin {
 
       jvmTest {
          dependencies {
-            implementation compose.material
-
             implementation compose.desktop.currentOs
             implementation compose.uiTestJUnit4
          }

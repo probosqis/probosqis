@@ -34,27 +34,13 @@ kotlin {
    sourceSets {
       commonMain {
          dependencies {
-            implementation compose.material
             implementation project(':modules:ext:kotlin')
+            implementation project(':modules:ext:compose')
             implementation project(':modules:cache:core')
             implementation project(':modules:cache:compose')
             implementation project(':modules:page:core')
             implementation project(':modules:page:perpetuation')
             implementation project(':modules:page:compose')
-         }
-      }
-
-      androidMain {
-         dependencies {
-            implementation compose.uiTooling
-            implementation compose.preview
-         }
-      }
-
-      jvmMain {
-         dependencies {
-            implementation compose.uiTooling
-            implementation compose.preview
          }
       }
 
