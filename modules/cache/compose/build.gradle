@@ -34,7 +34,7 @@ kotlin {
    sourceSets {
       commonMain {
          dependencies {
-            implementation project(':modules:ext:commonMain')
+            implementation project(':modules:ext:kotlin')
             implementation compose.runtime
             implementation project(':modules:cache:core')
          }

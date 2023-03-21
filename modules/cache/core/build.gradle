@@ -25,7 +25,7 @@ kotlin {
    sourceSets {
       commonMain {
          dependencies {
-            implementation project(':modules:ext:commonMain')
+            implementation project(':modules:ext:kotlin')
             def composeVersion = libs.versions.compose.get()
             implementation "org.jetbrains.compose.runtime:runtime:$composeVersion"
          }

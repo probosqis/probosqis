@@ -25,7 +25,7 @@ kotlin {
    sourceSets {
       commonMain {
          dependencies {
-            implementation project(':modules:ext:commonMain')
+            implementation project(':modules:ext:kotlin')
             implementation project(':modules:page:core')
             implementation project(':modules:cache:core')
          }
