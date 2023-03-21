@@ -27,8 +27,8 @@ android {
 }
 
 kotlin {
-   android()
    jvm()
+   android()
 
    sourceSets {
       commonMain {

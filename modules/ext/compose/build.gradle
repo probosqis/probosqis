@@ -16,10 +16,19 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.android.library
+}
+
+apply from: rootProject.file('gradle/androidModule.gradle')
+
+android {
+   namespace 'com.wcaokaze.probosqis.ext.compose'
 }
 
 kotlin {
    jvm()
+   android()
 
    sourceSets {
    }
