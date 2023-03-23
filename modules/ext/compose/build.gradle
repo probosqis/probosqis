@@ -21,6 +21,7 @@ plugins {
    alias libs.plugins.compose
 }
 
+apply from: rootProject.file('gradle/kotlin.gradle')
 apply from: rootProject.file('gradle/android.gradle')
 
 android {
@@ -28,29 +29,20 @@ android {
 }
 
 kotlin {
-   jvm()
-   android()
-
    sourceSets {
-      commonMain {
-         dependencies {
-            api compose.material
-         }
+      commonMain.dependencies {
+         api compose.material
       }
 
-      androidMain {
-         dependencies {
-            api libs.androidx.activity.compose
-            api compose.uiTooling
-            api compose.preview
-         }
+      androidMain.dependencies {
+         api libs.androidx.activity.compose
+         api compose.uiTooling
+         api compose.preview
       }
 
-      jvmMain {
-         dependencies {
-            api compose.uiTooling
-            api compose.preview
-         }
+      jvmMain.dependencies {
+         api compose.uiTooling
+         api compose.preview
       }
    }
 }

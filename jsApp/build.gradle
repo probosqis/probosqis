@@ -31,11 +31,9 @@ kotlin {
    }
 
    sourceSets {
-      jsMain {
-         dependencies {
-            implementation compose.material
-            implementation project(':modules:app')
-         }
+      jsMain.dependencies {
+         implementation compose.material
+         implementation project(':modules:app')
       }
    }
 }

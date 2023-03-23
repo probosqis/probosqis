@@ -20,6 +20,7 @@ plugins {
    alias libs.plugins.compose
 }
 
+apply from: rootProject.file('gradle/kotlin.gradle')
 apply from: rootProject.file('gradle/android.gradle')
 
 android {
@@ -27,38 +28,21 @@ android {
 }
 
 kotlin {
-   jvm()
-   android()
-
    sourceSets {
-      commonMain {
-         dependencies {
-            implementation project(':modules:ext:kotlin')
-            implementation project(':modules:ext:compose')
-            implementation project(':modules:cache:core')
-            implementation project(':modules:cache:compose')
-            implementation project(':modules:page:core')
-         }
+      commonMain.dependencies {
+         implementation project(':modules:ext:compose')
+         implementation project(':modules:cache:core')
+         implementation project(':modules:cache:compose')
+         implementation project(':modules:page:core')
       }
 
-      commonTest {
-         dependencies {
-            implementation libs.kotlin.test
-            implementation libs.mockk
-         }
+      androidMain.dependencies {
+         implementation libs.accompanist.pager
       }
 
-      androidMain {
-         dependencies {
-            implementation libs.accompanist.pager
-         }
-      }
-
-      jvmTest {
-         dependencies {
-            implementation compose.desktop.currentOs
-            implementation compose.uiTestJUnit4
-         }
+      jvmTest.dependencies {
+         implementation compose.desktop.currentOs
+         implementation compose.uiTestJUnit4
       }
    }
 }

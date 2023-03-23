@@ -14,9 +14,32 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
+kotlin {
+   android()
 }
 
-apply from: rootProject.file('gradle/kotlin.gradle')
+android {
+   compileSdk 33
+   sourceSets.main.manifest.srcFile 'src/androidMain/AndroidManifest.xml'
+
+   defaultConfig {
+      minSdk 21
+      targetSdk 33
+   }
+
+   buildFeatures {
+      compose true
+   }
+
+   compileOptions {
+      coreLibraryDesugaringEnabled true
+   }
+
+   composeOptions {
+      kotlinCompilerExtensionVersion = libs.versions.compose
+   }
+}
+
+dependencies {
+   coreLibraryDesugaring libs.android.desugaring.jdk
+}

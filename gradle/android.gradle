@@ -14,28 +14,10 @@
  * limitations under the License.
  */
 
-android {
-   compileSdk 33
-   sourceSets.main.manifest.srcFile 'src/androidMain/AndroidManifest.xml'
+apply from: rootProject.file('gradle/androidConfig.gradle')
 
-   defaultConfig {
-      minSdk 21
-      targetSdk 33
+kotlin.sourceSets {
+   commonMain.dependencies {
+      implementation project(':modules:ext:android')
    }
-
-   buildFeatures {
-      compose true
-   }
-
-   compileOptions {
-      coreLibraryDesugaringEnabled true
-   }
-
-   composeOptions {
-      kotlinCompilerExtensionVersion = libs.versions.compose
-   }
-}
-
-dependencies {
-   coreLibraryDesugaring libs.android.desugaring.jdk
 }

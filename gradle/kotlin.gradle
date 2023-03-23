@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
-}
+apply from: rootProject.file('gradle/kotlinConfig.gradle')
 
-apply from: rootProject.file('gradle/kotlin.gradle')
+kotlin.sourceSets {
+   commonMain.dependencies {
+      implementation project(':modules:ext:kotlin')
+   }
+
+   commonTest.dependencies {
+      implementation libs.kotlin.test
+      implementation libs.mockk
+   }
+}

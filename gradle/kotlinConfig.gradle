@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
+kotlin {
+   jvm()
 }
-
-apply from: rootProject.file('gradle/kotlin.gradle')

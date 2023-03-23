@@ -20,6 +20,8 @@ plugins {
    alias libs.plugins.compose
 }
 
+apply from: rootProject.file('gradle/kotlin.gradle')
+
 compose.desktop {
    application {
       mainClass = "com.wcaokaze.probosqis.MainKt"
@@ -27,19 +29,14 @@ compose.desktop {
 }
 
 kotlin {
-   jvm()
-
    sourceSets {
-      jvmMain {
-         dependencies {
-            implementation compose.desktop.linux_x64
-            implementation project(':modules:ext:kotlin')
-            implementation project(':modules:ext:compose')
-            implementation project(':modules:app')
-            implementation project(':modules:page:core')
-            implementation project(':modules:page:perpetuation')
-            implementation project(':modules:page:compose')
-         }
+      jvmMain.dependencies {
+         implementation compose.desktop.linux_x64
+         implementation project(':modules:ext:compose')
+         implementation project(':modules:app')
+         implementation project(':modules:page:core')
+         implementation project(':modules:page:perpetuation')
+         implementation project(':modules:page:compose')
       }
    }
 }

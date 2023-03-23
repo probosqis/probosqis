@@ -21,6 +21,7 @@ plugins {
    alias libs.plugins.compose
 }
 
+apply from: rootProject.file('gradle/kotlin.gradle')
 apply from: rootProject.file('gradle/android.gradle')
 
 android {
@@ -44,31 +45,18 @@ android {
 }
 
 kotlin {
-   android()
-
    sourceSets {
-      androidMain {
-         dependencies {
-            implementation project(':modules:ext:kotlin')
-            implementation project(':modules:ext:compose')
-            implementation project(':modules:app')
-            implementation project(':modules:page:core')
-            implementation project(':modules:page:perpetuation')
-            implementation project(':modules:page:compose')
-         }
+      androidMain.dependencies {
+         implementation project(':modules:ext:compose')
+         implementation project(':modules:app')
+         implementation project(':modules:page:core')
+         implementation project(':modules:page:perpetuation')
+         implementation project(':modules:page:compose')
       }
 
-      androidTest {
-         dependencies {
-            implementation libs.kotlin.test
-         }
-      }
-
-      androidAndroidTest {
-         dependencies {
-            implementation libs.androidx.test.ext
-            implementation libs.androidx.test.espresso
-         }
+      androidAndroidTest.dependencies {
+         implementation libs.androidx.test.ext
+         implementation libs.androidx.test.espresso
       }
    }
 }

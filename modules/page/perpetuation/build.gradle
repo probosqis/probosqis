@@ -19,22 +19,13 @@ plugins {
    alias libs.plugins.kotlinx.serialization
 }
 
+apply from: rootProject.file('gradle/kotlin.gradle')
+
 kotlin {
-   jvm()
-
    sourceSets {
-      commonMain {
-         dependencies {
-            implementation project(':modules:ext:kotlin')
-            implementation project(':modules:page:core')
-            implementation project(':modules:cache:core')
-         }
-      }
-
-      commonTest {
-         dependencies {
-            implementation libs.kotlin.test
-         }
+      commonMain.dependencies {
+         implementation project(':modules:page:core')
+         implementation project(':modules:cache:core')
       }
    }
 }

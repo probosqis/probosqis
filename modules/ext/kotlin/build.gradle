@@ -19,16 +19,14 @@ plugins {
    alias libs.plugins.kotlinx.serialization
 }
 
-kotlin {
-   jvm()
+apply from: rootProject.file('gradle/kotlinConfig.gradle')
 
+kotlin {
    sourceSets {
-      commonMain {
-         dependencies {
-            api libs.kotlinx.datetime
-            api libs.kotlinx.serialization
-            api libs.kotlinx.collections.immutable
-         }
+      commonMain.dependencies {
+         api libs.kotlinx.datetime
+         api libs.kotlinx.serialization
+         api libs.kotlinx.collections.immutable
       }
    }
 }
