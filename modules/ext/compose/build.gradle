@@ -26,3 +26,12 @@ apply from: rootProject.file('gradle/setupModule.gradle')
 android {
    namespace 'com.wcaokaze.probosqis.ext.compose'
 }
+
+kotlin {
+   sourceSets {
+      commonMain.dependencies {
+         implementation project(':modules:ext:kotlin')
+         implementation project(':modules:ext:android')
+      }
+   }
+}
