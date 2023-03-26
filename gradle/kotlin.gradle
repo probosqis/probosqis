@@ -15,14 +15,4 @@
  */
 
 apply from: rootProject.file('gradle/kotlinConfig.gradle')
-apply from: rootProject.file('gradle/kotlinDependencies.gradle')
-
-kotlin.sourceSets {
-   commonMain.dependencies {
-      implementation project(':modules:ext:kotlin')
-   }
-
-   commonTest.dependencies {
-      implementation project(':modules:ext:kotlinTest')
-   }
-}
+apply from: rootProject.file('gradle/defactoStandardDependencies.gradle')

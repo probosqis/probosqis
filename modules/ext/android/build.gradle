@@ -22,7 +22,7 @@ plugins {
 
 apply from: rootProject.file('gradle/kotlin.gradle')
 apply from: rootProject.file('gradle/androidConfig.gradle')
-apply from: rootProject.file('gradle/androidDependencies.gradle')
+apply from: rootProject.file('gradle/defactoStandardDependencies.gradle')
 
 android {
    namespace 'com.wcaokaze.probosqis.ext.androidMain'

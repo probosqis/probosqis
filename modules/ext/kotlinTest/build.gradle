@@ -20,7 +20,7 @@ plugins {
 }
 
 apply from: rootProject.file('gradle/kotlinConfig.gradle')
-apply from: rootProject.file('gradle/kotlinDependencies.gradle')
+apply from: rootProject.file('gradle/defactoStandardDependencies.gradle')
 
 kotlin {
    sourceSets {

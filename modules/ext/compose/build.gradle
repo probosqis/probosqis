@@ -24,7 +24,7 @@ plugins {
 apply from: rootProject.file('gradle/kotlin.gradle')
 apply from: rootProject.file('gradle/android.gradle')
 apply from: rootProject.file('gradle/composeConfig.gradle')
-apply from: rootProject.file('gradle/composeDependencies.gradle')
+apply from: rootProject.file('gradle/defactoStandardDependencies.gradle')
 
 android {
    namespace 'com.wcaokaze.probosqis.ext.compose'

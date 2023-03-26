@@ -15,10 +15,3 @@
  */
 
 apply from: rootProject.file('gradle/composeConfig.gradle')
-apply from: rootProject.file('gradle/composeDependencies.gradle')
-
-kotlin.sourceSets {
-   commonMain.dependencies {
-      implementation project(':modules:ext:compose')
-   }
-}
