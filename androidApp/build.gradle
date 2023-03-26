@@ -53,10 +53,5 @@ kotlin {
          implementation project(':modules:page:perpetuation')
          implementation project(':modules:page:compose')
       }
-
-      androidAndroidTest.dependencies {
-         implementation libs.androidx.test.ext
-         implementation libs.androidx.test.espresso
-      }
    }
 }

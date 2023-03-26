@@ -15,6 +15,7 @@
  */
 
 apply from: rootProject.file('gradle/kotlinConfig.gradle')
+apply from: rootProject.file('gradle/kotlinDependencies.gradle')
 
 kotlin.sourceSets {
    commonMain.dependencies {
@@ -22,7 +23,6 @@ kotlin.sourceSets {
    }
 
    commonTest.dependencies {
-      implementation libs.kotlin.test
-      implementation libs.mockk
+      implementation project(':modules:ext:kotlinTest')
    }
 }

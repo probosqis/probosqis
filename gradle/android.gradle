@@ -15,6 +15,7 @@
  */
 
 apply from: rootProject.file('gradle/androidConfig.gradle')
+apply from: rootProject.file('gradle/androidDependencies.gradle')
 
 kotlin.sourceSets {
    commonMain.dependencies {

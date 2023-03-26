@@ -20,13 +20,4 @@ plugins {
 }
 
 apply from: rootProject.file('gradle/kotlinConfig.gradle')
-
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         api libs.kotlinx.datetime
-         api libs.kotlinx.serialization
-         api libs.kotlinx.collections.immutable
-      }
-   }
-}
+apply from: rootProject.file('gradle/kotlinDependencies.gradle')
