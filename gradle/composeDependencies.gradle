@@ -14,30 +14,26 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.android.library
-   alias libs.plugins.compose
-}
-
-apply from: rootProject.file('gradle/kotlin.gradle')
-apply from: rootProject.file('gradle/android.gradle')
-apply from: rootProject.file('gradle/compose.gradle')
-
-android {
-   namespace 'com.wcaokaze.probosqis.page.compose'
-}
-
 kotlin {
    sourceSets {
       commonMain.dependencies {
-         implementation project(':modules:cache:core')
-         implementation project(':modules:cache:compose')
-         implementation project(':modules:page:core')
+         implementation compose.material
       }
 
       androidMain.dependencies {
-         implementation libs.accompanist.pager
+         implementation libs.androidx.activity.compose
+         implementation compose.uiTooling
+         implementation compose.preview
+      }
+
+      jvmMain.dependencies {
+         implementation compose.uiTooling
+         implementation compose.preview
+      }
+
+      jvmTest.dependencies {
+         implementation compose.desktop.currentOs
+         implementation compose.uiTestJUnit4
       }
    }
 }

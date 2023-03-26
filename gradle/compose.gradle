@@ -14,24 +14,11 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
-   alias libs.plugins.android.library
-   alias libs.plugins.compose
-}
+apply from: rootProject.file('gradle/composeConfig.gradle')
+apply from: rootProject.file('gradle/composeDependencies.gradle')
 
-apply from: rootProject.file('gradle/kotlin.gradle')
-apply from: rootProject.file('gradle/android.gradle')
-
-android {
-   namespace 'com.wcaokaze.probosqis.cache.compose'
-}
-
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         implementation project(':modules:cache:core')
-      }
+kotlin.sourceSets {
+   commonMain.dependencies {
+      implementation project(':modules:ext:compose')
    }
 }

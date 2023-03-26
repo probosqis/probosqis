@@ -23,6 +23,7 @@ plugins {
 
 apply from: rootProject.file('gradle/kotlin.gradle')
 apply from: rootProject.file('gradle/android.gradle')
+apply from: rootProject.file('gradle/compose.gradle')
 
 android {
    namespace 'com.wcaokaze.probosqis.app'
@@ -31,17 +32,11 @@ android {
 kotlin {
    sourceSets {
       commonMain.dependencies {
-         implementation project(':modules:ext:compose')
          implementation project(':modules:cache:core')
          implementation project(':modules:cache:compose')
          implementation project(':modules:page:core')
          implementation project(':modules:page:perpetuation')
          implementation project(':modules:page:compose')
-      }
-
-      jvmTest.dependencies {
-         implementation compose.desktop.currentOs
-         implementation compose.uiTestJUnit4
       }
    }
 }

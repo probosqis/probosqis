@@ -23,6 +23,7 @@ plugins {
 
 apply from: rootProject.file('gradle/kotlin.gradle')
 apply from: rootProject.file('gradle/android.gradle')
+apply from: rootProject.file('gradle/compose.gradle')
 
 android {
    namespace 'com.wcaokaze.probosqis'
@@ -47,7 +48,6 @@ android {
 kotlin {
    sourceSets {
       androidMain.dependencies {
-         implementation project(':modules:ext:compose')
          implementation project(':modules:app')
          implementation project(':modules:page:core')
          implementation project(':modules:page:perpetuation')

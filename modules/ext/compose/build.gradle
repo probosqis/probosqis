@@ -23,26 +23,9 @@ plugins {
 
 apply from: rootProject.file('gradle/kotlin.gradle')
 apply from: rootProject.file('gradle/android.gradle')
+apply from: rootProject.file('gradle/composeConfig.gradle')
+apply from: rootProject.file('gradle/composeDependencies.gradle')
 
 android {
    namespace 'com.wcaokaze.probosqis.ext.compose'
-}
-
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         api compose.material
-      }
-
-      androidMain.dependencies {
-         api libs.androidx.activity.compose
-         api compose.uiTooling
-         api compose.preview
-      }
-
-      jvmMain.dependencies {
-         api compose.uiTooling
-         api compose.preview
-      }
-   }
 }

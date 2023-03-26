@@ -21,6 +21,7 @@ plugins {
 }
 
 apply from: rootProject.file('gradle/kotlin.gradle')
+apply from: rootProject.file('gradle/compose.gradle')
 
 compose.desktop {
    application {
@@ -32,7 +33,6 @@ kotlin {
    sourceSets {
       jvmMain.dependencies {
          implementation compose.desktop.linux_x64
-         implementation project(':modules:ext:compose')
          implementation project(':modules:app')
          implementation project(':modules:page:core')
          implementation project(':modules:page:perpetuation')
