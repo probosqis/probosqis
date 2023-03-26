@@ -19,11 +19,17 @@ boolean hasPlugin(Provider<? extends PluginDependency> plugin) {
 }
 
 def isAndroidModule = hasPlugin(libs.plugins.android.application)
-                   || hasPlugin(libs.plugins.android.library)
+      || hasPlugin(libs.plugins.android.library)
 def isComposeModule = hasPlugin(libs.plugins.compose)
 def isExtModule = project.path.contains(':modules:ext')
 
 kotlin {
+   jvm()
+
+   if (isAndroidModule) {
+      android()
+   }
+
    sourceSets {
       commonMain.dependencies {
          implementation libs.kotlinx.datetime
@@ -85,11 +91,39 @@ kotlin {
             }
          }
 
-         if (isComposeModule) {
+         if (isAndroidModule && isComposeModule) {
             commonMain.dependencies {
                implementation project(':modules:ext:compose')
             }
          }
       }
+   }
+}
+
+if (isAndroidModule) {
+   android {
+      compileSdk 33
+      sourceSets.main.manifest.srcFile 'src/androidMain/AndroidManifest.xml'
+
+      defaultConfig {
+         minSdk 21
+         targetSdk 33
+      }
+
+      buildFeatures {
+         compose true
+      }
+
+      compileOptions {
+         coreLibraryDesugaringEnabled true
+      }
+
+      composeOptions {
+         kotlinCompilerExtensionVersion = libs.versions.compose
+      }
+   }
+
+   dependencies {
+      coreLibraryDesugaring libs.android.desugaring.jdk
    }
 }

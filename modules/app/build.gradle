@@ -21,9 +21,7 @@ plugins {
    alias libs.plugins.compose
 }
 
-apply from: rootProject.file('gradle/kotlin.gradle')
-apply from: rootProject.file('gradle/android.gradle')
-apply from: rootProject.file('gradle/compose.gradle')
+apply from: rootProject.file('gradle/setupModule.gradle')
 
 android {
    namespace 'com.wcaokaze.probosqis.app'

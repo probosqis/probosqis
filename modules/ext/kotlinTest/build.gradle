@@ -19,8 +19,7 @@ plugins {
    alias libs.plugins.kotlinx.serialization
 }
 
-apply from: rootProject.file('gradle/kotlinConfig.gradle')
-apply from: rootProject.file('gradle/defactoStandardDependencies.gradle')
+apply from: rootProject.file('gradle/setupModule.gradle')
 
 kotlin {
    sourceSets {
