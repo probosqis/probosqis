@@ -16,17 +16,12 @@
 
 package com.wcaokaze.probosqis.page.core
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.*
 
 class ColumnTest {
-   private val clock = object : Clock {
-      override fun now() = Instant.parse("2000-01-01T00:00:00.000Z")
-   }
-
    @Serializable
    @SerialName("com.wcaokaze.probosqis.page.IntPage")
    class IntPage(val i: Int) : Page()
@@ -37,7 +32,7 @@ class ColumnTest {
 
    @Test
    fun add_pop() {
-      var column = Column(IntPage(0), clock)
+      var column = Column(IntPage(0), MockClock())
       column = column.added(StringPage("1"))
       column = column.added(StringPage("2"))
       column = column.added(IntPage(3))
@@ -67,7 +62,7 @@ class ColumnTest {
 
    @Test
    fun immutability() {
-      var column = Column(IntPage(0), clock)
+      var column = Column(IntPage(0), MockClock())
       column = column.added(StringPage("1"))
 
       val tail = column.tailOrNull()

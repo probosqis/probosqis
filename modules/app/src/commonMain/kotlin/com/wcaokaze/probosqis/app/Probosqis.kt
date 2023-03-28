@@ -21,13 +21,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.ext.kotlin.datetime.BehindClock
 import com.wcaokaze.probosqis.page.compose.ColumnBoard
 import com.wcaokaze.probosqis.page.compose.ColumnBoardState
 import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
 import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.datetime.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -59,10 +59,6 @@ internal fun loadColumnBoardOrDefault(
 }
 
 private fun createDefaultColumns(): List<Column> {
-   class BehindClock(private val offset: Duration) : Clock {
-      override fun now() = Clock.System.now() + offset
-   }
-
    return persistentListOf(
       Column(TestPage(0), BehindClock(Duration.ZERO)),
       Column(TestPage(1), BehindClock(1.milliseconds)),

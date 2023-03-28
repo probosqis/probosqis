@@ -23,13 +23,12 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
 import com.wcaokaze.probosqis.page.core.Page
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -40,10 +39,6 @@ import kotlin.test.assertIs
 
 @RunWith(JUnit4::class)
 class ColumnBoardTest {
-   private class MockClock(private val nowAsIso: String) : Clock {
-      override fun now() = Instant.parse(nowAsIso)
-   }
-
    @get:Rule
    val rule = createComposeRule()
 
@@ -54,8 +49,8 @@ class ColumnBoardTest {
       val columnBoardCache = run {
          val columnBoard = ColumnBoard(
             listOf(
-               Column(TestPage(0), MockClock("2000-01-01T00:00:00.000Z")),
-               Column(TestPage(10), MockClock("2000-01-01T00:01:00.000Z")),
+               Column(TestPage( 0), MockClock(minute = 0)),
+               Column(TestPage(10), MockClock(minute = 1)),
             )
          )
          WritableCache(columnBoard)
@@ -73,7 +68,7 @@ class ColumnBoardTest {
                      coroutineScope.launch {
                         val newColumn = Column(
                            TestPage(page.i + 1),
-                           MockClock("2000-01-01T00:02:00.000Z")
+                           MockClock(minute = 2)
                         )
                         columnState.addColumn(newColumn)
                      }
