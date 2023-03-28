@@ -20,25 +20,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import com.wcaokaze.probosqis.page.compose.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.compose.pageComposable
 import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
 import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.Month
 
 @Preview
 @Composable
 private fun ProbosqisPreview() {
    val di = remember {
       object : DI {
-         private val clock = object : Clock {
-            override fun now() = Instant.parse("2000-01-01T00:00:00.000Z")
-         }
+         private val clock = MockClock()
 
          override val pageComposableSwitcher = PageComposableSwitcher(
             allPageComposables = persistentListOf(

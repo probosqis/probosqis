@@ -14,28 +14,14 @@
  * limitations under the License.
  */
 
-android {
-   compileSdk 33
-   sourceSets.main.manifest.srcFile 'src/androidMain/AndroidManifest.xml'
+package com.wcaokaze.probosqis.ext.kotlin.datetime
 
-   defaultConfig {
-      minSdk 21
-      targetSdk 33
-   }
+import kotlinx.datetime.Clock
+import kotlin.time.Duration
 
-   buildFeatures {
-      compose true
-   }
-
-   compileOptions {
-      coreLibraryDesugaringEnabled true
-   }
-
-   composeOptions {
-      kotlinCompilerExtensionVersion = libs.versions.compose
-   }
-}
-
-dependencies {
-   coreLibraryDesugaring libs.android.desugaring.jdk
+/**
+ * [Clock.System]の時刻より[offset]後の時刻を返却するClock
+ */
+class BehindClock(private val offset: Duration) : Clock {
+   override fun now() = Clock.System.now() + offset
 }

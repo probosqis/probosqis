@@ -16,57 +16,25 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
    alias libs.plugins.android.library
    alias libs.plugins.compose
-   alias libs.plugins.kotlinx.serialization
 }
 
-apply from: rootProject.file('gradle/androidModule.gradle')
+apply from: rootProject.file('gradle/setupModule.gradle')
 
 android {
    namespace 'com.wcaokaze.probosqis.app'
 }
 
 kotlin {
-   android()
-   jvm()
-
    sourceSets {
-      commonMain {
-         dependencies {
-            implementation libs.kotlinx.datetime
-            implementation libs.kotlinx.serialization
-            implementation libs.kotlinx.collections.immutable
-            implementation compose.material
-            implementation project(':modules:cache:core')
-            implementation project(':modules:cache:compose')
-            implementation project(':modules:page:core')
-            implementation project(':modules:page:perpetuation')
-            implementation project(':modules:page:compose')
-         }
-      }
-
-      androidMain {
-         dependencies {
-            implementation compose.uiTooling
-            implementation compose.preview
-         }
-      }
-
-      jvmMain {
-         dependencies {
-            implementation compose.uiTooling
-            implementation compose.preview
-         }
-      }
-
-      jvmTest {
-         dependencies {
-            implementation libs.kotlin.test
-            implementation libs.mockk
-            implementation compose.desktop.currentOs
-            implementation compose.uiTestJUnit4
-         }
+      commonMain.dependencies {
+         implementation project(':modules:cache:core')
+         implementation project(':modules:cache:compose')
+         implementation project(':modules:page:core')
+         implementation project(':modules:page:perpetuation')
+         implementation project(':modules:page:compose')
       }
    }
 }

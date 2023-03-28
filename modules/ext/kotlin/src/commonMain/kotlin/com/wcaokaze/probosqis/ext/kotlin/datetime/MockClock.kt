@@ -14,28 +14,23 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.android.library
-   alias libs.plugins.compose
-}
+package com.wcaokaze.probosqis.ext.kotlin.datetime
 
-apply from: rootProject.file('gradle/setupModule.gradle')
+import kotlinx.datetime.*
 
-android {
-   namespace 'com.wcaokaze.probosqis.page.compose'
-}
+class MockClock(private val now: Instant) : Clock {
+   constructor(
+      year: Int = 2000,
+      month: Month = Month.JANUARY,
+      dayOfMonth: Int = 1,
+      hour: Int = 0,
+      minute: Int = 0,
+      second: Int = 0,
+      nanosecond: Int = 0
+   ) : this(
+      LocalDateTime(year, month, dayOfMonth, hour, minute, second, nanosecond)
+         .toInstant(TimeZone.UTC)
+   )
 
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         implementation project(':modules:cache:core')
-         implementation project(':modules:cache:compose')
-         implementation project(':modules:page:core')
-      }
-
-      androidMain.dependencies {
-         implementation libs.accompanist.pager
-      }
-   }
+   override fun now() = now
 }
