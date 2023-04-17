@@ -74,22 +74,22 @@ kotlin {
             implementation compose.material
          }
 
-         jvmMain.dependencies {
+         desktopMain.dependencies {
             implementation compose.uiTooling
             implementation compose.preview
          }
 
-         jvmTest.dependencies {
+         desktopTest.dependencies {
             implementation compose.desktop.currentOs
             implementation compose.uiTestJUnit4
          }
-      }
 
-      if (isAndroidModule && isComposeModule) {
-         androidMain.dependencies {
-            implementation libs.androidx.activity.compose
-            implementation compose.uiTooling
-            implementation compose.preview
+         if (isAndroidModule) {
+            androidMain.dependencies {
+               implementation libs.androidx.activity.compose
+               implementation compose.uiTooling
+               implementation compose.preview
+            }
          }
       }
 
