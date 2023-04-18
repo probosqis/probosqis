@@ -24,13 +24,30 @@ def isComposeModule = hasPlugin(libs.plugins.compose)
 def isExtModule = project.path.contains(':modules:ext')
 
 kotlin {
-   jvm()
+   if (isComposeModule) {
+      jvm('desktop')
+   } else {
+      jvm()
+   }
 
    if (isAndroidModule) {
       android()
    }
 
    sourceSets {
+      jvmMain.dependsOn(commonMain)
+      jvmTest.dependsOn(commonTest)
+
+      if (isAndroidModule) {
+         androidMain.dependsOn(jvmMain)
+         androidTest.dependsOn(jvmTest)
+      }
+
+      if (isComposeModule) {
+         desktopMain.dependsOn(jvmMain)
+         desktopTest.dependsOn(jvmTest)
+      }
+
       commonMain.dependencies {
          implementation libs.kotlinx.datetime
          implementation libs.kotlinx.serialization
@@ -57,22 +74,22 @@ kotlin {
             implementation compose.material
          }
 
-         jvmMain.dependencies {
+         desktopMain.dependencies {
             implementation compose.uiTooling
             implementation compose.preview
          }
 
-         jvmTest.dependencies {
+         desktopTest.dependencies {
             implementation compose.desktop.currentOs
             implementation compose.uiTestJUnit4
          }
-      }
 
-      if (isAndroidModule && isComposeModule) {
-         androidMain.dependencies {
-            implementation libs.androidx.activity.compose
-            implementation compose.uiTooling
-            implementation compose.preview
+         if (isAndroidModule) {
+            androidMain.dependencies {
+               implementation libs.androidx.activity.compose
+               implementation compose.uiTooling
+               implementation compose.preview
+            }
          }
       }
 
