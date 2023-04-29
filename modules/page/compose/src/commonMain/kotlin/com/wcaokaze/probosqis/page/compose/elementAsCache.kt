@@ -30,14 +30,23 @@ fun <T> WritableCache<JsonObject>.elementAsWritableCache(
    serializer: KSerializer<T>,
    init: () -> T
 ): WritableCache<T> {
-   return ElementWritableCache(this, key, serializer)
+   return ElementWritableCache(this, key, serializer, init)
 }
 
 private class ElementWritableCache<T>(
    private val origin: WritableCache<JsonObject>,
    private val key: String,
-   private val serializer: KSerializer<T>
+   private val serializer: KSerializer<T>,
+   private val init: () -> T
 ) : Cache<T>, WritableCache<T> {
+   init {
+      if (!origin.value.containsKey(key)) {
+         val initValue = init()
+         val jsonInitValue = Json.encodeToJsonElement(serializer, initValue)
+         origin.value = JsonObject(origin.value + (key to jsonInitValue))
+      }
+   }
+
    @InternalCacheApi
    override val state: State<T>
       get() = mutableState

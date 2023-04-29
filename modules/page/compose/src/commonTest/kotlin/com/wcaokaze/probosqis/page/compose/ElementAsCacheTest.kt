@@ -20,9 +20,8 @@ import com.wcaokaze.probosqis.cache.core.WritableCache
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.fail
+import kotlinx.serialization.json.int
+import kotlin.test.*
 
 class ElementAsCacheTest {
    @Test
@@ -41,5 +40,22 @@ class ElementAsCacheTest {
       }
 
       assertEquals(0, elementCache.value)
+   }
+
+   @Test
+   fun initialize() {
+      val origin = WritableCache(buildJsonObject {})
+
+      val elementCache = origin
+         .elementAsWritableCache("key", Int.serializer()) { 42 }
+
+      assertEquals(1, origin.value.size)
+      origin.value["key"].let {
+         assertNotNull(it)
+         assertIs<JsonPrimitive>(it)
+         assertEquals(42, it.int)
+      }
+
+      assertEquals(42, elementCache.value)
    }
 }
