@@ -41,9 +41,7 @@ private class ElementWritableCache<T>(
 ) : Cache<T>, WritableCache<T> {
    init {
       if (!origin.value.containsKey(key)) {
-         val initValue = init()
-         val jsonInitValue = Json.encodeToJsonElement(serializer, initValue)
-         origin.value = JsonObject(origin.value + (key to jsonInitValue))
+         initialize()
       }
    }
 
@@ -65,12 +63,23 @@ private class ElementWritableCache<T>(
 
    override var value: T
       get() {
-         val element = origin.value[key] ?: TODO()
-         return Json.decodeFromJsonElement(serializer, element)
+         val element = origin.value[key]
+         return if (element != null) {
+            Json.decodeFromJsonElement(serializer, element)
+         } else {
+            initialize()
+         }
       }
       set(_) {
          TODO()
       }
 
    override fun asCache() = this
+
+   private fun initialize(): T {
+      val initValue = init()
+      val jsonInitValue = Json.encodeToJsonElement(serializer, initValue)
+      origin.value = JsonObject(origin.value + (key to jsonInitValue))
+      return initValue
+   }
 }

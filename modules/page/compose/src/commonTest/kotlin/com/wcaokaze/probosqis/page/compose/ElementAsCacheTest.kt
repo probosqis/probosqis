@@ -57,5 +57,9 @@ class ElementAsCacheTest {
       }
 
       assertEquals(42, elementCache.value)
+
+      origin.value = buildJsonObject {}
+      assertFalse(origin.value.containsKey("key"))
+      assertEquals(42, elementCache.value)
    }
 }
