@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.compose
+package com.wcaokaze.probosqis.cache.core
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
-import com.wcaokaze.probosqis.cache.core.Cache
-import com.wcaokaze.probosqis.cache.core.InternalCacheApi
-import com.wcaokaze.probosqis.cache.core.WritableCache
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject

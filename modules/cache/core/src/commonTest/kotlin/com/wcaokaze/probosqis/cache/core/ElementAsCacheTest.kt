@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.compose
+package com.wcaokaze.probosqis.cache.core
 
-import com.wcaokaze.probosqis.cache.core.WritableCache
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
