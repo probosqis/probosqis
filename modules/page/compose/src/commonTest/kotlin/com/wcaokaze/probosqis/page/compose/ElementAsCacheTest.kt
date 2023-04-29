@@ -62,4 +62,23 @@ class ElementAsCacheTest {
       assertFalse(origin.value.containsKey("key"))
       assertEquals(42, elementCache.value)
    }
+
+   @Test
+   fun setValue() {
+      val origin = WritableCache(buildJsonObject {
+         put("key", JsonPrimitive(3))
+      })
+
+      val elementCache = origin
+         .elementAsWritableCache("key", Int.serializer()) { fail() }
+
+      elementCache.value = 42
+
+      origin.value["key"].let {
+         assertNotNull(it)
+         assertIs<JsonPrimitive>(it)
+         assertEquals(42, it.int)
+      }
+      assertEquals(42, elementCache.value)
+   }
 }

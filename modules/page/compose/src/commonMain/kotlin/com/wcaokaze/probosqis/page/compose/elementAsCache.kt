@@ -70,16 +70,20 @@ private class ElementWritableCache<T>(
             initialize()
          }
       }
-      set(_) {
-         TODO()
+      set(newValue) {
+         updateOrigin(newValue)
       }
 
    override fun asCache() = this
 
+   private fun updateOrigin(value: T) {
+      val jsonValue = Json.encodeToJsonElement(serializer, value)
+      origin.value = JsonObject(origin.value + (key to jsonValue))
+   }
+
    private fun initialize(): T {
       val initValue = init()
-      val jsonInitValue = Json.encodeToJsonElement(serializer, initValue)
-      origin.value = JsonObject(origin.value + (key to jsonInitValue))
+      updateOrigin(initValue)
       return initValue
    }
 }
