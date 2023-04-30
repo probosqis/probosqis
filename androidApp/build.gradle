@@ -47,9 +47,7 @@ kotlin {
    sourceSets {
       androidMain.dependencies {
          implementation project(':modules:app')
-         implementation project(':modules:page:core')
-         implementation project(':modules:page:perpetuation')
-         implementation project(':modules:page:compose')
+         implementation project(':modules:page')
       }
    }
 }

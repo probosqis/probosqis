@@ -24,7 +24,7 @@ plugins {
 apply from: rootProject.file('gradle/setupModule.gradle')
 
 android {
-   namespace 'com.wcaokaze.probosqis.page.compose'
+   namespace 'com.wcaokaze.probosqis.page'
 }
 
 kotlin {
@@ -32,7 +32,6 @@ kotlin {
       commonMain.dependencies {
          implementation project(':modules:cache:core')
          implementation project(':modules:cache:compose')
-         implementation project(':modules:page:core')
       }
 
       androidMain.dependencies {

@@ -32,9 +32,7 @@ kotlin {
       commonMain.dependencies {
          implementation project(':modules:cache:core')
          implementation project(':modules:cache:compose')
-         implementation project(':modules:page:core')
-         implementation project(':modules:page:perpetuation')
-         implementation project(':modules:page:compose')
+         implementation project(':modules:page')
       }
    }
 }
