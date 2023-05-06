@@ -27,7 +27,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertSame
 
 @RunWith(JUnit4::class)
-class PageTest {
+class PageComposeTest {
    @get:Rule
    val rule = createComposeRule()
 

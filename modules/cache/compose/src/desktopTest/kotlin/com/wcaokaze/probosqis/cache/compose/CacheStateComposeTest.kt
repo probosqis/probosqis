@@ -24,7 +24,7 @@ import org.junit.Rule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class CacheStateTest {
+class CacheStateComposeTest {
    @get:Rule
    val rule = createComposeRule()
 

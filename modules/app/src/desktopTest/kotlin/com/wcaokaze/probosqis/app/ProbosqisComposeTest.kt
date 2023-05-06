@@ -30,7 +30,7 @@ import java.io.IOException
 import kotlin.test.*
 
 @RunWith(JUnit4::class)
-class ProbosqisTest {
+class ProbosqisComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
