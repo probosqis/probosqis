@@ -18,8 +18,8 @@ package com.wcaokaze.probosqis.app
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.page.core.ColumnBoard
-import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
+import com.wcaokaze.probosqis.page.ColumnBoard
+import com.wcaokaze.probosqis.page.ColumnBoardRepository
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Rule

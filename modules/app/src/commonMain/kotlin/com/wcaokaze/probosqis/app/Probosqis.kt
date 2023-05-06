@@ -22,11 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.BehindClock
-import com.wcaokaze.probosqis.page.compose.ColumnBoard
-import com.wcaokaze.probosqis.page.compose.ColumnBoardState
-import com.wcaokaze.probosqis.page.core.Column
-import com.wcaokaze.probosqis.page.core.ColumnBoard
-import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
+import com.wcaokaze.probosqis.page.Column
+import com.wcaokaze.probosqis.page.ColumnBoard
+import com.wcaokaze.probosqis.page.ColumnBoardRepository
+import com.wcaokaze.probosqis.page.ColumnBoardState
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds

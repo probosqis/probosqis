@@ -21,11 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
-import com.wcaokaze.probosqis.page.compose.PageComposableSwitcher
-import com.wcaokaze.probosqis.page.compose.pageComposable
-import com.wcaokaze.probosqis.page.core.Column
-import com.wcaokaze.probosqis.page.core.ColumnBoard
-import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
+import com.wcaokaze.probosqis.page.*
 import kotlinx.collections.immutable.persistentListOf
 
 @Preview

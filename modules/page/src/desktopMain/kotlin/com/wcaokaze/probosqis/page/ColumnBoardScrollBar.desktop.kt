@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.page
 
-import androidx.compose.runtime.Stable
-import com.wcaokaze.probosqis.page.ColumnBoardRepository
-import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import androidx.compose.foundation.HorizontalScrollbar
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.runtime.Composable
 
-@Stable
-interface DI {
-   val pageComposableSwitcher: PageComposableSwitcher
-   val columnBoardRepository: ColumnBoardRepository
+@Composable
+internal actual fun ColumnBoardScrollBar(state: PagerState) {
+   HorizontalScrollbar(
+      rememberScrollbarAdapter(state.lazyListState)
+   )
 }

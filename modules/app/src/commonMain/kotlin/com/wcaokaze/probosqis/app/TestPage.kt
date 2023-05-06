@@ -24,9 +24,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.page.compose.ColumnState
-import com.wcaokaze.probosqis.page.core.Column
-import com.wcaokaze.probosqis.page.core.Page
+import com.wcaokaze.probosqis.page.Column
+import com.wcaokaze.probosqis.page.ColumnState
+import com.wcaokaze.probosqis.page.Page
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

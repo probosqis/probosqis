@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.page
 
-import androidx.compose.runtime.Stable
-import com.wcaokaze.probosqis.page.ColumnBoardRepository
-import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
 
-@Stable
-interface DI {
-   val pageComposableSwitcher: PageComposableSwitcher
-   val columnBoardRepository: ColumnBoardRepository
+internal class PreviewPage(val text: String) : Page()
+
+@Composable
+internal fun PreviewPage(page: PreviewPage) {
+   Text(
+      page.text,
+      fontSize = 48.sp,
+      modifier = Modifier.fillMaxSize()
+   )
 }
