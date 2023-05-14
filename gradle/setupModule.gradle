@@ -41,6 +41,7 @@ kotlin {
       if (isAndroidModule) {
          androidMain.dependsOn(jvmMain)
          androidTest.dependsOn(jvmTest)
+         androidAndroidTest.dependsOn(jvmTest)
       }
 
       if (isComposeModule) {
