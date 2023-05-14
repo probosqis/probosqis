@@ -67,12 +67,17 @@ kotlin {
          androidAndroidTest.dependencies {
             implementation libs.androidx.test.ext
             implementation libs.androidx.test.espresso
+            implementation libs.robolectric
          }
       }
 
       if (isComposeModule) {
          commonMain.dependencies {
             implementation compose.material
+         }
+
+         commonTest.dependencies {
+            implementation compose.uiTestJUnit4
          }
 
          desktopMain.dependencies {
@@ -82,7 +87,6 @@ kotlin {
 
          desktopTest.dependencies {
             implementation compose.desktop.currentOs
-            implementation compose.uiTestJUnit4
          }
 
          if (isAndroidModule) {
@@ -90,6 +94,10 @@ kotlin {
                implementation libs.androidx.activity.compose
                implementation compose.uiTooling
                implementation compose.preview
+            }
+
+            androidTest.dependencies {
+               implementation libs.compose.ui.test.manifest
             }
          }
       }
@@ -138,6 +146,12 @@ if (isAndroidModule) {
 
       composeOptions {
          kotlinCompilerExtensionVersion = libs.versions.compose
+      }
+
+      testOptions {
+         unitTests {
+            includeAndroidResources = true
+         }
       }
    }
 
