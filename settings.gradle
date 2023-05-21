@@ -58,7 +58,6 @@ dependencyResolutionManagement {
          library('mockk', 'io.mockk', 'mockk').version('1.13.4')
          library('robolectric', 'org.robolectric:robolectric:4.9')
          library('androidx-test-ext', 'androidx.test.ext:junit:1.1.5')
-         library('androidx-test-espresso', 'androidx.test.espresso:espresso-core:3.5.1')
          library('compose-ui-test-manifest', 'androidx.compose.ui', 'ui-test-manifest').versionRef('compose')
       }
    }
