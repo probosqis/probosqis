@@ -72,7 +72,7 @@ kotlin {
 
       if (isComposeModule) {
          commonMain.dependencies {
-            implementation compose.material
+            implementation compose.material3
          }
 
          commonTest.dependencies {
