@@ -37,6 +37,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -77,35 +78,37 @@ import kotlin.time.Duration.Companion.milliseconds
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Probosqis(di: DI) {
-   // 現状Desktopで動作しないため自前実装する
-   // val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-   val appBarScrollState = remember { AppBarScrollState() }
-   val nestedScrollConnection = remember(appBarScrollState) {
-      AppBarNestedScrollConnection(appBarScrollState)
-   }
+   MaterialTheme(colorScheme()) {
+      // 現状Desktopで動作しないため自前実装する
+      // val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+      val appBarScrollState = remember { AppBarScrollState() }
+      val nestedScrollConnection = remember(appBarScrollState) {
+         AppBarNestedScrollConnection(appBarScrollState)
+      }
 
-   Scaffold(
-      topBar = { AppBar(appBarScrollState) },
-      contentWindowInsets = WindowInsets(0, 0, 0, 0),
-      modifier = Modifier
-         .nestedScroll(nestedScrollConnection)
-   ) { paddingValues ->
-      LazyColumn(
-         contentPadding = WindowInsets.safeDrawing
-            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
-            .asPaddingValues(),
+      Scaffold(
+         topBar = { AppBar(appBarScrollState) },
+         contentWindowInsets = WindowInsets(0, 0, 0, 0),
          modifier = Modifier
-            .padding(paddingValues)
-            .fillMaxSize()
-            .background(Color.Cyan)
-      ) {
-         items(42) { i ->
-            Box(Modifier.fillMaxWidth().height(48.dp)) {
-               Text(
-                  "$i",
-                  fontSize = 20.sp,
-                  modifier = Modifier.align(Alignment.CenterStart)
-               )
+            .nestedScroll(nestedScrollConnection)
+      ) { paddingValues ->
+         LazyColumn(
+            contentPadding = WindowInsets.safeDrawing
+               .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
+               .asPaddingValues(),
+            modifier = Modifier
+               .padding(paddingValues)
+               .fillMaxSize()
+               .background(Color.Cyan)
+         ) {
+            items(42) { i ->
+               Box(Modifier.fillMaxWidth().height(48.dp)) {
+                  Text(
+                     "$i",
+                     fontSize = 20.sp,
+                     modifier = Modifier.align(Alignment.CenterStart)
+                  )
+               }
             }
          }
       }
@@ -228,6 +231,9 @@ private class AppBarNestedScrollConnection(
       return Velocity.Zero
    }
 }
+
+@Composable
+expect fun colorScheme(): ColorScheme
 
 internal fun loadColumnBoardOrDefault(
    columnBoardRepository: ColumnBoardRepository
