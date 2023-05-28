@@ -21,7 +21,7 @@ import androidx.compose.ui.window.singleWindowApplication
 import com.wcaokaze.probosqis.app.Probosqis
 
 fun main() {
-   singleWindowApplication {
+   singleWindowApplication(title = "") {
       val di = remember { DesktopDI() }
       Probosqis(di)
    }

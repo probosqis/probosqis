@@ -17,6 +17,11 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -30,18 +35,25 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Probosqis(di: DI) {
-   val columnBoardState = remember {
-      val columnBoardCache = loadColumnBoardOrDefault(di.columnBoardRepository)
-      ColumnBoardState(columnBoardCache)
-   }
+   Scaffold(
+      topBar = { TopAppBar(title = { Text("Probosqis") }) }
+   ) { paddingValues ->
+      val columnBoardState = remember {
+         val columnBoardCache = loadColumnBoardOrDefault(di.columnBoardRepository)
+         ColumnBoardState(columnBoardCache)
+      }
 
-   ColumnBoard(
-      columnBoardState,
-      di.pageComposableSwitcher,
-      modifier = Modifier.fillMaxSize()
-   )
+      ColumnBoard(
+         columnBoardState,
+         di.pageComposableSwitcher,
+         modifier = Modifier
+            .padding(paddingValues)
+            .fillMaxSize()
+      )
+   }
 }
 
 internal fun loadColumnBoardOrDefault(
