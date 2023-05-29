@@ -19,23 +19,16 @@ package com.wcaokaze.probosqis.app
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateTo
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -51,7 +44,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -63,8 +55,9 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.page.columnboard.SingleColumnBoard
+import com.wcaokaze.probosqis.page.columnboard.SingleColumnBoardAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,25 +75,11 @@ internal fun SingleColumnProbosqis(di: DI) {
       modifier = Modifier
          .nestedScroll(nestedScrollConnection)
    ) { paddingValues ->
-      LazyColumn(
-         contentPadding = WindowInsets.safeDrawing
-            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
-            .asPaddingValues(),
-         modifier = Modifier
+      SingleColumnBoard(
+         Modifier
             .padding(paddingValues)
             .fillMaxSize()
-            .background(Color.Cyan)
-      ) {
-         items(42) { i ->
-            Box(Modifier.fillMaxWidth().height(48.dp)) {
-               Text(
-                  "$i",
-                  fontSize = 20.sp,
-                  modifier = Modifier.align(Alignment.CenterStart)
-               )
-            }
-         }
-      }
+      )
    }
 }
 
@@ -144,23 +123,7 @@ private fun AppBar(state: AppBarScrollState) {
                .onSizeChanged { state.updateAppBarHeight(it.height) },
          )
 
-         Row {
-            TopAppBar(
-               title = { Text("Home") },
-               navigationIcon = {
-                  IconButton(
-                     onClick ={}
-                  ) {
-                     Icon(Icons.Default.Close, contentDescription = "Close")
-                  }
-               },
-               windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
-               colors = TopAppBarDefaults.smallTopAppBarColors(
-                  containerColor = Color.Transparent
-               ),
-               modifier = Modifier
-            )
-         }
+         SingleColumnBoardAppBar()
       }
    }
 }
