@@ -55,7 +55,6 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.page.columnboard.SingleColumnBoard
@@ -152,6 +151,7 @@ private class AppBarScrollState {
       scrollOffset = scrollOffset.coerceIn(-appBarHeight.toFloat(), 0.0f)
    }
 
+   @Suppress("UNUSED")
    suspend fun settle() {
       if (appBarHeight == 0) { return }
 
@@ -173,16 +173,5 @@ private class AppBarNestedScrollConnection(
       source: NestedScrollSource
    ): Offset {
       return Offset(0.0f, scrollState.scroll(available.y))
-   }
-
-   override suspend fun onPostFling(
-      consumed: Velocity,
-      available: Velocity
-   ): Velocity {
-      // AppBarに限って考えればここでavailableがゼロじゃないパターンは
-      // ほとんどありえない（AppBarの高さより小さい幅でFlingした場合だけ）
-      // ので無視する
-      scrollState.settle()
-      return Velocity.Zero
    }
 }
