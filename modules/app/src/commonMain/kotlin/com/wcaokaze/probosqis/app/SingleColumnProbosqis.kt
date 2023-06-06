@@ -62,7 +62,10 @@ import com.wcaokaze.probosqis.page.columnboard.SingleColumnBoardAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun SingleColumnProbosqis(di: DI) {
+internal fun SingleColumnProbosqis(
+   di: DI,
+   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
    // 現状Desktopで動作しないため自前実装する
    // val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
    val appBarScrollState = remember { AppBarScrollState() }
@@ -71,13 +74,14 @@ internal fun SingleColumnProbosqis(di: DI) {
    }
 
    Scaffold(
-      topBar = { AppBar(appBarScrollState) },
+      topBar = { AppBar(appBarScrollState, safeDrawingWindowInsets) },
       contentWindowInsets = WindowInsets(0, 0, 0, 0),
       modifier = Modifier
          .nestedScroll(nestedScrollConnection)
    ) { paddingValues ->
       SingleColumnBoard(
-         Modifier
+         safeDrawingWindowInsets = safeDrawingWindowInsets,
+         modifier = Modifier
             .padding(paddingValues)
             .fillMaxSize()
       )
@@ -86,12 +90,15 @@ internal fun SingleColumnProbosqis(di: DI) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppBar(state: AppBarScrollState) {
+private fun AppBar(
+   state: AppBarScrollState,
+   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
    Column(
       Modifier
          .shadow(4.dp)
          .background(MaterialTheme.colorScheme.primaryContainer)
-         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+         .windowInsetsPadding(safeDrawingWindowInsets.only(WindowInsetsSides.Top))
          .clipToBounds()
          .scrollable(rememberScrollState(), Orientation.Vertical)
    ) {
@@ -117,7 +124,7 @@ private fun AppBar(state: AppBarScrollState) {
                   Icon(Icons.Default.Menu, contentDescription = "Menu")
                }
             },
-            windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
+            windowInsets = safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
             colors = TopAppBarDefaults.smallTopAppBarColors(
                containerColor = Color.Transparent
             ),
@@ -125,7 +132,9 @@ private fun AppBar(state: AppBarScrollState) {
                .onSizeChanged { state.updateAppBarHeight(it.height) },
          )
 
-         SingleColumnBoardAppBar()
+         SingleColumnBoardAppBar(
+            safeDrawingWindowInsets = safeDrawingWindowInsets
+         )
       }
    }
 }

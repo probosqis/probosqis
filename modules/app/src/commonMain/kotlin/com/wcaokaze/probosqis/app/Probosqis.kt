@@ -17,11 +17,13 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.ext.kotlin.datetime.BehindClock
 import com.wcaokaze.probosqis.page.Column
 import com.wcaokaze.probosqis.page.ColumnBoard
@@ -31,11 +33,14 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
-fun Probosqis(di: DI) {
+fun Probosqis(
+   di: DI,
+   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
    MaterialTheme(colorScheme()) {
       BoxWithConstraints {
          if (maxWidth < 512.dp) {
-            SingleColumnProbosqis(di)
+            SingleColumnProbosqis(di, safeDrawingWindowInsets)
          } else {
             MultiColumnProbosqis(di)
          }

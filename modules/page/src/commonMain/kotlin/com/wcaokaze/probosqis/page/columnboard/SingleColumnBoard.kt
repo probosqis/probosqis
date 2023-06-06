@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
@@ -47,7 +48,10 @@ import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 
 @Composable
-fun SingleColumnBoardAppBar(modifier: Modifier = Modifier) {
+fun SingleColumnBoardAppBar(
+   modifier: Modifier = Modifier,
+   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
    Row(modifier) {
       @OptIn(ExperimentalMaterial3Api::class)
       TopAppBar(
@@ -59,7 +63,7 @@ fun SingleColumnBoardAppBar(modifier: Modifier = Modifier) {
                Icon(Icons.Default.Close, contentDescription = "Close")
             }
          },
-         windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
+         windowInsets = safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
          colors = TopAppBarDefaults.smallTopAppBarColors(
             containerColor = Color.Transparent
          ),
@@ -69,13 +73,16 @@ fun SingleColumnBoardAppBar(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SingleColumnBoard(modifier: Modifier = Modifier) {
+fun SingleColumnBoard(
+   modifier: Modifier = Modifier,
+   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
    Row(
       modifier
          .scrollable(rememberScrollState(), Orientation.Vertical)
    ) {
       LazyColumn(
-         contentPadding = WindowInsets.safeDrawing
+         contentPadding = safeDrawingWindowInsets
             .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
             .asPaddingValues(),
          modifier = Modifier
@@ -83,7 +90,11 @@ fun SingleColumnBoard(modifier: Modifier = Modifier) {
             .background(Color.Cyan)
       ) {
          items(42) { i ->
-            Box(Modifier.fillMaxWidth().height(48.dp)) {
+            Box(Modifier
+               .fillMaxWidth()
+               .height(48.dp)
+               .padding(horizontal = 16.dp)
+            ) {
                Text(
                   "$i",
                   fontSize = 20.sp,
