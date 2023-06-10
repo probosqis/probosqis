@@ -16,17 +16,23 @@
 
 package com.wcaokaze.probosqis.app
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
+import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import com.wcaokaze.probosqis.page.*
 import kotlinx.collections.immutable.persistentListOf
 
-@Preview
+@MultiDevicePreview
 @Composable
-private fun ProbosqisPreview() {
+private fun ProbosqisPreview(
+   @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
+   safeDrawingWindowInsets: WindowInsets
+) {
    val di = remember {
       object : DI {
          private val clock = MockClock()
@@ -52,5 +58,5 @@ private fun ProbosqisPreview() {
       }
    }
 
-   Probosqis(di)
+   Probosqis(di, safeDrawingWindowInsets)
 }

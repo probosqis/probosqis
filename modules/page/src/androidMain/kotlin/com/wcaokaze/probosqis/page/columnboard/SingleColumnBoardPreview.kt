@@ -18,18 +18,27 @@ package com.wcaokaze.probosqis.page.columnboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
+import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
 
-@Preview
+@MultiDevicePreview
 @Composable
-private fun SingleColumnBoardPreview() {
+private fun SingleColumnBoardPreview(
+   @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
+   safeDrawingWindowInsets: WindowInsets
+) {
    Column {
       SingleColumnBoardAppBar(
-         Modifier.background(MaterialTheme.colorScheme.primaryContainer)
+         safeDrawingWindowInsets = safeDrawingWindowInsets,
+         modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)
       )
-      SingleColumnBoard()
+      SingleColumnBoard(
+         safeDrawingWindowInsets = safeDrawingWindowInsets
+      )
    }
 }
