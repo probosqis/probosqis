@@ -24,18 +24,5 @@ plugins {
 apply from: rootProject.file('gradle/setupModule.gradle')
 
 android {
-   namespace 'com.wcaokaze.probosqis.app'
-}
-
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         implementation project(':modules:resources')
-         implementation project(':modules:cache:core')
-         implementation project(':modules:cache:compose')
-         implementation project(':modules:page:core')
-         implementation project(':modules:page:perpetuation')
-         implementation project(':modules:page:compose')
-      }
-   }
+   namespace 'com.wcaokaze.probosqis.resources'
 }
