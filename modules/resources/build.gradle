@@ -14,23 +14,15 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis
+plugins {
+   alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.android.library
+   alias libs.plugins.compose
+}
 
-import androidx.compose.runtime.remember
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
-import com.wcaokaze.probosqis.app.App
-import com.wcaokaze.probosqis.app.Probosqis
-import com.wcaokaze.probosqis.resources.Strings
+apply from: rootProject.file('gradle/setupModule.gradle')
 
-fun main() {
-   application {
-      Window(
-         title = Strings.App.topAppBarText,
-         onCloseRequest = { exitApplication() }
-      ) {
-         val di = remember { DesktopDI() }
-         Probosqis(di)
-      }
-   }
+android {
+   namespace 'com.wcaokaze.probosqis.resources'
 }

@@ -22,6 +22,4 @@ import androidx.compose.ui.tooling.preview.Preview
 @Preview(name = "landscape", widthDp = 800, heightDp = 450)
 @Preview(name = "narrow", widthDp = 250, heightDp = 500)
 @Preview(name = "tablet", widthDp = 1200, heightDp = 800)
-@Preview(name = "largeFont", widthDp = 450, heightDp = 800, fontScale = 1.5f)
-@Preview(name = "smallFont", widthDp = 450, heightDp = 800, fontScale = 0.75f)
 annotation class MultiDevicePreview

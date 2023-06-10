@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.page.columnboard.SingleColumnBoard
 import com.wcaokaze.probosqis.page.columnboard.SingleColumnBoardAppBar
+import com.wcaokaze.probosqis.resources.Strings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,7 +120,7 @@ private fun AppBar(
          TopAppBar(
             title = {
                Text(
-                  "Probosqis",
+                  text = Strings.App.topAppBarText,
                   maxLines = 1,
                   overflow = TextOverflow.Ellipsis
                )

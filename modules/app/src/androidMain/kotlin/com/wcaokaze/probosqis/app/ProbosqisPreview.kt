@@ -22,10 +22,35 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
+import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
+import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import com.wcaokaze.probosqis.page.*
 import kotlinx.collections.immutable.persistentListOf
+
+private object PreviewDI : DI {
+   private val clock = MockClock()
+
+   override val pageComposableSwitcher = PageComposableSwitcher(
+      allPageComposables = persistentListOf(
+         pageComposable<TestPage> { page, columnState -> TestPage(page, columnState) },
+      )
+   )
+
+   override val columnBoardRepository = object : ColumnBoardRepository {
+      override fun saveColumnBoard(columnBoard: ColumnBoard)
+            = throw NotImplementedError()
+
+      override fun loadColumnBoard() = WritableCache(
+         ColumnBoard(
+            columns = persistentListOf(
+               Column(TestPage(0), clock),
+            )
+         )
+      )
+   }
+}
 
 @MultiDevicePreview
 @Composable
@@ -33,30 +58,20 @@ private fun ProbosqisPreview(
    @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
    safeDrawingWindowInsets: WindowInsets
 ) {
-   val di = remember {
-      object : DI {
-         private val clock = MockClock()
-
-         override val pageComposableSwitcher = PageComposableSwitcher(
-            allPageComposables = persistentListOf(
-               pageComposable<TestPage> { page, columnState -> TestPage(page, columnState) },
-            )
-         )
-
-         override val columnBoardRepository = object : ColumnBoardRepository {
-            override fun saveColumnBoard(columnBoard: ColumnBoard)
-                  = throw NotImplementedError()
-
-            override fun loadColumnBoard() = WritableCache(
-               ColumnBoard(
-                  columns = persistentListOf(
-                     Column(TestPage(0), clock),
-                  )
-               )
-            )
-         }
-      }
-   }
-
+   val di = remember { PreviewDI }
    Probosqis(di, safeDrawingWindowInsets)
+}
+
+@MultiFontScalePreview
+@Composable
+private fun ProbosqisFontScalePreview() {
+   val di = remember { PreviewDI }
+   Probosqis(di)
+}
+
+@MultiLanguagePreview
+@Composable
+private fun ProbosqisLanguagePreview() {
+   val di = remember { PreviewDI }
+   Probosqis(di)
 }

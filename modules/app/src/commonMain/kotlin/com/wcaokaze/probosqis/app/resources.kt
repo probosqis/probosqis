@@ -14,23 +14,14 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis
+package com.wcaokaze.probosqis.app
 
-import androidx.compose.runtime.remember
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
-import com.wcaokaze.probosqis.app.App
-import com.wcaokaze.probosqis.app.Probosqis
+import androidx.compose.runtime.Composable
 import com.wcaokaze.probosqis.resources.Strings
 
-fun main() {
-   application {
-      Window(
-         title = Strings.App.topAppBarText,
-         onCloseRequest = { exitApplication() }
-      ) {
-         val di = remember { DesktopDI() }
-         Probosqis(di)
-      }
-   }
+expect object AppStrings {
+   @get:Composable
+   val topAppBarText: String
 }
+
+val Strings.Companion.App get() = AppStrings
