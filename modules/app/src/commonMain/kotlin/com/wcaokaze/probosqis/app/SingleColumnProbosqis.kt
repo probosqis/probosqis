@@ -55,6 +55,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.page.columnboard.SingleColumnBoard
@@ -116,7 +117,13 @@ private fun AppBar(
             }
       ) {
          TopAppBar(
-            title = { Text("Probosqis") },
+            title = {
+               Text(
+                  "Probosqis",
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis
+               )
+            },
             navigationIcon = {
                IconButton(
                   onClick = {}
