@@ -108,11 +108,9 @@ private fun AppBar(
             )
          },
          navigationIcon = {
-            IconButton(
+            MenuButton(
                onClick = {}
-            ) {
-               Icon(Icons.Default.Menu, contentDescription = "Menu")
-            }
+            )
          },
          colors = TopAppBarDefaults.smallTopAppBarColors(
             containerColor = Color.Transparent
@@ -128,5 +126,17 @@ private fun AppBar(
       )
 
       Spacer(Modifier.height(columnTopAppBarHeight))
+   }
+}
+
+@Composable
+private fun MenuButton(
+   onClick: () -> Unit
+) {
+   IconButton(onClick) {
+      Icon(
+         Icons.Default.Menu,
+         contentDescription = Strings.App.topAppBarNavigationContentDescription
+      )
    }
 }

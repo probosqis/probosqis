@@ -126,11 +126,9 @@ private fun AppBar(
                )
             },
             navigationIcon = {
-               IconButton(
+               MenuButton(
                   onClick = {}
-               ) {
-                  Icon(Icons.Default.Menu, contentDescription = "Menu")
-               }
+               )
             },
             windowInsets = safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
             colors = TopAppBarDefaults.smallTopAppBarColors(
@@ -144,6 +142,18 @@ private fun AppBar(
             safeDrawingWindowInsets = safeDrawingWindowInsets
          )
       }
+   }
+}
+
+@Composable
+private fun MenuButton(
+   onClick: () -> Unit
+) {
+   IconButton(onClick) {
+      Icon(
+         Icons.Default.Menu,
+         contentDescription = Strings.App.topAppBarNavigationContentDescription
+      )
    }
 }
 

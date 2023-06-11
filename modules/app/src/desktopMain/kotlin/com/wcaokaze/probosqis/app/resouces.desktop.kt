@@ -21,4 +21,7 @@ import androidx.compose.runtime.Composable
 actual object AppStrings {
    actual val topAppBar: String
       @Composable get() = "Probosqis"
+
+   actual val topAppBarNavigationContentDescription: String
+      @Composable get() = "Menu"
 }

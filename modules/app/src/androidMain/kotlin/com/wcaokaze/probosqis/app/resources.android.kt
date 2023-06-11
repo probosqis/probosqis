@@ -22,4 +22,7 @@ import androidx.compose.ui.res.stringResource
 actual object AppStrings {
    actual val topAppBar: String
       @Composable get() = stringResource(R.string.app_top_app_bar)
+
+   actual val topAppBarNavigationContentDescription: String
+      @Composable get() = stringResource(R.string.app_top_app_bar_navigation_content_description)
 }

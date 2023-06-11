@@ -16,4 +16,5 @@
 
 <resources>
     <string name="app_top_app_bar">Probosqis</string>
+    <string name="app_top_app_bar_navigation_content_description">Menu</string>
 </resources>

@@ -22,6 +22,9 @@ import com.wcaokaze.probosqis.resources.Strings
 expect object AppStrings {
    @get:Composable
    val topAppBar: String
+
+   @get:Composable
+   val topAppBarNavigationContentDescription: String
 }
 
 val Strings.Companion.App get() = AppStrings
