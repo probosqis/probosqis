@@ -19,6 +19,6 @@ package com.wcaokaze.probosqis.app
 import androidx.compose.runtime.Composable
 
 actual object AppStrings {
-   actual val topAppBarText: String
+   actual val topAppBar: String
       @Composable get() = "Probosqis"
 }

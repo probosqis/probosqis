@@ -102,7 +102,7 @@ private fun AppBar(
       TopAppBar(
          title = {
             Text(
-               text = Strings.App.topAppBarText,
+               text = Strings.App.topAppBar,
                maxLines = 1,
                overflow = TextOverflow.Ellipsis
             )

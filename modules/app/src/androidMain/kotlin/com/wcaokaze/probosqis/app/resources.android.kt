@@ -20,6 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 
 actual object AppStrings {
-   actual val topAppBarText: String
-      @Composable get() = stringResource(R.string.app_top_app_bar_text)
+   actual val topAppBar: String
+      @Composable get() = stringResource(R.string.app_top_app_bar)
 }

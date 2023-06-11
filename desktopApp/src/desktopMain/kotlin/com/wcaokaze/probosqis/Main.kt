@@ -26,7 +26,7 @@ import com.wcaokaze.probosqis.resources.Strings
 fun main() {
    application {
       Window(
-         title = Strings.App.topAppBarText,
+         title = Strings.App.topAppBar,
          onCloseRequest = { exitApplication() }
       ) {
          val di = remember { DesktopDI() }
