@@ -17,9 +17,23 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.ReadOnlyComposable
+import com.wcaokaze.probosqis.resources.LocalLanguage
+import com.wcaokaze.probosqis.resources.Strings
 
-actual object AppStrings {
-   actual val topAppBarText: String
-      @Composable get() = stringResource(R.string.app_top_app_bar_text)
+interface AppStrings {
+   val topAppBarText: String
 }
+
+val Strings.Companion.App: AppStrings
+   @Composable
+   @ReadOnlyComposable
+   get() = when (LocalLanguage.current) {
+      Strings.Language.ENGLISH -> object : AppStrings {
+         override val topAppBarText = "Probosqis"
+      }
+
+      Strings.Language.JAPANESE -> object : AppStrings {
+         override val topAppBarText = "Probosqis"
+      }
+   }
