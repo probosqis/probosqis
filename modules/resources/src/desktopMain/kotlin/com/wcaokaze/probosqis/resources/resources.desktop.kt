@@ -18,16 +18,17 @@ package com.wcaokaze.probosqis.resources
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-
-class Strings {
-   enum class Language {
-      ENGLISH,
-      JAPANESE,
-   }
-
-   companion object
-}
+import java.util.Locale
 
 @Composable
 @ReadOnlyComposable
-internal expect fun language(): Strings.Language
+internal actual fun language(): Strings.Language {
+   val locale = Locale.getDefault(Locale.Category.DISPLAY)
+   val languageRange = Locale.LanguageRange.parse(locale.toLanguageTag())
+   val langTag = Locale.lookupTag(languageRange, langTagMap.keys)
+   return langTagMap[langTag] ?: Strings.Language.ENGLISH
+}
+
+private val langTagMap = buildMap {
+   put("ja", Strings.Language.JAPANESE)
+}
