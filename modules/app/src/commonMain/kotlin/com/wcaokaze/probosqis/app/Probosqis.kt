@@ -42,7 +42,7 @@ fun Probosqis(
          if (maxWidth < 512.dp) {
             SingleColumnProbosqis(di, safeDrawingWindowInsets)
          } else {
-            MultiColumnProbosqis(di)
+            MultiColumnProbosqis(di, safeDrawingWindowInsets)
          }
       }
    }

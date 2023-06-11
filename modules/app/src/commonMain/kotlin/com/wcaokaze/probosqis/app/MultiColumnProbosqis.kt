@@ -16,8 +16,117 @@
 
 package com.wcaokaze.probosqis.app
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.page.columnboard.MultiColumnBoard
+import com.wcaokaze.probosqis.resources.Strings
 
 @Composable
-internal fun MultiColumnProbosqis(di: DI) {
+internal fun MultiColumnProbosqis(
+   di: DI,
+   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
+   BoxWithConstraints(
+      Modifier
+         .background(MaterialTheme.colorScheme.background)
+   ) {
+      val density = LocalDensity.current
+      var appBarHeight by remember(density, safeDrawingWindowInsets) {
+         val initialHeight = with (density) {
+            safeDrawingWindowInsets.getTop(density).toDp() + 64.dp
+         }
+         mutableStateOf(initialHeight)
+      }
+      var columnTopAppBarHeight by remember { mutableStateOf(64.dp) }
+
+      AppBar(
+         safeDrawingWindowInsets,
+         columnTopAppBarHeight,
+         onHeightChanged = { appBarHeight = it }
+      )
+
+      MultiColumnBoard(
+         columnCount = (maxWidth / 330.dp).toInt(),
+         safeDrawingWindowInsets
+            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+         onTopAppBarHeightChanged = { columnTopAppBarHeight = it },
+         modifier = Modifier
+            .padding(top = appBarHeight)
+      )
+   }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppBar(
+   safeDrawingWindowInsets: WindowInsets,
+   columnTopAppBarHeight: Dp,
+   onHeightChanged: (Dp) -> Unit
+) {
+   val density by rememberUpdatedState(LocalDensity.current)
+
+   Column(
+      Modifier
+         .background(MaterialTheme.colorScheme.primaryContainer)
+   ) {
+      TopAppBar(
+         title = {
+            Text(
+               text = Strings.App.topAppBarText,
+               maxLines = 1,
+               overflow = TextOverflow.Ellipsis
+            )
+         },
+         navigationIcon = {
+            IconButton(
+               onClick = {}
+            ) {
+               Icon(Icons.Default.Menu, contentDescription = "Menu")
+            }
+         },
+         colors = TopAppBarDefaults.smallTopAppBarColors(
+            containerColor = Color.Transparent
+         ),
+         windowInsets = safeDrawingWindowInsets
+            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
+         modifier = Modifier
+            .onSizeChanged {
+               val heightPx = it.height
+               val heightDp = with (density) { heightPx.toDp() }
+               onHeightChanged(heightDp)
+            }
+      )
+
+      Spacer(Modifier.height(columnTopAppBarHeight))
+   }
 }
