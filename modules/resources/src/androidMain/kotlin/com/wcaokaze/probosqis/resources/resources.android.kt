@@ -16,6 +16,18 @@
 
 package com.wcaokaze.probosqis.resources
 
-class Strings {
-   companion object
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.res.stringResource
+
+
+@Composable
+@ReadOnlyComposable
+internal actual fun language(): Strings.Language {
+   val langTag = stringResource(R.string.lang_tag)
+   return langTagMap[langTag] ?: Strings.Language.ENGLISH
+}
+
+private val langTagMap = buildMap {
+   put("ja", Strings.Language.JAPANESE)
 }

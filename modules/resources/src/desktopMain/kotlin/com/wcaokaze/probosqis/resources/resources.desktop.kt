@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.resources
 
 import androidx.compose.runtime.Composable
-import com.wcaokaze.probosqis.resources.Strings
+import androidx.compose.runtime.ReadOnlyComposable
+import java.util.Locale
 
-expect object AppStrings {
-   @get:Composable
-   val topAppBar: String
-
-   @get:Composable
-   val topAppBarNavigationContentDescription: String
+@Composable
+@ReadOnlyComposable
+internal actual fun language(): Strings.Language {
+   val locale = Locale.getDefault(Locale.Category.DISPLAY)
+   val languageRange = Locale.LanguageRange.parse(locale.toLanguageTag())
+   val langTag = Locale.lookupTag(languageRange, langTagMap.keys)
+   return langTagMap[langTag] ?: Strings.Language.ENGLISH
 }
 
-val Strings.Companion.App get() = AppStrings
+private val langTagMap = buildMap {
+   put("ja", Strings.Language.JAPANESE)
+}

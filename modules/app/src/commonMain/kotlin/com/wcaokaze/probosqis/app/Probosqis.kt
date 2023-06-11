@@ -28,6 +28,7 @@ import com.wcaokaze.probosqis.ext.kotlin.datetime.BehindClock
 import com.wcaokaze.probosqis.page.Column
 import com.wcaokaze.probosqis.page.ColumnBoard
 import com.wcaokaze.probosqis.page.ColumnBoardRepository
+import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -37,12 +38,14 @@ fun Probosqis(
    di: DI,
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
-   MaterialTheme(colorScheme()) {
-      BoxWithConstraints {
-         if (maxWidth < 512.dp) {
-            SingleColumnProbosqis(di, safeDrawingWindowInsets)
-         } else {
-            MultiColumnProbosqis(di, safeDrawingWindowInsets)
+   ProbosqisTheme {
+      MaterialTheme(colorScheme()) {
+         BoxWithConstraints {
+            if (maxWidth < 512.dp) {
+               SingleColumnProbosqis(di, safeDrawingWindowInsets)
+            } else {
+               MultiColumnProbosqis(di, safeDrawingWindowInsets)
+            }
          }
       }
    }

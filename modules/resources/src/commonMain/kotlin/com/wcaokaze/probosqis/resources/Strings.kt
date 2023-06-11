@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.resources
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 
-actual object AppStrings {
-   actual val topAppBar: String
-      @Composable get() = "Probosqis"
+class Strings {
+   enum class Language {
+      ENGLISH,
+      JAPANESE,
+   }
 
-   actual val topAppBarNavigationContentDescription: String
-      @Composable get() = "Menu"
+   companion object
 }
+
+@Composable
+@ReadOnlyComposable
+internal expect fun language(): Strings.Language

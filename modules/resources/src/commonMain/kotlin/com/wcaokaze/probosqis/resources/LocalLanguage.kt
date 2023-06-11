@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.resources
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.staticCompositionLocalOf
 
-actual object AppStrings {
-   actual val topAppBar: String
-      @Composable get() = stringResource(R.string.app_top_app_bar)
-
-   actual val topAppBarNavigationContentDescription: String
-      @Composable get() = stringResource(R.string.app_top_app_bar_navigation_content_description)
-}
+val LocalLanguage = staticCompositionLocalOf { Strings.Language.ENGLISH }
