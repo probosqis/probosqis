@@ -27,22 +27,25 @@ import com.wcaokaze.probosqis.page.compose.ColumnBoardState
 import com.wcaokaze.probosqis.page.core.Column
 import com.wcaokaze.probosqis.page.core.ColumnBoard
 import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
+import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun Probosqis(di: DI) {
-   val columnBoardState = remember {
-      val columnBoardCache = loadColumnBoardOrDefault(di.columnBoardRepository)
-      ColumnBoardState(columnBoardCache)
-   }
+   ProbosqisTheme {
+      val columnBoardState = remember {
+         val columnBoardCache = loadColumnBoardOrDefault(di.columnBoardRepository)
+         ColumnBoardState(columnBoardCache)
+      }
 
-   ColumnBoard(
-      columnBoardState,
-      di.pageComposableSwitcher,
-      modifier = Modifier.fillMaxSize()
-   )
+      ColumnBoard(
+         columnBoardState,
+         di.pageComposableSwitcher,
+         modifier = Modifier.fillMaxSize()
+      )
+   }
 }
 
 internal fun loadColumnBoardOrDefault(
