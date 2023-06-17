@@ -95,7 +95,7 @@ private fun rememberMultiColumnBoardMeasurePolicy(
 
       val placeables = measurables.map { it.measure(columnConstraints) }
 
-      layout(constraints.minWidth, constraints.minHeight) {
+      layout(columnBoardWidth, columnBoardHeight) {
          var x = 0
 
          for (placeable in placeables) {
