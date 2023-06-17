@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.page.ColumnBoardState
 import com.wcaokaze.probosqis.page.columnboard.MultiColumnBoard
 import com.wcaokaze.probosqis.resources.Strings
 
@@ -75,9 +76,21 @@ internal fun MultiColumnProbosqis(
          onHeightChanged = { appBarHeight = it }
       )
 
+      val columnBoardState = remember(di) {
+         ColumnBoardState(
+            columnBoardCache = loadColumnBoardOrDefault(di.columnBoardRepository)
+         )
+      }
+
+      val pageComposableSwitcher = remember(di) {
+         di.pageComposableSwitcher
+      }
+
       MultiColumnBoard(
+         columnBoardState,
+         pageComposableSwitcher,
          columnCount = (maxWidth / 330.dp).toInt(),
-         safeDrawingWindowInsets
+         windowInsets = safeDrawingWindowInsets
             .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
          onTopAppBarHeightChanged = { columnTopAppBarHeight = it },
          modifier = Modifier

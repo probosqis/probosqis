@@ -16,19 +16,10 @@
 
 package com.wcaokaze.probosqis.page.columnboard
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,47 +33,85 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.wcaokaze.probosqis.page.ColumnBoardState
+import com.wcaokaze.probosqis.page.ColumnContent
+import com.wcaokaze.probosqis.page.ColumnState
+import com.wcaokaze.probosqis.page.PageComposableSwitcher
 
 @Composable
 fun MultiColumnBoard(
+   state: ColumnBoardState,
+   pageComposableSwitcher: PageComposableSwitcher,
    columnCount: Int,
    windowInsets: WindowInsets,
-   onTopAppBarHeightChanged: (Dp) -> Unit,
-   modifier: Modifier = Modifier
+   modifier: Modifier = Modifier,
+   onTopAppBarHeightChanged: (Dp) -> Unit = {},
 ) {
-   Row(
-      modifier
-         .windowInsetsPadding(
-            windowInsets.only(WindowInsetsSides.Horizontal)
-         )
-         .padding(horizontal = 8.dp)
-   ) {
-      repeat (columnCount) { i ->
-         MultiColumnColumn(
-            isActive = columnCount == 1 || i == 1,
-            windowInsets.only(WindowInsetsSides.Bottom),
-            onTopAppBarHeightChanged,
-            modifier = Modifier
-               .weight(1.0f)
-               .padding(horizontal = 8.dp)
-         )
+   Layout(
+      content = {
+         repeat (columnCount) { index ->
+            val columnState = remember {
+               val column = state.columnBoard[index]
+               ColumnState(column, state)
+            }
+
+            MultiColumnColumn(
+               columnState,
+               isActive = columnCount == 1 || index == 1,
+               windowInsets.only(WindowInsetsSides.Bottom),
+               pageComposableSwitcher,
+               onTopAppBarHeightChanged,
+            )
+         }
+      },
+      measurePolicy = rememberMultiColumnBoardMeasurePolicy(columnCount),
+      modifier = modifier
+   )
+}
+
+@Composable
+private fun rememberMultiColumnBoardMeasurePolicy(
+   columnCount: Int
+) = remember(columnCount) {
+   MeasurePolicy { measurables, constraints ->
+      val columnBoardWidth = constraints.maxWidth
+      val columnBoardHeight = constraints.maxHeight
+
+      val columnConstraints = Constraints.fixed(
+         columnBoardWidth / columnCount,
+         columnBoardHeight
+      )
+
+      val placeables = measurables.map { it.measure(columnConstraints) }
+
+      layout(constraints.minWidth, constraints.minHeight) {
+         var x = 0
+
+         for (placeable in placeables) {
+            placeable.placeRelative(x, 0)
+            x += placeable.width
+         }
       }
    }
 }
 
 @Composable
 private fun MultiColumnColumn(
+   state: ColumnState,
    isActive: Boolean,
    windowInsets: WindowInsets,
+   pageComposableSwitcher: PageComposableSwitcher,
    onTopAppBarHeightChanged: (Dp) -> Unit,
    modifier: Modifier = Modifier
 ) {
@@ -125,36 +154,10 @@ private fun MultiColumnColumn(
                }
          )
 
-         DummyPage(
-            windowInsets,
-            modifier = Modifier.fillMaxSize()
+         ColumnContent(
+            state,
+            pageComposableSwitcher
          )
-      }
-   }
-}
-
-@Composable
-private fun DummyPage(
-   windowInsets: WindowInsets,
-   modifier: Modifier = Modifier
-) {
-   LazyColumn(
-      contentPadding = windowInsets.asPaddingValues(),
-      modifier = modifier
-   ) {
-      items(42) { i ->
-         Box(
-            Modifier
-               .fillMaxWidth()
-               .height(48.dp)
-               .padding(horizontal = 16.dp)
-         ) {
-            Text(
-               "$i",
-               fontSize = 20.sp,
-               modifier = Modifier.align(Alignment.CenterStart)
-            )
-         }
       }
    }
 }
