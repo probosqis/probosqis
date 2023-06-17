@@ -50,6 +50,9 @@ private object PreviewDI : DI {
          ColumnBoard(
             columns = persistentListOf(
                Column(TestPage(0), clock),
+               Column(TestPage(1), clock),
+               Column(TestPage(2), clock),
+               Column(TestPage(3), clock),
             )
          )
       )
