@@ -21,12 +21,18 @@ import kotlin.reflect.KClass
 
 data class PageComposable<P : Page>(
    val pageClass: KClass<P>,
-   val contentComposable: @Composable (P, ColumnState) -> Unit
+   val contentComposable: @Composable (P, ColumnState) -> Unit,
+   val headerComposable: @Composable (P, ColumnState) -> Unit,
+   val footerComposable: (@Composable (P, ColumnState) -> Unit)?
 )
 
 inline fun <reified P : Page> pageComposable(
-   noinline content: @Composable (P, ColumnState) -> Unit
+   noinline content: @Composable (P, ColumnState) -> Unit,
+   noinline header: @Composable (P, ColumnState) -> Unit,
+   noinline footer: (@Composable (P, ColumnState) -> Unit)?
 ) = PageComposable(
    P::class,
-   content
+   content,
+   header,
+   footer
 )

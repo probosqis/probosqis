@@ -44,7 +44,11 @@ class ColumnComposeTest {
 
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<SpyPage> { page, _ -> SpyPage(page) },
+            pageComposable<SpyPage>(
+               content = { page, _ -> SpyPage(page) },
+               header = { _, _ -> },
+               footer = null
+            ),
          )
       )
 
@@ -73,7 +77,11 @@ class ColumnComposeTest {
 
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<SpyPage> { page, _ -> SpyPage(page) },
+            pageComposable<SpyPage>(
+               content = { page, _ -> SpyPage(page) },
+               header = { _, _ -> },
+               footer = null
+            ),
          )
       )
 

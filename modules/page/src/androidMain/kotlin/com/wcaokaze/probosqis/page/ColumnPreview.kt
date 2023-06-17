@@ -28,7 +28,11 @@ private fun ColumnPreview() {
    val pageComposableSwitcher = remember {
       PageComposableSwitcher(
          listOf(
-            pageComposable<PreviewPage> { page, _ -> PreviewPage(page) },
+            pageComposable<PreviewPage>(
+               content = { page, _ -> PreviewPage(page) },
+               header = { _, _ -> },
+               footer = null
+            ),
          )
       )
    }

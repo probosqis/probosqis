@@ -57,23 +57,27 @@ class ColumnBoardComposeTest {
 
       val pageComposableSwitcher = PageComposableSwitcher(
          allPageComposables = listOf(
-            pageComposable<TestPage> { page, columnState ->
-               val coroutineScope = rememberCoroutineScope()
+            pageComposable<TestPage>(
+               content = { page, columnState ->
+                  val coroutineScope = rememberCoroutineScope()
 
-               Button(
-                  onClick = {
-                     coroutineScope.launch {
-                        val newColumn = Column(
-                           TestPage(page.i + 1),
-                           MockClock(minute = 2)
-                        )
-                        columnState.addColumn(newColumn)
+                  Button(
+                     onClick = {
+                        coroutineScope.launch {
+                           val newColumn = Column(
+                              TestPage(page.i + 1),
+                              MockClock(minute = 2)
+                           )
+                           columnState.addColumn(newColumn)
+                        }
                      }
+                  ) {
+                     Text("${page.i}")
                   }
-               ) {
-                  Text("${page.i}")
-               }
-            },
+               },
+               header = { _, _ -> },
+               footer = null
+            ),
          )
       )
 

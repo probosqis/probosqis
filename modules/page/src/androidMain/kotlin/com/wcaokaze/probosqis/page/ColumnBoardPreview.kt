@@ -37,7 +37,11 @@ fun ColumnBoardPreview() {
    val pageComposableSwitcher = remember {
       PageComposableSwitcher(
          allPageComposables = listOf(
-            pageComposable<PreviewPage> { page, _ -> PreviewPage(page) },
+            pageComposable<PreviewPage>(
+               content = { page, _ -> PreviewPage(page) },
+               header = { _, _ -> },
+               footer = null
+            ),
          )
       )
    }

@@ -30,8 +30,16 @@ class PageComposableSwitcherTest {
    fun getMetadata() {
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<PageA> { _, _ -> },
-            pageComposable<PageB> { _, _ -> },
+            pageComposable<PageA>(
+               content = { _, _ -> },
+               header = { _, _ -> },
+               footer = null
+            ),
+            pageComposable<PageB>(
+               content = { _, _ -> },
+               header = { _, _ -> },
+               footer = null
+            ),
          )
       )
 

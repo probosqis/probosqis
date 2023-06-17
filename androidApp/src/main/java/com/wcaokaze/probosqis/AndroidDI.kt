@@ -31,7 +31,11 @@ import java.io.File
 class AndroidDI(context: Context) : DI {
    override val pageComposableSwitcher = PageComposableSwitcher(
       allPageComposables = persistentListOf(
-         pageComposable<TestPage> { page, columnState -> TestPage(page, columnState) },
+         pageComposable<TestPage>(
+            content = { page, columnState -> TestPage(page, columnState) },
+            header = { _, _ -> },
+            footer = null
+         ),
       )
    )
 
