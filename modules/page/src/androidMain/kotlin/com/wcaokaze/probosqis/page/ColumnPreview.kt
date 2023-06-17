@@ -49,5 +49,5 @@ private fun ColumnPreview() {
       ColumnState(column, columnBoardState)
    }
 
-   Column(columnState, pageComposableSwitcher)
+   ColumnContent(columnState, pageComposableSwitcher)
 }

@@ -49,7 +49,7 @@ class ColumnComposeTest {
       )
 
       rule.setContent {
-         Column(columnState, pageComposableSwitcher)
+         ColumnContent(columnState, pageComposableSwitcher)
       }
 
       rule.runOnIdle {
@@ -78,7 +78,7 @@ class ColumnComposeTest {
       )
 
       rule.setContent {
-         Column(columnState, pageComposableSwitcher)
+         ColumnContent(columnState, pageComposableSwitcher)
       }
 
       rule.runOnIdle {

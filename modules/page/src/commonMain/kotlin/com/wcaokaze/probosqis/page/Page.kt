@@ -23,16 +23,16 @@ import kotlinx.serialization.Serializable
 abstract class Page
 
 @Composable
-internal fun <P : Page> Page(
+internal fun <P : Page> PageContent(
    page: P,
    pageComposableSwitcher: PageComposableSwitcher,
    columnState: ColumnState
 ) {
-   val pageComposable = pageComposableSwitcher[page]
+   val pageContentComposable = pageComposableSwitcher[page]
 
-   if (pageComposable == null) {
+   if (pageContentComposable == null) {
       TODO()
    } else {
-      pageComposable.composable(page, columnState)
+      pageContentComposable.contentComposable(page, columnState)
    }
 }

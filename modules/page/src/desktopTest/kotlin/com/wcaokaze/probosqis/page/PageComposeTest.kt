@@ -57,7 +57,7 @@ class PageComposeTest {
       )
 
       rule.setContent {
-         Page(pageA, pageComposableSwitcher, columnState = mockk())
+         PageContent(pageA, pageComposableSwitcher, columnState = mockk())
       }
 
       rule.runOnIdle {
@@ -83,7 +83,7 @@ class PageComposeTest {
       )
 
       rule.setContent {
-         Page(page, pageComposableSwitcher, columnState = mockk())
+         PageContent(page, pageComposableSwitcher, columnState = mockk())
       }
 
       rule.runOnIdle {

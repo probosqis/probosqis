@@ -112,7 +112,7 @@ fun ColumnBoard(
             val columnState = remember {
                ColumnState(column, columnBoardState = state)
             }
-            Column(columnState, pageComposableSwitcher)
+            ColumnContent(columnState, pageComposableSwitcher)
          }
       }
 

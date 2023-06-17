@@ -43,5 +43,5 @@ private fun PagePreview() {
    }
    val columnState = remember { ColumnState(column, columnBoardState) }
 
-   Page(page, pageComposableSwitcher, columnState)
+   PageContent(page, pageComposableSwitcher, columnState)
 }

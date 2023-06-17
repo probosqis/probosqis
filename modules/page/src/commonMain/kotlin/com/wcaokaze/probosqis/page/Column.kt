@@ -62,11 +62,11 @@ class ColumnState internal constructor(
 }
 
 @Composable
-internal fun Column(
+internal fun ColumnContent(
    state: ColumnState,
    pageComposableSwitcher: PageComposableSwitcher
 ) {
-   Page(
+   PageContent(
       page = state.column.head,
       pageComposableSwitcher,
       columnState = state
