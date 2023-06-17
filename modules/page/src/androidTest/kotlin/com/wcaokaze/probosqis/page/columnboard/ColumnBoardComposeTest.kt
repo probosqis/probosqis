@@ -43,35 +43,58 @@ class ColumnBoardComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
-   @Test
-   fun multiColumnBoard_layout() {
-      class TestPage(val i: Int) : Page()
+   private class TestPage(val i: Int) : Page()
 
-      val testPageComposable = pageComposable<TestPage>(
-         content = { page, _ ->
-            Text("${page.i}")
-         },
-         header = { _, _ -> },
-         footer = null
+   private val testPageComposable = pageComposable<TestPage>(
+      content = { page, _ ->
+         Text("${page.i}")
+      },
+      header = { _, _ -> },
+      footer = null
+   )
+
+   private val pageComposableSwitcher = PageComposableSwitcher(
+      allPageComposables = listOf(
+         testPageComposable,
       )
+   )
 
+   private fun createColumnBoardState(vararg columns: Column): ColumnBoardState {
+      val columnBoard = ColumnBoard(columns.toList())
+      val columnBoardCache = WritableCache(columnBoard)
+      return ColumnBoardState(columnBoardCache)
+   }
+
+   @Test
+   fun singleColumnBoard_layout() {
       rule.setContent {
          val columnBoardState = remember {
-            val columnBoard = ColumnBoard(
-               listOf(
-                  Column(TestPage(0), MockClock(minute = 0)),
-                  Column(TestPage(1), MockClock(minute = 1)),
-               )
+            createColumnBoardState(
+               Column(TestPage(0), MockClock(minute = 0)),
+               Column(TestPage(1), MockClock(minute = 1)),
             )
-            val columnBoardCache = WritableCache(columnBoard)
-            ColumnBoardState(columnBoardCache)
          }
 
-         val pageComposableSwitcher = remember {
-            PageComposableSwitcher(
-               allPageComposables = listOf(
-                  testPageComposable,
-               )
+         SingleColumnBoard(
+            columnBoardState,
+            pageComposableSwitcher,
+            WindowInsets(0, 0, 0, 0),
+            modifier = Modifier
+               .width(100.dp)
+         )
+      }
+
+      rule.onNodeWithText("0")
+         .assertLeftPositionInRootIsEqualTo(0.dp)
+   }
+
+   @Test
+   fun multiColumnBoard_layout() {
+      rule.setContent {
+         val columnBoardState = remember {
+            createColumnBoardState(
+               Column(TestPage(0), MockClock(minute = 0)),
+               Column(TestPage(1), MockClock(minute = 1)),
             )
          }
 

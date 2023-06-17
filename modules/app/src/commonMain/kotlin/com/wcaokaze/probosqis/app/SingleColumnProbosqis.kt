@@ -58,6 +58,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.page.ColumnBoardState
 import com.wcaokaze.probosqis.page.columnboard.SingleColumnBoard
 import com.wcaokaze.probosqis.page.columnboard.SingleColumnBoardAppBar
 import com.wcaokaze.probosqis.resources.Strings
@@ -81,8 +82,20 @@ internal fun SingleColumnProbosqis(
       modifier = Modifier
          .nestedScroll(nestedScrollConnection)
    ) { paddingValues ->
+      val columnBoardState = remember(di) {
+         ColumnBoardState(
+            columnBoardCache = loadColumnBoardOrDefault(di.columnBoardRepository)
+         )
+      }
+
+      val pageComposableSwitcher = remember(di) {
+         di.pageComposableSwitcher
+      }
+
       SingleColumnBoard(
-         safeDrawingWindowInsets = safeDrawingWindowInsets,
+         columnBoardState,
+         pageComposableSwitcher,
+         windowInsets = safeDrawingWindowInsets,
          modifier = Modifier
             .padding(paddingValues)
             .fillMaxSize()
