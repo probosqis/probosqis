@@ -19,21 +19,21 @@ package com.wcaokaze.probosqis.page
 import java.io.File
 import java.io.IOException
 
-private val testDir = File(".columnRepositoryTest")
+private val testDir = File(".pageStackRepositoryTest")
 
-actual fun createColumnBoardRepository(
-   allPageClasses: List<ColumnBoardRepository.PageSerializer<*>>
-): ColumnBoardRepository {
+actual fun createPageStackBoardRepository(
+   allPageClasses: List<PageStackBoardRepository.PageSerializer<*>>
+): PageStackBoardRepository {
    if (testDir.exists()) {
       if (!testDir.deleteRecursively()) { throw IOException() }
    }
    if (!testDir.mkdir()) { throw IOException() }
 
-   return JvmColumnBoardRepository(allPageClasses, testDir)
+   return JvmPageStackBoardRepository(allPageClasses, testDir)
 }
 
-actual fun deleteColumnBoardRepository(
-   columnBoardRepository: ColumnBoardRepository
+actual fun deletePageStackBoardRepository(
+   pageStackBoardRepository: PageStackBoardRepository
 ) {
    testDir.deleteRecursively()
 }

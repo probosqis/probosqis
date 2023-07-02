@@ -22,21 +22,21 @@ import com.wcaokaze.probosqis.cache.core.loadCache
 import com.wcaokaze.probosqis.cache.core.saveCache
 import java.io.File
 
-class JvmColumnBoardRepository(
-   allPageSerializers: List<ColumnBoardRepository.PageSerializer<*>>,
+class JvmPageStackBoardRepository(
+   allPageSerializers: List<PageStackBoardRepository.PageSerializer<*>>,
    directory: File
-) : AbstractColumnBoardRepository(allPageSerializers) {
+) : AbstractPageStackBoardRepository(allPageSerializers) {
    private val file = File(directory, "U61Jfjj954X8OrvZ")
 
    @TemporaryCacheApi
-   override fun saveColumnBoard(
-      columnBoard: ColumnBoard
-   ): WritableCache<ColumnBoard> {
-      return saveCache(columnBoard, file, json)
+   override fun savePageStackBoard(
+      pageStackBoard: PageStackBoard
+   ): WritableCache<PageStackBoard> {
+      return saveCache(pageStackBoard, file, json)
    }
 
    @TemporaryCacheApi
-   override fun loadColumnBoard(): WritableCache<ColumnBoard> {
+   override fun loadPageStackBoard(): WritableCache<PageStackBoard> {
       return loadCache(file, json)
    }
 }

@@ -28,7 +28,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 @RunWith(JUnit4::class)
-class ColumnComposeTest {
+class PageStackComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
@@ -37,10 +37,10 @@ class ColumnComposeTest {
       val page1 = SpyPage()
       val page2 = SpyPage()
 
-      var column = Column(page1, MockClock())
-      column = column.added(page2)
+      var pageStack = PageStack(page1, MockClock())
+      pageStack = pageStack.added(page2)
 
-      val columnState = ColumnState(column, columnBoardState = mockk())
+      val pageStackState = PageStackState(pageStack, pageStackBoardState = mockk())
 
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
@@ -53,7 +53,7 @@ class ColumnComposeTest {
       )
 
       rule.setContent {
-         ColumnContent(columnState, pageComposableSwitcher)
+         PageStackContent(pageStackState, pageComposableSwitcher)
       }
 
       rule.runOnIdle {
@@ -68,11 +68,11 @@ class ColumnComposeTest {
       val page2 = SpyPage()
       val page3 = SpyPage()
 
-      var column by mutableStateOf(Column(page1, MockClock()))
-      column = column.added(page2)
+      var pageStack by mutableStateOf(PageStack(page1, MockClock()))
+      pageStack = pageStack.added(page2)
 
-      val columnState by derivedStateOf {
-         ColumnState(column, columnBoardState = mockk())
+      val pageStackState by derivedStateOf {
+         PageStackState(pageStack, pageStackBoardState = mockk())
       }
 
       val pageComposableSwitcher = PageComposableSwitcher(
@@ -86,7 +86,7 @@ class ColumnComposeTest {
       )
 
       rule.setContent {
-         ColumnContent(columnState, pageComposableSwitcher)
+         PageStackContent(pageStackState, pageComposableSwitcher)
       }
 
       rule.runOnIdle {
@@ -95,7 +95,7 @@ class ColumnComposeTest {
          assertEquals(0, page3.recompositionCount)
       }
 
-      column = assertNotNull(column.tailOrNull())
+      pageStack = assertNotNull(pageStack.tailOrNull())
 
       rule.runOnIdle {
          assertEquals(1, page1.recompositionCount)
@@ -103,7 +103,7 @@ class ColumnComposeTest {
          assertEquals(0, page3.recompositionCount)
       }
 
-      column = column.added(page3)
+      pageStack = pageStack.added(page3)
 
       rule.runOnIdle {
          assertEquals(1, page1.recompositionCount)

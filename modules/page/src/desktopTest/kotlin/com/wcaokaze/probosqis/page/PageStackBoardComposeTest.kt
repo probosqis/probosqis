@@ -35,40 +35,40 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
 @RunWith(JUnit4::class)
-class ColumnBoardComposeTest {
+class PageStackBoardComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
    @Test
-   fun addColumn_viaColumnState() {
+   fun addPageStack_viaPageStackState() {
       class TestPage(val i: Int) : Page()
 
-      val columnBoardCache = run {
-         val columnBoard = ColumnBoard(
+      val pageStackBoardCache = run {
+         val pageStackBoard = PageStackBoard(
             listOf(
-               Column(TestPage( 0), MockClock(minute = 0)),
-               Column(TestPage(10), MockClock(minute = 1)),
+               PageStack(TestPage( 0), MockClock(minute = 0)),
+               PageStack(TestPage(10), MockClock(minute = 1)),
             )
          )
-         WritableCache(columnBoard)
+         WritableCache(pageStackBoard)
       }
 
-      val columnBoardState = ColumnBoardState(columnBoardCache)
+      val pageStackBoardState = PageStackBoardState(pageStackBoardCache)
 
       val pageComposableSwitcher = PageComposableSwitcher(
          allPageComposables = listOf(
             pageComposable<TestPage>(
-               content = { page, columnState ->
+               content = { page, pageStackState ->
                   val coroutineScope = rememberCoroutineScope()
 
                   Button(
                      onClick = {
                         coroutineScope.launch {
-                           val newColumn = Column(
+                           val newPageStack = PageStack(
                               TestPage(page.i + 1),
                               MockClock(minute = 2)
                            )
-                           columnState.addColumn(newColumn)
+                           pageStackState.addColumn(newPageStack)
                         }
                      }
                   ) {
@@ -85,36 +85,36 @@ class ColumnBoardComposeTest {
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
 
-         ColumnBoard(
-            columnBoardState,
+         PageStackBoard(
+            pageStackBoardState,
             pageComposableSwitcher
          )
       }
 
-      fun assertPageNumbers(expected: List<Int>, actual: ColumnBoard) {
-         val columns = List(actual.columnCount) { actual[it] }
-         val pages = columns.map { assertIs<TestPage>(it.head) }
+      fun assertPageNumbers(expected: List<Int>, actual: PageStackBoard) {
+         val pageStacks = List(actual.pageStackCount) { actual[it] }
+         val pages = pageStacks.map { assertIs<TestPage>(it.head) }
          assertContentEquals(expected, pages.map { it.i })
       }
 
       rule.runOnIdle {
-         assertEquals(2, columnBoardCache.value.columnCount)
+         assertEquals(2, pageStackBoardCache.value.pageStackCount)
       }
       coroutineScope.launch {
-         columnBoardState.animateScrollTo(1)
+         pageStackBoardState.animateScrollTo(1)
          rule.onNodeWithText("10").performClick()
       }
       rule.runOnIdle {
-         assertEquals(3, columnBoardCache.value.columnCount)
-         assertPageNumbers(listOf(0, 10, 11), columnBoardCache.value)
+         assertEquals(3, pageStackBoardCache.value.pageStackCount)
+         assertPageNumbers(listOf(0, 10, 11), pageStackBoardCache.value)
       }
       coroutineScope.launch {
-         columnBoardState.animateScrollTo(0)
+         pageStackBoardState.animateScrollTo(0)
          rule.onNodeWithText("0").performClick()
       }
       rule.runOnIdle {
-         assertEquals(4, columnBoardCache.value.columnCount)
-         assertPageNumbers(listOf(0, 1, 10, 11),columnBoardCache.value)
+         assertEquals(4, pageStackBoardCache.value.pageStackCount)
+         assertPageNumbers(listOf(0, 1, 10, 11), pageStackBoardCache.value)
       }
    }
 }

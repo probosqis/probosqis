@@ -21,7 +21,7 @@ import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.runtime.Composable
 
 @Composable
-internal actual fun ColumnBoardScrollBar(state: PagerState) {
+internal actual fun PageStackBoardScrollBar(state: PagerState) {
    HorizontalScrollbar(
       rememberScrollbarAdapter(state.lazyListState)
    )

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.columnboard
+package com.wcaokaze.probosqis.page.pagestackboard
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -44,58 +44,58 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.page.ColumnBoardState
-import com.wcaokaze.probosqis.page.ColumnContent
-import com.wcaokaze.probosqis.page.ColumnState
+import com.wcaokaze.probosqis.page.PageStackBoardState
+import com.wcaokaze.probosqis.page.PageStackContent
+import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 
 @Composable
-fun MultiColumnBoard(
-   state: ColumnBoardState,
+fun MultiColumnPageStackBoard(
+   state: PageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
-   columnCount: Int,
+   pageStackCount: Int,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
    onTopAppBarHeightChanged: (Dp) -> Unit = {},
 ) {
    Layout(
       content = {
-         repeat (columnCount) { index ->
-            val columnState = remember {
-               val column = state.columnBoard[index]
-               ColumnState(column, state)
+         repeat (pageStackCount) { index ->
+            val pageStackState = remember {
+               val pageStack = state.pageStackBoard[index]
+               PageStackState(pageStack, state)
             }
 
-            MultiColumnColumn(
-               columnState,
-               isActive = columnCount == 1 || index == 1,
+            PageStack(
+               pageStackState,
+               isActive = pageStackCount == 1 || index == 1,
                windowInsets.only(WindowInsetsSides.Bottom),
                pageComposableSwitcher,
                onTopAppBarHeightChanged,
             )
          }
       },
-      measurePolicy = rememberMultiColumnBoardMeasurePolicy(columnCount),
+      measurePolicy = rememberMultiColumnPageStackBoardMeasurePolicy(pageStackCount),
       modifier = modifier
    )
 }
 
 @Composable
-private fun rememberMultiColumnBoardMeasurePolicy(
-   columnCount: Int
-) = remember(columnCount) {
+private fun rememberMultiColumnPageStackBoardMeasurePolicy(
+   pageStackCount: Int
+) = remember(pageStackCount) {
    MeasurePolicy { measurables, constraints ->
-      val columnBoardWidth = constraints.maxWidth
-      val columnBoardHeight = constraints.maxHeight
+      val pageStackBoardWidth = constraints.maxWidth
+      val pageStackBoardHeight = constraints.maxHeight
 
-      val columnConstraints = Constraints.fixed(
-         columnBoardWidth / columnCount,
-         columnBoardHeight
+      val pageStackConstraints = Constraints.fixed(
+         pageStackBoardWidth / pageStackCount,
+         pageStackBoardHeight
       )
 
-      val placeables = measurables.map { it.measure(columnConstraints) }
+      val placeables = measurables.map { it.measure(pageStackConstraints) }
 
-      layout(columnBoardWidth, columnBoardHeight) {
+      layout(pageStackBoardWidth, pageStackBoardHeight) {
          var x = 0
 
          for (placeable in placeables) {
@@ -107,8 +107,8 @@ private fun rememberMultiColumnBoardMeasurePolicy(
 }
 
 @Composable
-private fun MultiColumnColumn(
-   state: ColumnState,
+private fun PageStack(
+   state: PageStackState,
    isActive: Boolean,
    windowInsets: WindowInsets,
    pageComposableSwitcher: PageComposableSwitcher,
@@ -154,7 +154,7 @@ private fun MultiColumnColumn(
                }
          )
 
-         ColumnContent(
+         PageStackContent(
             state,
             pageComposableSwitcher
          )

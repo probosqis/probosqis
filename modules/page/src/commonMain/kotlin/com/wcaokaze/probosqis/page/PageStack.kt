@@ -22,53 +22,61 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
+/**
+ * 画面遷移した[Page]をStack状に積んだもの。
+ *
+ * 必ず1つ以上の[Page]を持つ（空のPageStackという概念はない）。
+ *
+ * UI上はカラムと呼ばれるが列ではない（列は[PageStackColumn]）ので
+ * 型としての名称はPageStack
+ */
 @Serializable
-class Column private constructor(
+class PageStack private constructor(
    private val pages: List<Page>,
    val createdTime: Instant
 ) {
    constructor(page: Page, clock: Clock = Clock.System)
          : this(listOf(page), clock.now())
 
-   /** このColumnの一番上の[Page] */
+   /** このPageStackの一番上の[Page] */
    val head: Page get() = pages.last()
 
    /**
     * @return
-    * このColumnの一番上の[Page]を取り除いたColumn。
-    * このColumnにPageがひとつしかない場合はnull
+    * このPageStackの一番上の[Page]を取り除いたPageStack。
+    * このPageStackにPageがひとつしかない場合はnull
     */
-   fun tailOrNull(): Column? {
+   fun tailOrNull(): PageStack? {
       val tailPages = pages.dropLast(1)
       return if (tailPages.isEmpty()) {
          null
       } else {
-         Column(tailPages, createdTime)
+         PageStack(tailPages, createdTime)
       }
    }
 
-   fun added(page: Page) = Column(pages + page, createdTime)
+   fun added(page: Page) = PageStack(pages + page, createdTime)
 }
 
 @Stable
-class ColumnState internal constructor(
-   internal val column: Column,
-   private val columnBoardState: ColumnBoardState
+class PageStackState internal constructor(
+   internal val pageStack: PageStack,
+   private val pageStackBoardState: PageStackBoardState
 ) {
-   suspend fun addColumn(column: Column) {
-      val index = columnBoardState.columnBoard.indexOf(this.column)
-      columnBoardState.addColumn(index + 1, column)
+   suspend fun addColumn(pageStack: PageStack) {
+      val index = pageStackBoardState.pageStackBoard.indexOf(this.pageStack)
+      pageStackBoardState.addPageStack(index + 1, pageStack)
    }
 }
 
 @Composable
-internal fun ColumnContent(
-   state: ColumnState,
+internal fun PageStackContent(
+   state: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher
 ) {
    PageContent(
-      page = state.column.head,
+      page = state.pageStack.head,
       pageComposableSwitcher,
-      columnState = state
+      pageStackState = state
    )
 }

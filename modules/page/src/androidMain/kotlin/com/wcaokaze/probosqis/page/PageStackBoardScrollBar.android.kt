@@ -19,5 +19,5 @@ package com.wcaokaze.probosqis.page
 import androidx.compose.runtime.Composable
 
 @Composable
-internal actual fun ColumnBoardScrollBar(state: PagerState) {
+internal actual fun PageStackBoardScrollBar(state: PagerState) {
 }

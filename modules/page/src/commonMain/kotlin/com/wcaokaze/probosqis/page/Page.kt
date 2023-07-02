@@ -26,13 +26,13 @@ abstract class Page
 internal fun <P : Page> PageContent(
    page: P,
    pageComposableSwitcher: PageComposableSwitcher,
-   columnState: ColumnState
+   pageStackState: PageStackState
 ) {
    val pageContentComposable = pageComposableSwitcher[page]
 
    if (pageContentComposable == null) {
       TODO()
    } else {
-      pageContentComposable.contentComposable(page, columnState)
+      pageContentComposable.contentComposable(page, pageStackState)
    }
 }

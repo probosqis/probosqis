@@ -20,7 +20,7 @@ import android.content.Context
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.app.DI
 import com.wcaokaze.probosqis.app.TestPage
-import com.wcaokaze.probosqis.page.JvmColumnBoardRepository
+import com.wcaokaze.probosqis.page.JvmPageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.pageComposable
 import com.wcaokaze.probosqis.page.pageSerializer
@@ -32,17 +32,17 @@ class AndroidDI(context: Context) : DI {
    override val pageComposableSwitcher = PageComposableSwitcher(
       allPageComposables = persistentListOf(
          pageComposable<TestPage>(
-            content = { page, columnState -> TestPage(page, columnState) },
+            content = { page, pageStackState -> TestPage(page, pageStackState) },
             header = { _, _ -> },
             footer = null
          ),
       )
    )
 
-   override val columnBoardRepository = JvmColumnBoardRepository(
+   override val pageStackBoardRepository = JvmPageStackBoardRepository(
       allPageSerializers = listOf(
          pageSerializer<TestPage>(),
       ),
-      File(context.filesDir, "probosqisData/columnBoardCache")
+      File(context.filesDir, "probosqisData/pageStackBoardCache")
    )
 }

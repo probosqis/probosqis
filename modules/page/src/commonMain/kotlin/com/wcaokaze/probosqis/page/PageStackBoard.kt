@@ -30,28 +30,28 @@ import com.wcaokaze.probosqis.cache.core.WritableCache
 import kotlinx.serialization.Serializable
 
 @Serializable
-class ColumnBoard(private val columns: List<Column>) {
-   val columnCount: Int
-      get() = columns.size
+class PageStackBoard(private val pageStacks: List<PageStack>) {
+   val pageStackCount: Int
+      get() = pageStacks.size
 
-   operator fun get(index: Int): Column = columns[index]
+   operator fun get(index: Int): PageStack = pageStacks[index]
 
-   fun indexOf(column: Column): Int
-      = columns.indexOfFirst { it === column }
+   fun indexOf(pageStack: PageStack): Int
+      = pageStacks.indexOfFirst { it === pageStack }
 
-   fun inserted(index: Int, column: Column): ColumnBoard {
-      return ColumnBoard(
+   fun inserted(index: Int, pageStack: PageStack): PageStackBoard {
+      return PageStackBoard(
          buildList {
-            addAll(columns)
-            add(index, column)
+            addAll(pageStacks)
+            add(index, pageStack)
          }
       )
    }
 
-   fun removed(index: Int): ColumnBoard {
-      return ColumnBoard(
+   fun removed(index: Int): PageStackBoard {
+      return PageStackBoard(
          buildList {
-            addAll(columns)
+            addAll(pageStacks)
             removeAt(index)
          }
       )
@@ -59,63 +59,63 @@ class ColumnBoard(private val columns: List<Column>) {
 }
 
 @Stable
-class ColumnBoardState(columnBoardCache: WritableCache<ColumnBoard>) {
-   internal var columnBoard by columnBoardCache.asMutableState()
+class PageStackBoardState(pageStackBoardCache: WritableCache<PageStackBoard>) {
+   internal var pageStackBoard by pageStackBoardCache.asMutableState()
 
    internal val pagerState = PagerState()
 
    /**
-    * ユーザーが最後に操作したカラム。
+    * ユーザーが最後に操作したPageStack。
     *
-    * ColumnBoardのスクロールによってcurrentColumnが画面外に出るとき、
-    * そのカラムに一番近い画面内のカラムが新たなcurrentColumnとなる。
+    * PageStackBoardのスクロールによってcurrentPageStackが画面外に出るとき、
+    * そのカラムに一番近い画面内のPageStackが新たなcurrentPageStackとなる。
     *
     * であるべきだが、ひとまず今はタブレットUIに対応するまでの間は
     * 常に画面内に1カラムしか表示されないので
-    * 画面内にあるカラムがcurrentColumnとなる
+    * 画面内にあるカラムがcurrentPageStackとなる
     */
-   val currentColumn: Int
+   val currentPageStack: Int
       get() = pagerState.currentPage
 
-   suspend fun animateScrollTo(column: Int) {
-      pagerState.animateScrollToPage(column)
+   suspend fun animateScrollTo(pageStack: Int) {
+      pagerState.animateScrollToPage(pageStack)
    }
 
-   suspend fun addColumn(index: Int, column: Column) {
-      columnBoard = columnBoard.inserted(index, column)
+   suspend fun addPageStack(index: Int, pageStack: PageStack) {
+      pageStackBoard = pageStackBoard.inserted(index, pageStack)
    }
 }
 
 @Composable
-fun ColumnBoard(
-   state: ColumnBoardState,
+fun PageStackBoard(
+   state: PageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
    modifier: Modifier = Modifier
 ) {
-   val columnBoard = state.columnBoard
+   val pageStackBoard = state.pageStackBoard
 
    Column(modifier) {
       HorizontalPager(
-         columnBoard.columnCount,
+         pageStackBoard.pageStackCount,
          state.pagerState,
-         key = { columnBoard[it].createdTime.toEpochMilliseconds() },
+         key = { pageStackBoard[it].createdTime.toEpochMilliseconds() },
          modifier = Modifier
             .fillMaxWidth()
             .weight(1.0f)
       ) { index ->
-         val column = columnBoard[index]
+         val pageStack = pageStackBoard[index]
          Box(
             Modifier.background(
-               if (state.currentColumn == index) { Color.Cyan } else { Color.White }
+               if (state.currentPageStack == index) { Color.Cyan } else { Color.White }
             )
          ) {
-            val columnState = remember {
-               ColumnState(column, columnBoardState = state)
+            val pageStackState = remember {
+               PageStackState(pageStack, pageStackBoardState = state)
             }
-            ColumnContent(columnState, pageComposableSwitcher)
+            PageStackContent(pageStackState, pageComposableSwitcher)
          }
       }
 
-      ColumnBoardScrollBar(state.pagerState)
+      PageStackBoardScrollBar(state.pagerState)
    }
 }

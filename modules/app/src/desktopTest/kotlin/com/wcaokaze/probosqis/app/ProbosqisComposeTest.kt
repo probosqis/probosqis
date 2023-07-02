@@ -18,8 +18,8 @@ package com.wcaokaze.probosqis.app
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.page.ColumnBoard
-import com.wcaokaze.probosqis.page.ColumnBoardRepository
+import com.wcaokaze.probosqis.page.PageStackBoard
+import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Rule
@@ -35,26 +35,26 @@ class ProbosqisComposeTest {
    val rule = createComposeRule()
 
    @Test
-   fun loadColumnBoard() {
-      val columnBoard = ColumnBoard(emptyList())
+   fun loadPageStackBoard() {
+      val pageStackBoard = PageStackBoard(emptyList())
 
-      val columnBoardRepository = mockk<ColumnBoardRepository> {
-         every { loadColumnBoard() } returns WritableCache(columnBoard)
+      val pageStackBoardRepository = mockk<PageStackBoardRepository> {
+         every { loadPageStackBoard() } returns WritableCache(pageStackBoard)
       }
 
-      val loadedCache = loadColumnBoardOrDefault(columnBoardRepository)
-      assertSame(columnBoard, loadedCache.value)
+      val loadedCache = loadPageStackBoardOrDefault(pageStackBoardRepository)
+      assertSame(pageStackBoard, loadedCache.value)
    }
 
    @Test
-   fun loadColumnBoard_default() {
-      val columnBoardRepository = mockk<ColumnBoardRepository> {
-         every { loadColumnBoard() } throws IOException()
-         every { saveColumnBoard(any()) } answers { WritableCache(firstArg()) }
+   fun loadPageStackBoard_default() {
+      val pageStackBoardRepository = mockk<PageStackBoardRepository> {
+         every { loadPageStackBoard() } throws IOException()
+         every { savePageStackBoard(any()) } answers { WritableCache(firstArg()) }
       }
 
-      val loadedCache = loadColumnBoardOrDefault(columnBoardRepository)
-      assertEquals(2, loadedCache.value.columnCount)
+      val loadedCache = loadPageStackBoardOrDefault(pageStackBoardRepository)
+      assertEquals(2, loadedCache.value.pageStackCount)
       assertIs<TestPage>(loadedCache.value[0].head)
       assertNull(loadedCache.value[0].tailOrNull())
       assertIs<TestPage>(loadedCache.value[1].head)

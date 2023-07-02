@@ -58,9 +58,9 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.ColumnBoardState
-import com.wcaokaze.probosqis.page.columnboard.SingleColumnBoard
-import com.wcaokaze.probosqis.page.columnboard.SingleColumnBoardAppBar
+import com.wcaokaze.probosqis.page.PageStackBoardState
+import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoard
+import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoardAppBar
 import com.wcaokaze.probosqis.resources.Strings
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,9 +82,10 @@ internal fun SingleColumnProbosqis(
       modifier = Modifier
          .nestedScroll(nestedScrollConnection)
    ) { paddingValues ->
-      val columnBoardState = remember(di) {
-         ColumnBoardState(
-            columnBoardCache = loadColumnBoardOrDefault(di.columnBoardRepository)
+      val pageStackBoardState = remember(di) {
+         PageStackBoardState(
+            pageStackBoardCache
+               = loadPageStackBoardOrDefault(di.pageStackBoardRepository)
          )
       }
 
@@ -92,8 +93,8 @@ internal fun SingleColumnProbosqis(
          di.pageComposableSwitcher
       }
 
-      SingleColumnBoard(
-         columnBoardState,
+      SingleColumnPageStackBoard(
+         pageStackBoardState,
          pageComposableSwitcher,
          windowInsets = safeDrawingWindowInsets,
          modifier = Modifier
@@ -151,7 +152,7 @@ private fun AppBar(
                .onSizeChanged { state.updateAppBarHeight(it.height) },
          )
 
-         SingleColumnBoardAppBar(
+         SingleColumnPageStackBoardAppBar(
             safeDrawingWindowInsets = safeDrawingWindowInsets
          )
       }

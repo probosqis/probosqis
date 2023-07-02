@@ -26,29 +26,29 @@ import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 
 inline fun <reified P : Page>
-      pageSerializer(): ColumnBoardRepository.PageSerializer<P>
+      pageSerializer(): PageStackBoardRepository.PageSerializer<P>
 {
-   return ColumnBoardRepository.PageSerializer(P::class, serializer())
+   return PageStackBoardRepository.PageSerializer(P::class, serializer())
 }
 
-interface ColumnBoardRepository {
+interface PageStackBoardRepository {
    data class PageSerializer<P : Page>(
       val pageClass: KClass<P>,
       val serializer: KSerializer<P>
    )
 
-   fun saveColumnBoard(columnBoard: ColumnBoard): WritableCache<ColumnBoard>
-   fun loadColumnBoard(): WritableCache<ColumnBoard>
+   fun savePageStackBoard(pageStackBoard: PageStackBoard): WritableCache<PageStackBoard>
+   fun loadPageStackBoard(): WritableCache<PageStackBoard>
 }
 
-abstract class AbstractColumnBoardRepository
+abstract class AbstractPageStackBoardRepository
    internal constructor(
-      allPageSerializers: List<ColumnBoardRepository.PageSerializer<*>>
+      allPageSerializers: List<PageStackBoardRepository.PageSerializer<*>>
    )
-   : ColumnBoardRepository
+   : PageStackBoardRepository
 {
    private fun <P : Page> PolymorphicModuleBuilder<Page>.subclass(
-      pageSerializer: ColumnBoardRepository.PageSerializer<P>
+      pageSerializer: PageStackBoardRepository.PageSerializer<P>
    ) {
       subclass(pageSerializer.pageClass, pageSerializer.serializer)
    }

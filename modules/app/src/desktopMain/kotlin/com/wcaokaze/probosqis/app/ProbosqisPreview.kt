@@ -34,21 +34,21 @@ private fun ProbosqisPreview() {
          override val pageComposableSwitcher = PageComposableSwitcher(
             allPageComposables = persistentListOf(
                pageComposable<TestPage>(
-                  content = { page, columnState -> TestPage(page, columnState) },
+                  content = { page, pageStackState -> TestPage(page, pageStackState) },
                   header = { _, _ -> },
                   footer = null
                ),
             )
          )
 
-         override val columnBoardRepository = object : ColumnBoardRepository {
-            override fun saveColumnBoard(columnBoard: ColumnBoard)
+         override val pageStackBoardRepository = object : PageStackBoardRepository {
+            override fun savePageStackBoard(pageStackBoard: PageStackBoard)
                   = throw NotImplementedError()
 
-            override fun loadColumnBoard() = WritableCache(
-               ColumnBoard(
-                  columns = persistentListOf(
-                     Column(TestPage(0), clock),
+            override fun loadPageStackBoard() = WritableCache(
+               PageStackBoard(
+                  pageStacks = persistentListOf(
+                     PageStack(TestPage(0), clock),
                   )
                )
             )

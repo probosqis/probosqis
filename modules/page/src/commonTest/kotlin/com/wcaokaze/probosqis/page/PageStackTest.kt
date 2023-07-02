@@ -21,7 +21,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.*
 
-class ColumnTest {
+class PageStackTest {
    @Serializable
    @SerialName("com.wcaokaze.probosqis.page.IntPage")
    class IntPage(val i: Int) : Page()
@@ -32,16 +32,16 @@ class ColumnTest {
 
    @Test
    fun add_pop() {
-      var column = Column(IntPage(0), MockClock())
-      column = column.added(StringPage("1"))
-      column = column.added(StringPage("2"))
-      column = column.added(IntPage(3))
+      var pageStack = PageStack(IntPage(0), MockClock())
+      pageStack = pageStack.added(StringPage("1"))
+      pageStack = pageStack.added(StringPage("2"))
+      pageStack = pageStack.added(IntPage(3))
 
-      var head = column.head
+      var head = pageStack.head
       assertIs<IntPage>(head)
       assertEquals(3, head.i)
 
-      var tail = column.tailOrNull()
+      var tail = pageStack.tailOrNull()
       assertNotNull(tail)
       head = tail.head
       assertIs<StringPage>(head)
@@ -62,17 +62,17 @@ class ColumnTest {
 
    @Test
    fun immutability() {
-      var column = Column(IntPage(0), MockClock())
-      column = column.added(StringPage("1"))
+      var pageStack = PageStack(IntPage(0), MockClock())
+      pageStack = pageStack.added(StringPage("1"))
 
-      val tail = column.tailOrNull()
+      val tail = pageStack.tailOrNull()
       assertNotNull(tail)
       val tailHead = tail.head
       assertIs<IntPage>(tailHead)
       assertEquals(0, tailHead.i)
 
-      val columnHead = column.head
-      assertIs<StringPage>(columnHead)
-      assertEquals("1", columnHead.s)
+      val pageStackHead = pageStack.head
+      assertIs<StringPage>(pageStackHead)
+      assertEquals("1", pageStackHead.s)
    }
 }

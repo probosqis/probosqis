@@ -21,28 +21,28 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.*
 
-expect fun createColumnBoardRepository(
-   allPageClasses: List<ColumnBoardRepository.PageSerializer<*>>
-): ColumnBoardRepository
+expect fun createPageStackBoardRepository(
+   allPageClasses: List<PageStackBoardRepository.PageSerializer<*>>
+): PageStackBoardRepository
 
-expect fun deleteColumnBoardRepository(
-   columnBoardRepository: ColumnBoardRepository
+expect fun deletePageStackBoardRepository(
+   pageStackBoardRepository: PageStackBoardRepository
 )
 
-class ColumnBoardRepositoryTest {
+class PageStackBoardRepositoryTest {
    @Serializable
-   @SerialName("com.wcaokaze.probosqis.perpetuation.page.IntPage")
+   @SerialName("com.wcaokaze.probosqis.page.IntPage")
    class IntPage(val i: Int) : Page()
 
    @Serializable
-   @SerialName("com.wcaokaze.probosqis.perpetuation.page.StringPage")
+   @SerialName("com.wcaokaze.probosqis.page.StringPage")
    class StringPage(val s: String) : Page()
 
-   private lateinit var columnBoardRepository: ColumnBoardRepository
+   private lateinit var pageStackBoardRepository: PageStackBoardRepository
 
    @BeforeTest
    fun beforeTest() {
-      columnBoardRepository = createColumnBoardRepository(
+      pageStackBoardRepository = createPageStackBoardRepository(
          listOf(
             pageSerializer<IntPage>(),
             pageSerializer<StringPage>(),
@@ -52,22 +52,22 @@ class ColumnBoardRepositoryTest {
 
    @AfterTest
    fun afterTest() {
-      deleteColumnBoardRepository(columnBoardRepository)
+      deletePageStackBoardRepository(pageStackBoardRepository)
    }
 
    @Test
    fun readWrite() {
       val intPage = IntPage(42)
       val stringPage = StringPage("wcaokaze")
-      var column = Column(intPage, MockClock())
-      column = column.added(stringPage)
-      val columnBoard = ColumnBoard(listOf(column))
+      var pageStack = PageStack(intPage, MockClock())
+      pageStack = pageStack.added(stringPage)
+      val pageStackBoard = PageStackBoard(listOf(pageStack))
 
-      columnBoardRepository.saveColumnBoard(columnBoard)
+      pageStackBoardRepository.savePageStackBoard(pageStackBoard)
 
-      val loadedCache = columnBoardRepository.loadColumnBoard()
+      val loadedCache = pageStackBoardRepository.loadPageStackBoard()
 
-      assertEquals(loadedCache.value.columnCount, 1)
+      assertEquals(loadedCache.value.pageStackCount, 1)
 
       val page1 = loadedCache.value[0].head
       assertIs<StringPage>(page1)

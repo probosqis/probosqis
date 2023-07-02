@@ -19,4 +19,4 @@ package com.wcaokaze.probosqis.page
 import androidx.compose.runtime.Composable
 
 @Composable
-internal expect fun ColumnBoardScrollBar(state: PagerState)
+internal expect fun PageStackBoardScrollBar(state: PagerState)

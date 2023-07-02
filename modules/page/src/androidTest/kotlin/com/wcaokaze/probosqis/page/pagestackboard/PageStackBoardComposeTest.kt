@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.columnboard
+package com.wcaokaze.probosqis.page.pagestackboard
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.width
@@ -27,9 +27,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
-import com.wcaokaze.probosqis.page.Column
-import com.wcaokaze.probosqis.page.ColumnBoard
-import com.wcaokaze.probosqis.page.ColumnBoardState
+import com.wcaokaze.probosqis.page.PageStack
+import com.wcaokaze.probosqis.page.PageStackBoard
+import com.wcaokaze.probosqis.page.PageStackBoardState
 import com.wcaokaze.probosqis.page.Page
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.pageComposable
@@ -39,7 +39,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class ColumnBoardComposeTest {
+class PageStackBoardComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
@@ -59,24 +59,26 @@ class ColumnBoardComposeTest {
       )
    )
 
-   private fun createColumnBoardState(vararg columns: Column): ColumnBoardState {
-      val columnBoard = ColumnBoard(columns.toList())
-      val columnBoardCache = WritableCache(columnBoard)
-      return ColumnBoardState(columnBoardCache)
+   private fun createPageStackBoardState(
+      vararg pageStacks: PageStack
+   ): PageStackBoardState {
+      val pageStackBoard = PageStackBoard(pageStacks.toList())
+      val pageStackBoardCache = WritableCache(pageStackBoard)
+      return PageStackBoardState(pageStackBoardCache)
    }
 
    @Test
-   fun singleColumnBoard_layout() {
+   fun singleColumnPageStackBoard_layout() {
       rule.setContent {
-         val columnBoardState = remember {
-            createColumnBoardState(
-               Column(TestPage(0), MockClock(minute = 0)),
-               Column(TestPage(1), MockClock(minute = 1)),
+         val pageStackBoardState = remember {
+            createPageStackBoardState(
+               PageStack(TestPage(0), MockClock(minute = 0)),
+               PageStack(TestPage(1), MockClock(minute = 1)),
             )
          }
 
-         SingleColumnBoard(
-            columnBoardState,
+         SingleColumnPageStackBoard(
+            pageStackBoardState,
             pageComposableSwitcher,
             WindowInsets(0, 0, 0, 0),
             modifier = Modifier
@@ -89,19 +91,19 @@ class ColumnBoardComposeTest {
    }
 
    @Test
-   fun multiColumnBoard_layout() {
+   fun multiColumnPageStackBoard_layout() {
       rule.setContent {
-         val columnBoardState = remember {
-            createColumnBoardState(
-               Column(TestPage(0), MockClock(minute = 0)),
-               Column(TestPage(1), MockClock(minute = 1)),
+         val pageStackBoardState = remember {
+            createPageStackBoardState(
+               PageStack(TestPage(0), MockClock(minute = 0)),
+               PageStack(TestPage(1), MockClock(minute = 1)),
             )
          }
 
-         MultiColumnBoard(
-            columnBoardState,
+         MultiColumnPageStackBoard(
+            pageStackBoardState,
             pageComposableSwitcher,
-            columnCount = 2,
+            pageStackCount = 2,
             WindowInsets(0, 0, 0, 0),
             modifier = Modifier
                .width(100.dp)

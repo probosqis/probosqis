@@ -35,24 +35,24 @@ private object PreviewDI : DI {
    override val pageComposableSwitcher = PageComposableSwitcher(
       allPageComposables = persistentListOf(
          pageComposable<TestPage>(
-            content = { page, columnState -> TestPage(page, columnState) },
+            content = { page, pageStackState -> TestPage(page, pageStackState) },
             header = { _, _ -> },
             footer = null
          ),
       )
    )
 
-   override val columnBoardRepository = object : ColumnBoardRepository {
-      override fun saveColumnBoard(columnBoard: ColumnBoard)
+   override val pageStackBoardRepository = object : PageStackBoardRepository {
+      override fun savePageStackBoard(pageStackBoard: PageStackBoard)
             = throw NotImplementedError()
 
-      override fun loadColumnBoard() = WritableCache(
-         ColumnBoard(
-            columns = persistentListOf(
-               Column(TestPage(0), clock),
-               Column(TestPage(1), clock),
-               Column(TestPage(2), clock),
-               Column(TestPage(3), clock),
+      override fun loadPageStackBoard() = WritableCache(
+         PageStackBoard(
+            pageStacks = persistentListOf(
+               PageStack(TestPage(0), clock),
+               PageStack(TestPage(1), clock),
+               PageStack(TestPage(2), clock),
+               PageStack(TestPage(3), clock),
             )
          )
       )

@@ -25,9 +25,9 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.ext.kotlin.datetime.BehindClock
-import com.wcaokaze.probosqis.page.Column
-import com.wcaokaze.probosqis.page.ColumnBoard
-import com.wcaokaze.probosqis.page.ColumnBoardRepository
+import com.wcaokaze.probosqis.page.PageStack
+import com.wcaokaze.probosqis.page.PageStackBoard
+import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.time.Duration
@@ -54,22 +54,22 @@ fun Probosqis(
 @Composable
 expect fun colorScheme(): ColorScheme
 
-internal fun loadColumnBoardOrDefault(
-   columnBoardRepository: ColumnBoardRepository
-): WritableCache<ColumnBoard> {
+internal fun loadPageStackBoardOrDefault(
+   pageStackBoardRepository: PageStackBoardRepository
+): WritableCache<PageStackBoard> {
    return try {
-      columnBoardRepository.loadColumnBoard()
+      pageStackBoardRepository.loadPageStackBoard()
    } catch (e: Exception) {
-      val columnBoard = ColumnBoard(
-         columns = createDefaultColumns()
+      val pageStackBoard = PageStackBoard(
+         pageStacks = createDefaultPageStacks()
       )
-      columnBoardRepository.saveColumnBoard(columnBoard)
+      pageStackBoardRepository.savePageStackBoard(pageStackBoard)
    }
 }
 
-private fun createDefaultColumns(): List<Column> {
+private fun createDefaultPageStacks(): List<PageStack> {
    return persistentListOf(
-      Column(TestPage(0), BehindClock(Duration.ZERO)),
-      Column(TestPage(1), BehindClock(1.milliseconds)),
+      PageStack(TestPage(0), BehindClock(Duration.ZERO)),
+      PageStack(TestPage(1), BehindClock(1.milliseconds)),
    )
 }

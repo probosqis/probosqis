@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.columnboard
+package com.wcaokaze.probosqis.page.pagestackboard
 
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -42,13 +42,13 @@ import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.ColumnBoardState
-import com.wcaokaze.probosqis.page.ColumnContent
-import com.wcaokaze.probosqis.page.ColumnState
+import com.wcaokaze.probosqis.page.PageStackBoardState
+import com.wcaokaze.probosqis.page.PageStackContent
+import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 
 @Composable
-fun SingleColumnBoardAppBar(
+fun SingleColumnPageStackBoardAppBar(
    modifier: Modifier = Modifier,
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
@@ -79,44 +79,44 @@ fun SingleColumnBoardAppBar(
 }
 
 @Composable
-fun SingleColumnBoard(
-   state: ColumnBoardState,
+fun SingleColumnPageStackBoard(
+   state: PageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
 ) {
    Layout(
       content = {
-         val columnState by remember(state) {
+         val pageStackState by remember(state) {
             derivedStateOf {
-               val column = state.columnBoard[0]
-               ColumnState(column, state)
+               val pageStack = state.pageStackBoard[0]
+               PageStackState(pageStack, state)
             }
          }
 
-         ColumnContent(
-            columnState,
+         PageStackContent(
+            pageStackState,
             pageComposableSwitcher
          )
       },
-      measurePolicy = rememberSingleColumnBoardMeasurePolicy(),
+      measurePolicy = rememberSingleColumnPageStackBoardMeasurePolicy(),
       modifier = modifier
          .scrollable(rememberScrollState(), Orientation.Vertical)
    )
 }
 
 @Composable
-private fun rememberSingleColumnBoardMeasurePolicy() = remember {
+private fun rememberSingleColumnPageStackBoardMeasurePolicy() = remember {
    MeasurePolicy { measurables, constraints ->
-      val columnBoardWidth = constraints.maxWidth
-      val columnBoardHeight = constraints.maxHeight
+      val pageStackBoardWidth = constraints.maxWidth
+      val pageStackBoardHeight = constraints.maxHeight
 
-      val columnConstraints = Constraints
-         .fixed(columnBoardWidth, columnBoardHeight)
+      val pageStackConstraints = Constraints
+         .fixed(pageStackBoardWidth, pageStackBoardHeight)
 
-      val placeables = measurables.map { it.measure(columnConstraints) }
+      val placeables = measurables.map { it.measure(pageStackConstraints) }
 
-      layout(columnBoardWidth, columnBoardHeight) {
+      layout(pageStackBoardWidth, pageStackBoardHeight) {
          var x = 0
 
          for (placeable in placeables) {

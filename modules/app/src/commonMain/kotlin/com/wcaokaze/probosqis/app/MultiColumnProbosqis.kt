@@ -48,8 +48,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.ColumnBoardState
-import com.wcaokaze.probosqis.page.columnboard.MultiColumnBoard
+import com.wcaokaze.probosqis.page.PageStackBoardState
+import com.wcaokaze.probosqis.page.pagestackboard.MultiColumnPageStackBoard
 import com.wcaokaze.probosqis.resources.Strings
 
 @Composable
@@ -68,17 +68,17 @@ internal fun MultiColumnProbosqis(
          }
          mutableStateOf(initialHeight)
       }
-      var columnTopAppBarHeight by remember { mutableStateOf(64.dp) }
+      var pageStackTopAppBarHeight by remember { mutableStateOf(64.dp) }
 
       AppBar(
          safeDrawingWindowInsets,
-         columnTopAppBarHeight,
+         pageStackTopAppBarHeight,
          onHeightChanged = { appBarHeight = it }
       )
 
-      val columnBoardState = remember(di) {
-         ColumnBoardState(
-            columnBoardCache = loadColumnBoardOrDefault(di.columnBoardRepository)
+      val pageStackBoardState = remember(di) {
+         PageStackBoardState(
+            pageStackBoardCache = loadPageStackBoardOrDefault(di.pageStackBoardRepository)
          )
       }
 
@@ -86,13 +86,13 @@ internal fun MultiColumnProbosqis(
          di.pageComposableSwitcher
       }
 
-      MultiColumnBoard(
-         columnBoardState,
+      MultiColumnPageStackBoard(
+         pageStackBoardState,
          pageComposableSwitcher,
-         columnCount = (maxWidth / 330.dp).toInt(),
+         pageStackCount = (maxWidth / 330.dp).toInt(),
          windowInsets = safeDrawingWindowInsets
             .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
-         onTopAppBarHeightChanged = { columnTopAppBarHeight = it },
+         onTopAppBarHeightChanged = { pageStackTopAppBarHeight = it },
          modifier = Modifier
             .padding(top = appBarHeight)
       )
@@ -103,7 +103,7 @@ internal fun MultiColumnProbosqis(
 @Composable
 private fun AppBar(
    safeDrawingWindowInsets: WindowInsets,
-   columnTopAppBarHeight: Dp,
+   pageStackTopAppBarHeight: Dp,
    onHeightChanged: (Dp) -> Unit
 ) {
    val density by rememberUpdatedState(LocalDensity.current)
@@ -138,7 +138,7 @@ private fun AppBar(
             }
       )
 
-      Spacer(Modifier.height(columnTopAppBarHeight))
+      Spacer(Modifier.height(pageStackTopAppBarHeight))
    }
 }
 
