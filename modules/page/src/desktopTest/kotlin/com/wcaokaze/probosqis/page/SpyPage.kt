@@ -23,8 +23,14 @@ internal class SpyPage : Page() {
 }
 
 @Composable
-internal fun SpyPage(page: SpyPage) {
+private fun SpyPage(page: SpyPage) {
    SideEffect {
       page.recompositionCount++
    }
 }
+
+internal val spyPageComposable = pageComposable<SpyPage>(
+   content = { page, _ -> SpyPage(page) },
+   header = { _, _ -> },
+   footer = null
+)

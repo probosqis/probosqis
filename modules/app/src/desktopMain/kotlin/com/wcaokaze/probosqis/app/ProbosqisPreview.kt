@@ -33,11 +33,7 @@ private fun ProbosqisPreview() {
 
          override val pageComposableSwitcher = PageComposableSwitcher(
             allPageComposables = persistentListOf(
-               pageComposable<TestPage>(
-                  content = { page, pageStackState -> TestPage(page, pageStackState) },
-                  header = { _, _ -> },
-                  footer = null
-               ),
+               testPageComposable,
             )
          )
 

@@ -32,6 +32,12 @@ class PageStackComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
+   private val pageComposableSwitcher = PageComposableSwitcher(
+      listOf(
+         spyPageComposable,
+      )
+   )
+
    @Test
    fun onlyForefrontComposableIsCalled() {
       val page1 = SpyPage()
@@ -41,16 +47,6 @@ class PageStackComposeTest {
       pageStack = pageStack.added(page2)
 
       val pageStackState = PageStackState(pageStack, pageStackBoardState = mockk())
-
-      val pageComposableSwitcher = PageComposableSwitcher(
-         listOf(
-            pageComposable<SpyPage>(
-               content = { page, _ -> SpyPage(page) },
-               header = { _, _ -> },
-               footer = null
-            ),
-         )
-      )
 
       rule.setContent {
          PageStackContent(pageStackState, pageComposableSwitcher)
@@ -74,16 +70,6 @@ class PageStackComposeTest {
       val pageStackState by derivedStateOf {
          PageStackState(pageStack, pageStackBoardState = mockk())
       }
-
-      val pageComposableSwitcher = PageComposableSwitcher(
-         listOf(
-            pageComposable<SpyPage>(
-               content = { page, _ -> SpyPage(page) },
-               header = { _, _ -> },
-               footer = null
-            ),
-         )
-      )
 
       rule.setContent {
          PageStackContent(pageStackState, pageComposableSwitcher)

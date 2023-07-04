@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.Page
+import com.wcaokaze.probosqis.page.pageComposable
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -57,3 +58,9 @@ fun TestPage(page: TestPage, pageStackState: PageStackState) {
       }
    }
 }
+
+val testPageComposable = pageComposable<TestPage>(
+   content = { page, pageStackState -> TestPage(page, pageStackState) },
+   header = { _, _ -> },
+   footer = null
+)
