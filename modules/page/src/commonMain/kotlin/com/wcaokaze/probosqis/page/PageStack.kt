@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -34,7 +35,7 @@ import kotlinx.serialization.Serializable
 class PageStack private constructor(
    private val pages: List<Page>,
    val createdTime: Instant
-) {
+) : PageStackBoard.LayoutElement {
    constructor(page: Page, clock: Clock = Clock.System)
          : this(listOf(page), clock.now())
 
