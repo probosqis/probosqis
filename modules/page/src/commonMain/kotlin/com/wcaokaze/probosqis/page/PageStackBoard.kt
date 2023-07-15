@@ -98,7 +98,7 @@ fun PageStackBoard(
       HorizontalPager(
          pageStackBoard.pageStackCount,
          state.pagerState,
-         key = { pageStackBoard[it].createdTime.toEpochMilliseconds() },
+         key = { pageStackBoard[it].id },
          modifier = Modifier
             .fillMaxWidth()
             .weight(1.0f)

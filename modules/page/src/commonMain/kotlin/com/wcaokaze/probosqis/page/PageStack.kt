@@ -17,12 +17,16 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+
+fun PageStack(page: Page, clock: Clock = Clock.System) = PageStack(
+   PageStack.Id(clock.now()),
+   page
+)
 
 /**
  * 画面遷移した[Page]をStack状に積んだもの。
@@ -34,15 +38,16 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 class PageStack private constructor(
-   private val pages: List<Page>,
-   val createdTime: Instant
+   val id: Id,
+   private val pages: List<Page>
 ) : PageStackBoard.LayoutElement {
-   @Immutable
+   @Serializable
    @JvmInline
-   value class Id(val value: Long)
+   value class Id(val value: Long) {
+      constructor(createdTime: Instant) : this(createdTime.toEpochMilliseconds())
+   }
 
-   constructor(page: Page, clock: Clock = Clock.System)
-         : this(listOf(page), clock.now())
+   constructor(id: Id, page: Page) : this(id, listOf(page))
 
    /** このPageStackの一番上の[Page] */
    val head: Page get() = pages.last()
@@ -57,11 +62,11 @@ class PageStack private constructor(
       return if (tailPages.isEmpty()) {
          null
       } else {
-         PageStack(tailPages, createdTime)
+         PageStack(id, tailPages)
       }
    }
 
-   fun added(page: Page) = PageStack(pages + page, createdTime)
+   fun added(page: Page) = PageStack(id, pages + page)
 }
 
 @Stable
