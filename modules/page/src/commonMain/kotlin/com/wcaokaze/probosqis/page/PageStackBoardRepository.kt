@@ -33,6 +33,14 @@ abstract class AbstractPageStackBoardRepository
 {
    private val pageRepo = object : AbstractPageStackRepository(allPageSerializers) {
       val _json = json
+
+      override fun loadPageStack(id: PageStack.Id) {
+         throw NotImplementedError()
+      }
+
+      override fun savePageStack(pageStack: PageStack): WritableCache<PageStack> {
+         throw NotImplementedError()
+      }
    }
 
    protected val json = pageRepo._json
