@@ -17,49 +17,23 @@
 package com.wcaokaze.probosqis.page
 
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.PolymorphicModuleBuilder
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.serializer
-import kotlin.reflect.KClass
-
-inline fun <reified P : Page>
-      pageSerializer(): PageStackBoardRepository.PageSerializer<P>
-{
-   return PageStackBoardRepository.PageSerializer(P::class, serializer())
-}
+import com.wcaokaze.probosqis.page.pagestackboard.AbstractPageStackRepository
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
 
 interface PageStackBoardRepository {
-   data class PageSerializer<P : Page>(
-      val pageClass: KClass<P>,
-      val serializer: KSerializer<P>
-   )
-
    fun savePageStackBoard(pageStackBoard: PageStackBoard): WritableCache<PageStackBoard>
    fun loadPageStackBoard(): WritableCache<PageStackBoard>
 }
 
 abstract class AbstractPageStackBoardRepository
    internal constructor(
-      allPageSerializers: List<PageStackBoardRepository.PageSerializer<*>>
+      allPageSerializers: List<PageStackRepository.PageSerializer<*>>
    )
    : PageStackBoardRepository
 {
-   private fun <P : Page> PolymorphicModuleBuilder<Page>.subclass(
-      pageSerializer: PageStackBoardRepository.PageSerializer<P>
-   ) {
-      subclass(pageSerializer.pageClass, pageSerializer.serializer)
+   private val pageRepo = object : AbstractPageStackRepository(allPageSerializers) {
+      val _json = json
    }
 
-   protected val json = Json {
-      serializersModule = SerializersModule {
-         polymorphic(Page::class) {
-            for (s in allPageSerializers) {
-               subclass(s)
-            }
-         }
-      }
-   }
+   protected val json = pageRepo._json
 }

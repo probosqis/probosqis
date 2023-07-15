@@ -17,12 +17,14 @@
 package com.wcaokaze.probosqis.page
 
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
+import com.wcaokaze.probosqis.page.pagestackboard.pageSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.*
 
 expect fun createPageStackBoardRepository(
-   allPageClasses: List<PageStackBoardRepository.PageSerializer<*>>
+   allPageClasses: List<PageStackRepository.PageSerializer<*>>
 ): PageStackBoardRepository
 
 expect fun deletePageStackBoardRepository(

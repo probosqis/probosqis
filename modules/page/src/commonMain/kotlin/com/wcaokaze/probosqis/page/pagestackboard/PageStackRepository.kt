@@ -16,4 +16,47 @@
 
 package com.wcaokaze.probosqis.page.pagestackboard
 
-interface PageStackRepository
+import com.wcaokaze.probosqis.page.Page
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.PolymorphicModuleBuilder
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.serializer
+import kotlin.reflect.KClass
+
+inline fun <reified P : Page>
+      pageSerializer(): PageStackRepository.PageSerializer<P>
+{
+   return PageStackRepository.PageSerializer(P::class, serializer())
+}
+
+interface PageStackRepository {
+   data class PageSerializer<P : Page>(
+      val pageClass: KClass<P>,
+      val serializer: KSerializer<P>
+   )
+}
+
+abstract class AbstractPageStackRepository
+   internal constructor(
+      allPageSerializers: List<PageStackRepository.PageSerializer<*>>
+   )
+   : PageStackRepository
+{
+   private fun <P : Page> PolymorphicModuleBuilder<Page>.subclass(
+      pageSerializer: PageStackRepository.PageSerializer<P>
+   ) {
+      subclass(pageSerializer.pageClass, pageSerializer.serializer)
+   }
+
+   protected val json = Json {
+      serializersModule = SerializersModule {
+         polymorphic(Page::class) {
+            for (s in allPageSerializers) {
+               subclass(s)
+            }
+         }
+      }
+   }
+}

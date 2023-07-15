@@ -23,7 +23,7 @@ import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.page.JvmPageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
-import com.wcaokaze.probosqis.page.pageSerializer
+import com.wcaokaze.probosqis.page.pagestackboard.pageSerializer
 import kotlinx.collections.immutable.persistentListOf
 import java.io.File
 
