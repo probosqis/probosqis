@@ -40,7 +40,7 @@ interface PageStackRepository {
    )
 
    fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
-   fun loadPageStack(id: PageStack.Id)
+   fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
 }
 
 abstract class AbstractPageStackRepository
