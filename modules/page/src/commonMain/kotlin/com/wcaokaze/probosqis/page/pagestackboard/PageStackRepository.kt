@@ -16,7 +16,9 @@
 
 package com.wcaokaze.probosqis.page.pagestackboard
 
+import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.Page
+import com.wcaokaze.probosqis.page.PageStack
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.PolymorphicModuleBuilder
@@ -36,6 +38,9 @@ interface PageStackRepository {
       val pageClass: KClass<P>,
       val serializer: KSerializer<P>
    )
+
+   fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
+   fun loadPageStack(id: PageStack.Id)
 }
 
 abstract class AbstractPageStackRepository

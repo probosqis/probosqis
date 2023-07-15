@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
 import kotlinx.datetime.Clock
@@ -36,6 +37,10 @@ class PageStack private constructor(
    private val pages: List<Page>,
    val createdTime: Instant
 ) : PageStackBoard.LayoutElement {
+   @Immutable
+   @JvmInline
+   value class Id(val value: Long)
+
    constructor(page: Page, clock: Clock = Clock.System)
          : this(listOf(page), clock.now())
 
