@@ -16,6 +16,46 @@
 
 package com.wcaokaze.probosqis.page.pagestackboard
 
-class PageStackBoard {
-   /* TODO sealed */ interface LayoutElement
+import com.wcaokaze.probosqis.cache.core.WritableCache
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
+
+class PageStackBoard(val column: Column) {
+   sealed class LayoutElement
+
+   class PageStack(
+      val cache: WritableCache<com.wcaokaze.probosqis.page.PageStack>
+   ) : LayoutElement()
+
+   class Column(
+      private val children: ImmutableList<LayoutElement>
+   ) : LayoutElement() {
+      val childCount: Int get() = children.size
+
+      operator fun get(index: Int): LayoutElement = children[index]
+
+      fun inserted(index: Int, element: LayoutElement) = Column(
+         children.toPersistentList().add(index, element)
+      )
+
+      fun removed(index: Int) = Column(
+         children.toPersistentList().removeAt(index)
+      )
+   }
+
+   class Row(
+      private val children: ImmutableList<LayoutElement>
+   ) : LayoutElement() {
+      val childCount: Int get() = children.size
+
+      operator fun get(index: Int): LayoutElement = children[index]
+
+      fun inserted(index: Int, element: LayoutElement) = Row(
+         children.toPersistentList().add(index, element)
+      )
+
+      fun removed(index: Int) = Row(
+         children.toPersistentList().removeAt(index)
+      )
+   }
 }

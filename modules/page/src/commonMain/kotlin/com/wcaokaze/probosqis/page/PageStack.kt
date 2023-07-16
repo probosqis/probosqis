@@ -33,14 +33,14 @@ fun PageStack(page: Page, clock: Clock = Clock.System) = PageStack(
  *
  * 必ず1つ以上の[Page]を持つ（空のPageStackという概念はない）。
  *
- * UI上はカラムと呼ばれるが列ではない（列は[PageStackColumn]）ので
+ * UI上はカラムと呼ばれるが列ではない（列は[PageStackBoard.Column]）ので
  * 型としての名称はPageStack
  */
 @Serializable
 class PageStack private constructor(
    val id: Id,
    private val pages: List<Page>
-) : PageStackBoard.LayoutElement {
+) {
    @Serializable
    @JvmInline
    value class Id(val value: Long) {
