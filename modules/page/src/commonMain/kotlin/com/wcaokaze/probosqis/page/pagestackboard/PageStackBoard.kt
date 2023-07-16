@@ -41,6 +41,10 @@ class PageStackBoard(val column: Column) {
       fun removed(index: Int) = Column(
          children.toPersistentList().removeAt(index)
       )
+
+      fun replaced(index: Int, element: LayoutElement) = Column(
+         children.toPersistentList().set(index, element)
+      )
    }
 
    class Row(
@@ -56,6 +60,10 @@ class PageStackBoard(val column: Column) {
 
       fun removed(index: Int) = Row(
          children.toPersistentList().removeAt(index)
+      )
+
+      fun replaced(index: Int, element: LayoutElement) = Row(
+         children.toPersistentList().set(index, element)
       )
    }
 }

@@ -164,7 +164,63 @@ class PageStackBoardTest {
    }
 
    @Test
-   fun column_immutability() {
+   fun column_replace() {
+      var column = createColumn(3)
+      val replaced = createColumn(0)
+      column = column.replaced(1, replaced)
+
+      assertEquals(3, column.childCount)
+      assertPage(0, column[0])
+      assertSame(replaced, column[1])
+      assertPage(2, column[2])
+   }
+
+   @Test
+   fun column_replaceFirst() {
+      var column = createColumn(3)
+      val replaced = createColumn(0)
+      column = column.replaced(0, replaced)
+
+      assertEquals(3, column.childCount)
+      assertSame(replaced, column[0])
+      assertPage(1, column[1])
+      assertPage(2, column[2])
+   }
+
+   @Test
+   fun column_replaceLast() {
+      var column = createColumn(3)
+      val replaced = createColumn(0)
+      column = column.replaced(2, replaced)
+
+      assertEquals(3, column.childCount)
+      assertPage(0, column[0])
+      assertPage(1, column[1])
+      assertSame(replaced, column[2])
+   }
+
+   @Test
+   fun column_replaceOutOfBounds() {
+      val column = createColumn(3)
+      val replaced = createColumn(0)
+
+      assertFails {
+         column.replaced(3, replaced)
+      }
+   }
+
+   @Test
+   fun column_replaceNegativeIndex() {
+      val column = createColumn(3)
+      val replaced = createColumn(0)
+
+      assertFails {
+         column.replaced(-1, replaced)
+      }
+   }
+
+   @Test
+   fun column_insertImmutability() {
       val column = createColumn(2)
 
       val insertedColumn = column.inserted(0, createPageStackElement(2))
@@ -173,6 +229,11 @@ class PageStackBoardTest {
       assertPage(0, column[0])
       assertPage(1, column[1])
       assertEquals(3, insertedColumn.childCount)
+   }
+
+   @Test
+   fun column_removeImmutability() {
+      val column = createColumn(2)
 
       val removedColumn = column.removed(0)
       assertNotSame(column, removedColumn)
@@ -180,6 +241,18 @@ class PageStackBoardTest {
       assertPage(0, column[0])
       assertPage(1, column[1])
       assertEquals(1, removedColumn.childCount)
+   }
+
+   @Test
+   fun column_replaceImmutability() {
+      val column = createColumn(2)
+
+      val replacedColumn = column.replaced(0, createPageStackElement(2))
+      assertNotSame(column, replacedColumn)
+      assertEquals(2, column.childCount)
+      assertPage(0, column[0])
+      assertPage(1, column[1])
+      assertEquals(2, replacedColumn.childCount)
    }
 
    @Test
@@ -287,7 +360,63 @@ class PageStackBoardTest {
    }
 
    @Test
-   fun row_immutability() {
+   fun row_replace() {
+      var row = createRow(3)
+      val replaced = createColumn(0)
+      row = row.replaced(1, replaced)
+
+      assertEquals(3, row.childCount)
+      assertPage(0, row[0])
+      assertSame(replaced, row[1])
+      assertPage(2, row[2])
+   }
+
+   @Test
+   fun row_replaceFirst() {
+      var row = createRow(3)
+      val replaced = createColumn(0)
+      row = row.replaced(0, replaced)
+
+      assertEquals(3, row.childCount)
+      assertSame(replaced, row[0])
+      assertPage(1, row[1])
+      assertPage(2, row[2])
+   }
+
+   @Test
+   fun row_replaceLast() {
+      var row = createRow(3)
+      val replaced = createColumn(0)
+      row = row.replaced(2, replaced)
+
+      assertEquals(3, row.childCount)
+      assertPage(0, row[0])
+      assertPage(1, row[1])
+      assertSame(replaced, row[2])
+   }
+
+   @Test
+   fun row_replaceOutOfBounds() {
+      val row = createRow(3)
+      val replaced = createColumn(0)
+
+      assertFails {
+         row.replaced(3, replaced)
+      }
+   }
+
+   @Test
+   fun row_replaceNegativeIndex() {
+      val row = createRow(3)
+      val replaced = createColumn(0)
+
+      assertFails {
+         row.replaced(-1, replaced)
+      }
+   }
+
+   @Test
+   fun row_insertImmutability() {
       val row = createRow(2)
 
       val insertedRow = row.inserted(0, createPageStackElement(2))
@@ -296,6 +425,11 @@ class PageStackBoardTest {
       assertPage(0, row[0])
       assertPage(1, row[1])
       assertEquals(3, insertedRow.childCount)
+   }
+
+   @Test
+   fun row_removeImmutability() {
+      val row = createRow(2)
 
       val removedRow = row.removed(0)
       assertNotSame(row, removedRow)
@@ -303,5 +437,17 @@ class PageStackBoardTest {
       assertPage(0, row[0])
       assertPage(1, row[1])
       assertEquals(1, removedRow.childCount)
+   }
+
+   @Test
+   fun row_replaceImmutability() {
+      val row = createRow(2)
+
+      val replacedRow = row.replaced(0, createPageStackElement(2))
+      assertNotSame(row, replacedRow)
+      assertEquals(2, row.childCount)
+      assertPage(0, row[0])
+      assertPage(1, row[1])
+      assertEquals(2, replacedRow.childCount)
    }
 }
