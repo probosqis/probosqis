@@ -39,11 +39,11 @@ class DesktopDI : DI {
       allPageSerializers = listOf(
          pageSerializer<TestPage>(),
       ),
-      File("~/.probosqisData/pageStackCache")
+      File(System.getProperty("user.home"), ".probosqisData/pageStackCache")
    )
 
    override val pageStackBoardRepository = JvmPageStackBoardRepository(
       pageStackRepository,
-      File("~/.probosqisData/pageStackBoardCache")
+      File(System.getProperty("user.home"), ".probosqisData/pageStackBoardCache")
    )
 }
