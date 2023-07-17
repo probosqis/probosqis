@@ -36,17 +36,15 @@ class AndroidDI(context: Context) : DI {
       )
    )
 
-   override val pageStackBoardRepository = JvmPageStackBoardRepository(
-      allPageSerializers = listOf(
-         pageSerializer<TestPage>(),
-      ),
-      File(context.filesDir, "probosqisData/pageStackBoardCache")
-   )
-
    override val pageStackRepository = JvmPageStackRepository(
       allPageSerializers = listOf(
          pageSerializer<TestPage>(),
       ),
       File(context.filesDir, "probosqisData/pageStackCache")
+   )
+
+   override val pageStackBoardRepository = JvmPageStackBoardRepository(
+      pageStackRepository,
+      File(context.filesDir, "probosqisData/pageStackBoardCache")
    )
 }

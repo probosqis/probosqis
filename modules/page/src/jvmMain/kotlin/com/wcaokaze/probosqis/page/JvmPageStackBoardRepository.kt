@@ -25,9 +25,9 @@ import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
 import java.io.File
 
 class JvmPageStackBoardRepository(
-   allPageSerializers: List<PageStackRepository.PageSerializer<*>>,
+   pageStackRepository: PageStackRepository,
    directory: File
-) : AbstractPageStackBoardRepository(allPageSerializers) {
+) : AbstractPageStackBoardRepository(pageStackRepository) {
    private val file = File(directory, "U61Jfjj954X8OrvZ")
 
    @TemporaryCacheApi

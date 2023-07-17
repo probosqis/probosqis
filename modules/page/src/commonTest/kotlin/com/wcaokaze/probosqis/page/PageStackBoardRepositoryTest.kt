@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.page
 
-import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
@@ -24,17 +23,27 @@ import com.wcaokaze.probosqis.page.pagestackboard.pageSerializer
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+
+expect fun createPageStackRepository(
+   allPageClasses: List<PageStackRepository.PageSerializer<*>>
+): PageStackRepository
 
 expect fun createPageStackBoardRepository(
-   allPageClasses: List<PageStackRepository.PageSerializer<*>>
+   pageStackRepository: PageStackRepository
 ): PageStackBoardRepository
 
-expect fun deletePageStackBoardRepository(
+expect fun deleteRepositories(
+   pageStackRepository: PageStackRepository,
    pageStackBoardRepository: PageStackBoardRepository
 )
 
-@Ignore
 class PageStackBoardRepositoryTest {
    @Serializable
    @SerialName("com.wcaokaze.probosqis.page.IntPage")
@@ -44,21 +53,26 @@ class PageStackBoardRepositoryTest {
    @SerialName("com.wcaokaze.probosqis.page.StringPage")
    class StringPage(val s: String) : Page()
 
+   private lateinit var pageStackRepository: PageStackRepository
    private lateinit var pageStackBoardRepository: PageStackBoardRepository
 
    @BeforeTest
    fun beforeTest() {
-      pageStackBoardRepository = createPageStackBoardRepository(
+      pageStackRepository = createPageStackRepository(
          listOf(
             pageSerializer<IntPage>(),
             pageSerializer<StringPage>(),
          )
       )
+
+      pageStackBoardRepository = createPageStackBoardRepository(
+         pageStackRepository
+      )
    }
 
    @AfterTest
    fun afterTest() {
-      deletePageStackBoardRepository(pageStackBoardRepository)
+      deleteRepositories(pageStackRepository, pageStackBoardRepository)
    }
 
    @Test
@@ -68,7 +82,7 @@ class PageStackBoardRepositoryTest {
       var pageStack = PageStack(intPage, MockClock())
       pageStack = pageStack.added(stringPage)
 
-      val pageStackCache = WritableCache(pageStack)
+      val pageStackCache = pageStackRepository.savePageStack(pageStack)
       val children = persistentListOf(
          PageStackBoard.PageStack(pageStackCache),
       )

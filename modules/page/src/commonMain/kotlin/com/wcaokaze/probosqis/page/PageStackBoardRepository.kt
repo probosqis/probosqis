@@ -17,9 +17,12 @@
 package com.wcaokaze.probosqis.page
 
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.page.pagestackboard.AbstractPageStackRepository
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackCacheSerializer
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 
 interface PageStackBoardRepository {
    fun savePageStackBoard(pageStackBoard: PageStackBoard): WritableCache<PageStackBoard>
@@ -28,25 +31,13 @@ interface PageStackBoardRepository {
 
 abstract class AbstractPageStackBoardRepository
    internal constructor(
-      allPageSerializers: List<PageStackRepository.PageSerializer<*>>
+      private val pageStackRepository: PageStackRepository
    )
    : PageStackBoardRepository
 {
-   private val pageRepo = object : AbstractPageStackRepository(allPageSerializers) {
-      val _json = json
-
-      override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack> {
-         throw NotImplementedError()
-      }
-
-      override fun savePageStack(pageStack: PageStack): WritableCache<PageStack> {
-         throw NotImplementedError()
-      }
-
-      override fun deleteAllPageStacks() {
-         throw NotImplementedError()
+   protected val json = Json {
+      serializersModule = SerializersModule {
+         contextual(PageStackCacheSerializer(pageStackRepository))
       }
    }
-
-   protected val json = pageRepo._json
 }

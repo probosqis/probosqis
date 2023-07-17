@@ -16,24 +16,32 @@
 
 package com.wcaokaze.probosqis.page
 
+import com.wcaokaze.probosqis.page.pagestackboard.JvmPageStackRepository
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
 import java.io.File
 import java.io.IOException
 
 private val testDir = File(".pageStackRepositoryTest")
 
-actual fun createPageStackBoardRepository(
+actual fun createPageStackRepository(
    allPageClasses: List<PageStackRepository.PageSerializer<*>>
-): PageStackBoardRepository {
+): PageStackRepository {
    if (testDir.exists()) {
       if (!testDir.deleteRecursively()) { throw IOException() }
    }
    if (!testDir.mkdir()) { throw IOException() }
 
-   return JvmPageStackBoardRepository(allPageClasses, testDir)
+   return JvmPageStackRepository(allPageClasses, testDir)
 }
 
-actual fun deletePageStackBoardRepository(
+actual fun createPageStackBoardRepository(
+   pageStackRepository: PageStackRepository
+): PageStackBoardRepository {
+   return JvmPageStackBoardRepository(pageStackRepository, testDir)
+}
+
+actual fun deleteRepositories(
+   pageStackRepository: PageStackRepository,
    pageStackBoardRepository: PageStackBoardRepository
 ) {
    testDir.deleteRecursively()

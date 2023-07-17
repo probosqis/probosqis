@@ -19,53 +19,102 @@ package com.wcaokaze.probosqis.page.pagestackboard
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.cache.compose.asMutableState
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toPersistentList
+import com.wcaokaze.probosqis.page.PageStack
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
+internal class PageStackCacheSerializer(
+   private val pageStackRepository: PageStackRepository
+) : KSerializer<WritableCache<PageStack>> {
+   override val descriptor: SerialDescriptor
+      get() = PrimitiveSerialDescriptor("Cache", PrimitiveKind.LONG)
+
+   override fun serialize(encoder: Encoder, value: WritableCache<PageStack>) {
+      encoder.encodeLong(value.value.id.value)
+   }
+
+   override fun deserialize(decoder: Decoder): WritableCache<PageStack> {
+      val id = PageStack.Id(decoder.decodeLong())
+      return pageStackRepository.loadPageStack(id)
+   }
+}
+
+@Serializable
 class PageStackBoard(val rootRow: Row) {
+   @Serializable
    sealed class LayoutElement
 
+   @Serializable
    class PageStack(
+      @Contextual
       val cache: WritableCache<com.wcaokaze.probosqis.page.PageStack>
    ) : LayoutElement()
 
+   @Serializable
    class Column(
-      private val children: ImmutableList<LayoutElement>
+      private val children: List<LayoutElement>
    ) : LayoutElement() {
       val childCount: Int get() = children.size
 
       operator fun get(index: Int): LayoutElement = children[index]
 
       fun inserted(index: Int, element: LayoutElement) = Column(
-         children.toPersistentList().add(index, element)
+         buildList(capacity = children.size + 1) {
+            addAll(children.subList(0, index))
+            add(element)
+            addAll(children.subList(index, children.size))
+         }
       )
 
       fun removed(index: Int) = Column(
-         children.toPersistentList().removeAt(index)
+         buildList(capacity = children.size) {
+            addAll(children.subList(0, index))
+            addAll(children.subList(index + 1, children.size))
+         }
       )
 
       fun replaced(index: Int, element: LayoutElement) = Column(
-         children.toPersistentList().set(index, element)
+         buildList(capacity = children.size) {
+            addAll(children)
+            set(index, element)
+         }
       )
    }
 
+   @Serializable
    class Row(
-      private val children: ImmutableList<LayoutElement>
+      private val children: List<LayoutElement>
    ) : LayoutElement() {
       val childCount: Int get() = children.size
 
       operator fun get(index: Int): LayoutElement = children[index]
 
       fun inserted(index: Int, element: LayoutElement) = Row(
-         children.toPersistentList().add(index, element)
+         buildList(capacity = children.size + 1) {
+            addAll(children.subList(0, index))
+            add(element)
+            addAll(children.subList(index, children.size))
+         }
       )
 
       fun removed(index: Int) = Row(
-         children.toPersistentList().removeAt(index)
+         buildList(capacity = children.size) {
+            addAll(children.subList(0, index))
+            addAll(children.subList(index + 1, children.size))
+         }
       )
 
       fun replaced(index: Int, element: LayoutElement) = Row(
-         children.toPersistentList().set(index, element)
+         buildList(capacity = children.size) {
+            addAll(children)
+            set(index, element)
+         }
       )
    }
 }

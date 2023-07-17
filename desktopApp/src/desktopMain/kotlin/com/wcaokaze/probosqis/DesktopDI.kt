@@ -35,17 +35,15 @@ class DesktopDI : DI {
       )
    )
 
-   override val pageStackBoardRepository = JvmPageStackBoardRepository(
-      allPageSerializers = listOf(
-         pageSerializer<TestPage>(),
-      ),
-      File("~/.probosqisData/pageStackBoardCache")
-   )
-
    override val pageStackRepository = JvmPageStackRepository(
       allPageSerializers = listOf(
          pageSerializer<TestPage>(),
       ),
       File("~/.probosqisData/pageStackCache")
+   )
+
+   override val pageStackBoardRepository = JvmPageStackBoardRepository(
+      pageStackRepository,
+      File("~/.probosqisData/pageStackBoardCache")
    )
 }
