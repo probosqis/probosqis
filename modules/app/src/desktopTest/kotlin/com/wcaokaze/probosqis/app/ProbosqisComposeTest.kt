@@ -18,10 +18,13 @@ package com.wcaokaze.probosqis.app
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.page.PageStackBoard
 import com.wcaokaze.probosqis.page.PageStackBoardRepository
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,13 +39,18 @@ class ProbosqisComposeTest {
 
    @Test
    fun loadPageStackBoard() {
-      val pageStackBoard = PageStackBoard(emptyList())
+      val rootRow = PageStackBoard.Row(persistentListOf())
+      val pageStackBoard = PageStackBoard(rootRow)
 
       val pageStackBoardRepository = mockk<PageStackBoardRepository> {
          every { loadPageStackBoard() } returns WritableCache(pageStackBoard)
       }
 
-      val loadedCache = loadPageStackBoardOrDefault(pageStackBoardRepository)
+      val pageStackRepository = mockk<PageStackRepository>()
+
+      val loadedCache = loadPageStackBoardOrDefault(
+         pageStackBoardRepository, pageStackRepository)
+
       assertSame(pageStackBoard, loadedCache.value)
    }
 
@@ -53,11 +61,29 @@ class ProbosqisComposeTest {
          every { savePageStackBoard(any()) } answers { WritableCache(firstArg()) }
       }
 
-      val loadedCache = loadPageStackBoardOrDefault(pageStackBoardRepository)
-      assertEquals(2, loadedCache.value.pageStackCount)
-      assertIs<TestPage>(loadedCache.value[0].head)
-      assertNull(loadedCache.value[0].tailOrNull())
-      assertIs<TestPage>(loadedCache.value[1].head)
-      assertNull(loadedCache.value[1].tailOrNull())
+      val pageStackRepository = mockk<PageStackRepository> {
+         every { savePageStack(any()) } answers { WritableCache(firstArg()) }
+         every { deleteAllPageStacks() } returns Unit
+      }
+
+      val loadedCache = loadPageStackBoardOrDefault(
+         pageStackBoardRepository, pageStackRepository)
+
+      verify { pageStackRepository.deleteAllPageStacks() }
+      assertEquals(2, loadedCache.value.rootRow.childCount)
+
+      val pageStack1
+         = assertIs<PageStackBoard.PageStack>(loadedCache.value.rootRow[0])
+         .cache.value
+      assertIs<TestPage>(pageStack1.head)
+      assertNull(pageStack1.tailOrNull())
+      verify { pageStackRepository.savePageStack(pageStack1) }
+
+      val pageStack2
+         = assertIs<PageStackBoard.PageStack>(loadedCache.value.rootRow[1])
+         .cache.value
+      assertIs<TestPage>(pageStack2.head)
+      assertNull(pageStack2.tailOrNull())
+      verify { pageStackRepository.savePageStack(pageStack2) }
    }
 }

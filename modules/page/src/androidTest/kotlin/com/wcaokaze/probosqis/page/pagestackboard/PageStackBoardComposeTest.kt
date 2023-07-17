@@ -28,11 +28,10 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.PageStackBoard
-import com.wcaokaze.probosqis.page.PageStackBoardState
 import com.wcaokaze.probosqis.page.Page
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.pageComposable
+import kotlinx.collections.immutable.toImmutableList
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -62,7 +61,13 @@ class PageStackBoardComposeTest {
    private fun createPageStackBoardState(
       vararg pageStacks: PageStack
    ): PageStackBoardState {
-      val pageStackBoard = PageStackBoard(pageStacks.toList())
+      val rootRow = PageStackBoard.Row(
+         pageStacks
+            .map { PageStackBoard.PageStack(WritableCache(it)) }
+            .toImmutableList()
+      )
+
+      val pageStackBoard = PageStackBoard(rootRow)
       val pageStackBoardCache = WritableCache(pageStackBoard)
       return PageStackBoardState(pageStackBoardCache)
    }

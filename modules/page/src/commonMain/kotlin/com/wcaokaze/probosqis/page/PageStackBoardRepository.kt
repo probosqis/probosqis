@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.page
 
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.pagestackboard.AbstractPageStackRepository
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
 
 interface PageStackBoardRepository {
@@ -39,6 +40,10 @@ abstract class AbstractPageStackBoardRepository
       }
 
       override fun savePageStack(pageStack: PageStack): WritableCache<PageStack> {
+         throw NotImplementedError()
+      }
+
+      override fun deleteAllPageStacks() {
          throw NotImplementedError()
       }
    }

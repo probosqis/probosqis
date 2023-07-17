@@ -23,6 +23,7 @@ import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.page.JvmPageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.pagestackboard.JvmPageStackRepository
 import com.wcaokaze.probosqis.page.pagestackboard.pageSerializer
 import kotlinx.collections.immutable.persistentListOf
 import java.io.File
@@ -40,5 +41,12 @@ class AndroidDI(context: Context) : DI {
          pageSerializer<TestPage>(),
       ),
       File(context.filesDir, "probosqisData/pageStackBoardCache")
+   )
+
+   override val pageStackRepository = JvmPageStackRepository(
+      allPageSerializers = listOf(
+         pageSerializer<TestPage>(),
+      ),
+      File(context.filesDir, "probosqisData/pageStackCache")
    )
 }

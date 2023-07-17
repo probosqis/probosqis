@@ -16,11 +16,13 @@
 
 package com.wcaokaze.probosqis.page.pagestackboard
 
+import androidx.compose.runtime.Stable
+import com.wcaokaze.probosqis.cache.compose.asMutableState
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 
-class PageStackBoard(val column: Column) {
+class PageStackBoard(val rootRow: Row) {
    sealed class LayoutElement
 
    class PageStack(
@@ -65,5 +67,15 @@ class PageStackBoard(val column: Column) {
       fun replaced(index: Int, element: LayoutElement) = Row(
          children.toPersistentList().set(index, element)
       )
+   }
+}
+
+@Stable
+class PageStackBoardState(pageStackBoardCache: WritableCache<PageStackBoard>) {
+   internal var pageStackBoard: PageStackBoard
+         by pageStackBoardCache.asMutableState()
+
+   suspend fun animateScrollTo(pageStack: Int) {
+      TODO()
    }
 }

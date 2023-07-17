@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import io.mockk.mockk
 import org.junit.Rule
@@ -46,7 +47,10 @@ class PageStackComposeTest {
       var pageStack = PageStack(page1, MockClock())
       pageStack = pageStack.added(page2)
 
-      val pageStackState = PageStackState(pageStack, pageStackBoardState = mockk())
+      val pageStackState = PageStackState(
+         WritableCache(pageStack),
+         pageStackBoardState = mockk()
+      )
 
       rule.setContent {
          PageStackContent(pageStackState, pageComposableSwitcher)
@@ -64,11 +68,14 @@ class PageStackComposeTest {
       val page2 = SpyPage()
       val page3 = SpyPage()
 
-      var pageStack by mutableStateOf(PageStack(page1, MockClock()))
-      pageStack = pageStack.added(page2)
-
       val pageStackState by derivedStateOf {
-         PageStackState(pageStack, pageStackBoardState = mockk())
+         var pageStack = PageStack(page1, MockClock())
+         pageStack = pageStack.added(page2)
+
+         PageStackState(
+            WritableCache(pageStack),
+            pageStackBoardState = mockk()
+         )
       }
 
       rule.setContent {
@@ -81,7 +88,8 @@ class PageStackComposeTest {
          assertEquals(0, page3.recompositionCount)
       }
 
-      pageStack = assertNotNull(pageStack.tailOrNull())
+      pageStackState.pageStackCache.value =
+         assertNotNull(pageStackState.pageStack.tailOrNull())
 
       rule.runOnIdle {
          assertEquals(1, page1.recompositionCount)
@@ -89,7 +97,8 @@ class PageStackComposeTest {
          assertEquals(0, page3.recompositionCount)
       }
 
-      pageStack = pageStack.added(page3)
+      pageStackState.pageStackCache.value =
+         pageStackState.pageStack.added(page3)
 
       rule.runOnIdle {
          assertEquals(1, page1.recompositionCount)

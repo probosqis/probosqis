@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.page
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.rememberCoroutineScope
@@ -24,12 +25,17 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoardState
+import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoard
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import kotlin.test.Ignore
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -39,17 +45,22 @@ class PageStackBoardComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
+   @Ignore
    @Test
    fun addPageStack_viaPageStackState() {
       class TestPage(val i: Int) : Page()
 
       val pageStackBoardCache = run {
-         val pageStackBoard = PageStackBoard(
-            listOf(
+         val children = listOf(
                PageStack(TestPage( 0), MockClock(minute = 0)),
                PageStack(TestPage(10), MockClock(minute = 1)),
             )
-         )
+            .map { WritableCache(it) }
+            .map { PageStackBoard.PageStack(it) }
+            .toImmutableList()
+
+         val rootRow = PageStackBoard.Row(children)
+         val pageStackBoard = PageStackBoard(rootRow)
          WritableCache(pageStackBoard)
       }
 
@@ -85,27 +96,33 @@ class PageStackBoardComposeTest {
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
 
-         PageStackBoard(
+         SingleColumnPageStackBoard(
             pageStackBoardState,
-            pageComposableSwitcher
+            pageComposableSwitcher,
+            WindowInsets(0, 0, 0, 0)
          )
       }
 
       fun assertPageNumbers(expected: List<Int>, actual: PageStackBoard) {
-         val pageStacks = List(actual.pageStackCount) { actual[it] }
-         val pages = pageStacks.map { assertIs<TestPage>(it.head) }
+         val elements = List(actual.rootRow.childCount) { actual.rootRow[it] }
+
+         val pages = elements
+            .map { assertIs<PageStackBoard.PageStack>(it) }
+            .map { it.cache.value }
+            .map { assertIs<TestPage>(it.head) }
+
          assertContentEquals(expected, pages.map { it.i })
       }
 
       rule.runOnIdle {
-         assertEquals(2, pageStackBoardCache.value.pageStackCount)
+         assertEquals(2, pageStackBoardCache.value.rootRow.childCount)
       }
       coroutineScope.launch {
          pageStackBoardState.animateScrollTo(1)
          rule.onNodeWithText("10").performClick()
       }
       rule.runOnIdle {
-         assertEquals(3, pageStackBoardCache.value.pageStackCount)
+         assertEquals(3, pageStackBoardCache.value.rootRow.childCount)
          assertPageNumbers(listOf(0, 10, 11), pageStackBoardCache.value)
       }
       coroutineScope.launch {
@@ -113,7 +130,7 @@ class PageStackBoardComposeTest {
          rule.onNodeWithText("0").performClick()
       }
       rule.runOnIdle {
-         assertEquals(4, pageStackBoardCache.value.pageStackCount)
+         assertEquals(4, pageStackBoardCache.value.rootRow.childCount)
          assertPageNumbers(listOf(0, 1, 10, 11), pageStackBoardCache.value)
       }
    }

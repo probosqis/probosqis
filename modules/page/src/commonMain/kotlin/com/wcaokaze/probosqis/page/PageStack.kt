@@ -18,7 +18,10 @@ package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import com.wcaokaze.probosqis.cache.compose.asState
+import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoardState
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -71,12 +74,13 @@ class PageStack private constructor(
 
 @Stable
 class PageStackState internal constructor(
-   internal val pageStack: PageStack,
+   internal val pageStackCache: WritableCache<PageStack>,
    private val pageStackBoardState: PageStackBoardState
 ) {
+   internal val pageStack: PageStack by pageStackCache.asState()
+
    suspend fun addColumn(pageStack: PageStack) {
-      val index = pageStackBoardState.pageStackBoard.indexOf(this.pageStack)
-      pageStackBoardState.addPageStack(index + 1, pageStack)
+      TODO()
    }
 }
 

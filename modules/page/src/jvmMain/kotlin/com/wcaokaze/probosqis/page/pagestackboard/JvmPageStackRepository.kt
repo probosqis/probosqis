@@ -33,7 +33,7 @@ class JvmPageStackRepository(
          if (dir.exists()) {
             require(dir.isDirectory)
          } else {
-            if (!dir.mkdir()) { throw IOException() }
+            if (!dir.mkdirs()) { throw IOException() }
          }
       }
 
@@ -51,5 +51,11 @@ class JvmPageStackRepository(
       val fileName = id.value.toString(16)
       val file = File(dir, fileName)
       return loadCache(file, json)
+   }
+
+   override fun deleteAllPageStacks() {
+      for (file in dir.listFiles() ?: emptyArray()) {
+         file.deleteRecursively()
+      }
    }
 }

@@ -44,7 +44,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.page.PageStackBoardState
 import com.wcaokaze.probosqis.page.PageStackContent
 import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
@@ -61,18 +60,21 @@ fun MultiColumnPageStackBoard(
    Layout(
       content = {
          repeat (pageStackCount) { index ->
-            val pageStackState = remember {
-               val pageStack = state.pageStackBoard[index]
-               PageStackState(pageStack, state)
-            }
+            val element = state.pageStackBoard.rootRow[index]
 
-            PageStack(
-               pageStackState,
-               isActive = pageStackCount == 1 || index == 1,
-               windowInsets.only(WindowInsetsSides.Bottom),
-               pageComposableSwitcher,
-               onTopAppBarHeightChanged,
-            )
+            if (element is PageStackBoard.PageStack) {
+               val pageStackState = remember {
+                  PageStackState(element.cache, state)
+               }
+
+               PageStack(
+                  pageStackState,
+                  isActive = pageStackCount == 1 || index == 1,
+                  windowInsets.only(WindowInsetsSides.Bottom),
+                  pageComposableSwitcher,
+                  onTopAppBarHeightChanged,
+               )
+            }
          }
       },
       measurePolicy = rememberMultiColumnPageStackBoardMeasurePolicy(pageStackCount),

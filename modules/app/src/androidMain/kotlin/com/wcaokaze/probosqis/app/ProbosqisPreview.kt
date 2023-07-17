@@ -26,8 +26,13 @@ import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
-import com.wcaokaze.probosqis.page.*
+import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.PageStack
+import com.wcaokaze.probosqis.page.PageStackBoardRepository
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 private object PreviewDI : DI {
    private val clock = MockClock()
@@ -42,16 +47,26 @@ private object PreviewDI : DI {
       override fun savePageStackBoard(pageStackBoard: PageStackBoard)
             = throw NotImplementedError()
 
-      override fun loadPageStackBoard() = WritableCache(
-         PageStackBoard(
-            pageStacks = persistentListOf(
-               PageStack(TestPage(0), clock),
-               PageStack(TestPage(1), clock),
-               PageStack(TestPage(2), clock),
-               PageStack(TestPage(3), clock),
-            )
-         )
-      )
+      override fun loadPageStackBoard(): WritableCache<PageStackBoard> {
+         val children = List(4) {
+            val pageStack = PageStack(TestPage(0), clock)
+            val pageStackCache = WritableCache(pageStack)
+            PageStackBoard.PageStack(pageStackCache)
+         } .toImmutableList()
+
+         val rootRow = PageStackBoard.Row(children)
+         val pageStackBoard = PageStackBoard(rootRow)
+         return WritableCache(pageStackBoard)
+      }
+   }
+
+   override val pageStackRepository = object : PageStackRepository {
+      override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
+            = throw NotImplementedError()
+      override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
+            = throw NotImplementedError()
+      override fun deleteAllPageStacks()
+            = throw NotImplementedError()
    }
 }
 

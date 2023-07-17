@@ -26,10 +26,12 @@ import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.ext.kotlin.datetime.BehindClock
 import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.PageStackBoard
 import com.wcaokaze.probosqis.page.PageStackBoardRepository
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -55,21 +57,30 @@ fun Probosqis(
 expect fun colorScheme(): ColorScheme
 
 internal fun loadPageStackBoardOrDefault(
-   pageStackBoardRepository: PageStackBoardRepository
+   pageStackBoardRepository: PageStackBoardRepository,
+   pageStackRepository: PageStackRepository
 ): WritableCache<PageStackBoard> {
    return try {
       pageStackBoardRepository.loadPageStackBoard()
    } catch (e: Exception) {
-      val pageStackBoard = PageStackBoard(
-         pageStacks = createDefaultPageStacks()
+      pageStackRepository.deleteAllPageStacks()
+
+      val rootRow = PageStackBoard.Row(
+         createDefaultPageStacks(pageStackRepository)
       )
+      val pageStackBoard = PageStackBoard(rootRow)
       pageStackBoardRepository.savePageStackBoard(pageStackBoard)
    }
 }
 
-private fun createDefaultPageStacks(): List<PageStack> {
-   return persistentListOf(
-      PageStack(TestPage(0), BehindClock(Duration.ZERO)),
-      PageStack(TestPage(1), BehindClock(1.milliseconds)),
-   )
+private fun createDefaultPageStacks(
+   pageStackRepository: PageStackRepository
+): ImmutableList<PageStackBoard.LayoutElement> {
+   return sequenceOf(
+         PageStack(TestPage(0), BehindClock(Duration.ZERO)),
+         PageStack(TestPage(1), BehindClock(1.milliseconds)),
+      )
+      .map { pageStackRepository.savePageStack(it) }
+      .map { PageStackBoard.PageStack(it) }
+      .toImmutableList()
 }

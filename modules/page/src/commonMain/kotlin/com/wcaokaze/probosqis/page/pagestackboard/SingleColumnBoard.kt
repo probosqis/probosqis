@@ -42,7 +42,6 @@ import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.PageStackBoardState
 import com.wcaokaze.probosqis.page.PageStackContent
 import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
@@ -89,8 +88,9 @@ fun SingleColumnPageStackBoard(
       content = {
          val pageStackState by remember(state) {
             derivedStateOf {
-               val pageStack = state.pageStackBoard[0]
-               PageStackState(pageStack, state)
+               val pageStack = state.pageStackBoard.rootRow[0]
+                     as PageStackBoard.PageStack
+               PageStackState(pageStack.cache, state)
             }
          }
 

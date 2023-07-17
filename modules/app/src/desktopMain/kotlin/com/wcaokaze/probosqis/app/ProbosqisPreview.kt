@@ -21,7 +21,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
-import com.wcaokaze.probosqis.page.*
+import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.PageStack
+import com.wcaokaze.probosqis.page.PageStackBoardRepository
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
 import kotlinx.collections.immutable.persistentListOf
 
 @Preview
@@ -41,13 +45,25 @@ private fun ProbosqisPreview() {
             override fun savePageStackBoard(pageStackBoard: PageStackBoard)
                   = throw NotImplementedError()
 
-            override fun loadPageStackBoard() = WritableCache(
-               PageStackBoard(
-                  pageStacks = persistentListOf(
-                     PageStack(TestPage(0), clock),
-                  )
+            override fun loadPageStackBoard(): WritableCache<PageStackBoard> {
+               val pageStack = PageStack(TestPage(0), clock)
+               val pageStackCache = WritableCache(pageStack)
+               val children = persistentListOf(
+                  PageStackBoard.PageStack(pageStackCache),
                )
-            )
+               val rootRow = PageStackBoard.Row(children)
+               val pageStackBoard = PageStackBoard(rootRow)
+               return WritableCache(pageStackBoard)
+            }
+         }
+
+         override val pageStackRepository = object : PageStackRepository {
+            override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
+                  = throw NotImplementedError()
+            override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
+                  = throw NotImplementedError()
+            override fun deleteAllPageStacks()
+                  = throw NotImplementedError()
          }
       }
    }
