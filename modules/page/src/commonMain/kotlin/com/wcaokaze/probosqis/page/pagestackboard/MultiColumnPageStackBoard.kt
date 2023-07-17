@@ -48,6 +48,8 @@ import com.wcaokaze.probosqis.page.PageStackContent
 import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 
+private const val PAGE_STACK_PADDING_DP = 8
+
 @Composable
 fun MultiColumnPageStackBoard(
    state: PageStackBoardState,
@@ -87,22 +89,27 @@ private fun rememberMultiColumnPageStackBoardMeasurePolicy(
    pageStackCount: Int
 ) = remember(pageStackCount) {
    MeasurePolicy { measurables, constraints ->
+      val pageStackPadding = PAGE_STACK_PADDING_DP.dp.roundToPx()
+
       val pageStackBoardWidth = constraints.maxWidth
       val pageStackBoardHeight = constraints.maxHeight
 
-      val pageStackConstraints = Constraints.fixed(
-         pageStackBoardWidth / pageStackCount,
-         pageStackBoardHeight
+      val pageStackWidth = (
+            (pageStackBoardWidth - pageStackPadding * 2) / pageStackCount
+            - pageStackPadding * 2
       )
+
+      val pageStackConstraints = Constraints.fixed(
+         pageStackWidth, pageStackBoardHeight)
 
       val placeables = measurables.map { it.measure(pageStackConstraints) }
 
       layout(pageStackBoardWidth, pageStackBoardHeight) {
-         var x = 0
+         var x = pageStackPadding
 
          for (placeable in placeables) {
-            placeable.placeRelative(x, 0)
-            x += placeable.width
+            placeable.placeRelative(x + pageStackPadding, 0)
+            x += placeable.width + pageStackPadding * 2
          }
       }
    }

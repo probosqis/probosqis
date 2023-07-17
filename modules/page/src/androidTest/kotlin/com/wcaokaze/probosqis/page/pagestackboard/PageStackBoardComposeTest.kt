@@ -116,8 +116,8 @@ class PageStackBoardComposeTest {
       }
 
       rule.onNodeWithText("0")
-         .assertLeftPositionInRootIsEqualTo(0.dp)
+         .assertLeftPositionInRootIsEqualTo(16.dp)
       rule.onNodeWithText("1")
-         .assertLeftPositionInRootIsEqualTo(50.dp)
+         .assertLeftPositionInRootIsEqualTo(58.dp)
    }
 }
