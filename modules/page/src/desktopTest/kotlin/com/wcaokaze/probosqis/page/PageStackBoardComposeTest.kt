@@ -26,8 +26,8 @@ import androidx.compose.ui.test.performClick
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
-import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoardState
 import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoard
+import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoardState
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -64,7 +64,7 @@ class PageStackBoardComposeTest {
          WritableCache(pageStackBoard)
       }
 
-      val pageStackBoardState = PageStackBoardState(pageStackBoardCache)
+      val pageStackBoardState = SingleColumnPageStackBoardState(pageStackBoardCache)
 
       val pageComposableSwitcher = PageComposableSwitcher(
          allPageComposables = listOf(

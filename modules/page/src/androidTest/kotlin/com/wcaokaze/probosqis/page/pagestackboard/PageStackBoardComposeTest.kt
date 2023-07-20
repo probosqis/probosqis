@@ -58,9 +58,24 @@ class PageStackBoardComposeTest {
       )
    )
 
-   private fun createPageStackBoardState(
+   private fun createSingleColumnPageStackBoardState(
       vararg pageStacks: PageStack
-   ): PageStackBoardState {
+   ): SingleColumnPageStackBoardState {
+      return createPageStackBoardState(
+         ::SingleColumnPageStackBoardState, *pageStacks)
+   }
+
+   private fun createMultiColumnPageStackBoardState(
+      vararg pageStacks: PageStack
+   ): MultiColumnPageStackBoardState {
+      return createPageStackBoardState(
+         ::MultiColumnPageStackBoardState, *pageStacks)
+   }
+
+   private fun <S : PageStackBoardState> createPageStackBoardState(
+      constructor: (WritableCache<PageStackBoard>) -> S,
+      vararg pageStacks: PageStack
+   ): S {
       val rootRow = PageStackBoard.Row(
          pageStacks
             .map { PageStackBoard.PageStack(WritableCache(it)) }
@@ -69,14 +84,14 @@ class PageStackBoardComposeTest {
 
       val pageStackBoard = PageStackBoard(rootRow)
       val pageStackBoardCache = WritableCache(pageStackBoard)
-      return PageStackBoardState(pageStackBoardCache)
+      return constructor(pageStackBoardCache)
    }
 
    @Test
    fun singleColumnPageStackBoard_layout() {
       rule.setContent {
          val pageStackBoardState = remember {
-            createPageStackBoardState(
+            createSingleColumnPageStackBoardState(
                PageStack(TestPage(0), MockClock(minute = 0)),
                PageStack(TestPage(1), MockClock(minute = 1)),
             )
@@ -99,7 +114,7 @@ class PageStackBoardComposeTest {
    fun multiColumnPageStackBoard_layout() {
       rule.setContent {
          val pageStackBoardState = remember {
-            createPageStackBoardState(
+            createMultiColumnPageStackBoardState(
                PageStack(TestPage(0), MockClock(minute = 0)),
                PageStack(TestPage(1), MockClock(minute = 1)),
             )

@@ -58,9 +58,9 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoardState
 import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoard
 import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoardAppBar
+import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoardState
 import com.wcaokaze.probosqis.resources.Strings
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,7 +87,7 @@ internal fun SingleColumnProbosqis(
             di.pageStackBoardRepository,
             di.pageStackRepository
          )
-         PageStackBoardState(pageStackBoardCache)
+         SingleColumnPageStackBoardState(pageStackBoardCache)
       }
 
       val pageComposableSwitcher = remember(di) {

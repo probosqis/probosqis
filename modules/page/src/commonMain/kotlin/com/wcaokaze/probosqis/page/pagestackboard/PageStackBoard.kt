@@ -120,11 +120,9 @@ class PageStackBoard(val rootRow: Row) {
 }
 
 @Stable
-class PageStackBoardState(pageStackBoardCache: WritableCache<PageStackBoard>) {
+sealed class PageStackBoardState(pageStackBoardCache: WritableCache<PageStackBoard>) {
    internal var pageStackBoard: PageStackBoard
          by pageStackBoardCache.asMutableState()
 
-   suspend fun animateScrollTo(pageStack: Int) {
-      TODO()
-   }
+   abstract suspend fun animateScrollTo(pageStack: Int)
 }

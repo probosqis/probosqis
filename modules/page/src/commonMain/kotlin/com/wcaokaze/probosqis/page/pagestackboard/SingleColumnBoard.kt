@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -41,10 +42,20 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.page.PageStackContent
 import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
+
+@Stable
+class SingleColumnPageStackBoardState(
+   pageStackBoardCache: WritableCache<PageStackBoard>
+) : PageStackBoardState(pageStackBoardCache) {
+   override suspend fun animateScrollTo(pageStack: Int) {
+      TODO()
+   }
+}
 
 @Composable
 fun SingleColumnPageStackBoardAppBar(
@@ -79,7 +90,7 @@ fun SingleColumnPageStackBoardAppBar(
 
 @Composable
 fun SingleColumnPageStackBoard(
-   state: PageStackBoardState,
+   state: SingleColumnPageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,

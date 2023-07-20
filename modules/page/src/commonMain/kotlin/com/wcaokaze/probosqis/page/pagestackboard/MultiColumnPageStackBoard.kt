@@ -32,6 +32,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -44,15 +45,25 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.PageStackContent
 import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 
 private const val PAGE_STACK_PADDING_DP = 8
 
+@Stable
+class MultiColumnPageStackBoardState(
+   pageStackBoardCache: WritableCache<PageStackBoard>
+) : PageStackBoardState(pageStackBoardCache) {
+   override suspend fun animateScrollTo(pageStack: Int) {
+      TODO()
+   }
+}
+
 @Composable
 fun MultiColumnPageStackBoard(
-   state: PageStackBoardState,
+   state: MultiColumnPageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStackCount: Int,
    windowInsets: WindowInsets,
