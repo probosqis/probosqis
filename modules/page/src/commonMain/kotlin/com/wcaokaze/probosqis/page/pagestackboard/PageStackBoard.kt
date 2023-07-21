@@ -64,6 +64,8 @@ class PageStackBoard(val rootRow: Row) {
 
       operator fun get(index: Int): LayoutElement = children[index]
 
+      operator fun iterator(): Iterator<LayoutElement> = children.iterator()
+
       fun inserted(index: Int, element: LayoutElement) = Column(
          buildList(capacity = children.size + 1) {
             addAll(children.subList(0, index))
@@ -94,6 +96,8 @@ class PageStackBoard(val rootRow: Row) {
       val childCount: Int get() = children.size
 
       operator fun get(index: Int): LayoutElement = children[index]
+
+      operator fun iterator(): Iterator<LayoutElement> = children.iterator()
 
       fun inserted(index: Int, element: LayoutElement) = Row(
          buildList(capacity = children.size + 1) {

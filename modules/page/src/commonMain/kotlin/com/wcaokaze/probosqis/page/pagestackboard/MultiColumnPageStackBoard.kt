@@ -34,21 +34,28 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.MeasurePolicy
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackContent
 import com.wcaokaze.probosqis.page.PageStackState
-import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableMap
 
 private const val PAGE_STACK_PADDING_DP = 8
 
@@ -56,6 +63,59 @@ private const val PAGE_STACK_PADDING_DP = 8
 class MultiColumnPageStackBoardState(
    pageStackBoardCache: WritableCache<PageStackBoard>
 ) : PageStackBoardState(pageStackBoardCache) {
+   @Stable
+   class LayoutState(
+      val pageStackCache: WritableCache<PageStack>,
+      initialPosition: IntOffset,
+      initialWidth: Int,
+   ) {
+      var position by mutableStateOf(initialPosition)
+      var width by mutableStateOf(initialWidth)
+   }
+
+   var layoutStates: ImmutableMap<PageStack.Id, LayoutState>
+         by mutableStateOf(persistentMapOf())
+      private set
+
+   internal fun layout(
+      pageStackBoardWidth: Int,
+      pageStackCount: Int,
+      density: Density,
+   ) {
+      val layoutStateMap = layoutStates
+      val layoutResult = mutableMapOf<PageStack.Id, LayoutState>()
+
+      val pageStackPadding = with (density) { PAGE_STACK_PADDING_DP.dp.roundToPx() }
+
+      val pageStackWidth = (
+         (pageStackBoardWidth - pageStackPadding * 2) / pageStackCount
+         - pageStackPadding * 2
+      )
+
+      var x = pageStackPadding
+
+      for (element in pageStackBoard.rootRow) {
+         if (element !is PageStackBoard.PageStack) { continue }
+
+         val pageStack = element.cache.value
+
+         x += pageStackPadding
+         val position = IntOffset(x, 0)
+         x += pageStackWidth + pageStackPadding
+
+         var layoutState = layoutStateMap[pageStack.id]
+         if (layoutState != null) {
+            layoutState.position = position
+            layoutState.width = pageStackWidth
+         } else {
+            layoutState = LayoutState(element.cache, position, pageStackWidth)
+         }
+         layoutResult[pageStack.id] = layoutState
+      }
+
+      layoutStates = layoutResult.toImmutableMap()
+   }
+
    override suspend fun animateScrollTo(pageStack: Int) {
       TODO()
    }
@@ -70,60 +130,47 @@ fun MultiColumnPageStackBoard(
    modifier: Modifier = Modifier,
    onTopAppBarHeightChanged: (Dp) -> Unit = {},
 ) {
-   Layout(
-      content = {
-         repeat (pageStackCount) { index ->
-            val element = state.pageStackBoard.rootRow[index]
+   SubcomposeLayout(
+      modifier = modifier,
+      measurePolicy = remember(state, pageStackCount) {{ constraints ->
+         val pageStackBoardWidth = constraints.maxWidth
+         val pageStackBoardHeight = constraints.maxHeight
 
-            if (element is PageStackBoard.PageStack) {
+         state.layout(
+            pageStackBoardWidth,
+            pageStackCount,
+            density = this
+         )
+
+         val placeables = state.layoutStates.map { (pageStackId, layoutState) ->
+            val measurable = subcompose(pageStackId) {
                val pageStackState = remember {
-                  PageStackState(element.cache, state)
+                  PageStackState(layoutState.pageStackCache, state)
                }
 
                PageStack(
                   pageStackState,
-                  isActive = pageStackCount == 1 || index == 1,
+                  isActive = pageStackCount == 1,
                   windowInsets.only(WindowInsetsSides.Bottom),
                   pageComposableSwitcher,
                   onTopAppBarHeightChanged,
                )
+            } .single()
+
+            val pageStackConstraints = Constraints.fixed(
+               layoutState.width, pageStackBoardHeight)
+
+            val placeable = measurable.measure(pageStackConstraints)
+            Triple(pageStackId, layoutState, placeable)
+         }
+
+         layout(pageStackBoardWidth, pageStackBoardHeight) {
+            for ((_, layout, placeable) in placeables) {
+               placeable.placeRelative(layout.position)
             }
          }
-      },
-      measurePolicy = rememberMultiColumnPageStackBoardMeasurePolicy(pageStackCount),
-      modifier = modifier
+      }}
    )
-}
-
-@Composable
-private fun rememberMultiColumnPageStackBoardMeasurePolicy(
-   pageStackCount: Int
-) = remember(pageStackCount) {
-   MeasurePolicy { measurables, constraints ->
-      val pageStackPadding = PAGE_STACK_PADDING_DP.dp.roundToPx()
-
-      val pageStackBoardWidth = constraints.maxWidth
-      val pageStackBoardHeight = constraints.maxHeight
-
-      val pageStackWidth = (
-            (pageStackBoardWidth - pageStackPadding * 2) / pageStackCount
-            - pageStackPadding * 2
-      )
-
-      val pageStackConstraints = Constraints.fixed(
-         pageStackWidth, pageStackBoardHeight)
-
-      val placeables = measurables.map { it.measure(pageStackConstraints) }
-
-      layout(pageStackBoardWidth, pageStackBoardHeight) {
-         var x = pageStackPadding
-
-         for (placeable in placeables) {
-            placeable.placeRelative(x + pageStackPadding, 0)
-            x += placeable.width + pageStackPadding * 2
-         }
-      }
-   }
 }
 
 @Composable
