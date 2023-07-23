@@ -57,14 +57,34 @@ class PageStackBoard(val rootRow: Row) {
    ) : LayoutElement()
 
    @Serializable
-   class Column(
-      private val children: List<LayoutElement>
-   ) : LayoutElement() {
+   sealed class LayoutElementParent : LayoutElement(), Iterable<LayoutElement> {
+      abstract val children: List<LayoutElement>
+
+      /** 葉ノードの数。すなわちこのサブツリーの子孫にある[PageStack]の数。 */
+      internal abstract val leafCount: Int
+
       val childCount: Int get() = children.size
+
+      protected fun countLeafs(children: List<LayoutElement>): Int {
+         return children.sumOf {
+            when (it) {
+               is PageStack -> 1
+               is LayoutElementParent -> it.leafCount
+            }
+         }
+      }
 
       operator fun get(index: Int): LayoutElement = children[index]
 
-      operator fun iterator(): Iterator<LayoutElement> = children.iterator()
+      override operator fun iterator(): Iterator<LayoutElement>
+            = children.iterator()
+   }
+
+   @Serializable
+   class Column(
+      override val children: List<LayoutElement>
+   ) : LayoutElementParent() {
+      override val leafCount: Int = countLeafs(children)
 
       fun inserted(index: Int, element: LayoutElement) = Column(
          buildList(capacity = children.size + 1) {
@@ -91,13 +111,9 @@ class PageStackBoard(val rootRow: Row) {
 
    @Serializable
    class Row(
-      private val children: List<LayoutElement>
-   ) : LayoutElement() {
-      val childCount: Int get() = children.size
-
-      operator fun get(index: Int): LayoutElement = children[index]
-
-      operator fun iterator(): Iterator<LayoutElement> = children.iterator()
+      override val children: List<LayoutElement>
+   ) : LayoutElementParent() {
+      override val leafCount: Int = countLeafs(children)
 
       fun inserted(index: Int, element: LayoutElement) = Row(
          buildList(capacity = children.size + 1) {
@@ -121,6 +137,37 @@ class PageStackBoard(val rootRow: Row) {
          }
       )
    }
+}
+
+operator fun PageStackBoard.get(index: Int): PageStackBoard.PageStack {
+   fun PageStackBoard.LayoutElementParent
+         .findSubtree(indexInSubtree: Int): PageStackBoard.PageStack
+   {
+      assert(indexInSubtree >= 0)
+
+      var nodeIndex = 0
+      for (node in this) {
+         when (node) {
+            is PageStackBoard.PageStack -> {
+               if (nodeIndex == indexInSubtree) { return node }
+               nodeIndex++
+            }
+            is PageStackBoard.LayoutElementParent -> {
+               if (nodeIndex + node.leafCount > indexInSubtree) {
+                  return node.findSubtree(indexInSubtree - nodeIndex)
+               }
+               nodeIndex += node.leafCount
+            }
+         }
+      }
+
+      throw IndexOutOfBoundsException(
+         "pageStack count: $nodeIndex, specified index: $index")
+   }
+
+   if (index < 0) { throw IndexOutOfBoundsException("specified index: $index") }
+
+   return rootRow.findSubtree(index)
 }
 
 @Stable

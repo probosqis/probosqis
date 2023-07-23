@@ -450,4 +450,61 @@ class PageStackBoardTest {
       assertPage(1, row[1])
       assertEquals(2, replacedRow.childCount)
    }
+
+   @Test
+   fun getAsTreeIndex() {
+      fun Row(vararg children: PageStackBoard.LayoutElement)
+            = PageStackBoard.Row(children.toList())
+      fun Column(vararg children: PageStackBoard.LayoutElement)
+            = PageStackBoard.Column(children.toList())
+      fun PageStack(id: Long): PageStackBoard.PageStack {
+         val pageStack = PageStack(PageStack.Id(id), PageImpl(0))
+         val pageStackCache = WritableCache(pageStack)
+         return PageStackBoard.PageStack(pageStackCache)
+      }
+
+      val pageStackBoard = PageStackBoard(
+         Row(
+            PageStack(0L),
+            Column(
+               PageStack(2L),
+               Column(
+                  PageStack(3L),
+                  PageStack(5L),
+               ),
+               PageStack(6L),
+               Row(
+                  PageStack(8L),
+               ),
+            ),
+            PageStack(11L),
+            Row(
+               PageStack(12L),
+               Column(
+                  PageStack(14L),
+               ),
+               PageStack(17L),
+               Row(
+                  PageStack(18L),
+                  PageStack(20L),
+               ),
+            ),
+         )
+      )
+
+      assertEquals( 0L, pageStackBoard[ 0].cache.value.id.value)
+      assertEquals( 2L, pageStackBoard[ 1].cache.value.id.value)
+      assertEquals( 3L, pageStackBoard[ 2].cache.value.id.value)
+      assertEquals( 5L, pageStackBoard[ 3].cache.value.id.value)
+      assertEquals( 6L, pageStackBoard[ 4].cache.value.id.value)
+      assertEquals( 8L, pageStackBoard[ 5].cache.value.id.value)
+      assertEquals(11L, pageStackBoard[ 6].cache.value.id.value)
+      assertEquals(12L, pageStackBoard[ 7].cache.value.id.value)
+      assertEquals(14L, pageStackBoard[ 8].cache.value.id.value)
+      assertEquals(17L, pageStackBoard[ 9].cache.value.id.value)
+      assertEquals(18L, pageStackBoard[10].cache.value.id.value)
+      assertEquals(20L, pageStackBoard[11].cache.value.id.value)
+      assertFails { pageStackBoard[12] }
+      assertFails { pageStackBoard[-1] }
+   }
 }
