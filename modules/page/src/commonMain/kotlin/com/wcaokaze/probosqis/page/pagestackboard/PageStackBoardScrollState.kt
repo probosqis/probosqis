@@ -38,7 +38,10 @@ internal class PageStackBoardScrollState : ScrollableState {
       private set
 
    override fun dispatchRawDelta(delta: Float): Float {
-      scrollOffset += delta
+      // deltaは指が動いた量。正のとき右に動いたことを表す。
+      // scrollOffsetは正のとき「右が見える」状態を表す。
+      // よってこの2つは符号が逆であるため、-演算となる
+      scrollOffset -= delta
       return delta
    }
 

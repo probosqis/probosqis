@@ -96,7 +96,9 @@ class MultiColumnPageStackBoardState(
          - pageStackPadding * 2
       )
 
-      var x = scrollState.scrollOffset.toInt() + pageStackPadding
+      // scrollOffsetが大きいほど右のPageStackが表示される
+      // つまりscrollOffsetが大きいほどPageStackの位置は左となるため符号が逆となる
+      var x = -scrollState.scrollOffset.toInt() + pageStackPadding
 
       for (element in pageStackBoard.rootRow) {
          if (element !is PageStackBoard.PageStack) { continue }
