@@ -21,9 +21,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
@@ -112,6 +116,8 @@ class PageStackBoardComposeTest {
 
    @Test
    fun multiColumnPageStackBoard_layout() {
+      val boardWidth = 100.dp
+
       rule.setContent {
          val pageStackBoardState = remember {
             createMultiColumnPageStackBoardState(
@@ -126,13 +132,60 @@ class PageStackBoardComposeTest {
             pageStackCount = 2,
             WindowInsets(0, 0, 0, 0),
             modifier = Modifier
-               .width(100.dp)
+               .width(boardWidth)
          )
       }
 
       rule.onNodeWithText("0")
          .assertLeftPositionInRootIsEqualTo(16.dp)
       rule.onNodeWithText("1")
-         .assertLeftPositionInRootIsEqualTo(58.dp)
+         .assertLeftPositionInRootIsEqualTo(boardWidth / 2 + 8.dp)
+   }
+
+   @Test
+   fun multiColumnPageStackBoard_scroll() {
+      val boardWidth = 100.dp
+      val boardTestTag = "PageStackBoard"
+
+      rule.setContent {
+         val pageStackBoardState = remember {
+            createMultiColumnPageStackBoardState(
+               PageStack(TestPage(0), MockClock(minute = 0)),
+               PageStack(TestPage(1), MockClock(minute = 1)),
+               PageStack(TestPage(2), MockClock(minute = 2)),
+            )
+         }
+
+         MultiColumnPageStackBoard(
+            pageStackBoardState,
+            pageComposableSwitcher,
+            pageStackCount = 2,
+            WindowInsets(0, 0, 0, 0),
+            modifier = Modifier
+               .width(boardWidth)
+               .testTag(boardTestTag)
+         )
+      }
+
+      rule.onNodeWithText("0")
+         .assertLeftPositionInRootIsEqualTo(16.dp)
+      rule.onNodeWithText("1")
+         .assertLeftPositionInRootIsEqualTo(boardWidth / 2 + 8.dp)
+
+      val scrollAmount = 32.dp
+
+      rule.onNodeWithTag(boardTestTag)
+         .performTouchInput {
+            down(Offset(0.0f, 0.0f))
+            moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
+            moveBy(Offset(-scrollAmount.toPx(), 0.0f))
+            // upするとsnapする
+            // up()
+         }
+
+      rule.onNodeWithText("0")
+         .assertLeftPositionInRootIsEqualTo(16.dp - scrollAmount)
+      rule.onNodeWithText("1")
+         .assertLeftPositionInRootIsEqualTo(boardWidth / 2 + 8.dp - scrollAmount)
    }
 }

@@ -16,6 +16,8 @@
 
 package com.wcaokaze.probosqis.page.pagestackboard
 
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -77,6 +79,8 @@ class MultiColumnPageStackBoardState(
          by mutableStateOf(persistentMapOf())
       private set
 
+   internal val scrollState = PageStackBoardScrollState()
+
    internal fun layout(
       pageStackBoardWidth: Int,
       pageStackCount: Int,
@@ -92,7 +96,7 @@ class MultiColumnPageStackBoardState(
          - pageStackPadding * 2
       )
 
-      var x = pageStackPadding
+      var x = scrollState.scrollOffset.toInt() + pageStackPadding
 
       for (element in pageStackBoard.rootRow) {
          if (element !is PageStackBoard.PageStack) { continue }
@@ -131,7 +135,8 @@ fun MultiColumnPageStackBoard(
    onTopAppBarHeightChanged: (Dp) -> Unit = {},
 ) {
    SubcomposeLayout(
-      modifier = modifier,
+      modifier = modifier
+         .scrollable(state.scrollState, Orientation.Horizontal),
       measurePolicy = remember(state, pageStackCount) {{ constraints ->
          val pageStackBoardWidth = constraints.maxWidth
          val pageStackBoardHeight = constraints.maxHeight
