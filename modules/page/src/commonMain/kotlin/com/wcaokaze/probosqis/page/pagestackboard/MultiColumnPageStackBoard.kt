@@ -96,9 +96,7 @@ class MultiColumnPageStackBoardState(
          - pageStackPadding * 2
       )
 
-      // scrollOffsetが大きいほど右のPageStackが表示される
-      // つまりscrollOffsetが大きいほどPageStackの位置は左となるため符号が逆となる
-      var x = -scrollState.scrollOffset.toInt() + pageStackPadding
+      var x = pageStackPadding
 
       for (element in pageStackBoard.rootRow) {
          if (element !is PageStackBoard.PageStack) { continue }
@@ -119,7 +117,12 @@ class MultiColumnPageStackBoardState(
          layoutResult[pageStack.id] = layoutState
       }
 
+      x += pageStackPadding
+
       layoutStates = layoutResult.toImmutableMap()
+
+      scrollState.setMaxScrollOffset(
+         (x - pageStackBoardWidth).toFloat().coerceAtLeast(0f))
    }
 
    override suspend fun animateScrollTo(pageStack: Int) {
@@ -172,8 +175,14 @@ fun MultiColumnPageStackBoard(
          }
 
          layout(pageStackBoardWidth, pageStackBoardHeight) {
+            val scrollOffset = state.scrollState.scrollOffset.toInt()
+
             for ((_, layout, placeable) in placeables) {
-               placeable.placeRelative(layout.position)
+               // scrollOffsetが大きいほど右のPageStackが表示される
+               // つまりscrollOffsetが大きいほどPageStackの位置は左となるため
+               // 符号が逆となる
+               placeable.placeRelative(
+                  -scrollOffset + layout.position.x, layout.position.y)
             }
          }
       }}

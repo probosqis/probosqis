@@ -37,12 +37,18 @@ internal class PageStackBoardScrollState : ScrollableState {
    var scrollOffset by mutableStateOf(0f)
       private set
 
+   private var maxScrollOffset by mutableStateOf(0f)
+
    override fun dispatchRawDelta(delta: Float): Float {
+      val oldScrollOffset = scrollOffset
+
       // deltaは指が動いた量。正のとき右に動いたことを表す。
       // scrollOffsetは正のとき「右が見える」状態を表す。
       // よってこの2つは符号が逆であるため、-演算となる
-      scrollOffset -= delta
-      return delta
+      val newScrollOffset = (oldScrollOffset - delta).coerceIn(0f, maxScrollOffset)
+
+      scrollOffset = newScrollOffset
+      return newScrollOffset - oldScrollOffset
    }
 
    private val scrollScope = object : ScrollScope {
@@ -63,5 +69,10 @@ internal class PageStackBoardScrollState : ScrollableState {
             }
          }
       }
+   }
+
+   internal fun setMaxScrollOffset(value: Float) {
+      maxScrollOffset = value
+      scrollOffset = scrollOffset.coerceIn(0f, value)
    }
 }
