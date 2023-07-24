@@ -42,10 +42,7 @@ internal class PageStackBoardScrollState : ScrollableState {
    override fun dispatchRawDelta(delta: Float): Float {
       val oldScrollOffset = scrollOffset
 
-      // deltaは指が動いた量。正のとき右に動いたことを表す。
-      // scrollOffsetは正のとき「右が見える」状態を表す。
-      // よってこの2つは符号が逆であるため、-演算となる
-      val newScrollOffset = (oldScrollOffset - delta).coerceIn(0f, maxScrollOffset)
+      val newScrollOffset = (oldScrollOffset + delta).coerceIn(0f, maxScrollOffset)
 
       scrollOffset = newScrollOffset
       return newScrollOffset - oldScrollOffset

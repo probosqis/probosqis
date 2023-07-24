@@ -141,7 +141,14 @@ fun MultiColumnPageStackBoard(
 ) {
    SubcomposeLayout(
       modifier = modifier
-         .scrollable(state.scrollState, Orientation.Horizontal),
+         .scrollable(
+            state.scrollState,
+            Orientation.Horizontal,
+            // scrollableで検知する指の動きは右に動いたとき正の値となる。
+            // ScrollScope.scrollByは正のとき「右が見える」方向へスクロールする。
+            // よってこの2つは符号が逆であるため、ここで反転する
+            reverseDirection = true
+         ),
       measurePolicy = remember(state, pageStackCount) {{ constraints ->
          val pageStackBoardWidth = constraints.maxWidth
          val pageStackBoardHeight = constraints.maxHeight
