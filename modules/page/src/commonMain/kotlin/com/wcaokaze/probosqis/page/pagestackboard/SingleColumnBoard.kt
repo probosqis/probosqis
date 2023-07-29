@@ -52,7 +52,7 @@ import com.wcaokaze.probosqis.page.PageComposableSwitcher
 class SingleColumnPageStackBoardState(
    pageStackBoardCache: WritableCache<PageStackBoard>
 ) : PageStackBoardState(pageStackBoardCache) {
-   override suspend fun animateScrollTo(pageStack: Int) {
+   override suspend fun animateScrollTo(index: Int) {
       TODO()
    }
 }

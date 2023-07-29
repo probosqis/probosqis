@@ -23,12 +23,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.assertWidthIsEqualTo
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -41,11 +43,14 @@ import com.wcaokaze.probosqis.page.Page
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.pageComposable
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 
 @RunWith(RobolectricTestRunner::class)
 class PageStackBoardComposeTest {
@@ -348,6 +353,97 @@ class PageStackBoardComposeTest {
             with (rule.density) { (90.dp - 16.dp).toPx() / 2 },
             pageStackBoardState.scrollState.scrollOffset
          )
+      }
+   }
+
+   @Test
+   fun animateScrollTo() {
+      val boardWidth = 100.dp
+      val boardTestTag = "PageStackBoard"
+
+      val pageStackBoardState = createMultiColumnPageStackBoardState(
+         PageStack(TestPage(0), MockClock(minute = 0)),
+         PageStack(TestPage(1), MockClock(minute = 1)),
+         PageStack(TestPage(2), MockClock(minute = 2)),
+         PageStack(TestPage(3), MockClock(minute = 3)),
+      )
+
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+
+         MultiColumnPageStackBoard(
+            pageStackBoardState,
+            pageComposableSwitcher,
+            pageStackCount = 2,
+            WindowInsets(0, 0, 0, 0),
+            modifier = Modifier
+               .width(boardWidth)
+               .testTag(boardTestTag)
+         )
+      }
+
+      fun ComposeContentTestRule.assertScrollOffset(index: Int) {
+         runOnIdle {
+            val pageStackWidth = with (density) {
+               (boardWidth - 16.dp).toPx() / 2
+            }
+            assertEquals(
+               pageStackWidth * index,
+               pageStackBoardState.scrollState.scrollOffset
+            )
+         }
+      }
+
+      rule.onNodeWithText("0").assertLeftPositionInRootIsEqualTo(16.dp)
+      rule.assertScrollOffset(0)
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScrollTo(1)
+      }
+      rule.onNodeWithText("1").assertLeftPositionInRootIsEqualTo(16.dp)
+      rule.assertScrollOffset(1)
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScrollTo(2)
+      }
+      rule.onNodeWithText("2").assertLeftPositionInRootIsEqualTo(16.dp)
+      rule.assertScrollOffset(2)
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScrollTo(3)
+      }
+      // 3が右端でBoardには2つのPageStackが入るため、
+      // 3までスクロールしても2までしかスクロールされない
+      rule.onNodeWithText("2").assertLeftPositionInRootIsEqualTo(16.dp)
+      rule.assertScrollOffset(2)
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScrollTo(2)
+      }
+      rule.onNodeWithText("2").assertLeftPositionInRootIsEqualTo(16.dp)
+      rule.assertScrollOffset(2)
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScrollTo(1)
+      }
+      rule.onNodeWithText("1").assertLeftPositionInRootIsEqualTo(16.dp)
+      rule.assertScrollOffset(1)
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScrollTo(0)
+      }
+      rule.onNodeWithText("0").assertLeftPositionInRootIsEqualTo(16.dp)
+      rule.assertScrollOffset(0)
+
+      coroutineScope.launch {
+         assertFails {
+            pageStackBoardState.animateScrollTo(4)
+         }
+         assertFails {
+            pageStackBoardState.animateScrollTo(-1)
+         }
       }
    }
 }

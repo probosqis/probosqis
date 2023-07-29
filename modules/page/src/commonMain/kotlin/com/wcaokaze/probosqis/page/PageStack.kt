@@ -75,7 +75,7 @@ class PageStack private constructor(
 @Stable
 class PageStackState internal constructor(
    internal val pageStackCache: WritableCache<PageStack>,
-   private val pageStackBoardState: PageStackBoardState
+   val pageStackBoardState: PageStackBoardState
 ) {
    internal val pageStack: PageStack by pageStackCache.asState()
 

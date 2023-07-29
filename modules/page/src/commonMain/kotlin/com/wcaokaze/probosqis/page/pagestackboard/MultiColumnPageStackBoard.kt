@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.page.pagestackboard
 
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -79,6 +80,8 @@ class MultiColumnPageStackBoardState(
          by mutableStateOf(persistentMapOf())
       private set
 
+   private var pageStackPadding by mutableStateOf(0)
+
    internal val scrollState = PageStackBoardScrollState()
 
    internal fun layout(
@@ -120,13 +123,23 @@ class MultiColumnPageStackBoardState(
       x += pageStackPadding
 
       layoutStates = layoutResult.toImmutableMap()
+      this.pageStackPadding = pageStackPadding
 
       scrollState.setMaxScrollOffset(
          (x - pageStackBoardWidth).toFloat().coerceAtLeast(0f))
    }
 
-   override suspend fun animateScrollTo(pageStack: Int) {
-      TODO()
+   override suspend fun animateScrollTo(index: Int) {
+      val pageStack = pageStackBoard[index].cache.value
+      animateScrollTo(pageStack.id)
+   }
+
+   suspend fun animateScrollTo(pageStack: PageStack.Id) {
+      val layoutState = layoutStates[pageStack]
+         ?: throw NoSuchElementException("pageStack for ID $pageStack not found")
+
+      val targetScrollOffset = layoutState.position.x - pageStackPadding * 2
+      scrollState.animateScrollBy(targetScrollOffset - scrollState.scrollOffset)
    }
 }
 
