@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +36,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
@@ -57,6 +59,8 @@ class PageStackBoardComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
+   private val pageStackBoardTag = "PageStackBoard"
+
    private class TestPage(val i: Int) : Page()
 
    private val testPageComposable = pageComposable<TestPage>(
@@ -76,26 +80,58 @@ class PageStackBoardComposeTest {
       )
    )
 
+   @Composable
+   private fun SingleColumnPageStackBoard(
+      state: SingleColumnPageStackBoardState,
+      width: Dp
+   ) {
+      SingleColumnPageStackBoard(
+         state,
+         pageComposableSwitcher,
+         WindowInsets(0, 0, 0, 0),
+         modifier = Modifier
+            .width(width)
+            .testTag(pageStackBoardTag)
+      )
+   }
+
+   @Composable
+   private fun MultiColumnPageStackBoard(
+      state: MultiColumnPageStackBoardState,
+      width: Dp
+   ) {
+      MultiColumnPageStackBoard(
+         state,
+         pageComposableSwitcher,
+         pageStackCount = 2,
+         WindowInsets(0, 0, 0, 0),
+         modifier = Modifier
+            .width(width)
+            .testTag(pageStackBoardTag)
+      )
+   }
+
    private fun createSingleColumnPageStackBoardState(
-      vararg pageStacks: PageStack
+      pageStackCount: Int
    ): SingleColumnPageStackBoardState {
       return createPageStackBoardState(
-         ::SingleColumnPageStackBoardState, *pageStacks)
+         ::SingleColumnPageStackBoardState, pageStackCount)
    }
 
    private fun createMultiColumnPageStackBoardState(
-      vararg pageStacks: PageStack
+      pageStackCount: Int
    ): MultiColumnPageStackBoardState {
       return createPageStackBoardState(
-         ::MultiColumnPageStackBoardState, *pageStacks)
+         ::MultiColumnPageStackBoardState, pageStackCount)
    }
 
    private fun <S : PageStackBoardState> createPageStackBoardState(
       constructor: (WritableCache<PageStackBoard>) -> S,
-      vararg pageStacks: PageStack
+      pageStackCount: Int
    ): S {
       val rootRow = PageStackBoard.Row(
-         pageStacks
+         List(pageStackCount) { TestPage(it) }
+            .map { PageStack(it, MockClock(minute = it.i)) }
             .map { PageStackBoard.PageStack(WritableCache(it)) }
             .toImmutableList()
       )
@@ -109,19 +145,10 @@ class PageStackBoardComposeTest {
    fun singleColumnPageStackBoard_layout() {
       rule.setContent {
          val pageStackBoardState = remember {
-            createSingleColumnPageStackBoardState(
-               PageStack(TestPage(0), MockClock(minute = 0)),
-               PageStack(TestPage(1), MockClock(minute = 1)),
-            )
+            createSingleColumnPageStackBoardState(pageStackCount = 2)
          }
 
-         SingleColumnPageStackBoard(
-            pageStackBoardState,
-            pageComposableSwitcher,
-            WindowInsets(0, 0, 0, 0),
-            modifier = Modifier
-               .width(100.dp)
-         )
+         SingleColumnPageStackBoard(pageStackBoardState, width = 100.dp)
       }
 
       rule.onNodeWithText("0")
@@ -135,20 +162,10 @@ class PageStackBoardComposeTest {
 
       rule.setContent {
          val pageStackBoardState = remember {
-            createMultiColumnPageStackBoardState(
-               PageStack(TestPage(0), MockClock(minute = 0)),
-               PageStack(TestPage(1), MockClock(minute = 1)),
-            )
+            createMultiColumnPageStackBoardState(pageStackCount = 2)
          }
 
-         MultiColumnPageStackBoard(
-            pageStackBoardState,
-            pageComposableSwitcher,
-            pageStackCount = 2,
-            WindowInsets(0, 0, 0, 0),
-            modifier = Modifier
-               .width(boardWidth)
-         )
+         MultiColumnPageStackBoard(pageStackBoardState, boardWidth)
       }
 
       val expectedPageStackWidth = (boardWidth - 16.dp) / 2 - 16.dp
@@ -166,19 +183,10 @@ class PageStackBoardComposeTest {
 
       rule.setContent {
          val pageStackBoardState = remember {
-            createMultiColumnPageStackBoardState(
-               PageStack(TestPage(0), MockClock(minute = 0)),
-            )
+            createMultiColumnPageStackBoardState(pageStackCount = 1)
          }
 
-         MultiColumnPageStackBoard(
-            pageStackBoardState,
-            pageComposableSwitcher,
-            pageStackCount = 2,
-            WindowInsets(0, 0, 0, 0),
-            modifier = Modifier
-               .width(boardWidth)
-         )
+         MultiColumnPageStackBoard(pageStackBoardState, boardWidth)
       }
 
       val expectedPageStackWidth = (boardWidth - 16.dp) / 2 - 16.dp
@@ -191,27 +199,13 @@ class PageStackBoardComposeTest {
    fun multiColumnPageStackBoard_layout_omitComposingInvisibles() {
       val boardWidth = 100.dp
 
-      val pageStackBoardState = createMultiColumnPageStackBoardState(
-         PageStack(TestPage(0), MockClock(minute = 0)),
-         PageStack(TestPage(1), MockClock(minute = 1)),
-         PageStack(TestPage(2), MockClock(minute = 2)),
-         PageStack(TestPage(3), MockClock(minute = 3)),
-         PageStack(TestPage(4), MockClock(minute = 4)),
-      )
+      val pageStackBoardState
+            = createMultiColumnPageStackBoardState(pageStackCount = 5)
 
       lateinit var coroutineScope: CoroutineScope
-
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
-
-         MultiColumnPageStackBoard(
-            pageStackBoardState,
-            pageComposableSwitcher,
-            pageStackCount = 2,
-            WindowInsets(0, 0, 0, 0),
-            modifier = Modifier
-               .width(boardWidth)
-         )
+         MultiColumnPageStackBoard(pageStackBoardState, boardWidth)
       }
 
       rule.onNodeWithText("0").assertExists()
@@ -254,24 +248,12 @@ class PageStackBoardComposeTest {
    @Test
    fun multiColumnPageStackBoard_scroll() {
       val boardWidth = 100.dp
-      val boardTestTag = "PageStackBoard"
 
-      val pageStackBoardState = createMultiColumnPageStackBoardState(
-         PageStack(TestPage(0), MockClock(minute = 0)),
-         PageStack(TestPage(1), MockClock(minute = 1)),
-         PageStack(TestPage(2), MockClock(minute = 2)),
-      )
+      val pageStackBoardState
+            = createMultiColumnPageStackBoardState(pageStackCount = 3)
 
       rule.setContent {
-         MultiColumnPageStackBoard(
-            pageStackBoardState,
-            pageComposableSwitcher,
-            pageStackCount = 2,
-            WindowInsets(0, 0, 0, 0),
-            modifier = Modifier
-               .width(boardWidth)
-               .testTag(boardTestTag)
-         )
+         MultiColumnPageStackBoard(pageStackBoardState, boardWidth)
       }
 
       rule.onNodeWithText("0")
@@ -284,7 +266,7 @@ class PageStackBoardComposeTest {
 
       val scrollAmount = 32.dp
 
-      rule.onNodeWithTag(boardTestTag)
+      rule.onNodeWithTag(pageStackBoardTag)
          .performTouchInput {
             down(Offset(0.0f, 0.0f))
             moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
@@ -308,24 +290,12 @@ class PageStackBoardComposeTest {
    @Test
    fun multiColumnPageStackBoard_scrollEdge() {
       val boardWidth = 100.dp
-      val boardTestTag = "PageStackBoard"
 
-      val pageStackBoardState = createMultiColumnPageStackBoardState(
-         PageStack(TestPage(0), MockClock(minute = 0)),
-         PageStack(TestPage(1), MockClock(minute = 1)),
-         PageStack(TestPage(2), MockClock(minute = 2)),
-      )
+      val pageStackBoardState
+            = createMultiColumnPageStackBoardState(pageStackCount = 3)
 
       rule.setContent {
-         MultiColumnPageStackBoard(
-            pageStackBoardState,
-            pageComposableSwitcher,
-            pageStackCount = 2,
-            WindowInsets(0, 0, 0, 0),
-            modifier = Modifier
-               .width(boardWidth)
-               .testTag(boardTestTag)
-         )
+         MultiColumnPageStackBoard(pageStackBoardState, boardWidth)
       }
 
       rule.onNodeWithText("0").assertLeftPositionInRootIsEqualTo(16.dp)
@@ -333,7 +303,7 @@ class PageStackBoardComposeTest {
          assertEquals(0f, pageStackBoardState.scrollState.scrollOffset)
       }
 
-      rule.onNodeWithTag(boardTestTag)
+      rule.onNodeWithTag(pageStackBoardTag)
          .performTouchInput {
             down(Offset(0.0f, 0.0f))
             moveBy(Offset(viewConfiguration.touchSlop, 0.0f))
@@ -345,7 +315,7 @@ class PageStackBoardComposeTest {
          assertEquals(0f, pageStackBoardState.scrollState.scrollOffset)
       }
 
-      rule.onNodeWithTag(boardTestTag)
+      rule.onNodeWithTag(pageStackBoardTag)
          .performTouchInput {
             moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
             moveBy(Offset(-100.dp.toPx(), 0.0f))
@@ -363,29 +333,17 @@ class PageStackBoardComposeTest {
    @Test
    fun multiColumnPageStackBoard_scrollEdge_afterSizeChanged() {
       var boardWidth by mutableStateOf(100.dp)
-      val boardTestTag = "PageStackBoard"
 
-      val pageStackBoardState = createMultiColumnPageStackBoardState(
-         PageStack(TestPage(0), MockClock(minute = 0)),
-         PageStack(TestPage(1), MockClock(minute = 1)),
-         PageStack(TestPage(2), MockClock(minute = 2)),
-      )
+      val pageStackBoardState
+            = createMultiColumnPageStackBoardState(pageStackCount = 3)
 
       rule.setContent {
-         MultiColumnPageStackBoard(
-            pageStackBoardState,
-            pageComposableSwitcher,
-            pageStackCount = 2,
-            WindowInsets(0, 0, 0, 0),
-            modifier = Modifier
-               .width(boardWidth)
-               .testTag(boardTestTag)
-         )
+         MultiColumnPageStackBoard(pageStackBoardState, boardWidth)
       }
 
       rule.onNodeWithText("0").assertLeftPositionInRootIsEqualTo(16.dp)
 
-      rule.onNodeWithTag(boardTestTag)
+      rule.onNodeWithTag(pageStackBoardTag)
          .performTouchInput {
             down(Offset(0.0f, 0.0f))
             moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
@@ -423,29 +381,14 @@ class PageStackBoardComposeTest {
    @Test
    fun animateScrollTo() {
       val boardWidth = 100.dp
-      val boardTestTag = "PageStackBoard"
 
-      val pageStackBoardState = createMultiColumnPageStackBoardState(
-         PageStack(TestPage(0), MockClock(minute = 0)),
-         PageStack(TestPage(1), MockClock(minute = 1)),
-         PageStack(TestPage(2), MockClock(minute = 2)),
-         PageStack(TestPage(3), MockClock(minute = 3)),
-      )
+      val pageStackBoardState
+            = createMultiColumnPageStackBoardState(pageStackCount = 4)
 
       lateinit var coroutineScope: CoroutineScope
-
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
-
-         MultiColumnPageStackBoard(
-            pageStackBoardState,
-            pageComposableSwitcher,
-            pageStackCount = 2,
-            WindowInsets(0, 0, 0, 0),
-            modifier = Modifier
-               .width(boardWidth)
-               .testTag(boardTestTag)
-         )
+         MultiColumnPageStackBoard(pageStackBoardState, boardWidth)
       }
 
       fun ComposeContentTestRule.assertScrollOffset(index: Int) {
