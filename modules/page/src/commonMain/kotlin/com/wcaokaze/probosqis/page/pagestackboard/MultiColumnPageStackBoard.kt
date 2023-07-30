@@ -47,7 +47,6 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -70,7 +69,7 @@ class MultiColumnPageStackBoardState(
    class LayoutState(
       val pageStackCache: WritableCache<PageStack>,
       initialPosition: IntOffset,
-      initialWidth: Int,
+      initialWidth: Int
    ) {
       var position by mutableStateOf(initialPosition)
       var width by mutableStateOf(initialWidth)
@@ -87,12 +86,10 @@ class MultiColumnPageStackBoardState(
    internal fun layout(
       pageStackBoardWidth: Int,
       pageStackCount: Int,
-      density: Density,
+      pageStackPadding: Int
    ) {
       val layoutStateMap = layoutStates
       val layoutResult = mutableMapOf<PageStack.Id, LayoutState>()
-
-      val pageStackPadding = with (density) { PAGE_STACK_PADDING_DP.dp.roundToPx() }
 
       val pageStackWidth = (
          (pageStackBoardWidth - pageStackPadding * 2) / pageStackCount
@@ -150,7 +147,7 @@ fun MultiColumnPageStackBoard(
    pageStackCount: Int,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
-   onTopAppBarHeightChanged: (Dp) -> Unit = {},
+   onTopAppBarHeightChanged: (Dp) -> Unit = {}
 ) {
    SubcomposeLayout(
       modifier = modifier
@@ -165,14 +162,21 @@ fun MultiColumnPageStackBoard(
       measurePolicy = remember(state, pageStackCount) {{ constraints ->
          val pageStackBoardWidth = constraints.maxWidth
          val pageStackBoardHeight = constraints.maxHeight
+         val pageStackPadding = PAGE_STACK_PADDING_DP.dp.roundToPx()
 
-         state.layout(
-            pageStackBoardWidth,
-            pageStackCount,
-            density = this
-         )
+         state.layout(pageStackBoardWidth, pageStackCount, pageStackPadding)
 
-         val placeables = state.layoutStates.map { (pageStackId, layoutState) ->
+         val scrollOffset = state.scrollState.scrollOffset.toInt()
+
+         val placeables = state.layoutStates.mapNotNull { (pageStackId, layoutState) ->
+            // TODO: PageStackに影がつくかつかないか未定のためギリギリ範囲外の
+            //       PageStackもコンポーズしている。影の件が決まり次第変更する
+            if (layoutState.position.x + layoutState.width + pageStackPadding < scrollOffset ||
+                layoutState.position.x - pageStackPadding > scrollOffset + pageStackBoardWidth)
+            {
+               return@mapNotNull null
+            }
+
             val measurable = subcompose(pageStackId) {
                val pageStackState = remember {
                   PageStackState(layoutState.pageStackCache, state)
@@ -183,7 +187,7 @@ fun MultiColumnPageStackBoard(
                   isActive = pageStackCount == 1,
                   windowInsets.only(WindowInsetsSides.Bottom),
                   pageComposableSwitcher,
-                  onTopAppBarHeightChanged,
+                  onTopAppBarHeightChanged
                )
             } .single()
 
@@ -195,7 +199,6 @@ fun MultiColumnPageStackBoard(
          }
 
          layout(pageStackBoardWidth, pageStackBoardHeight) {
-            val scrollOffset = state.scrollState.scrollOffset.toInt()
 
             for ((_, layout, placeable) in placeables) {
                // scrollOffsetが大きいほど右のPageStackが表示される

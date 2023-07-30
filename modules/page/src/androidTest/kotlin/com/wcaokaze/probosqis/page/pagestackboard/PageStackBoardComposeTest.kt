@@ -188,6 +188,70 @@ class PageStackBoardComposeTest {
    }
 
    @Test
+   fun multiColumnPageStackBoard_layout_omitComposingInvisibles() {
+      val boardWidth = 100.dp
+
+      val pageStackBoardState = createMultiColumnPageStackBoardState(
+         PageStack(TestPage(0), MockClock(minute = 0)),
+         PageStack(TestPage(1), MockClock(minute = 1)),
+         PageStack(TestPage(2), MockClock(minute = 2)),
+         PageStack(TestPage(3), MockClock(minute = 3)),
+         PageStack(TestPage(4), MockClock(minute = 4)),
+      )
+
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+
+         MultiColumnPageStackBoard(
+            pageStackBoardState,
+            pageComposableSwitcher,
+            pageStackCount = 2,
+            WindowInsets(0, 0, 0, 0),
+            modifier = Modifier
+               .width(boardWidth)
+         )
+      }
+
+      rule.onNodeWithText("0").assertExists()
+      rule.onNodeWithText("1").assertExists()
+      rule.onNodeWithText("2").assertExists() // 2はギリギリ存在する（影が見えるため）
+      rule.onNodeWithText("3").assertDoesNotExist()
+      rule.onNodeWithText("4").assertDoesNotExist()
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScrollTo(1)
+      }
+
+      rule.onNodeWithText("0").assertExists()
+      rule.onNodeWithText("1").assertExists()
+      rule.onNodeWithText("2").assertExists()
+      rule.onNodeWithText("3").assertExists()
+      rule.onNodeWithText("4").assertDoesNotExist()
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScrollTo(2)
+      }
+
+      rule.onNodeWithText("0").assertDoesNotExist()
+      rule.onNodeWithText("1").assertExists() // 1はギリギリ存在する
+      rule.onNodeWithText("2").assertExists()
+      rule.onNodeWithText("3").assertExists()
+      rule.onNodeWithText("4").assertExists()
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScrollTo(3)
+      }
+
+      rule.onNodeWithText("0").assertDoesNotExist()
+      rule.onNodeWithText("1").assertDoesNotExist()
+      rule.onNodeWithText("2").assertExists()
+      rule.onNodeWithText("3").assertExists()
+      rule.onNodeWithText("4").assertExists()
+   }
+
+   @Test
    fun multiColumnPageStackBoard_scroll() {
       val boardWidth = 100.dp
       val boardTestTag = "PageStackBoard"
