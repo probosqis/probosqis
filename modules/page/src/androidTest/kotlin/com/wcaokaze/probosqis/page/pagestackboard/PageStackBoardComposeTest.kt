@@ -51,8 +51,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertIs
 
 @RunWith(RobolectricTestRunner::class)
 class PageStackBoardComposeTest {
@@ -130,15 +132,19 @@ class PageStackBoardComposeTest {
       pageStackCount: Int
    ): S {
       val rootRow = PageStackBoard.Row(
-         List(pageStackCount) { TestPage(it) }
-            .map { PageStack(it, MockClock(minute = it.i)) }
-            .map { PageStackBoard.PageStack(WritableCache(it)) }
-            .toImmutableList()
+         List(pageStackCount) { createPageStack(it) }.toImmutableList()
       )
 
       val pageStackBoard = PageStackBoard(rootRow)
       val pageStackBoardCache = WritableCache(pageStackBoard)
       return constructor(pageStackBoardCache)
+   }
+
+   private fun createPageStack(i: Int): PageStackBoard.PageStack {
+      val page = TestPage(i)
+      val pageStack = PageStack(page, MockClock(minute = i))
+      val cache = WritableCache(pageStack)
+      return PageStackBoard.PageStack(cache)
    }
 
    @Test
@@ -243,6 +249,146 @@ class PageStackBoardComposeTest {
       rule.onNodeWithText("2").assertExists()
       rule.onNodeWithText("3").assertExists()
       rule.onNodeWithText("4").assertExists()
+   }
+
+   @Test
+   fun multiColumnPageStackBoard_layout_mutatePageStackBoard() {
+      fun assertPageStacks(
+         expectedPageNumbers: List<Int>,
+         pageStackBoard: PageStackBoard
+      ) {
+         val pageStackCount = pageStackBoard.rootRow.leafCount
+         assertEquals(expectedPageNumbers.size, pageStackCount)
+
+         for (i in 0 until pageStackCount) {
+            val page = pageStackBoard[i].cache.value.head
+            assertIs<TestPage>(page)
+            assertEquals(expectedPageNumbers[i], page.i)
+         }
+      }
+
+      fun assertPageStackLayoutStates(
+         pageStackBoard: PageStackBoard,
+         layoutState: LayoutState
+      ) {
+         val pageStackCount = pageStackBoard.rootRow.leafCount
+         val ids = (0 until pageStackCount)
+            .map { pageStackBoard[it].cache.value.id }
+
+         assertEquals(ids, layoutState.layoutStateList.map { it.pageStackId })
+
+         assertEquals(pageStackCount, layoutState.layoutStateMap.size)
+         for (id in ids) {
+            assertContains(layoutState.layoutStateMap, id)
+         }
+      }
+
+      val boardWidth = 100.dp
+
+      val pageStackBoardState
+            = createMultiColumnPageStackBoardState(pageStackCount = 2)
+
+      rule.setContent {
+         MultiColumnPageStackBoard(pageStackBoardState, boardWidth)
+      }
+
+      rule.runOnIdle {
+         assertPageStacks(listOf(0, 1), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStates(
+            pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+      }
+
+      // ---- insert first ----
+
+      pageStackBoardState.pageStackBoard = PageStackBoard(
+         pageStackBoardState.pageStackBoard.rootRow.inserted(0, createPageStack(2))
+      )
+
+      rule.runOnIdle {
+         assertPageStacks(listOf(2, 0, 1), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStates(
+            pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+      }
+
+      // ---- insert last ----
+
+      pageStackBoardState.pageStackBoard = PageStackBoard(
+         pageStackBoardState.pageStackBoard.rootRow.inserted(3, createPageStack(3))
+      )
+
+      rule.runOnIdle {
+         assertPageStacks(listOf(2, 0, 1, 3), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStates(
+            pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+      }
+
+      // ---- insert middle ----
+
+      pageStackBoardState.pageStackBoard = PageStackBoard(
+         pageStackBoardState.pageStackBoard.rootRow.inserted(2, createPageStack(4))
+      )
+
+      rule.runOnIdle {
+         assertPageStacks(listOf(2, 0, 4, 1, 3), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStates(
+            pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+      }
+
+      // ---- replace ----
+
+      pageStackBoardState.pageStackBoard = PageStackBoard(
+         pageStackBoardState.pageStackBoard.rootRow.replaced(2, createPageStack(5))
+      )
+
+      rule.runOnIdle {
+         assertPageStacks(listOf(2, 0, 5, 1, 3), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStates(
+            pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+      }
+
+      // ---- remove first ----
+
+      pageStackBoardState.pageStackBoard = PageStackBoard(
+         pageStackBoardState.pageStackBoard.rootRow.removed(0)
+      )
+
+      rule.runOnIdle {
+         assertPageStacks(listOf(0, 5, 1, 3), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStates(
+            pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+      }
+
+      // ---- remove last ----
+
+      pageStackBoardState.pageStackBoard = PageStackBoard(
+         pageStackBoardState.pageStackBoard.rootRow.removed(3)
+      )
+
+      rule.runOnIdle {
+         assertPageStacks(listOf(0, 5, 1), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStates(
+            pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+      }
+
+      // ---- remove middle ----
+
+      pageStackBoardState.pageStackBoard = PageStackBoard(
+         pageStackBoardState.pageStackBoard.rootRow.removed(1)
+      )
+
+      rule.runOnIdle {
+         assertPageStacks(listOf(0, 1), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStates(
+            pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+      }
    }
 
    @Test

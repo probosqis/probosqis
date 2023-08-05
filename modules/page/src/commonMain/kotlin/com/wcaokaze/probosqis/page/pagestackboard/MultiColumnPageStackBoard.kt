@@ -55,9 +55,13 @@ import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackContent
 import com.wcaokaze.probosqis.page.PageStackState
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
+import org.jetbrains.annotations.TestOnly
 
 private const val PAGE_STACK_PADDING_DP = 8
 
@@ -65,31 +69,99 @@ private const val PAGE_STACK_PADDING_DP = 8
 class MultiColumnPageStackBoardState(
    pageStackBoardCache: WritableCache<PageStackBoard>
 ) : PageStackBoardState(pageStackBoardCache) {
-   @Stable
-   class LayoutState(
-      val pageStackCache: WritableCache<PageStack>,
-      initialPosition: IntOffset,
-      initialWidth: Int
-   ) {
-      var position by mutableStateOf(initialPosition)
-      var width by mutableStateOf(initialWidth)
+   internal val scrollState = PageStackBoardScrollState()
+   internal val layout = LayoutState()
+
+   override suspend fun animateScrollTo(index: Int) {
+      val pageStack = pageStackBoard[index].cache.value
+      animateScrollTo(pageStack.id)
    }
 
-   var layoutStates: ImmutableMap<PageStack.Id, LayoutState>
-         by mutableStateOf(persistentMapOf())
-      private set
+   suspend fun animateScrollTo(pageStack: PageStack.Id) {
+      val layoutState = layout.pageStackLayout(pageStack)
+         ?: throw NoSuchElementException("pageStack for ID $pageStack not found")
 
-   private var pageStackPadding by mutableStateOf(0)
-
-   internal val scrollState = PageStackBoardScrollState()
+      val targetScrollOffset = layoutState.position.x - layout.pageStackPadding * 2
+      scrollState.animateScrollBy(targetScrollOffset - scrollState.scrollOffset)
+   }
 
    internal fun layout(
       pageStackBoardWidth: Int,
       pageStackCount: Int,
-      pageStackPadding: Int
+      pageStackPadding: Int,
    ) {
-      val layoutStateMap = layoutStates
-      val layoutResult = mutableMapOf<PageStack.Id, LayoutState>()
+      layout.layout(pageStackBoard, pageStackBoardWidth, pageStackCount,
+         pageStackPadding, scrollState)
+   }
+}
+
+@Stable
+internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
+   @Stable
+   class PageStackLayoutState(
+      val pageStackCache: WritableCache<PageStack>,
+      initialPosition: IntOffset,
+      initialWidth: Int
+   ) {
+      val pageStackId = pageStackCache.value.id
+      var position by mutableStateOf(initialPosition)
+      var width by mutableStateOf(initialWidth)
+   }
+
+   internal var pageStackPadding by mutableStateOf(0)
+      private set
+
+   /** [MultiColumnPageStackBoardState.pageStackBoard]と同じ順 */
+   private var list: ImmutableList<PageStackLayoutState>
+         by mutableStateOf(persistentListOf())
+
+   private var map: ImmutableMap<PageStack.Id, PageStackLayoutState>
+         by mutableStateOf(persistentMapOf())
+
+   internal val layoutStateList
+      @TestOnly get() = list
+
+   internal val layoutStateMap
+      @TestOnly get() = map
+
+   fun pageStackLayout(id: PageStack.Id): PageStackLayoutState? = map[id]
+
+   override operator fun iterator(): Iterator<PageStackLayoutState>
+         = list.iterator()
+
+   internal fun layout(
+      pageStackBoard: PageStackBoard,
+      pageStackBoardWidth: Int,
+      pageStackCount: Int,
+      pageStackPadding: Int,
+      scrollState: PageStackBoardScrollState
+   ) {
+      val prevLayoutList = list
+      val prevLayoutMap = map
+
+      /*
+       * ウィンドウサイズの変更やPageStackサイズの変更等によって
+       * 再レイアウトする場合、PageStackの順番は変わっておらず、
+       * prevLayoutListとprevLayoutMapをそのまま再利用できる。
+       * そのため、まずはpageStackBoardを0から順にレイアウトしていくが、
+       * prevLayoutList[i]のPageStackIdがpageStackBoard[i]のPageStackIdと
+       * 一致しなくなった時点でPageStackの並び替えや挿入があったことが確定し、
+       * prevLayoutListを再利用できなくなる。その時点でiに-1が入り、resultList,
+       * resultMapにi以前の要素がコピーされる。それ以降はprevLayoutMapから
+       * レイアウトを探してresultList, resultMapに格納していく。
+       */
+      lateinit var resultList: MutableList<PageStackLayoutState>
+      lateinit var resultMap: MutableMap<PageStack.Id, PageStackLayoutState>
+      var i = 0
+
+      fun prepareResults() {
+         resultList = prevLayoutList.subList(0, i).toMutableList()
+         resultMap = mutableMapOf()
+         for (l in resultList) {
+            resultMap[l.pageStackId] = l
+         }
+         i = -1
+      }
 
       val pageStackWidth = (
          (pageStackBoardWidth - pageStackPadding * 2) / pageStackCount
@@ -98,45 +170,67 @@ class MultiColumnPageStackBoardState(
 
       var x = pageStackPadding
 
-      for (element in pageStackBoard.rootRow) {
-         if (element !is PageStackBoard.PageStack) { continue }
+      fun layout(parent: PageStackBoard.LayoutElementParent) {
+         for (element in parent) {
+            when (element) {
+               is PageStackBoard.PageStack -> {
+                  val pageStack = element.cache.value
 
-         val pageStack = element.cache.value
+                  x += pageStackPadding
+                  val position = IntOffset(x, 0)
+                  x += pageStackWidth + pageStackPadding
 
-         x += pageStackPadding
-         val position = IntOffset(x, 0)
-         x += pageStackWidth + pageStackPadding
+                  var layoutState = if (i >= 0) {
+                     if (prevLayoutList.getOrNull(i)?.pageStackId == pageStack.id) {
+                        prevLayoutList[i++]
+                     } else {
+                        prepareResults()
+                        prevLayoutMap[pageStack.id]
+                     }
+                  } else {
+                     prevLayoutMap[pageStack.id]
+                  }
 
-         var layoutState = layoutStateMap[pageStack.id]
-         if (layoutState != null) {
-            layoutState.position = position
-            layoutState.width = pageStackWidth
-         } else {
-            layoutState = LayoutState(element.cache, position, pageStackWidth)
+                  if (layoutState != null) {
+                     layoutState.position = position
+                     layoutState.width = pageStackWidth
+                  } else {
+                     layoutState = PageStackLayoutState(
+                        element.cache, position, pageStackWidth)
+                  }
+
+                  if (i < 0) {
+                     resultList += layoutState
+                     resultMap[pageStack.id] = layoutState
+                  }
+               }
+
+               is PageStackBoard.LayoutElementParent -> {
+                  layout(element)
+               }
+            }
          }
-         layoutResult[pageStack.id] = layoutState
       }
 
-      x += pageStackPadding
+      layout(pageStackBoard.rootRow)
 
-      layoutStates = layoutResult.toImmutableMap()
+      x += pageStackPadding
       this.pageStackPadding = pageStackPadding
+
+      when {
+         i < 0 -> {
+            map = resultMap.toImmutableMap()
+            list = resultList.toImmutableList()
+         }
+         i < prevLayoutList.size -> {
+            prepareResults()
+            map = resultMap.toImmutableMap()
+            list = resultList.toImmutableList()
+         }
+      }
 
       scrollState.setMaxScrollOffset(
          (x - pageStackBoardWidth).toFloat().coerceAtLeast(0f))
-   }
-
-   override suspend fun animateScrollTo(index: Int) {
-      val pageStack = pageStackBoard[index].cache.value
-      animateScrollTo(pageStack.id)
-   }
-
-   suspend fun animateScrollTo(pageStack: PageStack.Id) {
-      val layoutState = layoutStates[pageStack]
-         ?: throw NoSuchElementException("pageStack for ID $pageStack not found")
-
-      val targetScrollOffset = layoutState.position.x - pageStackPadding * 2
-      scrollState.animateScrollBy(targetScrollOffset - scrollState.scrollOffset)
    }
 }
 
@@ -168,18 +262,18 @@ fun MultiColumnPageStackBoard(
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
 
-         val placeables = state.layoutStates.mapNotNull { (pageStackId, layoutState) ->
+         val placeables = state.layout.mapNotNull { pageStackLayout ->
             // TODO: PageStackに影がつくかつかないか未定のためギリギリ範囲外の
             //       PageStackもコンポーズしている。影の件が決まり次第変更する
-            if (layoutState.position.x + layoutState.width + pageStackPadding < scrollOffset ||
-                layoutState.position.x - pageStackPadding > scrollOffset + pageStackBoardWidth)
+            if (pageStackLayout.position.x + pageStackLayout.width + pageStackPadding < scrollOffset ||
+                pageStackLayout.position.x - pageStackPadding > scrollOffset + pageStackBoardWidth)
             {
                return@mapNotNull null
             }
 
-            val measurable = subcompose(pageStackId) {
+            val measurable = subcompose(pageStackLayout.pageStackId) {
                val pageStackState = remember {
-                  PageStackState(layoutState.pageStackCache, state)
+                  PageStackState(pageStackLayout.pageStackCache, state)
                }
 
                PageStack(
@@ -192,15 +286,15 @@ fun MultiColumnPageStackBoard(
             } .single()
 
             val pageStackConstraints = Constraints.fixed(
-               layoutState.width, pageStackBoardHeight)
+               pageStackLayout.width, pageStackBoardHeight)
 
             val placeable = measurable.measure(pageStackConstraints)
-            Triple(pageStackId, layoutState, placeable)
+            Pair(pageStackLayout, placeable)
          }
 
          layout(pageStackBoardWidth, pageStackBoardHeight) {
 
-            for ((_, layout, placeable) in placeables) {
+            for ((layout, placeable) in placeables) {
                // scrollOffsetが大きいほど右のPageStackが表示される
                // つまりscrollOffsetが大きいほどPageStackの位置は左となるため
                // 符号が逆となる
