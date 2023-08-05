@@ -72,6 +72,9 @@ class MultiColumnPageStackBoardState(
    internal val scrollState = PageStackBoardScrollState()
    internal val layout = LayoutState()
 
+   override var firstVisiblePageStackIndex by mutableStateOf(0)
+      internal set
+
    override suspend fun animateScrollTo(index: Int) {
       val pageStack = pageStackBoard[index].cache.value
       animateScrollTo(pageStack.id)
@@ -262,13 +265,24 @@ fun MultiColumnPageStackBoard(
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
 
-         val placeables = state.layout.mapNotNull { pageStackLayout ->
+         var firstVisibleIndex = -1
+
+         val placeables = state.layout.mapIndexedNotNull { index, pageStackLayout ->
+            val pageStackPosition = pageStackLayout.position
+            val pageStackWidth = pageStackLayout.width
+
+            if (firstVisibleIndex < 0) {
+               if (pageStackPosition.x + pageStackWidth > scrollOffset) {
+                  firstVisibleIndex = index
+               }
+            }
+
             // TODO: PageStackに影がつくかつかないか未定のためギリギリ範囲外の
             //       PageStackもコンポーズしている。影の件が決まり次第変更する
-            if (pageStackLayout.position.x + pageStackLayout.width + pageStackPadding < scrollOffset ||
-                pageStackLayout.position.x - pageStackPadding > scrollOffset + pageStackBoardWidth)
+            if (pageStackPosition.x + pageStackWidth + pageStackPadding < scrollOffset ||
+                pageStackPosition.x - pageStackPadding > scrollOffset + pageStackBoardWidth)
             {
-               return@mapNotNull null
+               return@mapIndexedNotNull null
             }
 
             val measurable = subcompose(pageStackLayout.pageStackId) {
@@ -286,14 +300,15 @@ fun MultiColumnPageStackBoard(
             } .single()
 
             val pageStackConstraints = Constraints.fixed(
-               pageStackLayout.width, pageStackBoardHeight)
+               pageStackWidth, pageStackBoardHeight)
 
             val placeable = measurable.measure(pageStackConstraints)
             Pair(pageStackLayout, placeable)
          }
 
-         layout(pageStackBoardWidth, pageStackBoardHeight) {
+         state.firstVisiblePageStackIndex = firstVisibleIndex
 
+         layout(pageStackBoardWidth, pageStackBoardHeight) {
             for ((layout, placeable) in placeables) {
                // scrollOffsetが大きいほど右のPageStackが表示される
                // つまりscrollOffsetが大きいほどPageStackの位置は左となるため

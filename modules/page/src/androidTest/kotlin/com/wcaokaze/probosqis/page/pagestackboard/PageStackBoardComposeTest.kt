@@ -453,7 +453,7 @@ class PageStackBoardComposeTest {
          .performTouchInput {
             down(Offset(0.0f, 0.0f))
             moveBy(Offset(viewConfiguration.touchSlop, 0.0f))
-            moveBy(Offset(100.dp.toPx(), 0.0f))
+            moveBy(Offset(boardWidth.toPx(), 0.0f))
          }
 
       rule.onNodeWithText("0").assertLeftPositionInRootIsEqualTo(16.dp)
@@ -464,7 +464,7 @@ class PageStackBoardComposeTest {
       rule.onNodeWithTag(pageStackBoardTag)
          .performTouchInput {
             moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
-            moveBy(Offset(-100.dp.toPx(), 0.0f))
+            moveBy(Offset(-boardWidth.toPx(), 0.0f))
          }
 
       rule.onNodeWithText("1").assertLeftPositionInRootIsEqualTo(16.dp)
@@ -597,6 +597,54 @@ class PageStackBoardComposeTest {
          assertFails {
             pageStackBoardState.animateScrollTo(-1)
          }
+      }
+   }
+
+   @Test
+   fun multiColumnPageStackBoard_firstVisibleIndex() {
+      val boardWidth = 100.dp
+
+      val pageStackBoardState
+            = createMultiColumnPageStackBoardState(pageStackCount = 4)
+
+      rule.setContent {
+         MultiColumnPageStackBoard(pageStackBoardState, boardWidth)
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+      }
+
+      val pageStackWidth = (boardWidth - 16.dp) / 2
+
+      rule.onNodeWithTag(pageStackBoardTag)
+         .performTouchInput {
+            down(Offset(0.0f, 0.0f))
+            moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
+            moveBy(Offset(-pageStackWidth.toPx() + 1.0f, 0.0f))
+         }
+
+      rule.onNodeWithText("0")
+         .fetchSemanticsNode()
+         .boundsInRoot
+         .let { assertEquals(1.0f, it.left + it.width, absoluteTolerance = 0.05f) }
+
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag)
+         .performTouchInput {
+            moveBy(Offset(-2.0f, 0.0f))
+         }
+
+      rule.onNodeWithText("0")
+         .fetchSemanticsNode()
+         .boundsInRoot
+         .let { assertEquals(-1.0f, it.left + it.width, absoluteTolerance = 0.05f) }
+
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.firstVisiblePageStackIndex)
       }
    }
 }

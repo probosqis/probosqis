@@ -52,6 +52,9 @@ import com.wcaokaze.probosqis.page.PageComposableSwitcher
 class SingleColumnPageStackBoardState(
    pageStackBoardCache: WritableCache<PageStackBoard>
 ) : PageStackBoardState(pageStackBoardCache) {
+   override val firstVisiblePageStackIndex: Int
+      get() = TODO()
+
    override suspend fun animateScrollTo(index: Int) {
       TODO()
    }

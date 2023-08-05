@@ -175,5 +175,7 @@ sealed class PageStackBoardState(pageStackBoardCache: WritableCache<PageStackBoa
    internal var pageStackBoard: PageStackBoard
          by pageStackBoardCache.asMutableState()
 
+   abstract val firstVisiblePageStackIndex: Int
+
    abstract suspend fun animateScrollTo(index: Int)
 }
