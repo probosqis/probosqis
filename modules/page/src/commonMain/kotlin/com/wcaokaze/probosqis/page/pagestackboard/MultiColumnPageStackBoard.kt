@@ -69,24 +69,8 @@ private const val PAGE_STACK_PADDING_DP = 8
 class MultiColumnPageStackBoardState(
    pageStackBoardCache: WritableCache<PageStackBoard>
 ) : PageStackBoardState(pageStackBoardCache) {
-   internal val scrollState = PageStackBoardScrollState()
-   internal val layout = LayoutState()
-
    override var firstVisiblePageStackIndex by mutableStateOf(0)
       internal set
-
-   override suspend fun animateScrollTo(index: Int) {
-      val pageStack = pageStackBoard[index].cache.value
-      animateScrollTo(pageStack.id)
-   }
-
-   suspend fun animateScrollTo(pageStack: PageStack.Id) {
-      val layoutState = layout.pageStackLayout(pageStack)
-         ?: throw NoSuchElementException("pageStack for ID $pageStack not found")
-
-      val targetScrollOffset = layoutState.position.x - layout.pageStackPadding * 2
-      scrollState.animateScrollBy(targetScrollOffset - scrollState.scrollOffset)
-   }
 
    internal fun layout(
       pageStackBoardWidth: Int,
@@ -128,6 +112,8 @@ internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
       @TestOnly get() = map
 
    fun pageStackLayout(id: PageStack.Id): PageStackLayoutState? = map[id]
+
+   fun pageStackLayout(index: Int): PageStackLayoutState = list[index]
 
    override operator fun iterator(): Iterator<PageStackLayoutState>
          = list.iterator()
@@ -254,7 +240,10 @@ fun MultiColumnPageStackBoard(
             // scrollableで検知する指の動きは右に動いたとき正の値となる。
             // ScrollScope.scrollByは正のとき「右が見える」方向へスクロールする。
             // よってこの2つは符号が逆であるため、ここで反転する
-            reverseDirection = true
+            reverseDirection = true,
+            flingBehavior = remember(state) {
+               PageStackBoardFlingBehavior.Standard(state)
+            }
          ),
       measurePolicy = remember(state, pageStackCount) {{ constraints ->
          val pageStackBoardWidth = constraints.maxWidth

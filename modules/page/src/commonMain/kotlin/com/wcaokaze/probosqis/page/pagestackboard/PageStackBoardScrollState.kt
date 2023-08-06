@@ -34,15 +34,15 @@ internal class PageStackBoardScrollState : ScrollableState {
    override val isScrollInProgress: Boolean
       get() = isScrolling
 
-   var scrollOffset by mutableStateOf(0f)
+   var scrollOffset by mutableStateOf(0.0f)
       private set
 
-   private var maxScrollOffset by mutableStateOf(0f)
+   private var maxScrollOffset by mutableStateOf(0.0f)
 
    override fun dispatchRawDelta(delta: Float): Float {
       val oldScrollOffset = scrollOffset
 
-      val newScrollOffset = (oldScrollOffset + delta).coerceIn(0f, maxScrollOffset)
+      val newScrollOffset = (oldScrollOffset + delta).coerceIn(0.0f, maxScrollOffset)
 
       scrollOffset = newScrollOffset
       return newScrollOffset - oldScrollOffset
@@ -70,6 +70,6 @@ internal class PageStackBoardScrollState : ScrollableState {
 
    internal fun setMaxScrollOffset(value: Float) {
       maxScrollOffset = value
-      scrollOffset = scrollOffset.coerceIn(0f, value)
+      scrollOffset = scrollOffset.coerceIn(0.0f, value)
    }
 }

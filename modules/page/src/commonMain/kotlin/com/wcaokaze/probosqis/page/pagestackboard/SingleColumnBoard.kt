@@ -54,10 +54,6 @@ class SingleColumnPageStackBoardState(
 ) : PageStackBoardState(pageStackBoardCache) {
    override val firstVisiblePageStackIndex: Int
       get() = TODO()
-
-   override suspend fun animateScrollTo(index: Int) {
-      TODO()
-   }
 }
 
 @Composable

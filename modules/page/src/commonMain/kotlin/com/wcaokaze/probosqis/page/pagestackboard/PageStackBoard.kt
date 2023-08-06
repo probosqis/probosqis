@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.page.pagestackboard
 
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.cache.compose.asMutableState
 import com.wcaokaze.probosqis.cache.core.WritableCache
@@ -137,6 +138,8 @@ class PageStackBoard(val rootRow: Row) {
          }
       )
    }
+
+   val pageStackCount = rootRow.leafCount
 }
 
 operator fun PageStackBoard.get(index: Int): PageStackBoard.PageStack {
@@ -175,7 +178,18 @@ sealed class PageStackBoardState(pageStackBoardCache: WritableCache<PageStackBoa
    internal var pageStackBoard: PageStackBoard
          by pageStackBoardCache.asMutableState()
 
+   internal val scrollState = PageStackBoardScrollState()
+   internal val layout = LayoutState()
+
    abstract val firstVisiblePageStackIndex: Int
 
-   abstract suspend fun animateScrollTo(index: Int)
+   suspend fun animateScrollTo(index: Int) {
+      val targetScrollOffset = getScrollOffsetForPageStack(index)
+      scrollState.animateScrollBy(targetScrollOffset - scrollState.scrollOffset)
+   }
+
+   internal fun getScrollOffsetForPageStack(index: Int): Int {
+      val pageStackLayout = layout.pageStackLayout(index)
+      return pageStackLayout.position.x - layout.pageStackPadding * 2
+   }
 }
