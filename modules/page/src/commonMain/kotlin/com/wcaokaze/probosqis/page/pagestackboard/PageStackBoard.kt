@@ -173,6 +173,23 @@ operator fun PageStackBoard.get(index: Int): PageStackBoard.PageStack {
    return rootRow.findSubtree(index)
 }
 
+fun PageStackBoard.sequence(): Sequence<PageStackBoard.PageStack> {
+   suspend fun SequenceScope<PageStackBoard.PageStack>
+         .yieldChildren(parent: PageStackBoard.LayoutElementParent)
+   {
+      for (node in parent) {
+         when (node) {
+            is PageStackBoard.PageStack           -> yield(node)
+            is PageStackBoard.LayoutElementParent -> yieldChildren(node)
+         }
+      }
+   }
+
+   return sequence {
+      yieldChildren(rootRow)
+   }
+}
+
 @Stable
 sealed class PageStackBoardState(pageStackBoardCache: WritableCache<PageStackBoard>) {
    internal var pageStackBoard: PageStackBoard

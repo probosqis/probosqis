@@ -22,6 +22,7 @@ import com.wcaokaze.probosqis.page.PageStack
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertIs
@@ -451,18 +452,18 @@ class PageStackBoardTest {
       assertEquals(2, replacedRow.childCount)
    }
 
+   private fun Row(vararg children: PageStackBoard.LayoutElement)
+         = PageStackBoard.Row(children.toList())
+   private fun Column(vararg children: PageStackBoard.LayoutElement)
+         = PageStackBoard.Column(children.toList())
+   private fun PageStack(id: Long): PageStackBoard.PageStack {
+      val pageStack = PageStack(PageStack.Id(id), PageImpl(0))
+      val pageStackCache = WritableCache(pageStack)
+      return PageStackBoard.PageStack(pageStackCache)
+   }
+
    @Test
    fun getAsTreeIndex() {
-      fun Row(vararg children: PageStackBoard.LayoutElement)
-            = PageStackBoard.Row(children.toList())
-      fun Column(vararg children: PageStackBoard.LayoutElement)
-            = PageStackBoard.Column(children.toList())
-      fun PageStack(id: Long): PageStackBoard.PageStack {
-         val pageStack = PageStack(PageStack.Id(id), PageImpl(0))
-         val pageStackCache = WritableCache(pageStack)
-         return PageStackBoard.PageStack(pageStackCache)
-      }
-
       val pageStackBoard = PageStackBoard(
          Row(
             PageStack(0L),
@@ -506,5 +507,45 @@ class PageStackBoardTest {
       assertEquals(20L, pageStackBoard[11].cache.value.id.value)
       assertFails { pageStackBoard[12] }
       assertFails { pageStackBoard[-1] }
+   }
+
+   @Test
+   fun sequence() {
+      val pageStackBoard = PageStackBoard(
+         Row(
+            PageStack(0L),
+            Column(
+               PageStack(2L),
+               Column(
+                  PageStack(3L),
+                  PageStack(5L),
+               ),
+               PageStack(6L),
+               Row(
+                  PageStack(8L),
+               ),
+            ),
+            PageStack(11L),
+            Row(
+               PageStack(12L),
+               Column(
+                  PageStack(14L),
+               ),
+               PageStack(17L),
+               Row(
+                  PageStack(18L),
+                  PageStack(20L),
+               ),
+            ),
+         )
+      )
+
+      val expected = listOf(0L, 2L, 3L, 5L, 6L, 8L, 11L, 12L, 14L, 17L, 18L, 20L)
+
+      val actual = pageStackBoard.sequence()
+         .map { it.cache.value.id.value }
+         .toList()
+
+      assertContentEquals(expected, actual)
    }
 }
