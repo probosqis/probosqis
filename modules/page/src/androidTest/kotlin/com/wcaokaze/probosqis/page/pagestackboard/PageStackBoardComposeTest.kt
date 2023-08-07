@@ -91,7 +91,10 @@ class PageStackBoardComposeTest {
                   coroutineScope.launch {
                      val newPageStack = PageStack(
                         TestPage(page.i + 100),
-                        MockClock(hour = 1, minute = page.i + 1)
+                        MockClock(
+                           hour   = (page.i / 100) + 1,
+                           minute = (page.i % 100) + 1
+                        )
                      )
                      pageStackState.addColumn(newPageStack)
                   }
@@ -1023,6 +1026,14 @@ class PageStackBoardComposeTest {
       rule.runOnIdle {
          assertPageNumbers(
             listOf(0, 100, 1, 101),
+            pageStackBoardState.pageStackBoard
+         )
+      }
+
+      rule.onNodeWithText("Add PageStack 100").performClick()
+      rule.runOnIdle {
+         assertPageNumbers(
+            listOf(0, 100, 200, 1, 101),
             pageStackBoardState.pageStackBoard
          )
       }

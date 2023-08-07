@@ -90,13 +90,15 @@ class PageStackState internal constructor(
          board.pageStackCount
       } else {
          board.rootRow.asSequence()
-            .runningFold(0) { acc, node ->
+            .map { node ->
                when (node) {
-                  is PageStackBoard.PageStack           -> acc + 1
-                  is PageStackBoard.LayoutElementParent -> acc + node.leafCount
+                  is PageStackBoard.PageStack           -> 1
+                  is PageStackBoard.LayoutElementParent -> node.leafCount
                }
             }
+            .runningReduce { acc, leafCount -> acc + leafCount }
             .indexOfFirst { it > index }
+            .plus(1)
       }
 
       pageStackBoardState.addColumn(insertionIndex, pageStack)
