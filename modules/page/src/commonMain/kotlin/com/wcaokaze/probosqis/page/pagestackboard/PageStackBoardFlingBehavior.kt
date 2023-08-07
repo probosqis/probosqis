@@ -41,17 +41,23 @@ internal object PageStackBoardFlingBehavior {
             prevTime = time
          }
 
-         while (prevTime < finishTime) {
-            withFrameNanos { time ->
-               val d = (time - prevTime) / 1_000_000_000.0f
-               val diff = velocity * d + acceleration * d * d / 2.0f
-               scrollBy(diff)
-               velocity += acceleration * d
-               prevTime = time
-            }
-         }
+         do {
+            val isRunning = withFrameNanos { time ->
+               if (time < finishTime) {
+                  val d = (time - prevTime) / 1_000_000_000.0f
+                  val diff = velocity * d + acceleration * d * d / 2.0f
+                  scrollBy(diff)
+                  velocity += acceleration * d
+                  prevTime = time
 
-         scrollBy(flingSpec.targetScrollOffset - state.scrollState.scrollOffset)
+                  true
+               } else {
+                  scrollBy(flingSpec.targetScrollOffset - state.scrollState.scrollOffset)
+
+                  false
+               }
+            }
+         } while (isRunning)
 
          return 0.0f
       }
