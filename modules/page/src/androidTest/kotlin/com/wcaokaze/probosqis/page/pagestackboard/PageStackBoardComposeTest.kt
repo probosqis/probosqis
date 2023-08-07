@@ -16,9 +16,11 @@
 
 package com.wcaokaze.probosqis.page.pagestackboard
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,6 +38,7 @@ import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.Dp
@@ -46,6 +49,8 @@ import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.Page
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.pageComposable
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -53,7 +58,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.BeforeTest
 import kotlin.test.assertContains
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertIs
@@ -70,11 +77,29 @@ class PageStackBoardComposeTest {
    private class TestPage(val i: Int) : Page()
 
    private val testPageComposable = pageComposable<TestPage>(
-      content = { page, _ ->
-         Text(
-            "${page.i}",
-            modifier = Modifier.fillMaxWidth()
-         )
+      content = { page, pageStackState ->
+         Column {
+            val coroutineScope = rememberCoroutineScope()
+
+            Text(
+               "${page.i}",
+               modifier = Modifier.fillMaxWidth()
+            )
+
+            Button(
+               onClick = {
+                  coroutineScope.launch {
+                     val newPageStack = PageStack(
+                        TestPage(page.i + 100),
+                        MockClock(hour = 1, minute = page.i + 1)
+                     )
+                     pageStackState.addColumn(newPageStack)
+                  }
+               }
+            ) {
+               Text("Add PageStack ${page.i}")
+            }
+         }
       },
       header = { _, _ -> },
       footer = null
@@ -85,6 +110,15 @@ class PageStackBoardComposeTest {
          testPageComposable,
       )
    )
+
+   private lateinit var pageStackRepository: PageStackRepository
+
+   @BeforeTest
+   fun beforeTest() {
+      pageStackRepository = mockk {
+         every { savePageStack(any()) } answers { WritableCache(firstArg()) }
+      }
+   }
 
    @Composable
    private fun SingleColumnPageStackBoard(
@@ -133,7 +167,7 @@ class PageStackBoardComposeTest {
    }
 
    private fun <S : PageStackBoardState> createPageStackBoardState(
-      constructor: (WritableCache<PageStackBoard>) -> S,
+      constructor: (WritableCache<PageStackBoard>, PageStackRepository) -> S,
       pageStackCount: Int
    ): S {
       val rootRow = PageStackBoard.Row(
@@ -142,13 +176,13 @@ class PageStackBoardComposeTest {
 
       val pageStackBoard = PageStackBoard(rootRow)
       val pageStackBoardCache = WritableCache(pageStackBoard)
-      return constructor(pageStackBoardCache)
+      return constructor(pageStackBoardCache, pageStackRepository)
    }
 
    private fun createPageStack(i: Int): PageStackBoard.PageStack {
       val page = TestPage(i)
       val pageStack = PageStack(page, MockClock(minute = i))
-      val cache = WritableCache(pageStack)
+      val cache = pageStackRepository.savePageStack(pageStack)
       return PageStackBoard.PageStack(cache)
    }
 
@@ -947,6 +981,50 @@ class PageStackBoardComposeTest {
          .let { assertEquals(-1.0f, it.left + it.width, absoluteTolerance = 0.05f) }
       rule.runOnIdle {
          assertEquals(1, pageStackBoardState.firstVisiblePageStackIndex)
+      }
+   }
+
+   // TODO: Row内のPageStackとかでもテストする
+   @Test
+   fun addPageStack_viaPageStackState() {
+      val pageStackBoardState
+            = createMultiColumnPageStackBoardState(pageStackCount = 2)
+
+      rule.setContent {
+         MultiColumnPageStackBoard(pageStackBoardState)
+      }
+
+      fun assertPageNumbers(expected: List<Int>, actual: PageStackBoard) {
+         val pages = actual.sequence()
+            .map { assertIs<PageStackBoard.PageStack>(it) }
+            .map { it.cache.value }
+            .map { assertIs<TestPage>(it.head) }
+            .toList()
+
+         assertContentEquals(expected, pages.map { it.i })
+      }
+
+      rule.runOnIdle {
+         assertPageNumbers(
+            listOf(0, 1),
+            pageStackBoardState.pageStackBoard
+         )
+      }
+
+      rule.onNodeWithText("Add PageStack 1").performClick()
+      rule.runOnIdle {
+         assertPageNumbers(
+            listOf(0, 1, 101),
+            pageStackBoardState.pageStackBoard
+         )
+      }
+
+      rule.onNodeWithText("Add PageStack 0").performClick()
+      rule.runOnIdle {
+         assertPageNumbers(
+            listOf(0, 100, 1, 101),
+            pageStackBoardState.pageStackBoard
+         )
       }
    }
 }

@@ -191,7 +191,10 @@ fun PageStackBoard.sequence(): Sequence<PageStackBoard.PageStack> {
 }
 
 @Stable
-sealed class PageStackBoardState(pageStackBoardCache: WritableCache<PageStackBoard>) {
+sealed class PageStackBoardState(
+   pageStackBoardCache: WritableCache<PageStackBoard>,
+   private val pageStackRepository: PageStackRepository
+) {
    internal var pageStackBoard: PageStackBoard
          by pageStackBoardCache.asMutableState()
 
@@ -208,5 +211,16 @@ sealed class PageStackBoardState(pageStackBoardCache: WritableCache<PageStackBoa
    internal fun getScrollOffsetForPageStack(index: Int): Int {
       val pageStackLayout = layout.pageStackLayout(index)
       return pageStackLayout.position.x - layout.pageStackPadding * 2
+   }
+
+   suspend fun addColumn(index: Int, pageStack: PageStack) {
+      val pageStackCache = pageStackRepository.savePageStack(pageStack)
+
+      pageStackBoard = PageStackBoard(
+         pageStackBoard.rootRow.inserted(
+            index,
+            PageStackBoard.PageStack(pageStackCache)
+         )
+      )
    }
 }

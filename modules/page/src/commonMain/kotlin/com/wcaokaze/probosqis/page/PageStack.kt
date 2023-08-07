@@ -22,6 +22,7 @@ import com.wcaokaze.probosqis.cache.compose.asState
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
 import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoardState
+import com.wcaokaze.probosqis.page.pagestackboard.sequence
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -80,7 +81,25 @@ class PageStackState internal constructor(
    internal val pageStack: PageStack by pageStackCache.asState()
 
    suspend fun addColumn(pageStack: PageStack) {
-      TODO()
+      val board = pageStackBoardState.pageStackBoard
+
+      val index = board.sequence()
+         .indexOfFirst { it.cache.value.id == this.pageStack.id }
+
+      val insertionIndex = if (index < 0) {
+         board.pageStackCount
+      } else {
+         board.rootRow.asSequence()
+            .runningFold(0) { acc, node ->
+               when (node) {
+                  is PageStackBoard.PageStack           -> acc + 1
+                  is PageStackBoard.LayoutElementParent -> acc + node.leafCount
+               }
+            }
+            .indexOfFirst { it > index }
+      }
+
+      pageStackBoardState.addColumn(insertionIndex, pageStack)
    }
 }
 

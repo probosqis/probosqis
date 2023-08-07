@@ -50,8 +50,9 @@ import com.wcaokaze.probosqis.page.PageComposableSwitcher
 
 @Stable
 class SingleColumnPageStackBoardState(
-   pageStackBoardCache: WritableCache<PageStackBoard>
-) : PageStackBoardState(pageStackBoardCache) {
+   pageStackBoardCache: WritableCache<PageStackBoard>,
+   pageStackRepository: PageStackRepository
+) : PageStackBoardState(pageStackBoardCache, pageStackRepository) {
    override val firstVisiblePageStackIndex: Int
       get() = TODO()
 }

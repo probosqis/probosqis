@@ -67,8 +67,9 @@ private const val PAGE_STACK_PADDING_DP = 8
 
 @Stable
 class MultiColumnPageStackBoardState(
-   pageStackBoardCache: WritableCache<PageStackBoard>
-) : PageStackBoardState(pageStackBoardCache) {
+   pageStackBoardCache: WritableCache<PageStackBoard>,
+   pageStackRepository: PageStackRepository
+) : PageStackBoardState(pageStackBoardCache, pageStackRepository) {
    override var firstVisiblePageStackIndex by mutableStateOf(0)
       internal set
 

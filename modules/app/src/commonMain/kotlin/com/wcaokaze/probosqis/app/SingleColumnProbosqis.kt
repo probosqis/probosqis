@@ -87,7 +87,9 @@ internal fun SingleColumnProbosqis(
             di.pageStackBoardRepository,
             di.pageStackRepository
          )
-         SingleColumnPageStackBoardState(pageStackBoardCache)
+
+         SingleColumnPageStackBoardState(
+            pageStackBoardCache, di.pageStackRepository)
       }
 
       val pageComposableSwitcher = remember(di) {
