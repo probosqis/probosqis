@@ -77,25 +77,36 @@ class MultiColumnPageStackBoardState(
    override var firstVisiblePageStackIndex by mutableStateOf(0)
       internal set
 
+   override fun pageStackState(id: PageStack.Id): PageStackState?
+         = layout.pageStackLayout(id)?.pageStackState
+
+   override fun pageStackState(index: Int): PageStackState
+         = layout.pageStackLayout(index).pageStackState
+
    internal fun layout(
       pageStackBoardWidth: Int,
       pageStackCount: Int,
-      pageStackPadding: Int,
+      pageStackPadding: Int
    ) {
       layout.layout(animCoroutineScope, pageStackBoard, pageStackBoardWidth,
-         pageStackCount, pageStackPadding, scrollState)
+         pageStackCount, pageStackPadding, scrollState,
+         pageStackStateConstructor = { pageStackCache,->
+            PageStackState(pageStackCache, pageStackBoardState = this)
+         }
+      )
    }
 }
 
 @Stable
-internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
+internal class LayoutLogic : Iterable<LayoutLogic.PageStackLayoutState> {
    @Stable
    class PageStackLayoutState(
-      val pageStackCache: WritableCache<PageStack>,
+      val pageStackState: PageStackState,
       initialPosition: IntOffset,
       initialWidth: Int
    ) {
-      val pageStackId = pageStackCache.value.id
+      val pageStackId = pageStackState.pageStack.id
+
       internal val positionAnimatable
             = Animatable(initialPosition, IntOffset.VectorConverter)
       val position: IntOffset get() = positionAnimatable.value
@@ -139,7 +150,8 @@ internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
       pageStackBoardWidth: Int,
       pageStackCount: Int,
       pageStackPadding: Int,
-      scrollState: PageStackBoardScrollState
+      scrollState: PageStackBoardScrollState,
+      pageStackStateConstructor: (WritableCache<PageStack>) -> PageStackState
    ) {
       val prevLayoutList = list
       val prevLayoutMap = map
@@ -213,8 +225,9 @@ internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
                         }
                      }
                   } else {
+                     val pageStackState = pageStackStateConstructor(element.cache)
                      layoutState = PageStackLayoutState(
-                        element.cache, position, pageStackWidth)
+                        pageStackState, position, pageStackWidth)
                   }
 
                   if (i < 0) {
@@ -304,12 +317,8 @@ fun MultiColumnPageStackBoard(
             }
 
             val measurable = subcompose(pageStackLayout.pageStackId) {
-               val pageStackState = remember {
-                  PageStackState(pageStackLayout.pageStackCache, state)
-               }
-
                PageStack(
-                  pageStackState,
+                  pageStackLayout.pageStackState,
                   isActive = pageStackCount == 1,
                   windowInsets.only(WindowInsetsSides.Bottom),
                   pageComposableSwitcher,

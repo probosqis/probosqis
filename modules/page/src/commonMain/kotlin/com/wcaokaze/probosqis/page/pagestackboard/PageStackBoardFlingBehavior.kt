@@ -79,7 +79,7 @@ internal object PageStackBoardFlingBehavior {
             currentScrollOffset, initialVelocity)
 
          val currentIdx = state.firstVisiblePageStackIndex
-         val estimatedIdx = state.layout.layoutStateList
+         val estimatedIdx = state.layout
             .indexOfFirst { it.position.x + it.width > estimatedScrollOffset }
 
          val targetIdx = when {

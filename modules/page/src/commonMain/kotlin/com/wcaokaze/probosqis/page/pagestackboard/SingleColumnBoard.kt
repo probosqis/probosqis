@@ -47,6 +47,7 @@ import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.page.PageStackContent
 import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.PageStack
 
 @Stable
 class SingleColumnPageStackBoardState(
@@ -55,6 +56,14 @@ class SingleColumnPageStackBoardState(
 ) : PageStackBoardState(pageStackBoardCache, pageStackRepository) {
    override val firstVisiblePageStackIndex: Int
       get() = TODO()
+
+   override fun pageStackState(id: PageStack.Id): PageStackState? {
+      TODO()
+   }
+
+   override fun pageStackState(index: Int): PageStackState {
+      TODO()
+   }
 }
 
 @Composable

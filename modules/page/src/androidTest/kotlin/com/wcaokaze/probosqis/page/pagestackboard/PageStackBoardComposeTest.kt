@@ -358,17 +358,17 @@ class PageStackBoardComposeTest {
 
       fun assertPageStackLayoutStates(
          pageStackBoard: PageStackBoard,
-         layoutState: LayoutState
+         layoutLogic: LayoutLogic
       ) {
          val pageStackCount = pageStackBoard.pageStackCount
          val ids = (0 until pageStackCount)
             .map { pageStackBoard[it].cache.value.id }
 
-         assertEquals(ids, layoutState.layoutStateList.map { it.pageStackId })
+         assertEquals(ids, layoutLogic.layoutStateList.map { it.pageStackId })
 
-         assertEquals(pageStackCount, layoutState.layoutStateMap.size)
+         assertEquals(pageStackCount, layoutLogic.layoutStateMap.size)
          for (id in ids) {
-            assertContains(layoutState.layoutStateMap, id)
+            assertContains(layoutLogic.layoutStateMap, id)
          }
       }
 

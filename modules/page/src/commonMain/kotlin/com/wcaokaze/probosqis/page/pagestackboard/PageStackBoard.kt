@@ -21,6 +21,7 @@ import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.cache.compose.asMutableState
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.PageStack
+import com.wcaokaze.probosqis.page.PageStackState
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -199,9 +200,12 @@ sealed class PageStackBoardState(
          by pageStackBoardCache.asMutableState()
 
    internal val scrollState = PageStackBoardScrollState()
-   internal val layout = LayoutState()
+   internal val layout = LayoutLogic()
 
    abstract val firstVisiblePageStackIndex: Int
+
+   internal abstract fun pageStackState(id: PageStack.Id): PageStackState?
+   internal abstract fun pageStackState(index: Int): PageStackState
 
    suspend fun animateScrollTo(index: Int) {
       val targetScrollOffset = getScrollOffsetForPageStack(index)
