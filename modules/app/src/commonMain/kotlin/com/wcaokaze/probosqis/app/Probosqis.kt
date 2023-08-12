@@ -16,54 +16,71 @@
 
 package com.wcaokaze.probosqis.app
 
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.ext.kotlin.datetime.BehindClock
-import com.wcaokaze.probosqis.page.compose.ColumnBoard
-import com.wcaokaze.probosqis.page.compose.ColumnBoardState
-import com.wcaokaze.probosqis.page.core.Column
-import com.wcaokaze.probosqis.page.core.ColumnBoard
-import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
+import com.wcaokaze.probosqis.page.PageStack
+import com.wcaokaze.probosqis.page.PageStackBoardRepository
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
-fun Probosqis(di: DI) {
+fun Probosqis(
+   di: DI,
+   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
    ProbosqisTheme {
-      val columnBoardState = remember {
-         val columnBoardCache = loadColumnBoardOrDefault(di.columnBoardRepository)
-         ColumnBoardState(columnBoardCache)
+      MaterialTheme(colorScheme()) {
+         BoxWithConstraints {
+            if (maxWidth < 512.dp) {
+               SingleColumnProbosqis(di, safeDrawingWindowInsets)
+            } else {
+               MultiColumnProbosqis(di, safeDrawingWindowInsets)
+            }
+         }
       }
-
-      ColumnBoard(
-         columnBoardState,
-         di.pageComposableSwitcher,
-         modifier = Modifier.fillMaxSize()
-      )
    }
 }
 
-internal fun loadColumnBoardOrDefault(
-   columnBoardRepository: ColumnBoardRepository
-): WritableCache<ColumnBoard> {
+@Composable
+expect fun colorScheme(): ColorScheme
+
+internal fun loadPageStackBoardOrDefault(
+   pageStackBoardRepository: PageStackBoardRepository,
+   pageStackRepository: PageStackRepository
+): WritableCache<PageStackBoard> {
    return try {
-      columnBoardRepository.loadColumnBoard()
+      pageStackBoardRepository.loadPageStackBoard()
    } catch (e: Exception) {
-      val columnBoard = ColumnBoard(
-         columns = createDefaultColumns()
+      pageStackRepository.deleteAllPageStacks()
+
+      val rootRow = PageStackBoard.Row(
+         createDefaultPageStacks(pageStackRepository)
       )
-      columnBoardRepository.saveColumnBoard(columnBoard)
+      val pageStackBoard = PageStackBoard(rootRow)
+      pageStackBoardRepository.savePageStackBoard(pageStackBoard)
    }
 }
 
-private fun createDefaultColumns(): List<Column> {
-   return persistentListOf(
-      Column(TestPage(0), BehindClock(Duration.ZERO)),
-      Column(TestPage(1), BehindClock(1.milliseconds)),
-   )
+private fun createDefaultPageStacks(
+   pageStackRepository: PageStackRepository
+): ImmutableList<PageStackBoard.LayoutElement> {
+   return sequenceOf(
+         PageStack(TestPage(0), BehindClock(Duration.ZERO)),
+         PageStack(TestPage(1), BehindClock(1.milliseconds)),
+      )
+      .map { pageStackRepository.savePageStack(it) }
+      .map { PageStackBoard.PageStack(it) }
+      .toImmutableList()
 }

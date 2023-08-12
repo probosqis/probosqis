@@ -24,9 +24,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.page.compose.ColumnState
-import com.wcaokaze.probosqis.page.core.Column
-import com.wcaokaze.probosqis.page.core.Page
+import com.wcaokaze.probosqis.page.PageStack
+import com.wcaokaze.probosqis.page.PageStackState
+import com.wcaokaze.probosqis.page.Page
+import com.wcaokaze.probosqis.page.pageComposable
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -36,7 +37,7 @@ import kotlinx.serialization.Serializable
 class TestPage(val i: Int) : Page()
 
 @Composable
-fun TestPage(page: TestPage, columnState: ColumnState) {
+fun TestPage(page: TestPage, pageStackState: PageStackState) {
    Column(Modifier.fillMaxSize()) {
       Text(
          "${page.i}",
@@ -48,8 +49,8 @@ fun TestPage(page: TestPage, columnState: ColumnState) {
       Button(
          onClick = {
             coroutineScope.launch {
-               val newColumn = Column(TestPage(page.i + 1))
-               columnState.addColumn(newColumn)
+               val newPageStack = PageStack(TestPage(page.i + 1))
+               pageStackState.addColumn(newPageStack)
             }
          }
       ) {
@@ -57,3 +58,9 @@ fun TestPage(page: TestPage, columnState: ColumnState) {
       }
    }
 }
+
+val testPageComposable = pageComposable<TestPage>(
+   content = { page, pageStackState -> TestPage(page, pageStackState) },
+   header = { _, _ -> },
+   footer = null
+)

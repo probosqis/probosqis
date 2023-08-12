@@ -17,11 +17,13 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.runtime.Stable
-import com.wcaokaze.probosqis.page.compose.PageComposableSwitcher
-import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
+import com.wcaokaze.probosqis.page.PageStackBoardRepository
+import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
 
 @Stable
 interface DI {
    val pageComposableSwitcher: PageComposableSwitcher
-   val columnBoardRepository: ColumnBoardRepository
+   val pageStackBoardRepository: PageStackBoardRepository
+   val pageStackRepository: PageStackRepository
 }

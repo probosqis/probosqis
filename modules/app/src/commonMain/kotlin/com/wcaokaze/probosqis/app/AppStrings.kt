@@ -22,7 +22,8 @@ import com.wcaokaze.probosqis.resources.LocalLanguage
 import com.wcaokaze.probosqis.resources.Strings
 
 interface AppStrings {
-   val topAppBarText: String
+   val topAppBar: String
+   val topAppBarNavigationContentDescription: String
 }
 
 val Strings.Companion.App: AppStrings
@@ -30,10 +31,12 @@ val Strings.Companion.App: AppStrings
    @ReadOnlyComposable
    get() = when (LocalLanguage.current) {
       Strings.Language.ENGLISH -> object : AppStrings {
-         override val topAppBarText = "Probosqis"
+         override val topAppBar = "Probosqis"
+         override val topAppBarNavigationContentDescription = "Menu"
       }
 
       Strings.Language.JAPANESE -> object : AppStrings {
-         override val topAppBarText = "Probosqis"
+         override val topAppBar = "Probosqis"
+         override val topAppBarNavigationContentDescription = "メニュー"
       }
    }

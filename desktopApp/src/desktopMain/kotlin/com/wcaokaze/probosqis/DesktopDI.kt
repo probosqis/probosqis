@@ -19,10 +19,11 @@ package com.wcaokaze.probosqis
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.app.DI
 import com.wcaokaze.probosqis.app.TestPage
-import com.wcaokaze.probosqis.page.compose.PageComposableSwitcher
-import com.wcaokaze.probosqis.page.compose.pageComposable
-import com.wcaokaze.probosqis.page.perpetuation.JvmColumnBoardRepository
-import com.wcaokaze.probosqis.page.perpetuation.pageSerializer
+import com.wcaokaze.probosqis.app.testPageComposable
+import com.wcaokaze.probosqis.page.JvmPageStackBoardRepository
+import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.pagestackboard.JvmPageStackRepository
+import com.wcaokaze.probosqis.page.pagestackboard.pageSerializer
 import kotlinx.collections.immutable.persistentListOf
 import java.io.File
 
@@ -30,14 +31,19 @@ import java.io.File
 class DesktopDI : DI {
    override val pageComposableSwitcher = PageComposableSwitcher(
       allPageComposables = persistentListOf(
-         pageComposable<TestPage> { page, columnState -> TestPage(page, columnState) },
+         testPageComposable,
       )
    )
 
-   override val columnBoardRepository = JvmColumnBoardRepository(
+   override val pageStackRepository = JvmPageStackRepository(
       allPageSerializers = listOf(
          pageSerializer<TestPage>(),
       ),
-      File("~/.probosqisData/columnBoardCache")
+      File(System.getProperty("user.home"), ".probosqisData/pageStackCache")
+   )
+
+   override val pageStackBoardRepository = JvmPageStackBoardRepository(
+      pageStackRepository,
+      File(System.getProperty("user.home"), ".probosqisData/pageStackBoardCache")
    )
 }

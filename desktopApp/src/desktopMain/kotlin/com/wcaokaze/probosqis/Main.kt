@@ -17,12 +17,20 @@
 package com.wcaokaze.probosqis
 
 import androidx.compose.runtime.remember
-import androidx.compose.ui.window.singleWindowApplication
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
+import com.wcaokaze.probosqis.app.App
 import com.wcaokaze.probosqis.app.Probosqis
+import com.wcaokaze.probosqis.resources.Strings
 
 fun main() {
-   singleWindowApplication {
-      val di = remember { DesktopDI() }
-      Probosqis(di)
+   application {
+      Window(
+         title = Strings.App.topAppBar,
+         onCloseRequest = { exitApplication() }
+      ) {
+         val di = remember { DesktopDI() }
+         Probosqis(di)
+      }
    }
 }

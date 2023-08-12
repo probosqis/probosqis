@@ -16,45 +16,80 @@
 
 package com.wcaokaze.probosqis.app
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
+import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
+import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
+import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
-import com.wcaokaze.probosqis.page.compose.PageComposableSwitcher
-import com.wcaokaze.probosqis.page.compose.pageComposable
-import com.wcaokaze.probosqis.page.core.Column
-import com.wcaokaze.probosqis.page.core.ColumnBoard
-import com.wcaokaze.probosqis.page.perpetuation.ColumnBoardRepository
+import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.PageStack
+import com.wcaokaze.probosqis.page.PageStackBoardRepository
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
+import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
-@Preview
-@Composable
-private fun ProbosqisPreview() {
-   val di = remember {
-      object : DI {
-         private val clock = MockClock()
+private object PreviewDI : DI {
+   private val clock = MockClock()
 
-         override val pageComposableSwitcher = PageComposableSwitcher(
-            allPageComposables = persistentListOf(
-               pageComposable<TestPage> { page, columnState -> TestPage(page, columnState) },
-            )
-         )
+   override val pageComposableSwitcher = PageComposableSwitcher(
+      allPageComposables = persistentListOf(
+         testPageComposable,
+      )
+   )
 
-         override val columnBoardRepository = object : ColumnBoardRepository {
-            override fun saveColumnBoard(columnBoard: ColumnBoard)
-                  = throw NotImplementedError()
+   override val pageStackBoardRepository = object : PageStackBoardRepository {
+      override fun savePageStackBoard(pageStackBoard: PageStackBoard)
+            = throw NotImplementedError()
 
-            override fun loadColumnBoard() = WritableCache(
-               ColumnBoard(
-                  columns = persistentListOf(
-                     Column(TestPage(0), clock),
-                  )
-               )
-            )
-         }
+      override fun loadPageStackBoard(): WritableCache<PageStackBoard> {
+         val children = List(4) {
+            val pageStack = PageStack(TestPage(0), clock)
+            val pageStackCache = WritableCache(pageStack)
+            PageStackBoard.PageStack(pageStackCache)
+         } .toImmutableList()
+
+         val rootRow = PageStackBoard.Row(children)
+         val pageStackBoard = PageStackBoard(rootRow)
+         return WritableCache(pageStackBoard)
       }
    }
 
+   override val pageStackRepository = object : PageStackRepository {
+      override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
+            = throw NotImplementedError()
+      override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
+            = throw NotImplementedError()
+      override fun deleteAllPageStacks()
+            = throw NotImplementedError()
+   }
+}
+
+@MultiDevicePreview
+@Composable
+private fun ProbosqisPreview(
+   @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
+   safeDrawingWindowInsets: WindowInsets
+) {
+   val di = remember { PreviewDI }
+   Probosqis(di, safeDrawingWindowInsets)
+}
+
+@MultiFontScalePreview
+@Composable
+private fun ProbosqisFontScalePreview() {
+   val di = remember { PreviewDI }
+   Probosqis(di)
+}
+
+@MultiLanguagePreview
+@Composable
+private fun ProbosqisLanguagePreview() {
+   val di = remember { PreviewDI }
    Probosqis(di)
 }

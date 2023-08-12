@@ -152,6 +152,18 @@ if (isAndroidModule) {
             includeAndroidResources = true
          }
       }
+
+      packagingOptions.resources {
+         excludes += [
+               'META-INF/LICENSE',
+               'META-INF/LICENSE.txt',
+               'META-INF/LICENSE.md',
+               'META-INF/license',
+               'META-INF/license.txt',
+               'META-INF/license.md',
+               'META-INF/LICENSE-notice.md',
+         ]
+      }
    }
 
    dependencies {
