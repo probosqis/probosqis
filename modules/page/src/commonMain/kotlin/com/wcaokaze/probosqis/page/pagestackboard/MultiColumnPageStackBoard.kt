@@ -16,8 +16,9 @@
 
 package com.wcaokaze.probosqis.page.pagestackboard
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -61,12 +62,15 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.jetbrains.annotations.TestOnly
 
 private const val PAGE_STACK_PADDING_DP = 8
 
 @Stable
 class MultiColumnPageStackBoardState(
+   private val animCoroutineScope: CoroutineScope,
    pageStackBoardCache: WritableCache<PageStackBoard>,
    pageStackRepository: PageStackRepository
 ) : PageStackBoardState(pageStackBoardCache, pageStackRepository) {
@@ -78,8 +82,8 @@ class MultiColumnPageStackBoardState(
       pageStackCount: Int,
       pageStackPadding: Int,
    ) {
-      layout.layout(pageStackBoard, pageStackBoardWidth, pageStackCount,
-         pageStackPadding, scrollState)
+      layout.layout(animCoroutineScope, pageStackBoard, pageStackBoardWidth,
+         pageStackCount, pageStackPadding, scrollState)
    }
 }
 
@@ -92,8 +96,13 @@ internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
       initialWidth: Int
    ) {
       val pageStackId = pageStackCache.value.id
-      var position by mutableStateOf(initialPosition)
-      var width by mutableStateOf(initialWidth)
+      internal val positionAnimatable
+            = Animatable(initialPosition, IntOffset.VectorConverter)
+      val position: IntOffset get() = positionAnimatable.value
+
+      internal val widthAnimatable
+            = Animatable(initialWidth, Int.VectorConverter)
+      val width: Int get() = widthAnimatable.value
    }
 
    internal var pageStackPadding by mutableStateOf(0)
@@ -119,7 +128,13 @@ internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
    override operator fun iterator(): Iterator<PageStackLayoutState>
          = list.iterator()
 
+   /**
+    * @param animCoroutineScope
+    *   PageStackの移動や幅変更があったときのアニメーションを再生するための
+    *   CoroutineScope
+    */
    internal fun layout(
+      animCoroutineScope: CoroutineScope,
       pageStackBoard: PageStackBoard,
       pageStackBoardWidth: Int,
       pageStackCount: Int,
@@ -182,8 +197,21 @@ internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
                   }
 
                   if (layoutState != null) {
-                     layoutState.position = position
-                     layoutState.width = pageStackWidth
+                     // launch内からアクセスする際、layoutStateは違う値に
+                     // 変わっている可能性が高いため、変わらない変数に移動しておく
+                     val l = layoutState
+
+                     if (l.positionAnimatable.value != position) {
+                        animCoroutineScope.launch {
+                           l.positionAnimatable.animateTo(position)
+                        }
+                     }
+
+                     if (layoutState.widthAnimatable.value != pageStackWidth) {
+                        animCoroutineScope.launch {
+                           l.widthAnimatable.animateTo(pageStackWidth)
+                        }
+                     }
                   } else {
                      layoutState = PageStackLayoutState(
                         element.cache, position, pageStackWidth)
