@@ -88,32 +88,52 @@ class MultiColumnPageStackBoardState(
       pageStackCount: Int,
       pageStackPadding: Int
    ) {
-      layout.layout(animCoroutineScope, pageStackBoard, pageStackBoardWidth,
-         pageStackCount, pageStackPadding, scrollState,
-         pageStackStateConstructor = { pageStackCache,->
-            PageStackState(pageStackCache, pageStackBoardState = this)
-         }
-      )
+      layout.layout(animCoroutineScope, pageStackBoardWidth, pageStackCount,
+         pageStackPadding, scrollState)
    }
 }
 
 @Stable
-internal class LayoutLogic : Iterable<LayoutLogic.PageStackLayoutState> {
+internal class LayoutLogic(
+   pageStackBoard: PageStackBoard,
+   private val pageStackStateConstructor: (WritableCache<PageStack>) -> PageStackState
+) : Iterable<LayoutLogic.PageStackLayoutState> {
    @Stable
-   class PageStackLayoutState(
-      val pageStackState: PageStackState,
-      initialPosition: IntOffset,
-      initialWidth: Int
-   ) {
+   internal class PageStackLayoutState(val pageStackState: PageStackState) {
       val pageStackId = pageStackState.pageStack.id
 
-      internal val positionAnimatable
-            = Animatable(initialPosition, IntOffset.VectorConverter)
-      val position: IntOffset get() = positionAnimatable.value
+      /**
+       * [PageStackBoardState.pageStackBoard]をセットして生成された直後の
+       * インスタンスの場合 `false`。[layout]が呼ばれて位置とサイズが決まったあと
+       * `true` になる
+       */
+      var isInitialized by mutableStateOf(false)
+         internal set
 
-      internal val widthAnimatable
-            = Animatable(initialWidth, Int.VectorConverter)
-      val width: Int get() = widthAnimatable.value
+      private lateinit var positionAnimatable: Animatable<IntOffset, *>
+      val position: IntOffset get() {
+         require(isInitialized)
+         return positionAnimatable.value
+      }
+      internal suspend fun animatePosition(targetPosition: IntOffset) {
+         positionAnimatable.animateTo(targetPosition)
+      }
+
+      private lateinit var widthAnimatable: Animatable<Int, *>
+      val width: Int get() {
+         require(isInitialized)
+         return widthAnimatable.value
+      }
+      internal suspend fun animateWidth(targetWidth: Int) {
+         widthAnimatable.animateTo(targetWidth)
+      }
+
+      internal fun initialize(position: IntOffset, width: Int) {
+         require(!isInitialized)
+         positionAnimatable = Animatable(position, IntOffset.VectorConverter)
+         widthAnimatable = Animatable(width, Int.VectorConverter)
+         isInitialized = true
+      }
    }
 
    internal var pageStackPadding by mutableStateOf(0)
@@ -132,6 +152,10 @@ internal class LayoutLogic : Iterable<LayoutLogic.PageStackLayoutState> {
    internal val layoutStateMap
       @TestOnly get() = map
 
+   init {
+      recreateLayoutState(pageStackBoard)
+   }
+
    fun pageStackLayout(id: PageStack.Id): PageStackLayoutState? = map[id]
 
    fun pageStackLayout(index: Int): PageStackLayoutState = list[index]
@@ -139,34 +163,11 @@ internal class LayoutLogic : Iterable<LayoutLogic.PageStackLayoutState> {
    override operator fun iterator(): Iterator<PageStackLayoutState>
          = list.iterator()
 
-   /**
-    * @param animCoroutineScope
-    *   PageStackの移動や幅変更があったときのアニメーションを再生するための
-    *   CoroutineScope
-    */
-   internal fun layout(
-      animCoroutineScope: CoroutineScope,
-      pageStackBoard: PageStackBoard,
-      pageStackBoardWidth: Int,
-      pageStackCount: Int,
-      pageStackPadding: Int,
-      scrollState: PageStackBoardScrollState,
-      pageStackStateConstructor: (WritableCache<PageStack>) -> PageStackState
-   ) {
+   internal fun recreateLayoutState(pageStackBoard: PageStackBoard) {
       val prevLayoutList = list
       val prevLayoutMap = map
 
-      /*
-       * ウィンドウサイズの変更やPageStackサイズの変更等によって
-       * 再レイアウトする場合、PageStackの順番は変わっておらず、
-       * prevLayoutListとprevLayoutMapをそのまま再利用できる。
-       * そのため、まずはpageStackBoardを0から順にレイアウトしていくが、
-       * prevLayoutList[i]のPageStackIdがpageStackBoard[i]のPageStackIdと
-       * 一致しなくなった時点でPageStackの並び替えや挿入があったことが確定し、
-       * prevLayoutListを再利用できなくなる。その時点でiに-1が入り、resultList,
-       * resultMapにi以前の要素がコピーされる。それ以降はprevLayoutMapから
-       * レイアウトを探してresultList, resultMapに格納していく。
-       */
+      // 再生成が不要な可能性もあるため、必要になるまでは生成しないまま進める
       lateinit var resultList: MutableList<PageStackLayoutState>
       lateinit var resultMap: MutableMap<PageStack.Id, PageStackLayoutState>
       var i = 0
@@ -180,6 +181,56 @@ internal class LayoutLogic : Iterable<LayoutLogic.PageStackLayoutState> {
          i = -1
       }
 
+      for (pageStackElement in pageStackBoard.sequence()) {
+         val pageStack = pageStackElement.cache.value
+
+         var layoutState = if (i >= 0) {
+            if (prevLayoutList.getOrNull(i)?.pageStackId == pageStack.id) {
+               prevLayoutList[i++]
+            } else {
+               prepareResults()
+               prevLayoutMap[pageStack.id]
+            }
+         } else {
+            prevLayoutMap[pageStack.id]
+         }
+
+         if (i < 0) {
+            if (layoutState == null) {
+               val pageStackState = pageStackStateConstructor(pageStackElement.cache)
+               layoutState = PageStackLayoutState(pageStackState)
+            }
+
+            resultList += layoutState
+            resultMap[pageStack.id] = layoutState
+         }
+      }
+
+      when {
+         i < 0 -> {
+            list = resultList.toImmutableList()
+            map = resultMap.toImmutableMap()
+         }
+         i < prevLayoutList.size -> {
+            prepareResults()
+            list = resultList.toImmutableList()
+            map = resultMap.toImmutableMap()
+         }
+      }
+   }
+
+   /**
+    * @param animCoroutineScope
+    *   PageStackの移動や幅変更があったときのアニメーションを再生するための
+    *   CoroutineScope
+    */
+   internal fun layout(
+      animCoroutineScope: CoroutineScope,
+      pageStackBoardWidth: Int,
+      pageStackCount: Int,
+      pageStackPadding: Int,
+      scrollState: PageStackBoardScrollState
+   ) {
       val pageStackWidth = (
          (pageStackBoardWidth - pageStackPadding * 2) / pageStackCount
          - pageStackPadding * 2
@@ -187,78 +238,30 @@ internal class LayoutLogic : Iterable<LayoutLogic.PageStackLayoutState> {
 
       var x = pageStackPadding
 
-      fun layout(parent: PageStackBoard.LayoutElementParent) {
-         for (element in parent) {
-            when (element) {
-               is PageStackBoard.PageStack -> {
-                  val pageStack = element.cache.value
+      for (layoutState in list) {
+         x += pageStackPadding
+         val position = IntOffset(x, 0)
+         x += pageStackWidth + pageStackPadding
 
-                  x += pageStackPadding
-                  val position = IntOffset(x, 0)
-                  x += pageStackWidth + pageStackPadding
-
-                  var layoutState = if (i >= 0) {
-                     if (prevLayoutList.getOrNull(i)?.pageStackId == pageStack.id) {
-                        prevLayoutList[i++]
-                     } else {
-                        prepareResults()
-                        prevLayoutMap[pageStack.id]
-                     }
-                  } else {
-                     prevLayoutMap[pageStack.id]
-                  }
-
-                  if (layoutState != null) {
-                     // launch内からアクセスする際、layoutStateは違う値に
-                     // 変わっている可能性が高いため、変わらない変数に移動しておく
-                     val l = layoutState
-
-                     if (l.positionAnimatable.value != position) {
-                        animCoroutineScope.launch {
-                           l.positionAnimatable.animateTo(position)
-                        }
-                     }
-
-                     if (layoutState.widthAnimatable.value != pageStackWidth) {
-                        animCoroutineScope.launch {
-                           l.widthAnimatable.animateTo(pageStackWidth)
-                        }
-                     }
-                  } else {
-                     val pageStackState = pageStackStateConstructor(element.cache)
-                     layoutState = PageStackLayoutState(
-                        pageStackState, position, pageStackWidth)
-                  }
-
-                  if (i < 0) {
-                     resultList += layoutState
-                     resultMap[pageStack.id] = layoutState
-                  }
+         if (!layoutState.isInitialized) {
+            layoutState.initialize(position, pageStackWidth)
+         } else {
+            if (layoutState.position != position) {
+               animCoroutineScope.launch {
+                  layoutState.animatePosition(position)
                }
+            }
 
-               is PageStackBoard.LayoutElementParent -> {
-                  layout(element)
+            if (layoutState.width != pageStackWidth) {
+               animCoroutineScope.launch {
+                  layoutState.animateWidth(pageStackWidth)
                }
             }
          }
       }
 
-      layout(pageStackBoard.rootRow)
-
       x += pageStackPadding
       this.pageStackPadding = pageStackPadding
-
-      when {
-         i < 0 -> {
-            map = resultMap.toImmutableMap()
-            list = resultList.toImmutableList()
-         }
-         i < prevLayoutList.size -> {
-            prepareResults()
-            map = resultMap.toImmutableMap()
-            list = resultList.toImmutableList()
-         }
-      }
 
       scrollState.setMaxScrollOffset(
          (x - pageStackBoardWidth).toFloat().coerceAtLeast(0f))

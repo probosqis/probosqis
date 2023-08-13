@@ -65,7 +65,9 @@ import kotlin.test.assertContains
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class PageStackBoardComposeTest {
@@ -342,7 +344,7 @@ class PageStackBoardComposeTest {
 
    @Test
    fun multiColumnPageStackBoard_layout_mutatePageStackBoard() {
-      fun assertPageStacks(
+      fun assertPageNumbers(
          expectedPageNumbers: List<Int>,
          pageStackBoard: PageStackBoard
       ) {
@@ -356,7 +358,7 @@ class PageStackBoardComposeTest {
          }
       }
 
-      fun assertPageStackLayoutStates(
+      fun assertPageStackLayoutStatesExist(
          pageStackBoard: PageStackBoard,
          layoutLogic: LayoutLogic
       ) {
@@ -382,9 +384,9 @@ class PageStackBoardComposeTest {
       }
 
       rule.runOnIdle {
-         assertPageStacks(listOf(0, 1), pageStackBoardState.pageStackBoard)
+         assertPageNumbers(listOf(0, 1), pageStackBoardState.pageStackBoard)
 
-         assertPageStackLayoutStates(
+         assertPageStackLayoutStatesExist(
             pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
       }
 
@@ -394,11 +396,17 @@ class PageStackBoardComposeTest {
          pageStackBoardState.pageStackBoard.rootRow.inserted(0, createPageStack(2))
       )
 
-      rule.runOnIdle {
-         assertPageStacks(listOf(2, 0, 1), pageStackBoardState.pageStackBoard)
+      assertFalse(
+         pageStackBoardState.layout.pageStackLayout(0).isInitialized)
 
-         assertPageStackLayoutStates(
+      rule.runOnIdle {
+         assertPageNumbers(listOf(2, 0, 1), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStatesExist(
             pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+
+         assertTrue(
+            pageStackBoardState.layout.pageStackLayout(0).isInitialized)
       }
 
       // ---- insert last ----
@@ -407,11 +415,17 @@ class PageStackBoardComposeTest {
          pageStackBoardState.pageStackBoard.rootRow.inserted(3, createPageStack(3))
       )
 
-      rule.runOnIdle {
-         assertPageStacks(listOf(2, 0, 1, 3), pageStackBoardState.pageStackBoard)
+      assertFalse(
+         pageStackBoardState.layout.pageStackLayout(3).isInitialized)
 
-         assertPageStackLayoutStates(
+      rule.runOnIdle {
+         assertPageNumbers(listOf(2, 0, 1, 3), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStatesExist(
             pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+
+         assertTrue(
+            pageStackBoardState.layout.pageStackLayout(3).isInitialized)
       }
 
       // ---- insert middle ----
@@ -420,11 +434,17 @@ class PageStackBoardComposeTest {
          pageStackBoardState.pageStackBoard.rootRow.inserted(2, createPageStack(4))
       )
 
-      rule.runOnIdle {
-         assertPageStacks(listOf(2, 0, 4, 1, 3), pageStackBoardState.pageStackBoard)
+      assertFalse(
+         pageStackBoardState.layout.pageStackLayout(2).isInitialized)
 
-         assertPageStackLayoutStates(
+      rule.runOnIdle {
+         assertPageNumbers(listOf(2, 0, 4, 1, 3), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStatesExist(
             pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+
+         assertTrue(
+            pageStackBoardState.layout.pageStackLayout(2).isInitialized)
       }
 
       // ---- replace ----
@@ -433,11 +453,17 @@ class PageStackBoardComposeTest {
          pageStackBoardState.pageStackBoard.rootRow.replaced(2, createPageStack(5))
       )
 
-      rule.runOnIdle {
-         assertPageStacks(listOf(2, 0, 5, 1, 3), pageStackBoardState.pageStackBoard)
+      assertFalse(
+         pageStackBoardState.layout.pageStackLayout(2).isInitialized)
 
-         assertPageStackLayoutStates(
+      rule.runOnIdle {
+         assertPageNumbers(listOf(2, 0, 5, 1, 3), pageStackBoardState.pageStackBoard)
+
+         assertPageStackLayoutStatesExist(
             pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
+
+         assertTrue(
+            pageStackBoardState.layout.pageStackLayout(2).isInitialized)
       }
 
       // ---- remove first ----
@@ -447,9 +473,9 @@ class PageStackBoardComposeTest {
       )
 
       rule.runOnIdle {
-         assertPageStacks(listOf(0, 5, 1, 3), pageStackBoardState.pageStackBoard)
+         assertPageNumbers(listOf(0, 5, 1, 3), pageStackBoardState.pageStackBoard)
 
-         assertPageStackLayoutStates(
+         assertPageStackLayoutStatesExist(
             pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
       }
 
@@ -460,9 +486,9 @@ class PageStackBoardComposeTest {
       )
 
       rule.runOnIdle {
-         assertPageStacks(listOf(0, 5, 1), pageStackBoardState.pageStackBoard)
+         assertPageNumbers(listOf(0, 5, 1), pageStackBoardState.pageStackBoard)
 
-         assertPageStackLayoutStates(
+         assertPageStackLayoutStatesExist(
             pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
       }
 
@@ -473,9 +499,9 @@ class PageStackBoardComposeTest {
       )
 
       rule.runOnIdle {
-         assertPageStacks(listOf(0, 1), pageStackBoardState.pageStackBoard)
+         assertPageNumbers(listOf(0, 1), pageStackBoardState.pageStackBoard)
 
-         assertPageStackLayoutStates(
+         assertPageStackLayoutStatesExist(
             pageStackBoardState.pageStackBoard, pageStackBoardState.layout)
       }
    }

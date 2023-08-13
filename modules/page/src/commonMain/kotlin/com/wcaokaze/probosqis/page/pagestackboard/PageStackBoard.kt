@@ -196,11 +196,23 @@ sealed class PageStackBoardState(
    pageStackBoardCache: WritableCache<PageStackBoard>,
    private val pageStackRepository: PageStackRepository
 ) {
+   private val pageStackBoardState = pageStackBoardCache.asMutableState()
+
    internal var pageStackBoard: PageStackBoard
-         by pageStackBoardCache.asMutableState()
+      get() = pageStackBoardState.value
+      set(value) {
+         pageStackBoardState.value = value
+         layout.recreateLayoutState(value)
+      }
 
    internal val scrollState = PageStackBoardScrollState()
-   internal val layout = LayoutLogic()
+
+   internal val layout = LayoutLogic(
+      pageStackBoard,
+      pageStackStateConstructor = { pageStackCache,->
+         PageStackState(pageStackCache, pageStackBoardState = this)
+      }
+   )
 
    abstract val firstVisiblePageStackIndex: Int
 
