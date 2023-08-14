@@ -175,12 +175,7 @@ class PageStackBoardComposeTest {
       val animCoroutineScope = rememberCoroutineScope()
       return remember(animCoroutineScope) {
          val pageStackBoardState = createPageStackBoardState(
-            constructor = { _, pageStackBoardCache, pageStackRepo ->
-               SingleColumnPageStackBoardState(pageStackBoardCache, pageStackRepo)
-            },
-            animCoroutineScope,
-            pageStackCount
-         )
+            ::SingleColumnPageStackBoardState, animCoroutineScope, pageStackCount)
          RememberedPageStackBoardState(pageStackBoardState, animCoroutineScope)
       }
    }
@@ -199,7 +194,7 @@ class PageStackBoardComposeTest {
 
    private fun <S : PageStackBoardState> createPageStackBoardState(
       constructor: (
-         CoroutineScope, WritableCache<PageStackBoard>, PageStackRepository
+         WritableCache<PageStackBoard>, PageStackRepository, CoroutineScope
       ) -> S,
       animCoroutineScope: CoroutineScope,
       pageStackCount: Int
@@ -210,7 +205,7 @@ class PageStackBoardComposeTest {
 
       val pageStackBoard = PageStackBoard(rootRow)
       val pageStackBoardCache = WritableCache(pageStackBoard)
-      return constructor(animCoroutineScope, pageStackBoardCache, pageStackRepository)
+      return constructor(pageStackBoardCache, pageStackRepository, animCoroutineScope)
    }
 
    private fun createPageStack(i: Int): PageStackBoard.PageStack {

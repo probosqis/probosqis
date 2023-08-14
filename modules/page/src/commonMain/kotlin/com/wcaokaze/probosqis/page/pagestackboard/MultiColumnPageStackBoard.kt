@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.page.pagestackboard
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
@@ -63,17 +65,24 @@ import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.annotations.TestOnly
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val PAGE_STACK_PADDING_DP = 8
 
 @Stable
 class MultiColumnPageStackBoardState(
-   private val animCoroutineScope: CoroutineScope,
    pageStackBoardCache: WritableCache<PageStackBoard>,
-   pageStackRepository: PageStackRepository
-) : PageStackBoardState(pageStackBoardCache, pageStackRepository) {
+   pageStackRepository: PageStackRepository,
+   animCoroutineScope: CoroutineScope
+) : PageStackBoardState(
+   pageStackBoardCache,
+   pageStackRepository,
+   animCoroutineScope
+) {
    override var firstVisiblePageStackIndex by mutableStateOf(0)
       internal set
 
@@ -82,15 +91,6 @@ class MultiColumnPageStackBoardState(
 
    override fun pageStackState(index: Int): PageStackState
          = layout.pageStackLayout(index).pageStackState
-
-   internal fun layout(
-      pageStackBoardWidth: Int,
-      pageStackCount: Int,
-      pageStackPadding: Int
-   ) {
-      layout.layout(animCoroutineScope, pageStackBoardWidth, pageStackCount,
-         pageStackPadding, scrollState)
-   }
 }
 
 @Stable
@@ -110,10 +110,13 @@ internal class LayoutLogic(
       var isInitialized by mutableStateOf(false)
          internal set
 
+      private val yOffsetAnimatable = Animatable(0.0f)
+
       private lateinit var positionAnimatable: Animatable<IntOffset, *>
       val position: IntOffset get() {
          require(isInitialized)
-         return positionAnimatable.value
+         val (x, y) = positionAnimatable.value
+         return IntOffset(x, y + yOffsetAnimatable.value.toInt())
       }
       internal suspend fun animatePosition(targetPosition: IntOffset) {
          positionAnimatable.animateTo(targetPosition)
@@ -126,6 +129,25 @@ internal class LayoutLogic(
       }
       internal suspend fun animateWidth(targetWidth: Int) {
          widthAnimatable.animateTo(targetWidth)
+      }
+
+      private val alphaAnimatable = Animatable(1.0f)
+      val alpha: Float get() = alphaAnimatable.value
+
+      internal suspend fun animateInsertion(yOffset: Float) {
+         coroutineScope {
+            alphaAnimatable.snapTo(0.0f)
+            yOffsetAnimatable.snapTo(yOffset)
+
+            delay(200.milliseconds)
+
+            launch {
+               alphaAnimatable.animateTo(1.0f, tween(durationMillis = 200))
+            }
+            launch {
+               yOffsetAnimatable.animateTo(0.0f, tween(durationMillis = 200))
+            }
+         }
       }
 
       internal fun initialize(position: IntOffset, width: Int) {
@@ -295,7 +317,8 @@ fun MultiColumnPageStackBoard(
          val pageStackBoardHeight = constraints.maxHeight
          val pageStackPadding = PAGE_STACK_PADDING_DP.dp.roundToPx()
 
-         state.layout(pageStackBoardWidth, pageStackCount, pageStackPadding)
+         state.layout(density = this, pageStackBoardWidth, pageStackCount,
+            pageStackPadding)
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
 
@@ -325,7 +348,9 @@ fun MultiColumnPageStackBoard(
                   isActive = pageStackCount == 1,
                   windowInsets.only(WindowInsetsSides.Bottom),
                   pageComposableSwitcher,
-                  onTopAppBarHeightChanged
+                  onTopAppBarHeightChanged,
+                  modifier = Modifier
+                     .alpha(pageStackLayout.alpha)
                )
             } .single()
 

@@ -85,7 +85,7 @@ internal fun MultiColumnProbosqis(
          )
 
          MultiColumnPageStackBoardState(
-            coroutineScope, pageStackBoardCache, di.pageStackRepository)
+            pageStackBoardCache, di.pageStackRepository, coroutineScope)
       }
 
       val pageComposableSwitcher = remember(di) {

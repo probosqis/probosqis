@@ -18,10 +18,16 @@ package com.wcaokaze.probosqis.page.pagestackboard
 
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.compose.asMutableState
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -194,7 +200,8 @@ fun PageStackBoard.sequence(): Sequence<PageStackBoard.PageStack> {
 @Stable
 sealed class PageStackBoardState(
    pageStackBoardCache: WritableCache<PageStackBoard>,
-   private val pageStackRepository: PageStackRepository
+   private val pageStackRepository: PageStackRepository,
+   private val animCoroutineScope: CoroutineScope
 ) {
    private val pageStackBoardState = pageStackBoardCache.asMutableState()
 
@@ -215,6 +222,8 @@ sealed class PageStackBoardState(
    )
 
    abstract val firstVisiblePageStackIndex: Int
+
+   private var pageStackInsertionAnimOffset by mutableStateOf(0.0f)
 
    internal abstract fun pageStackState(id: PageStack.Id): PageStackState?
    internal abstract fun pageStackState(index: Int): PageStackState
@@ -238,5 +247,22 @@ sealed class PageStackBoardState(
             PageStackBoard.PageStack(pageStackCache)
          )
       )
+
+      layout.pageStackLayout(pageStack.id)
+         ?.animateInsertion(pageStackInsertionAnimOffset)
+   }
+
+   internal fun layout(
+      density: Density,
+      pageStackBoardWidth: Int,
+      pageStackCount: Int,
+      pageStackPadding: Int
+   ) {
+      with (density) {
+         pageStackInsertionAnimOffset = 64.dp.toPx()
+      }
+
+      layout.layout(animCoroutineScope, pageStackBoardWidth, pageStackCount,
+         pageStackPadding, scrollState)
    }
 }

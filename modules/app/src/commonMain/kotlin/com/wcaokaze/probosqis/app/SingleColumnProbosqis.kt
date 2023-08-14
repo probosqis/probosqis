@@ -44,6 +44,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -82,6 +83,7 @@ internal fun SingleColumnProbosqis(
       modifier = Modifier
          .nestedScroll(nestedScrollConnection)
    ) { paddingValues ->
+      val coroutineScope = rememberCoroutineScope()
       val pageStackBoardState = remember(di) {
          val pageStackBoardCache = loadPageStackBoardOrDefault(
             di.pageStackBoardRepository,
@@ -89,7 +91,7 @@ internal fun SingleColumnProbosqis(
          )
 
          SingleColumnPageStackBoardState(
-            pageStackBoardCache, di.pageStackRepository)
+            pageStackBoardCache, di.pageStackRepository, coroutineScope)
       }
 
       val pageComposableSwitcher = remember(di) {

@@ -48,12 +48,18 @@ import com.wcaokaze.probosqis.page.PageStackContent
 import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.PageStack
+import kotlinx.coroutines.CoroutineScope
 
 @Stable
 class SingleColumnPageStackBoardState(
    pageStackBoardCache: WritableCache<PageStackBoard>,
-   pageStackRepository: PageStackRepository
-) : PageStackBoardState(pageStackBoardCache, pageStackRepository) {
+   pageStackRepository: PageStackRepository,
+   animCoroutineScope: CoroutineScope
+) : PageStackBoardState(
+   pageStackBoardCache,
+   pageStackRepository,
+   animCoroutineScope
+) {
    override val firstVisiblePageStackIndex: Int
       get() = TODO()
 
