@@ -16,7 +16,7 @@
 
 package com.wcaokaze.probosqis.page.pagestackboard
 
-import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.animation.core.animate
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -229,8 +229,18 @@ sealed class PageStackBoardState(
    internal abstract fun pageStackState(index: Int): PageStackState
 
    suspend fun animateScrollTo(index: Int) {
-      val targetScrollOffset = getScrollOffsetForPageStack(index)
-      scrollState.animateScrollBy(targetScrollOffset - scrollState.scrollOffset)
+      scrollState.scroll {
+         val targetScrollOffset = getScrollOffsetForPageStack(index)
+
+         var prevValue = scrollState.scrollOffset
+
+         animate(
+            initialValue = prevValue,
+            targetValue = targetScrollOffset.toFloat()
+         ) { value, _ ->
+            prevValue += scrollBy(value - prevValue)
+         }
+      }
    }
 
    internal fun getScrollOffsetForPageStack(index: Int): Int {
