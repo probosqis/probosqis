@@ -43,6 +43,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.compositeOver
@@ -67,6 +68,8 @@ import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.jetbrains.annotations.TestOnly
 import kotlin.time.Duration.Companion.milliseconds
@@ -155,6 +158,12 @@ internal class LayoutLogic(
          positionAnimatable = Animatable(position, IntOffset.VectorConverter)
          widthAnimatable = Animatable(width, Int.VectorConverter)
          isInitialized = true
+      }
+
+      internal suspend fun awaitInitialized() {
+         snapshotFlow { isInitialized }
+            .filter { it }
+            .first()
       }
    }
 

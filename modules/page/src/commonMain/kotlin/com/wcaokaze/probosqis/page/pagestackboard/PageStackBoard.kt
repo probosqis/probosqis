@@ -229,13 +229,22 @@ sealed class PageStackBoardState(
    internal abstract fun pageStackState(index: Int): PageStackState
 
    suspend fun animateScrollTo(index: Int) {
-      val targetScrollOffset = getScrollOffsetForPageStack(index)
+      val pageStackLayout = layout.pageStackLayout(index)
+      pageStackLayout.awaitInitialized()
+      val targetScrollOffset = getScrollOffset(pageStackLayout)
+
       scrollState.animateScrollBy(targetScrollOffset - scrollState.scrollOffset)
    }
 
    internal fun getScrollOffsetForPageStack(index: Int): Int {
       val pageStackLayout = layout.pageStackLayout(index)
-      return pageStackLayout.position.x - layout.pageStackPadding * 2
+      return getScrollOffset(pageStackLayout)
+   }
+
+   private fun getScrollOffset(
+      pageStackLayoutState: LayoutLogic.PageStackLayoutState
+   ): Int {
+      return pageStackLayoutState.position.x - layout.pageStackPadding * 2
    }
 
    suspend fun addColumn(index: Int, pageStack: PageStack) {
