@@ -36,6 +36,7 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlin.math.roundToInt
 
 internal class PageStackCacheSerializer(
    private val pageStackRepository: PageStackRepository
@@ -197,6 +198,24 @@ fun PageStackBoard.sequence(): Sequence<PageStackBoard.PageStack> {
    }
 }
 
+/**
+ * PageStackBoard内の位置
+ * @see PageStackBoardState.animateScroll
+ */
+enum class PositionInBoard {
+   /** 表示されている領域の一番左（Ltr時） */
+   FirstVisible,
+   /** 表示されている領域の一番右（Rtl時） */
+   LastVisible,
+   /**
+    * 現在の位置から最も近い表示される位置。つまり、目的のPageStackが現在の表示領域
+    * より右にある場合、表示領域の一番右、目的のPageStackが現在の表示領域より左に
+    * ある場合、表示領域の一番左、目的のPageStackがすでに現在表示されている場合、
+    * 現在の位置。
+    */
+   NearestVisible,
+}
+
 @Stable
 sealed class PageStackBoardState(
    pageStackBoardCache: WritableCache<PageStackBoard>,
@@ -228,23 +247,75 @@ sealed class PageStackBoardState(
    internal abstract fun pageStackState(id: PageStack.Id): PageStackState?
    internal abstract fun pageStackState(index: Int): PageStackState
 
-   suspend fun animateScrollTo(index: Int) {
-      val pageStackLayout = layout.pageStackLayout(index)
+   suspend fun animateScroll(
+      pageStackIndex: Int,
+      targetPositionInBoard: PositionInBoard = PositionInBoard.NearestVisible
+   ) {
+      val pageStackLayout = layout.pageStackLayout(pageStackIndex)
       pageStackLayout.awaitInitialized()
-      val targetScrollOffset = getScrollOffset(pageStackLayout)
+      val targetScrollOffset
+            = getScrollOffset(pageStackLayout, targetPositionInBoard)
 
       scrollState.animateScrollBy(targetScrollOffset - scrollState.scrollOffset)
    }
 
-   internal fun getScrollOffsetForPageStack(index: Int): Int {
-      val pageStackLayout = layout.pageStackLayout(index)
-      return getScrollOffset(pageStackLayout)
+   suspend fun animateScroll(
+      pageStackId: PageStack.Id,
+      targetPositionInBoard: PositionInBoard = PositionInBoard.NearestVisible
+   ) {
+      val pageStackLayout = layout.pageStackLayout(pageStackId)
+         ?: throw IllegalArgumentException("PageStack not found: $pageStackId")
+      pageStackLayout.awaitInitialized()
+      val targetScrollOffset
+            = getScrollOffset(pageStackLayout, targetPositionInBoard)
+
+      scrollState.animateScrollBy(targetScrollOffset - scrollState.scrollOffset)
    }
 
-   private fun getScrollOffset(
-      pageStackLayoutState: LayoutLogic.PageStackLayoutState
+   internal fun getScrollOffset(
+      pageStackIndex: Int,
+      targetPositionInBoard: PositionInBoard
+   ): Int = getScrollOffset(
+      pageStackLayoutState = layout.pageStackLayout(pageStackIndex),
+      targetPositionInBoard
+   )
+
+   internal fun getScrollOffset(
+      pageStackId: PageStack.Id,
+      targetPositionInBoard: PositionInBoard
+   ): Int = getScrollOffset(
+      pageStackLayoutState = layout.pageStackLayout(pageStackId)
+         ?: throw IllegalArgumentException("PageStack not found: $pageStackId"),
+      targetPositionInBoard
+   )
+
+   /**
+    * 指定したPageStackが指定した位置にあるときの
+    * [scrollOffset][PageStackBoardScrollState.scrollOffset]。
+    * ただし実際にその位置までスクロールできるとは限らない。
+    */
+   internal fun getScrollOffset(
+      pageStackLayoutState: LayoutLogic.PageStackLayoutState,
+      targetPositionInBoard: PositionInBoard
    ): Int {
-      return pageStackLayoutState.position.x - layout.pageStackPadding * 2
+      when (targetPositionInBoard) {
+         PositionInBoard.FirstVisible -> {
+            return pageStackLayoutState.position.x - layout.pageStackPadding * 2
+         }
+         PositionInBoard.LastVisible -> {
+            return pageStackLayoutState.position.x - (
+                  layout.pageStackBoardWidth - pageStackLayoutState.width
+                  - layout.pageStackPadding * 2
+            )
+         }
+         PositionInBoard.NearestVisible -> {
+            return scrollState.scrollOffset.roundToInt()
+               .coerceIn(
+                  getScrollOffset(pageStackLayoutState, PositionInBoard.LastVisible),
+                  getScrollOffset(pageStackLayoutState, PositionInBoard.FirstVisible)
+               )
+         }
+      }
    }
 
    suspend fun addColumn(index: Int, pageStack: PageStack) {
@@ -256,6 +327,8 @@ sealed class PageStackBoardState(
             PageStackBoard.PageStack(pageStackCache)
          )
       )
+
+      animateScroll(index, PositionInBoard.LastVisible)
 
       layout.pageStackLayout(pageStack.id)
          ?.animateInsertion(pageStackInsertionAnimOffset)

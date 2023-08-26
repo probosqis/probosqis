@@ -96,8 +96,8 @@ internal object PageStackBoardFlingBehavior {
             }
 
             else -> {
-               val leftStackScrollOffset  = state.getScrollOffsetForPageStack(currentIdx)
-               val rightStackScrollOffset = state.getScrollOffsetForPageStack(currentIdx + 1)
+               val leftStackScrollOffset  = state.getScrollOffset(currentIdx,     PositionInBoard.FirstVisible)
+               val rightStackScrollOffset = state.getScrollOffset(currentIdx + 1, PositionInBoard.FirstVisible)
 
                if (
                   (estimatedScrollOffset - leftStackScrollOffset)
@@ -112,7 +112,8 @@ internal object PageStackBoardFlingBehavior {
             }
          }
 
-         val targetScrollOffset = state.getScrollOffsetForPageStack(targetIdx)
+         val targetScrollOffset = state.getScrollOffset(
+            targetIdx, PositionInBoard.FirstVisible)
 
          // ちょうどtargetScrollOffsetで止まる加速度を算出する
          val acceleration = initialVelocity * initialVelocity /

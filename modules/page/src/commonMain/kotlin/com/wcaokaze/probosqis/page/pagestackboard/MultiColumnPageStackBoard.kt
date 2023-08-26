@@ -167,6 +167,9 @@ internal class LayoutLogic(
       }
    }
 
+   internal var pageStackBoardWidth by mutableStateOf(0)
+      private set
+
    internal var pageStackPadding by mutableStateOf(0)
       private set
 
@@ -290,6 +293,8 @@ internal class LayoutLogic(
             }
          }
       }
+
+      this.pageStackBoardWidth = pageStackBoardWidth
 
       x += pageStackPadding
       this.pageStackPadding = pageStackPadding
