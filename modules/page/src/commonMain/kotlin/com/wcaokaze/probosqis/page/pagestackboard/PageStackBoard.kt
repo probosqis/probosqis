@@ -16,6 +16,8 @@
 
 package com.wcaokaze.probosqis.page.pagestackboard
 
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -28,6 +30,8 @@ import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -249,19 +253,22 @@ sealed class PageStackBoardState(
 
    suspend fun animateScroll(
       pageStackIndex: Int,
-      targetPositionInBoard: PositionInBoard = PositionInBoard.NearestVisible
+      targetPositionInBoard: PositionInBoard = PositionInBoard.NearestVisible,
+      animationSpec: AnimationSpec<Float> = spring()
    ) {
       val pageStackLayout = layout.pageStackLayout(pageStackIndex)
       pageStackLayout.awaitInitialized()
       val targetScrollOffset
             = getScrollOffset(pageStackLayout, targetPositionInBoard)
 
-      scrollState.animateScrollBy(targetScrollOffset - scrollState.scrollOffset)
+      scrollState.animateScrollBy(
+         targetScrollOffset - scrollState.scrollOffset, animationSpec)
    }
 
    suspend fun animateScroll(
       pageStackId: PageStack.Id,
-      targetPositionInBoard: PositionInBoard = PositionInBoard.NearestVisible
+      targetPositionInBoard: PositionInBoard = PositionInBoard.NearestVisible,
+      animationSpec: AnimationSpec<Float> = spring()
    ) {
       val pageStackLayout = layout.pageStackLayout(pageStackId)
          ?: throw IllegalArgumentException("PageStack not found: $pageStackId")
@@ -269,7 +276,8 @@ sealed class PageStackBoardState(
       val targetScrollOffset
             = getScrollOffset(pageStackLayout, targetPositionInBoard)
 
-      scrollState.animateScrollBy(targetScrollOffset - scrollState.scrollOffset)
+      scrollState.animateScrollBy(
+         targetScrollOffset - scrollState.scrollOffset, animationSpec)
    }
 
    internal fun getScrollOffset(
@@ -328,10 +336,16 @@ sealed class PageStackBoardState(
          )
       )
 
-      animateScroll(index, PositionInBoard.LastVisible)
-
-      layout.pageStackLayout(pageStack.id)
-         ?.animateInsertion(pageStackInsertionAnimOffset)
+      coroutineScope {
+         launch {
+            animateScroll(pageStack.id, PositionInBoard.NearestVisible,
+               layout.pageStackPositionAnimSpec())
+         }
+         launch {
+            layout.pageStackLayout(pageStack.id)
+               ?.animateInsertion(pageStackInsertionAnimOffset)
+         }
+      }
    }
 
    internal fun layout(

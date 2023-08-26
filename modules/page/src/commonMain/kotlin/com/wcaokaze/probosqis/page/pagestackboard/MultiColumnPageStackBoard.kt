@@ -17,7 +17,9 @@
 package com.wcaokaze.probosqis.page.pagestackboard
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -121,14 +123,25 @@ internal class LayoutLogic(
          val (x, y) = positionAnimatable.value
          return IntOffset(x, y + yOffsetAnimatable.value.toInt())
       }
-      internal suspend fun animatePosition(targetPosition: IntOffset) {
-         positionAnimatable.animateTo(targetPosition)
+      internal val targetPosition: IntOffset get() {
+         assert(isInitialized)
+         return positionAnimatable.targetValue
+      }
+      internal suspend fun animatePosition(
+         targetPosition: IntOffset,
+         animationSpec: AnimationSpec<IntOffset>
+      ) {
+         positionAnimatable.animateTo(targetPosition, animationSpec)
       }
 
       private lateinit var widthAnimatable: Animatable<Int, *>
       val width: Int get() {
          require(isInitialized)
          return widthAnimatable.value
+      }
+      internal val targetWidth: Int get() {
+         assert(isInitialized)
+         return widthAnimatable.targetValue
       }
       internal suspend fun animateWidth(targetWidth: Int) {
          widthAnimatable.animateTo(targetWidth)
@@ -196,6 +209,8 @@ internal class LayoutLogic(
 
    override operator fun iterator(): Iterator<PageStackLayoutState>
          = list.iterator()
+
+   internal fun <T> pageStackPositionAnimSpec() = spring<T>()
 
    internal fun recreateLayoutState(pageStackBoard: PageStackBoard) {
       val prevLayoutList = list
@@ -280,13 +295,13 @@ internal class LayoutLogic(
          if (!layoutState.isInitialized) {
             layoutState.initialize(position, pageStackWidth)
          } else {
-            if (layoutState.position != position) {
+            if (layoutState.targetPosition != position) {
                animCoroutineScope.launch {
-                  layoutState.animatePosition(position)
+                  layoutState.animatePosition(position, pageStackPositionAnimSpec())
                }
             }
 
-            if (layoutState.width != pageStackWidth) {
+            if (layoutState.targetWidth != pageStackWidth) {
                animCoroutineScope.launch {
                   layoutState.animateWidth(pageStackWidth)
                }
