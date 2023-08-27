@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.page.pagestackboard
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -43,6 +44,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -116,6 +118,33 @@ internal class LayoutLogic(
          internal set
 
       private val yOffsetAnimatable = Animatable(0.0f)
+      internal suspend fun animateInsertion(yOffset: Float) {
+         coroutineScope {
+            alphaAnimatable.snapTo(0.0f)
+            yOffsetAnimatable.snapTo(yOffset)
+
+            delay(200.milliseconds)
+
+            launch {
+               alphaAnimatable.animateTo(1.0f, tween(durationMillis = 200))
+            }
+            launch {
+               yOffsetAnimatable.animateTo(0.0f, tween(durationMillis = 200))
+            }
+         }
+      }
+      internal suspend fun animateRemoving(yOffset: Float) {
+         coroutineScope {
+            launch {
+               alphaAnimatable.animateTo(
+                  0.0f, tween(durationMillis = 200, easing = LinearEasing))
+            }
+            launch {
+               yOffsetAnimatable.animateTo(
+                  yOffset, tween(durationMillis = 200, easing = LinearEasing))
+            }
+         }
+      }
 
       private lateinit var positionAnimatable: Animatable<IntOffset, *>
       val position: IntOffset get() {
@@ -149,22 +178,6 @@ internal class LayoutLogic(
 
       private val alphaAnimatable = Animatable(1.0f)
       val alpha: Float get() = alphaAnimatable.value
-
-      internal suspend fun animateInsertion(yOffset: Float) {
-         coroutineScope {
-            alphaAnimatable.snapTo(0.0f)
-            yOffsetAnimatable.snapTo(yOffset)
-
-            delay(200.milliseconds)
-
-            launch {
-               alphaAnimatable.animateTo(1.0f, tween(durationMillis = 200))
-            }
-            launch {
-               yOffsetAnimatable.animateTo(0.0f, tween(durationMillis = 200))
-            }
-         }
-      }
 
       internal fun initialize(position: IntOffset, width: Int) {
          require(!isInitialized)
@@ -422,13 +435,19 @@ private fun PageStack(
    ) {
       val density by rememberUpdatedState(LocalDensity.current)
 
+      val coroutineScope = rememberCoroutineScope()
+
       Column {
          @OptIn(ExperimentalMaterial3Api::class)
          TopAppBar(
             title = { Text("Home") },
             navigationIcon = {
                IconButton(
-                  onClick = {}
+                  onClick = {
+                     coroutineScope.launch {
+                        state.removeFromBoard()
+                     }
+                  }
                ) {
                   Icon(Icons.Default.Close, contentDescription = "Close")
                }

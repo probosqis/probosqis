@@ -154,35 +154,110 @@ class PageStackBoard(val rootRow: Row) {
    val pageStackCount = rootRow.leafCount
 }
 
+internal fun <P : PageStackBoard.LayoutElementParent> P.removed(index: Int): P {
+   fun PageStackBoard.LayoutElementParent
+         .impl(index: Int): PageStackBoard.LayoutElementParent
+   {
+      return when (this) {
+         is PageStackBoard.Column -> removed(index)
+         is PageStackBoard.Row    -> removed(index)
+      }
+   }
+   @Suppress("UNCHECKED_CAST")
+   return impl(index) as P
+}
+
+internal fun <P : PageStackBoard.LayoutElementParent>
+      P.replaced(index: Int, element: PageStackBoard.LayoutElement): P
+{
+   fun PageStackBoard.LayoutElementParent
+         .impl(index: Int): PageStackBoard.LayoutElementParent
+   {
+      return when (this) {
+         is PageStackBoard.Column -> replaced(index, element)
+         is PageStackBoard.Row    -> replaced(index, element)
+      }
+   }
+   @Suppress("UNCHECKED_CAST")
+   return impl(index) as P
+}
+
 operator fun PageStackBoard.get(index: Int): PageStackBoard.PageStack {
    fun PageStackBoard.LayoutElementParent
          .findSubtree(indexInSubtree: Int): PageStackBoard.PageStack
    {
       assert(indexInSubtree >= 0)
 
-      var nodeIndex = 0
+      var leafIndex = 0
       for (node in this) {
          when (node) {
             is PageStackBoard.PageStack -> {
-               if (nodeIndex == indexInSubtree) { return node }
-               nodeIndex++
+               if (leafIndex == indexInSubtree) { return node }
+               leafIndex++
             }
             is PageStackBoard.LayoutElementParent -> {
-               if (nodeIndex + node.leafCount > indexInSubtree) {
-                  return node.findSubtree(indexInSubtree - nodeIndex)
+               if (leafIndex + node.leafCount > indexInSubtree) {
+                  return node.findSubtree(indexInSubtree - leafIndex)
                }
-               nodeIndex += node.leafCount
+               leafIndex += node.leafCount
             }
          }
       }
 
       throw IndexOutOfBoundsException(
-         "pageStack count: $nodeIndex, specified index: $index")
+         "pageStack count: $leafIndex, specified index: $index")
    }
 
    if (index < 0) { throw IndexOutOfBoundsException("specified index: $index") }
 
    return rootRow.findSubtree(index)
+}
+
+internal fun PageStackBoard.removed(id: PageStack.Id): PageStackBoard {
+   val index = sequence().indexOfFirst { it.cache.value.id == id }
+   if (index < 0) { return this }
+   return removed(index)
+}
+
+internal fun PageStackBoard.removed(index: Int): PageStackBoard {
+   fun <P : PageStackBoard.LayoutElementParent>
+         P.removedSubtree(indexInSubtree: Int): P
+   {
+      assert(indexInSubtree >= 0)
+
+      var leafIndex = 0
+      for ((childIndex, node) in this.withIndex()) {
+         when (node) {
+            is PageStackBoard.PageStack -> {
+               if (leafIndex == indexInSubtree) {
+                  return this.removed(childIndex)
+               }
+               leafIndex++
+            }
+            is PageStackBoard.LayoutElementParent -> {
+               if (leafIndex + node.leafCount > indexInSubtree) {
+                  val removedSubtree
+                        = node.removedSubtree(indexInSubtree - leafIndex)
+                  return if (removedSubtree.childCount > 0) {
+                     this.replaced(childIndex, removedSubtree)
+                  } else {
+                     this.removed(childIndex)
+                  }
+               }
+               leafIndex += node.leafCount
+            }
+         }
+      }
+
+      throw IndexOutOfBoundsException(
+         "pageStack count: $leafIndex, specified index: $index")
+   }
+
+   if (index < 0) { throw IndexOutOfBoundsException("specified index: $index") }
+
+   return PageStackBoard(
+      rootRow.removedSubtree(index)
+   )
 }
 
 fun PageStackBoard.sequence(): Sequence<PageStackBoard.PageStack> {
@@ -346,6 +421,13 @@ sealed class PageStackBoardState(
                ?.animateInsertion(pageStackInsertionAnimOffset)
          }
       }
+   }
+
+   suspend fun removePageStack(id: PageStack.Id) {
+      layout.pageStackLayout(id)
+         ?.animateRemoving(pageStackInsertionAnimOffset)
+
+      pageStackBoard = pageStackBoard.removed(id)
    }
 
    internal fun layout(

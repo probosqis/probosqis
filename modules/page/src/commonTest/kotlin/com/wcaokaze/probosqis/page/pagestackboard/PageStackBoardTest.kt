@@ -25,9 +25,11 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class PageStackBoardTest {
    @Serializable
@@ -58,6 +60,175 @@ class PageStackBoardTest {
       assertIs<PageStackBoard.PageStack>(element)
       val page = assertIs<PageImpl>(element.cache.value.head)
       assertEquals(expected, page.i)
+   }
+
+   private infix fun PageStackBoard.treeEquals(other: PageStackBoard): Boolean {
+      fun subtreeEquals(
+         expected: PageStackBoard.LayoutElementParent,
+         actual:   PageStackBoard.LayoutElementParent
+      ): Boolean {
+         if (expected is PageStackBoard.Column
+            && actual !is PageStackBoard.Column)
+         {
+            return false
+         }
+         if (expected is PageStackBoard.Row
+            && actual !is PageStackBoard.Row)
+         {
+            return false
+         }
+
+         if (expected.childCount != actual.childCount) { return false }
+
+         for ((expectedChild, actualChild) in expected.zip(actual)) {
+            when (expectedChild) {
+               is PageStackBoard.PageStack -> {
+                  if (actualChild !is PageStackBoard.PageStack) { return false }
+
+                  val expectedPageStack = expectedChild.cache.value
+                  val actualPageStack   = actualChild  .cache.value
+                  if (expectedPageStack.id != actualPageStack.id) { return false }
+               }
+
+               is PageStackBoard.LayoutElementParent -> {
+                  if (actualChild !is PageStackBoard.LayoutElementParent) {
+                     return false
+                  }
+
+                  if (!subtreeEquals(expectedChild, actualChild)) { return false }
+               }
+            }
+         }
+
+         return true
+      }
+
+      return subtreeEquals(rootRow, other.rootRow)
+   }
+
+   @Test
+   fun treeEquals() {
+      assertTrue {
+         val a = PageStackBoard(
+            Row(PageStack(0L))
+         )
+         val b = PageStackBoard(
+            Row(PageStack(0L))
+         )
+         a treeEquals b
+      }
+
+      assertFalse {
+         val a = PageStackBoard(
+            Row(PageStack(0L))
+         )
+         val b = PageStackBoard(
+            Row(PageStack(1L))
+         )
+         a treeEquals b
+      }
+
+      assertTrue {
+         val a = PageStackBoard(
+            Row(
+               Column(PageStack(0L)),
+            )
+         )
+         val b = PageStackBoard(
+            Row(
+               Column(PageStack(0L)),
+            )
+         )
+         a treeEquals b
+      }
+
+      assertFalse {
+         val a = PageStackBoard(
+            Row(
+               Column(PageStack(0L)),
+            )
+         )
+         val b = PageStackBoard(
+            Row(
+               Row(PageStack(0L)),
+            )
+         )
+         a treeEquals b
+      }
+
+      assertFalse {
+         val a = PageStackBoard(
+            Row(
+               Column(PageStack(0L)),
+            )
+         )
+         val b = PageStackBoard(
+            Row(
+               PageStack(0L),
+            )
+         )
+         a treeEquals b
+      }
+
+      assertFalse {
+         val a = PageStackBoard(
+            Row(
+               Column(PageStack(0L)),
+            )
+         )
+         val b = PageStackBoard(
+            Row(
+               Column(PageStack(0L)),
+               PageStack(1L),
+            )
+         )
+         a treeEquals b
+      }
+
+      assertFalse {
+         val a = PageStackBoard(
+            Row(
+               Column(PageStack(0L)),
+               PageStack(1L),
+            )
+         )
+         val b = PageStackBoard(
+            Row(
+               Column(PageStack(0L)),
+            )
+         )
+         a treeEquals b
+      }
+
+      assertTrue {
+         val a = PageStackBoard(
+            Row(
+               Column(
+                  PageStack(0L),
+               ),
+               Row(
+                  Column(
+                     PageStack(1L),
+                  ),
+                  PageStack(2L),
+               ),
+            )
+         )
+         val b = PageStackBoard(
+            Row(
+               Column(
+                  PageStack(0L),
+               ),
+               Row(
+                  Column(
+                     PageStack(1L),
+                  ),
+                  PageStack(2L),
+               ),
+            )
+         )
+         a treeEquals b
+      }
    }
 
    @Test
@@ -547,5 +718,276 @@ class PageStackBoardTest {
          .toList()
 
       assertContentEquals(expected, actual)
+   }
+
+   @Test
+   fun removeFromBoard() {
+      val pageStackBoard = PageStackBoard(
+         Row(
+            Column(
+               PageStack(0L),
+               Column(
+                  PageStack(1L),
+                  PageStack(2L),
+               ),
+               PageStack(3L),
+               Row(PageStack(4L)),
+            ),
+            Row(
+               Column(PageStack(5L)),
+               PageStack(6L),
+               Row(
+                  PageStack(7L),
+                  PageStack(8L),
+               ),
+               PageStack(9L),
+            ),
+         )
+      )
+
+      assertTrue(
+         pageStackBoard.removed(PageStack.Id(0L)) treeEquals PageStackBoard(
+            Row(
+               Column(
+                  Column(
+                     PageStack(1L),
+                     PageStack(2L),
+                  ),
+                  PageStack(3L),
+                  Row(PageStack(4L)),
+               ),
+               Row(
+                  Column(PageStack(5L)),
+                  PageStack(6L),
+                  Row(
+                     PageStack(7L),
+                     PageStack(8L),
+                  ),
+                  PageStack(9L),
+               ),
+            )
+         )
+      )
+
+      assertTrue(
+         pageStackBoard.removed(PageStack.Id(1L)) treeEquals PageStackBoard(
+            Row(
+               Column(
+                  PageStack(0L),
+                  Column(
+                     PageStack(2L),
+                  ),
+                  PageStack(3L),
+                  Row(PageStack(4L)),
+               ),
+               Row(
+                  Column(PageStack(5L)),
+                  PageStack(6L),
+                  Row(
+                     PageStack(7L),
+                     PageStack(8L),
+                  ),
+                  PageStack(9L),
+               ),
+            )
+         )
+      )
+
+      assertTrue(
+         pageStackBoard.removed(PageStack.Id(2L)) treeEquals PageStackBoard(
+            Row(
+               Column(
+                  PageStack(0L),
+                  Column(
+                     PageStack(1L),
+                  ),
+                  PageStack(3L),
+                  Row(PageStack(4L)),
+               ),
+               Row(
+                  Column(PageStack(5L)),
+                  PageStack(6L),
+                  Row(
+                     PageStack(7L),
+                     PageStack(8L),
+                  ),
+                  PageStack(9L),
+               ),
+            )
+         )
+      )
+
+      assertTrue(
+         pageStackBoard.removed(PageStack.Id(3L)) treeEquals PageStackBoard(
+            Row(
+               Column(
+                  PageStack(0L),
+                  Column(
+                     PageStack(1L),
+                     PageStack(2L),
+                  ),
+                  Row(PageStack(4L)),
+               ),
+               Row(
+                  Column(PageStack(5L)),
+                  PageStack(6L),
+                  Row(
+                     PageStack(7L),
+                     PageStack(8L),
+                  ),
+                  PageStack(9L),
+               ),
+            )
+         )
+      )
+
+      assertTrue(
+         pageStackBoard.removed(PageStack.Id(4L)) treeEquals PageStackBoard(
+            Row(
+               Column(
+                  PageStack(0L),
+                  Column(
+                     PageStack(1L),
+                     PageStack(2L),
+                  ),
+                  PageStack(3L),
+               ),
+               Row(
+                  Column(PageStack(5L)),
+                  PageStack(6L),
+                  Row(
+                     PageStack(7L),
+                     PageStack(8L),
+                  ),
+                  PageStack(9L),
+               ),
+            )
+         )
+      )
+
+      assertTrue(
+         pageStackBoard.removed(PageStack.Id(5L)) treeEquals PageStackBoard(
+            Row(
+               Column(
+                  PageStack(0L),
+                  Column(
+                     PageStack(1L),
+                     PageStack(2L),
+                  ),
+                  PageStack(3L),
+                  Row(PageStack(4L)),
+               ),
+               Row(
+                  PageStack(6L),
+                  Row(
+                     PageStack(7L),
+                     PageStack(8L),
+                  ),
+                  PageStack(9L),
+               ),
+            )
+         )
+      )
+
+      assertTrue(
+         pageStackBoard.removed(PageStack.Id(6L)) treeEquals PageStackBoard(
+            Row(
+               Column(
+                  PageStack(0L),
+                  Column(
+                     PageStack(1L),
+                     PageStack(2L),
+                  ),
+                  PageStack(3L),
+                  Row(PageStack(4L)),
+               ),
+               Row(
+                  Column(PageStack(5L)),
+                  Row(
+                     PageStack(7L),
+                     PageStack(8L),
+                  ),
+                  PageStack(9L),
+               ),
+            )
+         )
+      )
+
+      assertTrue(
+         pageStackBoard.removed(PageStack.Id(7L)) treeEquals PageStackBoard(
+            Row(
+               Column(
+                  PageStack(0L),
+                  Column(
+                     PageStack(1L),
+                     PageStack(2L),
+                  ),
+                  PageStack(3L),
+                  Row(PageStack(4L)),
+               ),
+               Row(
+                  Column(PageStack(5L)),
+                  PageStack(6L),
+                  Row(
+                     PageStack(8L),
+                  ),
+                  PageStack(9L),
+               ),
+            )
+         )
+      )
+
+      assertTrue(
+         pageStackBoard.removed(PageStack.Id(8L)) treeEquals PageStackBoard(
+            Row(
+               Column(
+                  PageStack(0L),
+                  Column(
+                     PageStack(1L),
+                     PageStack(2L),
+                  ),
+                  PageStack(3L),
+                  Row(PageStack(4L)),
+               ),
+               Row(
+                  Column(PageStack(5L)),
+                  PageStack(6L),
+                  Row(
+                     PageStack(7L),
+                  ),
+                  PageStack(9L),
+               ),
+            )
+         )
+      )
+
+      assertTrue(
+         pageStackBoard.removed(PageStack.Id(9L)) treeEquals PageStackBoard(
+            Row(
+               Column(
+                  PageStack(0L),
+                  Column(
+                     PageStack(1L),
+                     PageStack(2L),
+                  ),
+                  PageStack(3L),
+                  Row(PageStack(4L)),
+               ),
+               Row(
+                  Column(PageStack(5L)),
+                  PageStack(6L),
+                  Row(
+                     PageStack(7L),
+                     PageStack(8L),
+                  ),
+               ),
+            )
+         )
+      )
+
+      assertFails {
+         pageStackBoard.removed(-1)
+         pageStackBoard.removed(10)
+      }
    }
 }

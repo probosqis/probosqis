@@ -102,6 +102,16 @@ class PageStackBoardComposeTest {
             ) {
                Text("Add PageStack ${page.i}")
             }
+
+            Button(
+               onClick = {
+                  coroutineScope.launch {
+                     pageStackState.removeFromBoard()
+                  }
+               }
+            ) {
+               Text("Remove PageStack ${page.i}")
+            }
          }
       },
       header = { _, _ -> },
@@ -1445,6 +1455,59 @@ class PageStackBoardComposeTest {
          assertEquals(
             expectedScrollOffset(1),
             pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+   }
+
+   @Test
+   fun removePageStack_viaPageStackState() {
+      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      rule.setContent {
+         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         SideEffect {
+            pageStackBoardState = remembered.pageStackBoardState
+         }
+         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+      }
+
+      fun assertPageNumbers(expected: List<Int>, actual: PageStackBoard) {
+         val pages = actual.sequence()
+            .map { assertIs<PageStackBoard.PageStack>(it) }
+            .map { it.cache.value }
+            .map { assertIs<TestPage>(it.head) }
+            .toList()
+
+         assertContentEquals(expected, pages.map { it.i })
+      }
+
+      rule.runOnIdle {
+         assertPageNumbers(
+            listOf(0, 1, 2, 3),
+            pageStackBoardState.pageStackBoard
+         )
+      }
+
+      rule.onNodeWithText("Remove PageStack 1").performClick()
+      rule.runOnIdle {
+         assertPageNumbers(
+            listOf(0, 2, 3),
+            pageStackBoardState.pageStackBoard
+         )
+      }
+
+      rule.onNodeWithText("Remove PageStack 0").performClick()
+      rule.runOnIdle {
+         assertPageNumbers(
+            listOf(2, 3),
+            pageStackBoardState.pageStackBoard
+         )
+      }
+
+      rule.onNodeWithText("Remove PageStack 3").performClick()
+      rule.runOnIdle {
+         assertPageNumbers(
+            listOf(2),
+            pageStackBoardState.pageStackBoard
          )
       }
    }
