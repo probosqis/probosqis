@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.pagestackboard
+package com.wcaokaze.probosqis.page
 
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -44,10 +44,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.PageStackContent
-import com.wcaokaze.probosqis.page.PageStackState
-import com.wcaokaze.probosqis.page.PageComposableSwitcher
-import com.wcaokaze.probosqis.page.PageStack
 import kotlinx.coroutines.CoroutineScope
 
 @Stable

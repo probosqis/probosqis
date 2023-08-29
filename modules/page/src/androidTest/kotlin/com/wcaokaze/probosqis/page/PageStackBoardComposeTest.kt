@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.pagestackboard
+package com.wcaokaze.probosqis.page
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -46,10 +46,6 @@ import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.Page
-import com.wcaokaze.probosqis.page.PageComposableSwitcher
-import com.wcaokaze.probosqis.page.pageComposable
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.toImmutableList

@@ -20,7 +20,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
-import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoardState
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.Test

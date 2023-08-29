@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.pagestackboard
+package com.wcaokaze.probosqis.page
 
 import com.wcaokaze.probosqis.cache.core.TemporaryCacheApi
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.cache.core.loadCache
 import com.wcaokaze.probosqis.cache.core.saveCache
-import com.wcaokaze.probosqis.page.PageStack
 import java.io.File
 import java.io.IOException
 

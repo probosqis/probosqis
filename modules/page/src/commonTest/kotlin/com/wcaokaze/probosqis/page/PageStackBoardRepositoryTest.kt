@@ -17,9 +17,6 @@
 package com.wcaokaze.probosqis.page
 
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
-import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
-import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
-import com.wcaokaze.probosqis.page.pagestackboard.pageSerializer
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -30,10 +27,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-
-expect fun createPageStackRepository(
-   allPageClasses: List<PageStackRepository.PageSerializer<*>>
-): PageStackRepository
 
 expect fun createPageStackBoardRepository(
    pageStackRepository: PageStackRepository

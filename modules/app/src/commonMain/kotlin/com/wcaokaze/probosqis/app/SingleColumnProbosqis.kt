@@ -59,9 +59,9 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoard
-import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoardAppBar
-import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoardState
+import com.wcaokaze.probosqis.page.SingleColumnPageStackBoard
+import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardAppBar
+import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardState
 import com.wcaokaze.probosqis.resources.Strings
 
 @OptIn(ExperimentalMaterial3Api::class)

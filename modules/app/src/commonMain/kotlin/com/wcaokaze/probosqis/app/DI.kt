@@ -19,7 +19,7 @@ package com.wcaokaze.probosqis.app
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
-import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
+import com.wcaokaze.probosqis.page.PageStackRepository
 
 @Stable
 interface DI {
