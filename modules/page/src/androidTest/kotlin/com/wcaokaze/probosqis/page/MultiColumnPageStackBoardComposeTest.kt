@@ -65,7 +65,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class PageStackBoardComposeTest {
+class MultiColumnPageStackBoardComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
@@ -262,7 +262,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_layout() {
+   fun layout() {
       rule.setContent {
          val (pageStackBoardState, _)
                = rememberMultiColumnPageStackBoardState(pageStackCount = 2)
@@ -278,7 +278,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_layout_notEnoughPageStacks() {
+   fun layout_notEnoughPageStacks() {
       rule.setContent {
          val (pageStackBoardState, _)
                = rememberMultiColumnPageStackBoardState(pageStackCount = 1)
@@ -291,7 +291,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_layout_omitComposingInvisibles() {
+   fun layout_omitComposingInvisibles() {
       val boardWidth = 100.dp
 
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
@@ -343,7 +343,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_layout_mutatePageStackBoard() {
+   fun layout_mutatePageStackBoard() {
       fun assertPageNumbers(
          expectedPageNumbers: List<Int>,
          pageStackBoard: PageStackBoard
@@ -507,7 +507,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll() {
+   fun scroll() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 3)
@@ -548,7 +548,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scrollEdge() {
+   fun scrollEdge() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 3)
@@ -608,7 +608,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scrollEdge_afterSizeChanged() {
+   fun scrollEdge_afterSizeChanged() {
       var boardWidth by mutableStateOf(200.dp)
 
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
@@ -714,7 +714,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll_snap() {
+   fun scroll_snap() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
@@ -749,7 +749,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll_snap_tooFast() {
+   fun scroll_snap_tooFast() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
@@ -792,7 +792,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll_snap_edges() {
+   fun scroll_snap_edges() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
@@ -837,7 +837,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll_snap_afterImmobility() {
+   fun scroll_snap_afterImmobility() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
@@ -895,7 +895,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll_swipe_overMultiplePageStacks() {
+   fun scroll_swipe_overMultiplePageStacks() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
@@ -1436,7 +1436,7 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_firstVisibleIndex() {
+   fun firstVisibleIndex() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
