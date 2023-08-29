@@ -38,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -76,14 +77,15 @@ internal fun MultiColumnProbosqis(
          onHeightChanged = { appBarHeight = it }
       )
 
-      val pageStackBoardState = remember(di) {
+      val coroutineScope = rememberCoroutineScope()
+      val pageStackBoardState = remember(di, coroutineScope) {
          val pageStackBoardCache = loadPageStackBoardOrDefault(
             di.pageStackBoardRepository,
             di.pageStackRepository
          )
 
          MultiColumnPageStackBoardState(
-            pageStackBoardCache, di.pageStackRepository)
+            pageStackBoardCache, di.pageStackRepository, coroutineScope)
       }
 
       val pageComposableSwitcher = remember(di) {

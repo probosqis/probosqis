@@ -16,8 +16,14 @@
 
 package com.wcaokaze.probosqis.page.pagestackboard
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -39,9 +45,12 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
@@ -61,40 +70,133 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.jetbrains.annotations.TestOnly
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val PAGE_STACK_PADDING_DP = 8
 
 @Stable
 class MultiColumnPageStackBoardState(
    pageStackBoardCache: WritableCache<PageStackBoard>,
-   pageStackRepository: PageStackRepository
-) : PageStackBoardState(pageStackBoardCache, pageStackRepository) {
+   pageStackRepository: PageStackRepository,
+   animCoroutineScope: CoroutineScope
+) : PageStackBoardState(
+   pageStackBoardCache,
+   pageStackRepository,
+   animCoroutineScope
+) {
    override var firstVisiblePageStackIndex by mutableStateOf(0)
       internal set
 
-   internal fun layout(
-      pageStackBoardWidth: Int,
-      pageStackCount: Int,
-      pageStackPadding: Int,
-   ) {
-      layout.layout(pageStackBoard, pageStackBoardWidth, pageStackCount,
-         pageStackPadding, scrollState)
-   }
+   override fun pageStackState(id: PageStack.Id): PageStackState?
+         = layout.pageStackLayout(id)?.pageStackState
+
+   override fun pageStackState(index: Int): PageStackState
+         = layout.pageStackLayout(index).pageStackState
 }
 
 @Stable
-internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
+internal class LayoutLogic(
+   pageStackBoard: PageStackBoard,
+   private val pageStackStateConstructor: (WritableCache<PageStack>) -> PageStackState
+) : Iterable<LayoutLogic.PageStackLayoutState> {
    @Stable
-   class PageStackLayoutState(
-      val pageStackCache: WritableCache<PageStack>,
-      initialPosition: IntOffset,
-      initialWidth: Int
-   ) {
-      val pageStackId = pageStackCache.value.id
-      var position by mutableStateOf(initialPosition)
-      var width by mutableStateOf(initialWidth)
+   internal class PageStackLayoutState(val pageStackState: PageStackState) {
+      val pageStackId = pageStackState.pageStack.id
+
+      /**
+       * [PageStackBoardState.pageStackBoard]をセットして生成された直後の
+       * インスタンスの場合 `false`。[layout]が呼ばれて位置とサイズが決まったあと
+       * `true` になる
+       */
+      var isInitialized by mutableStateOf(false)
+         internal set
+
+      private val yOffsetAnimatable = Animatable(0.0f)
+      internal suspend fun animateInsertion(yOffset: Float) {
+         coroutineScope {
+            alphaAnimatable.snapTo(0.0f)
+            yOffsetAnimatable.snapTo(yOffset)
+
+            delay(200.milliseconds)
+
+            launch {
+               alphaAnimatable.animateTo(1.0f, tween(durationMillis = 200))
+            }
+            launch {
+               yOffsetAnimatable.animateTo(0.0f, tween(durationMillis = 200))
+            }
+         }
+      }
+      internal suspend fun animateRemoving(yOffset: Float) {
+         coroutineScope {
+            launch {
+               alphaAnimatable.animateTo(
+                  0.0f, tween(durationMillis = 200, easing = LinearEasing))
+            }
+            launch {
+               yOffsetAnimatable.animateTo(
+                  yOffset, tween(durationMillis = 200, easing = LinearEasing))
+            }
+         }
+      }
+
+      private lateinit var positionAnimatable: Animatable<IntOffset, *>
+      val position: IntOffset get() {
+         require(isInitialized)
+         val (x, y) = positionAnimatable.value
+         return IntOffset(x, y + yOffsetAnimatable.value.toInt())
+      }
+      internal val targetPosition: IntOffset get() {
+         assert(isInitialized)
+         return positionAnimatable.targetValue
+      }
+      internal suspend fun animatePosition(
+         targetPosition: IntOffset,
+         animationSpec: AnimationSpec<IntOffset>
+      ) {
+         positionAnimatable.animateTo(targetPosition, animationSpec)
+      }
+
+      private lateinit var widthAnimatable: Animatable<Int, *>
+      val width: Int get() {
+         require(isInitialized)
+         return widthAnimatable.value
+      }
+      internal val targetWidth: Int get() {
+         assert(isInitialized)
+         return widthAnimatable.targetValue
+      }
+      internal suspend fun animateWidth(targetWidth: Int) {
+         widthAnimatable.animateTo(targetWidth)
+      }
+
+      private val alphaAnimatable = Animatable(1.0f)
+      val alpha: Float get() = alphaAnimatable.value
+
+      internal fun initialize(position: IntOffset, width: Int) {
+         require(!isInitialized)
+         positionAnimatable = Animatable(position, IntOffset.VectorConverter)
+         widthAnimatable = Animatable(width, Int.VectorConverter)
+         isInitialized = true
+      }
+
+      internal suspend fun awaitInitialized() {
+         snapshotFlow { isInitialized }
+            .filter { it }
+            .first()
+      }
    }
+
+   internal var pageStackBoardWidth by mutableStateOf(0)
+      private set
 
    internal var pageStackPadding by mutableStateOf(0)
       private set
@@ -112,6 +214,14 @@ internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
    internal val layoutStateMap
       @TestOnly get() = map
 
+   private var maxScrollOffsetAnimJob: Job
+         by mutableStateOf(Job().apply { complete() })
+   private var maxScrollOffsetAnimTarget by mutableStateOf(0.0f)
+
+   init {
+      recreateLayoutState(pageStackBoard)
+   }
+
    fun pageStackLayout(id: PageStack.Id): PageStackLayoutState? = map[id]
 
    fun pageStackLayout(index: Int): PageStackLayoutState = list[index]
@@ -119,27 +229,13 @@ internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
    override operator fun iterator(): Iterator<PageStackLayoutState>
          = list.iterator()
 
-   internal fun layout(
-      pageStackBoard: PageStackBoard,
-      pageStackBoardWidth: Int,
-      pageStackCount: Int,
-      pageStackPadding: Int,
-      scrollState: PageStackBoardScrollState
-   ) {
+   internal fun <T> pageStackPositionAnimSpec() = spring<T>()
+
+   internal fun recreateLayoutState(pageStackBoard: PageStackBoard) {
       val prevLayoutList = list
       val prevLayoutMap = map
 
-      /*
-       * ウィンドウサイズの変更やPageStackサイズの変更等によって
-       * 再レイアウトする場合、PageStackの順番は変わっておらず、
-       * prevLayoutListとprevLayoutMapをそのまま再利用できる。
-       * そのため、まずはpageStackBoardを0から順にレイアウトしていくが、
-       * prevLayoutList[i]のPageStackIdがpageStackBoard[i]のPageStackIdと
-       * 一致しなくなった時点でPageStackの並び替えや挿入があったことが確定し、
-       * prevLayoutListを再利用できなくなる。その時点でiに-1が入り、resultList,
-       * resultMapにi以前の要素がコピーされる。それ以降はprevLayoutMapから
-       * レイアウトを探してresultList, resultMapに格納していく。
-       */
+      // 再生成が不要な可能性もあるため、必要になるまでは生成しないまま進める
       lateinit var resultList: MutableList<PageStackLayoutState>
       lateinit var resultMap: MutableMap<PageStack.Id, PageStackLayoutState>
       var i = 0
@@ -153,6 +249,58 @@ internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
          i = -1
       }
 
+      for (pageStackElement in pageStackBoard.sequence()) {
+         val pageStack = pageStackElement.cache.value
+
+         var layoutState = if (i >= 0) {
+            if (prevLayoutList.getOrNull(i)?.pageStackId == pageStack.id) {
+               prevLayoutList[i++]
+            } else {
+               prepareResults()
+               prevLayoutMap[pageStack.id]
+            }
+         } else {
+            prevLayoutMap[pageStack.id]
+         }
+
+         if (i < 0) {
+            if (layoutState == null) {
+               val pageStackState = pageStackStateConstructor(pageStackElement.cache)
+               layoutState = PageStackLayoutState(pageStackState)
+            }
+
+            resultList += layoutState
+            resultMap[pageStack.id] = layoutState
+         }
+      }
+
+      when {
+         i < 0 -> {
+            list = resultList.toImmutableList()
+            map = resultMap.toImmutableMap()
+         }
+         i < prevLayoutList.size -> {
+            prepareResults()
+            list = resultList.toImmutableList()
+            map = resultMap.toImmutableMap()
+         }
+      }
+   }
+
+   /**
+    * @param animCoroutineScope
+    *   PageStackの移動や幅変更があったときのアニメーションを再生するための
+    *   CoroutineScope
+    */
+   internal fun layout(
+      animCoroutineScope: CoroutineScope,
+      pageStackBoardWidth: Int,
+      pageStackCount: Int,
+      pageStackPadding: Int,
+      scrollState: PageStackBoardScrollState
+   ) {
+      // ---- 各PageStackの位置計算
+
       val pageStackWidth = (
          (pageStackBoardWidth - pageStackPadding * 2) / pageStackCount
          - pageStackPadding * 2
@@ -160,67 +308,63 @@ internal class LayoutState : Iterable<LayoutState.PageStackLayoutState> {
 
       var x = pageStackPadding
 
-      fun layout(parent: PageStackBoard.LayoutElementParent) {
-         for (element in parent) {
-            when (element) {
-               is PageStackBoard.PageStack -> {
-                  val pageStack = element.cache.value
+      for (layoutState in list) {
+         x += pageStackPadding
+         val position = IntOffset(x, 0)
+         x += pageStackWidth + pageStackPadding
 
-                  x += pageStackPadding
-                  val position = IntOffset(x, 0)
-                  x += pageStackWidth + pageStackPadding
-
-                  var layoutState = if (i >= 0) {
-                     if (prevLayoutList.getOrNull(i)?.pageStackId == pageStack.id) {
-                        prevLayoutList[i++]
-                     } else {
-                        prepareResults()
-                        prevLayoutMap[pageStack.id]
-                     }
-                  } else {
-                     prevLayoutMap[pageStack.id]
-                  }
-
-                  if (layoutState != null) {
-                     layoutState.position = position
-                     layoutState.width = pageStackWidth
-                  } else {
-                     layoutState = PageStackLayoutState(
-                        element.cache, position, pageStackWidth)
-                  }
-
-                  if (i < 0) {
-                     resultList += layoutState
-                     resultMap[pageStack.id] = layoutState
-                  }
+         if (!layoutState.isInitialized) {
+            // 初回コンポジション。アニメーション不要
+            layoutState.initialize(position, pageStackWidth)
+         } else {
+            // リコンポジション。位置か幅が変化してる場合アニメーションする
+            if (layoutState.targetPosition != position) {
+               animCoroutineScope.launch {
+                  layoutState.animatePosition(position, pageStackPositionAnimSpec())
                }
+            }
 
-               is PageStackBoard.LayoutElementParent -> {
-                  layout(element)
+            if (layoutState.targetWidth != pageStackWidth) {
+               animCoroutineScope.launch {
+                  layoutState.animateWidth(pageStackWidth)
                }
             }
          }
       }
 
-      layout(pageStackBoard.rootRow)
+      this.pageStackBoardWidth = pageStackBoardWidth
 
       x += pageStackPadding
       this.pageStackPadding = pageStackPadding
 
-      when {
-         i < 0 -> {
-            map = resultMap.toImmutableMap()
-            list = resultList.toImmutableList()
-         }
-         i < prevLayoutList.size -> {
-            prepareResults()
-            map = resultMap.toImmutableMap()
-            list = resultList.toImmutableList()
+      // ---- maxScrollOffset調整
+
+      val maxScrollOffset = (x - pageStackBoardWidth).toFloat().coerceAtLeast(0f)
+      if (!maxScrollOffsetAnimJob.isActive
+         || maxScrollOffsetAnimTarget != maxScrollOffset)
+      {
+         if (scrollState.scrollOffset <= maxScrollOffset) {
+            // スクロール位置の調整不要なためmaxScrollOffsetのセットだけ行う
+            scrollState.setMaxScrollOffset(maxScrollOffset)
+         } else {
+            // maxScrollOffsetまでスクロールアニメーションする
+            maxScrollOffsetAnimTarget = maxScrollOffset
+            maxScrollOffsetAnimJob = animCoroutineScope.launch {
+               scrollState.scroll(enableOverscroll = true) {
+                  scrollState.setMaxScrollOffset(maxScrollOffset)
+
+                  var prevValue = scrollState.scrollOffset
+                  animate(
+                     initialValue = prevValue,
+                     targetValue = maxScrollOffset,
+                     animationSpec = pageStackPositionAnimSpec()
+                  ) { value, _ ->
+                     prevValue += scrollBy(value - prevValue)
+                  }
+               }
+            }
          }
       }
-
-      scrollState.setMaxScrollOffset(
-         (x - pageStackBoardWidth).toFloat().coerceAtLeast(0f))
    }
 }
 
@@ -251,7 +395,8 @@ fun MultiColumnPageStackBoard(
          val pageStackBoardHeight = constraints.maxHeight
          val pageStackPadding = PAGE_STACK_PADDING_DP.dp.roundToPx()
 
-         state.layout(pageStackBoardWidth, pageStackCount, pageStackPadding)
+         state.layout(density = this, pageStackBoardWidth, pageStackCount,
+            pageStackPadding)
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
 
@@ -276,16 +421,14 @@ fun MultiColumnPageStackBoard(
             }
 
             val measurable = subcompose(pageStackLayout.pageStackId) {
-               val pageStackState = remember {
-                  PageStackState(pageStackLayout.pageStackCache, state)
-               }
-
                PageStack(
-                  pageStackState,
+                  pageStackLayout.pageStackState,
                   isActive = pageStackCount == 1,
                   windowInsets.only(WindowInsetsSides.Bottom),
                   pageComposableSwitcher,
-                  onTopAppBarHeightChanged
+                  onTopAppBarHeightChanged,
+                  modifier = Modifier
+                     .alpha(pageStackLayout.alpha)
                )
             } .single()
 
@@ -328,13 +471,19 @@ private fun PageStack(
    ) {
       val density by rememberUpdatedState(LocalDensity.current)
 
+      val coroutineScope = rememberCoroutineScope()
+
       Column {
          @OptIn(ExperimentalMaterial3Api::class)
          TopAppBar(
             title = { Text("Home") },
             navigationIcon = {
                IconButton(
-                  onClick = {}
+                  onClick = {
+                     coroutineScope.launch {
+                        state.removeFromBoard()
+                     }
+                  }
                ) {
                   Icon(Icons.Default.Close, contentDescription = "Close")
                }

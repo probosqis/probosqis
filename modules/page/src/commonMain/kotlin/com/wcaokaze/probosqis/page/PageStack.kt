@@ -103,6 +103,10 @@ class PageStackState internal constructor(
 
       pageStackBoardState.addColumn(insertionIndex, pageStack)
    }
+
+   suspend fun removeFromBoard() {
+      pageStackBoardState.removePageStack(pageStack.id)
+   }
 }
 
 @Composable
