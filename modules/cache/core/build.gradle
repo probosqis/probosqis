@@ -16,24 +16,16 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
 }
 
+apply from: rootProject.file('gradle/setupModule.gradle')
+
 kotlin {
-   jvm()
-
    sourceSets {
-      commonMain {
-         dependencies {
-            def composeVersion = libs.versions.compose.get()
-            implementation "org.jetbrains.compose.runtime:runtime:$composeVersion"
-            implementation libs.kotlinx.serialization
-         }
-      }
-
-      commonTest {
-         dependencies {
-            implementation libs.kotlin.test
-         }
+      commonMain.dependencies {
+         def composeVersion = libs.versions.compose.get()
+         implementation "org.jetbrains.compose.runtime:runtime:$composeVersion"
       }
    }
 }

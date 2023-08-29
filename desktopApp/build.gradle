@@ -16,8 +16,11 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
    alias libs.plugins.compose
 }
+
+apply from: rootProject.file('gradle/setupModule.gradle')
 
 compose.desktop {
    application {
@@ -26,21 +29,12 @@ compose.desktop {
 }
 
 kotlin {
-   jvm()
-
    sourceSets {
-      jvmMain {
-         dependencies {
-            implementation libs.kotlinx.collections.immutable
-            implementation compose.desktop.linux_x64
-            implementation compose.material
-            implementation compose.uiTooling
-            implementation compose.preview
-            implementation project(':modules:app')
-            implementation project(':modules:page:core')
-            implementation project(':modules:page:perpetuation')
-            implementation project(':modules:page:compose')
-         }
+      jvmMain.dependencies {
+         implementation compose.desktop.linux_x64
+         implementation project(':modules:app')
+         implementation project(':modules:resources')
+         implementation project(':modules:page')
       }
    }
 }

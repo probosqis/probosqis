@@ -1,0 +1,172 @@
+/*
+ * Copyright 2023 wcaokaze
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+boolean hasPlugin(Provider<? extends PluginDependency> plugin) {
+   return project.pluginManager.hasPlugin(plugin.get().pluginId)
+}
+
+def isAndroidModule = hasPlugin(libs.plugins.android.application)
+      || hasPlugin(libs.plugins.android.library)
+def isComposeModule = hasPlugin(libs.plugins.compose)
+def isExtModule = project.path.contains(':modules:ext')
+
+kotlin {
+   if (isComposeModule) {
+      jvm('desktop')
+   } else {
+      jvm()
+   }
+
+   if (isAndroidModule) {
+      android()
+   }
+
+   sourceSets {
+      jvmMain.dependsOn(commonMain)
+      jvmTest.dependsOn(commonTest)
+
+      if (isAndroidModule) {
+         androidMain.dependsOn(jvmMain)
+         androidTest.dependsOn(jvmTest)
+         androidAndroidTest.dependsOn(jvmTest)
+      }
+
+      if (isComposeModule) {
+         desktopMain.dependsOn(jvmMain)
+         desktopTest.dependsOn(jvmTest)
+      }
+
+      commonMain.dependencies {
+         implementation libs.kotlinx.datetime
+         implementation libs.kotlinx.serialization
+         implementation libs.kotlinx.collections.immutable
+      }
+
+      commonTest.dependencies {
+         implementation libs.kotlin.test
+         implementation libs.mockk
+      }
+
+      if (isAndroidModule) {
+         androidMain.dependencies {
+         }
+
+         androidAndroidTest.dependencies {
+            implementation libs.androidx.test.ext
+            implementation libs.robolectric
+         }
+      }
+
+      if (isComposeModule) {
+         commonMain.dependencies {
+            implementation compose.material3
+         }
+
+         commonTest.dependencies {
+            implementation compose.uiTestJUnit4
+         }
+
+         desktopMain.dependencies {
+            implementation compose.uiTooling
+            implementation compose.preview
+         }
+
+         desktopTest.dependencies {
+            implementation compose.desktop.currentOs
+         }
+
+         if (isAndroidModule) {
+            androidMain.dependencies {
+               implementation libs.androidx.activity.compose
+               implementation compose.uiTooling
+               implementation compose.preview
+            }
+
+            androidTest.dependencies {
+               implementation libs.compose.ui.test.manifest
+            }
+         }
+      }
+
+      if (!isExtModule) {
+         commonMain.dependencies {
+            implementation project(':modules:ext:kotlin')
+         }
+
+         commonTest.dependencies {
+            implementation project(':modules:ext:kotlinTest')
+         }
+
+         if (isAndroidModule) {
+            commonMain.dependencies {
+               implementation project(':modules:ext:android')
+            }
+         }
+
+         if (isAndroidModule && isComposeModule) {
+            commonMain.dependencies {
+               implementation project(':modules:ext:compose')
+            }
+         }
+      }
+   }
+}
+
+if (isAndroidModule) {
+   android {
+      compileSdk 33
+      sourceSets.main.manifest.srcFile 'src/androidMain/AndroidManifest.xml'
+
+      defaultConfig {
+         minSdk 21
+         targetSdk 33
+      }
+
+      buildFeatures {
+         compose true
+      }
+
+      compileOptions {
+         coreLibraryDesugaringEnabled true
+      }
+
+      composeOptions {
+         kotlinCompilerExtensionVersion = libs.versions.compose
+      }
+
+      testOptions {
+         unitTests {
+            includeAndroidResources = true
+         }
+      }
+
+      packagingOptions.resources {
+         excludes += [
+               'META-INF/LICENSE',
+               'META-INF/LICENSE.txt',
+               'META-INF/LICENSE.md',
+               'META-INF/license',
+               'META-INF/license.txt',
+               'META-INF/license.md',
+               'META-INF/LICENSE-notice.md',
+         ]
+      }
+   }
+
+   dependencies {
+      coreLibraryDesugaring libs.android.desugaring.jdk
+   }
+}

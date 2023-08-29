@@ -16,33 +16,21 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.android.library
    alias libs.plugins.compose
 }
 
+apply from: rootProject.file('gradle/setupModule.gradle')
+
+android {
+   namespace 'com.wcaokaze.probosqis.cache.compose'
+}
+
 kotlin {
-   jvm()
-
    sourceSets {
-      commonMain {
-         dependencies {
-            implementation compose.runtime
-            implementation project(':modules:cache:core')
-         }
-      }
-
-      commonTest {
-         dependencies {
-            implementation libs.kotlin.test
-         }
-      }
-
-      jvmTest {
-         dependencies {
-            implementation compose.material
-
-            implementation compose.desktop.currentOs
-            implementation compose.uiTestJUnit4
-         }
+      commonMain.dependencies {
+         implementation project(':modules:cache:core')
       }
    }
 }

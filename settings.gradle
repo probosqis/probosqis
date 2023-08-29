@@ -45,6 +45,9 @@ dependencyResolutionManagement {
          plugin('kotlinx-serialization', 'org.jetbrains.kotlin.plugin.serialization').versionRef('kotlin')
 
          library('kotlinx-collections-immutable', 'org.jetbrains.kotlinx', 'kotlinx-collections-immutable').version('0.3.5')
+         library('kotlinx-datetime', 'org.jetbrains.kotlinx', 'kotlinx-datetime').version('0.4.0')
+
+         library('android-desugaring-jdk', 'com.android.tools', 'desugar_jdk_libs').version('1.2.2')
 
          library('androidx-activity-compose', 'androidx.activity', 'activity-compose').version('1.6.1')
          library('accompanist-pager', 'com.google.accompanist', 'accompanist-pager').versionRef('accompanist')
@@ -52,9 +55,10 @@ dependencyResolutionManagement {
          library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.4.1')
 
          library('kotlin-test', 'org.jetbrains.kotlin', 'kotlin-test').versionRef('kotlin')
-         library('androidx-test-ext', 'androidx.test.ext:junit:1.1.5')
-         library('androidx-test-espresso', 'androidx.test.espresso:espresso-core:3.5.1')
          library('mockk', 'io.mockk', 'mockk').version('1.13.4')
+         library('robolectric', 'org.robolectric:robolectric:4.9')
+         library('androidx-test-ext', 'androidx.test.ext:junit:1.1.5')
+         library('compose-ui-test-manifest', 'androidx.compose.ui', 'ui-test-manifest').versionRef('compose')
       }
    }
 }
@@ -64,8 +68,11 @@ include ':androidApp'
 include ':desktopApp'
 // include ':jsApp'
 include ':modules:app'
+include ':modules:ext:kotlin'
+include ':modules:ext:kotlinTest'
+include ':modules:ext:android'
+include ':modules:ext:compose'
+include ':modules:resources'
 include ':modules:cache:core'
 include ':modules:cache:compose'
-include ':modules:page:core'
-include ':modules:page:perpetuation'
-include ':modules:page:compose'
+include ':modules:page'

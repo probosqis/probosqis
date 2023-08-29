@@ -16,24 +16,51 @@
 
 package com.wcaokaze.probosqis.app
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.page.core.Page
+import com.wcaokaze.probosqis.page.PageStack
+import com.wcaokaze.probosqis.page.PageStackState
+import com.wcaokaze.probosqis.page.Page
+import com.wcaokaze.probosqis.page.pageComposable
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.app.TestPage")
-class TestPage : Page()
+class TestPage(val i: Int) : Page()
 
 @Composable
-fun TestPage(page: TestPage) {
-   Text(
-      "TEST",
-      fontSize = 48.sp,
-      modifier = Modifier.fillMaxSize()
-   )
+fun TestPage(page: TestPage, pageStackState: PageStackState) {
+   Column(Modifier.fillMaxSize()) {
+      Text(
+         "${page.i}",
+         fontSize = 48.sp
+      )
+
+      val coroutineScope = rememberCoroutineScope()
+
+      Button(
+         onClick = {
+            coroutineScope.launch {
+               val newPageStack = PageStack(TestPage(page.i + 1))
+               pageStackState.addColumn(newPageStack)
+            }
+         }
+      ) {
+         Text("Add Column")
+      }
+   }
 }
+
+val testPageComposable = pageComposable<TestPage>(
+   content = { page, pageStackState -> TestPage(page, pageStackState) },
+   header = { _, _ -> },
+   footer = null
+)

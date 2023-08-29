@@ -17,10 +17,7 @@
 package com.wcaokaze.probosqis.cache.compose
 
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.cache.core.Cache
-import com.wcaokaze.probosqis.cache.core.InternalCacheApi
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import kotlin.reflect.KProperty
 
@@ -29,29 +26,27 @@ fun <T> WritableCache<T>.asMutableState() = WritableCacheState(this)
 fun <T> WritableCache<T>.asState(): CacheState<T> = asCache().asState()
 
 @Stable
-class CacheState<out T> internal constructor(cache: Cache<T>) {
-   @OptIn(InternalCacheApi::class)
-   private val state = cache.state
-
-   val value: T by state
+class CacheState<out T>
+   internal constructor(private val cache: Cache<T>)
+{
+   val value: T by cache::value
 
    operator fun getValue(thisObj: Any?, property: KProperty<*>): T {
-      return state.getValue(thisObj, property)
+      return cache.value
    }
 }
 
 @Stable
-class WritableCacheState<T> internal constructor(cache: WritableCache<T>) {
-   @OptIn(InternalCacheApi::class)
-   private val state = cache.mutableState
-
-   var value: T by state
+class WritableCacheState<T>
+   internal constructor(private val cache: WritableCache<T>)
+{
+   var value: T by cache::value
 
    operator fun getValue(thisObj: Any?, property: KProperty<*>): T {
-      return state.getValue(thisObj, property)
+      return cache.value
    }
 
    operator fun setValue(thisObj: Any?, property: KProperty<*>, value: T) {
-      state.setValue(thisObj, property, value)
+      cache.value = value
    }
 }
