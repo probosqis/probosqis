@@ -39,13 +39,18 @@ internal class PageStackBoardScrollState : ScrollableState {
 
    private var maxScrollOffset by mutableStateOf(0.0f)
 
+   private var isEnabledOverscroll by mutableStateOf(false)
+   private fun Float.coerceInScrollableRange(): Float {
+      if (isEnabledOverscroll) { return this }
+      return coerceIn(0.0f, maxScrollOffset)
+   }
+
    override fun dispatchRawDelta(delta: Float): Float {
       val oldScrollOffset = scrollOffset
-
-      val newScrollOffset = (oldScrollOffset + delta).coerceIn(0.0f, maxScrollOffset)
+      val newScrollOffset = (oldScrollOffset + delta).coerceInScrollableRange()
 
       scrollOffset = newScrollOffset
-      return newScrollOffset - oldScrollOffset
+      return scrollOffset - oldScrollOffset
    }
 
    private val scrollScope = object : ScrollScope {
@@ -56,13 +61,28 @@ internal class PageStackBoardScrollState : ScrollableState {
       scrollPriority: MutatePriority,
       block: suspend ScrollScope.() -> Unit
    ) {
+      scroll(scrollPriority, enableOverscroll = false, block)
+   }
+
+   suspend fun scroll(
+      scrollPriority: MutatePriority = MutatePriority.Default,
+      enableOverscroll: Boolean = false,
+      block: suspend ScrollScope.() -> Unit
+   ) {
       coroutineScope {
          scrollMutex.mutateWith(scrollScope, scrollPriority) {
             isScrolling = true
+            isEnabledOverscroll = enableOverscroll
+
             try {
                block()
             } finally {
                isScrolling = false
+               isEnabledOverscroll = false
+
+               if (enableOverscroll) {
+                  scrollOffset = scrollOffset.coerceInScrollableRange()
+               }
             }
          }
       }
@@ -70,6 +90,6 @@ internal class PageStackBoardScrollState : ScrollableState {
 
    internal fun setMaxScrollOffset(value: Float) {
       maxScrollOffset = value
-      scrollOffset = scrollOffset.coerceIn(0.0f, value)
+      scrollOffset = scrollOffset.coerceInScrollableRange()
    }
 }

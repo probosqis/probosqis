@@ -616,24 +616,19 @@ class PageStackBoardComposeTest {
       var boardWidth by mutableStateOf(200.dp)
 
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var coroutineScope: CoroutineScope
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 3)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
+            coroutineScope = remembered.coroutineScope
          }
          MultiColumnPageStackBoard(remembered.pageStackBoardState, boardWidth)
       }
 
-      rule.onNodeWithText("0").assertLeftPositionInRootIsEqualTo(
-         expectedPageStackLeftPosition(0, boardWidth))
-
-      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
-         down(Offset(0.0f, 0.0f))
-         moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
-         moveBy(Offset(-boardWidth.toPx(), 0.0f))
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(1, PositionInBoard.FirstVisible)
       }
-      rule.onNodeWithText("1").assertLeftPositionInRootIsEqualTo(
-         expectedPageStackLeftPosition(0, boardWidth))
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1, boardWidth),
@@ -644,6 +639,28 @@ class PageStackBoardComposeTest {
       boardWidth = 190.dp
       rule.onNodeWithText("1").assertLeftPositionInRootIsEqualTo(
          expectedPageStackLeftPosition(0, boardWidth))
+      rule.runOnIdle {
+         assertEquals(
+            expectedScrollOffset(1, boardWidth),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         down(Offset(0.0f, 0.0f))
+         moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
+         moveBy(Offset(-100.dp.toPx(), 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(
+            expectedScrollOffset(1, boardWidth),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         up()
+      }
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1, boardWidth),
@@ -896,7 +913,6 @@ class PageStackBoardComposeTest {
          assertEquals(0.0f, pageStackBoardState.scrollState.scrollOffset)
       }
 
-
       rule.onNodeWithTag(pageStackBoardTag)
          .swipeLeft(expectedPageStackWidth() + 20.dp, duration = 400L)
       rule.runOnIdle {
@@ -914,6 +930,92 @@ class PageStackBoardComposeTest {
             pageStackBoardState.scrollState.scrollOffset
          )
       }
+   }
+
+   @Test
+   fun overscroll() {
+      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var coroutineScope: CoroutineScope
+      rule.setContent {
+         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         SideEffect {
+            pageStackBoardState = remembered.pageStackBoardState
+            coroutineScope = remembered.coroutineScope
+         }
+         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+      }
+
+      val scrollDistance = with (rule.density) { 32.dp.toPx() }
+
+      coroutineScope.launch {
+         pageStackBoardState.scrollState.scroll {
+            scrollBy(-scrollDistance)
+
+            assertEquals(
+               0.0f,
+               pageStackBoardState.scrollState.scrollOffset,
+               absoluteTolerance = 0.05f
+            )
+         }
+
+         assertEquals(
+            0.0f,
+            pageStackBoardState.scrollState.scrollOffset,
+            absoluteTolerance = 0.05f
+         )
+
+         pageStackBoardState.scrollState.scroll(enableOverscroll = true) {
+            scrollBy(-scrollDistance)
+
+            assertEquals(
+               -scrollDistance,
+               pageStackBoardState.scrollState.scrollOffset,
+               absoluteTolerance = 0.05f
+            )
+         }
+
+         assertEquals(
+            0.0f,
+            pageStackBoardState.scrollState.scrollOffset,
+            absoluteTolerance = 0.05f
+         )
+
+         pageStackBoardState.animateScroll(3)
+
+         pageStackBoardState.scrollState.scroll {
+            scrollBy(scrollDistance)
+
+            assertEquals(
+               expectedScrollOffset(2),
+               pageStackBoardState.scrollState.scrollOffset,
+               absoluteTolerance = 0.05f
+            )
+         }
+
+         assertEquals(
+            expectedScrollOffset(2),
+            pageStackBoardState.scrollState.scrollOffset,
+            absoluteTolerance = 0.05f
+         )
+
+         pageStackBoardState.scrollState.scroll(enableOverscroll = true) {
+            scrollBy(scrollDistance)
+
+            assertEquals(
+               expectedScrollOffset(2) + scrollDistance,
+               pageStackBoardState.scrollState.scrollOffset,
+               absoluteTolerance = 0.05f
+            )
+         }
+
+         assertEquals(
+            expectedScrollOffset(2),
+            pageStackBoardState.scrollState.scrollOffset,
+            absoluteTolerance = 0.05f
+         )
+      }
+
+      rule.waitForIdle()
    }
 
    @Test
@@ -1462,10 +1564,12 @@ class PageStackBoardComposeTest {
    @Test
    fun removePageStack_viaPageStackState() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var coroutineScope: CoroutineScope
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 6)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
+            coroutineScope = remembered.coroutineScope
          }
          MultiColumnPageStackBoard(remembered.pageStackBoardState)
       }
@@ -1482,32 +1586,82 @@ class PageStackBoardComposeTest {
 
       rule.runOnIdle {
          assertPageNumbers(
-            listOf(0, 1, 2, 3),
+            listOf(0, 1, 2, 3, 4, 5),
             pageStackBoardState.pageStackBoard
+         )
+
+         assertEquals(
+            expectedScrollOffset(0),
+            pageStackBoardState.scrollState.scrollOffset
          )
       }
 
       rule.onNodeWithText("Remove PageStack 1").performClick()
       rule.runOnIdle {
          assertPageNumbers(
-            listOf(0, 2, 3),
+            listOf(0, 2, 3, 4, 5),
             pageStackBoardState.pageStackBoard
+         )
+
+         assertEquals(
+            expectedScrollOffset(0),
+            pageStackBoardState.scrollState.scrollOffset
          )
       }
 
       rule.onNodeWithText("Remove PageStack 0").performClick()
       rule.runOnIdle {
          assertPageNumbers(
-            listOf(2, 3),
+            listOf(2, 3, 4, 5),
             pageStackBoardState.pageStackBoard
          )
+
+         assertEquals(
+            expectedScrollOffset(0),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(1, PositionInBoard.FirstVisible)
       }
 
       rule.onNodeWithText("Remove PageStack 3").performClick()
       rule.runOnIdle {
          assertPageNumbers(
+            listOf(2, 4, 5),
+            pageStackBoardState.pageStackBoard
+         )
+
+         assertEquals(
+            expectedScrollOffset(1),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+
+      rule.onNodeWithText("Remove PageStack 5").performClick()
+      rule.runOnIdle {
+         assertPageNumbers(
+            listOf(2, 4),
+            pageStackBoardState.pageStackBoard
+         )
+
+         assertEquals(
+            expectedScrollOffset(0),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+
+      rule.onNodeWithText("Remove PageStack 4").performClick()
+      rule.runOnIdle {
+         assertPageNumbers(
             listOf(2),
             pageStackBoardState.pageStackBoard
+         )
+
+         assertEquals(
+            expectedScrollOffset(0),
+            pageStackBoardState.scrollState.scrollOffset
          )
       }
    }

@@ -20,6 +20,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
@@ -70,6 +71,7 @@ import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
@@ -212,6 +214,10 @@ internal class LayoutLogic(
    internal val layoutStateMap
       @TestOnly get() = map
 
+   private var maxScrollOffsetAnimJob: Job
+         by mutableStateOf(Job().apply { complete() })
+   private var maxScrollOffsetAnimTarget by mutableStateOf(0.0f)
+
    init {
       recreateLayoutState(pageStackBoard)
    }
@@ -293,6 +299,8 @@ internal class LayoutLogic(
       pageStackPadding: Int,
       scrollState: PageStackBoardScrollState
    ) {
+      // ---- 各PageStackの位置計算
+
       val pageStackWidth = (
          (pageStackBoardWidth - pageStackPadding * 2) / pageStackCount
          - pageStackPadding * 2
@@ -306,8 +314,10 @@ internal class LayoutLogic(
          x += pageStackWidth + pageStackPadding
 
          if (!layoutState.isInitialized) {
+            // 初回コンポジション。アニメーション不要
             layoutState.initialize(position, pageStackWidth)
          } else {
+            // リコンポジション。位置か幅が変化してる場合アニメーションする
             if (layoutState.targetPosition != position) {
                animCoroutineScope.launch {
                   layoutState.animatePosition(position, pageStackPositionAnimSpec())
@@ -327,8 +337,34 @@ internal class LayoutLogic(
       x += pageStackPadding
       this.pageStackPadding = pageStackPadding
 
-      scrollState.setMaxScrollOffset(
-         (x - pageStackBoardWidth).toFloat().coerceAtLeast(0f))
+      // ---- maxScrollOffset調整
+
+      val maxScrollOffset = (x - pageStackBoardWidth).toFloat().coerceAtLeast(0f)
+      if (!maxScrollOffsetAnimJob.isActive
+         || maxScrollOffsetAnimTarget != maxScrollOffset)
+      {
+         if (scrollState.scrollOffset <= maxScrollOffset) {
+            // スクロール位置の調整不要なためmaxScrollOffsetのセットだけ行う
+            scrollState.setMaxScrollOffset(maxScrollOffset)
+         } else {
+            // maxScrollOffsetまでスクロールアニメーションする
+            maxScrollOffsetAnimTarget = maxScrollOffset
+            maxScrollOffsetAnimJob = animCoroutineScope.launch {
+               scrollState.scroll(enableOverscroll = true) {
+                  scrollState.setMaxScrollOffset(maxScrollOffset)
+
+                  var prevValue = scrollState.scrollOffset
+                  animate(
+                     initialValue = prevValue,
+                     targetValue = maxScrollOffset,
+                     animationSpec = pageStackPositionAnimSpec()
+                  ) { value, _ ->
+                     prevValue += scrollBy(value - prevValue)
+                  }
+               }
+            }
+         }
+      }
    }
 }
 
