@@ -16,15 +16,10 @@
 
 package com.wcaokaze.probosqis.page
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +43,6 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.junit.Rule
@@ -65,83 +59,20 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class MultiColumnPageStackBoardComposeTest {
+class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
    @get:Rule
    val rule = createComposeRule()
 
-   private val pageStackBoardTag = "PageStackBoard"
    private val defaultPageStackBoardWidth = 200.dp
    private val defaultPageStackCount = 2
 
-   private class TestPage(val i: Int) : Page()
-
-   private val testPageComposable = pageComposable<TestPage>(
-      content = { page, pageStackState ->
-         Column {
-            val coroutineScope = rememberCoroutineScope()
-
-            Text(
-               "${page.i}",
-               modifier = Modifier.fillMaxWidth()
-            )
-
-            Button(
-               onClick = {
-                  coroutineScope.launch {
-                     val newPageStack = PageStack(
-                        PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                        TestPage(page.i + 100)
-                     )
-                     pageStackState.addColumn(newPageStack)
-                  }
-               }
-            ) {
-               Text("Add PageStack ${page.i}")
-            }
-
-            Button(
-               onClick = {
-                  coroutineScope.launch {
-                     pageStackState.removeFromBoard()
-                  }
-               }
-            ) {
-               Text("Remove PageStack ${page.i}")
-            }
-         }
-      },
-      header = { _, _ -> },
-      footer = null
-   )
-
-   private val pageComposableSwitcher = PageComposableSwitcher(
-      allPageComposables = listOf(
-         testPageComposable,
-      )
-   )
-
-   private lateinit var pageStackRepository: PageStackRepository
+   override lateinit var pageStackRepository: PageStackRepository
 
    @BeforeTest
    fun beforeTest() {
       pageStackRepository = mockk {
          every { savePageStack(any()) } answers { WritableCache(firstArg()) }
       }
-   }
-
-   @Composable
-   private fun SingleColumnPageStackBoard(
-      state: SingleColumnPageStackBoardState,
-      width: Dp
-   ) {
-      SingleColumnPageStackBoard(
-         state,
-         pageComposableSwitcher,
-         WindowInsets(0, 0, 0, 0),
-         modifier = Modifier
-            .width(width)
-            .testTag(pageStackBoardTag)
-      )
    }
 
    @Composable
@@ -161,63 +92,17 @@ class MultiColumnPageStackBoardComposeTest {
       )
    }
 
-   @Stable
-   private class RememberedPageStackBoardState<S : PageStackBoardState>(
-      val pageStackBoardState: S,
-      val coroutineScope: CoroutineScope
-   ) {
-      operator fun component1() = pageStackBoardState
-      operator fun component2() = coroutineScope
-   }
-
-   @Composable
-   private fun rememberSingleColumnPageStackBoardState(
-      pageStackCount: Int
-   ): RememberedPageStackBoardState<SingleColumnPageStackBoardState> {
-      val animCoroutineScope = rememberCoroutineScope()
-      return remember(animCoroutineScope) {
-         val pageStackBoardState = createPageStackBoardState(
-            ::SingleColumnPageStackBoardState, animCoroutineScope, pageStackCount)
-         RememberedPageStackBoardState(pageStackBoardState, animCoroutineScope)
-      }
-   }
-
    @Composable
    private fun rememberMultiColumnPageStackBoardState(
       pageStackCount: Int
    ): RememberedPageStackBoardState<MultiColumnPageStackBoardState> {
       val animCoroutineScope = rememberCoroutineScope()
       return remember(animCoroutineScope) {
-         val pageStackBoardState = createPageStackBoardState(
-            ::MultiColumnPageStackBoardState, animCoroutineScope, pageStackCount)
+         val pageStackBoardCache = createPageStackBoard(pageStackCount)
+         val pageStackBoardState = MultiColumnPageStackBoardState(
+            pageStackBoardCache, pageStackRepository, animCoroutineScope)
          RememberedPageStackBoardState(pageStackBoardState, animCoroutineScope)
       }
-   }
-
-   private fun <S : PageStackBoardState> createPageStackBoardState(
-      constructor: (
-         WritableCache<PageStackBoard>, PageStackRepository, CoroutineScope
-      ) -> S,
-      animCoroutineScope: CoroutineScope,
-      pageStackCount: Int
-   ): S {
-      val rootRow = PageStackBoard.Row(
-         List(pageStackCount) { createPageStack(it) }.toImmutableList()
-      )
-
-      val pageStackBoard = PageStackBoard(rootRow)
-      val pageStackBoardCache = WritableCache(pageStackBoard)
-      return constructor(pageStackBoardCache, pageStackRepository, animCoroutineScope)
-   }
-
-   private fun createPageStack(i: Int): PageStackBoard.PageStack {
-      val page = TestPage(i)
-      val pageStack = PageStack(
-         PageStack.Id(i.toLong()),
-         page
-      )
-      val cache = pageStackRepository.savePageStack(pageStack)
-      return PageStackBoard.PageStack(cache)
    }
 
    private fun expectedPageStackWidth(
@@ -246,19 +131,6 @@ class MultiColumnPageStackBoardComposeTest {
       return with (rule.density) {
          (pageStackBoardWidth - 16.dp).toPx() / pageStackCount * index
       }
-   }
-
-   @Test
-   fun singleColumnPageStackBoard_layout() {
-      rule.setContent {
-         val (pageStackBoardState, _)
-               = rememberSingleColumnPageStackBoardState(pageStackCount = 2)
-         SingleColumnPageStackBoard(pageStackBoardState, width = 100.dp)
-      }
-
-      rule.onNodeWithText("0")
-         .assertLeftPositionInRootIsEqualTo(0.dp)
-         .assertWidthIsEqualTo(100.dp)
    }
 
    @Test
