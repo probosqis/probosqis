@@ -232,7 +232,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
       fun assertPageStackLayoutStatesExist(
          pageStackBoard: PageStackBoard,
-         layoutLogic: LayoutLogic
+         layoutLogic: MultiColumnLayoutLogic
       ) {
          val pageStackCount = pageStackBoard.pageStackCount
          val ids = (0 until pageStackCount)
