@@ -18,6 +18,8 @@ package com.wcaokaze.probosqis.page
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -56,6 +58,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -79,7 +82,8 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
    private fun MultiColumnPageStackBoard(
       state: MultiColumnPageStackBoardState,
       width: Dp = defaultPageStackBoardWidth,
-      pageStackCount: Int = defaultPageStackCount
+      pageStackCount: Int = defaultPageStackCount,
+      pageComposableSwitcher: PageComposableSwitcher = defaultPageComposableSwitcher
    ) {
       MultiColumnPageStackBoard(
          state,
@@ -1360,7 +1364,22 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
             pageStackBoardState = remembered.pageStackBoardState
             coroutineScope = remembered.coroutineScope
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         MultiColumnPageStackBoard(
+            remembered.pageStackBoardState,
+            pageComposableSwitcher = pageComposableSwitcher<TestPage> { page, pageStackState ->
+               Button(
+                  onClick = {
+                     val newPageStack = PageStack(
+                        PageStack.Id(pageStackState.pageStack.id.value + 100L),
+                        TestPage(page.i + 100)
+                     )
+                     pageStackState.addColumn(newPageStack)
+                  }
+               ) {
+                  Text("Add PageStack ${page.i}")
+               }
+            }
+         )
       }
 
       fun assertPageNumbers(expected: List<Int>, actual: PageStackBoard) {
@@ -1385,6 +1404,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          )
       }
 
+      rule.mainClock.autoAdvance = false
       rule.onNodeWithText("Add PageStack 1").performClick()
       rule.runOnIdle {
          assertPageNumbers(
@@ -1392,10 +1412,28 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
             pageStackBoardState.pageStackBoard
          )
 
+         // ボタン押下直後、まだBoardは動いていない
          assertEquals(
-            expectedScrollOffset(1),
+            expectedScrollOffset(0),
             pageStackBoardState.scrollState.scrollOffset
          )
+
+         // 挿入されるPageStackは透明
+         assertEquals(0.0f, pageStackBoardState.layout.pageStackLayout(2).alpha)
+      }
+      // PageStackひとつ分スクロールされるまで進める
+      rule.mainClock.advanceTimeUntil {
+         expectedScrollOffset(1) == pageStackBoardState.scrollState.scrollOffset
+      }
+      rule.runOnIdle {
+         // PageStack挿入アニメーションが開始されているがまだ終わっていない
+         assertNotEquals(1.0f, pageStackBoardState.layout.pageStackLayout(2).alpha)
+      }
+      // アニメーション終了まで進める
+      rule.mainClock.autoAdvance = true
+      rule.runOnIdle {
+         // 挿入アニメーション終了後不透明度は100%
+         assertEquals(1.0f, pageStackBoardState.layout.pageStackLayout(2).alpha)
       }
 
       coroutineScope.launch {

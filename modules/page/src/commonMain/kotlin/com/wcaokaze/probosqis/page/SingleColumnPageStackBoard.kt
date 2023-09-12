@@ -18,7 +18,6 @@ package com.wcaokaze.probosqis.page
 
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
@@ -37,7 +36,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -51,7 +49,6 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import org.jetbrains.annotations.TestOnly
 
 private const val PAGE_STACK_PADDING_DP = 8
@@ -300,8 +297,6 @@ private fun PageStackAppBar(
    pageComposableSwitcher: PageComposableSwitcher,
    modifier: Modifier = Modifier
 ) {
-   val coroutineScope = rememberCoroutineScope()
-
    @OptIn(ExperimentalMaterial3Api::class)
    TopAppBar(
       title = {
@@ -313,11 +308,7 @@ private fun PageStackAppBar(
       },
       navigationIcon = {
          IconButton(
-            onClick = {
-               coroutineScope.launch {
-                  state.removeFromBoard()
-               }
-            }
+            onClick = { state.removeFromBoard() }
          ) {
             Icon(Icons.Default.Close, contentDescription = "Close")
          }

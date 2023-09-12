@@ -384,7 +384,7 @@ sealed class PageStackBoardState(
       scrollState.scrollOffset
    )
 
-   suspend fun addColumn(index: Int, pageStack: PageStack) {
+   fun addColumn(index: Int, pageStack: PageStack): Job = animCoroutineScope.launch {
       val pageStackCache = pageStackRepository.savePageStack(pageStack)
 
       pageStackBoard = PageStackBoard(
@@ -394,19 +394,17 @@ sealed class PageStackBoardState(
          )
       )
 
-      coroutineScope {
-         launch {
-            animateScroll(pageStack.id, PositionInBoard.NearestVisible,
-               layout.pageStackPositionAnimSpec())
-         }
-         launch {
-            layout.pageStackLayout(pageStack.id)
-               ?.animateInsertion(pageStackInsertionAnimOffset)
-         }
+      launch {
+         animateScroll(pageStack.id, PositionInBoard.NearestVisible,
+            layout.pageStackPositionAnimSpec())
+      }
+      launch {
+         layout.pageStackLayout(pageStack.id)
+            ?.animateInsertion(pageStackInsertionAnimOffset)
       }
    }
 
-   suspend fun removePageStack(id: PageStack.Id) {
+   fun removePageStack(id: PageStack.Id): Job = animCoroutineScope.launch {
       layout.pageStackLayout(id)
          ?.animateRemoving(pageStackInsertionAnimOffset)
 

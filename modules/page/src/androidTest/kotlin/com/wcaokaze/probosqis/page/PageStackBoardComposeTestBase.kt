@@ -20,13 +20,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 abstract class PageStackBoardComposeTestBase {
    protected abstract val pageStackRepository: PageStackRepository
@@ -35,50 +34,48 @@ abstract class PageStackBoardComposeTestBase {
 
    protected class TestPage(val i: Int) : Page()
 
-   private val testPageComposable = pageComposable<TestPage>(
-      content = { page, pageStackState ->
-         Column {
-            val coroutineScope = rememberCoroutineScope()
+   protected inline fun <reified P : Page> pageComposableSwitcher(
+      noinline pageComposable: @Composable (P, PageStackState) -> Unit,
+   ): PageComposableSwitcher {
+      val headerComposable: @Composable (Page, PageStackState) -> Unit = { _, _ -> }
 
-            Text(
-               "${page.i}",
-               modifier = Modifier.fillMaxWidth()
-            )
+      val testPageComposable
+            = pageComposable(pageComposable, headerComposable, footer = null)
 
-            Button(
-               onClick = {
-                  coroutineScope.launch {
+      return PageComposableSwitcher(
+         allPageComposables = listOf(testPageComposable)
+      )
+   }
+
+   protected val defaultPageComposableSwitcher
+         = pageComposableSwitcher<TestPage> { page, pageStackState ->
+            Column {
+               Text(
+                  "${page.i}",
+                  modifier = Modifier.fillMaxWidth()
+               )
+
+               Button(
+                  onClick = {
                      val newPageStack = PageStack(
                         PageStack.Id(pageStackState.pageStack.id.value + 100L),
                         TestPage(page.i + 100)
                      )
                      pageStackState.addColumn(newPageStack)
                   }
+               ) {
+                  Text("Add PageStack ${page.i}")
                }
-            ) {
-               Text("Add PageStack ${page.i}")
-            }
 
-            Button(
-               onClick = {
-                  coroutineScope.launch {
+               Button(
+                  onClick = {
                      pageStackState.removeFromBoard()
                   }
+               ) {
+                  Text("Remove PageStack ${page.i}")
                }
-            ) {
-               Text("Remove PageStack ${page.i}")
             }
          }
-      },
-      header = { _, _ -> },
-      footer = null
-   )
-
-   protected val pageComposableSwitcher = PageComposableSwitcher(
-      allPageComposables = listOf(
-         testPageComposable,
-      )
-   )
 
    protected fun createPageStackBoard(
       pageStackCount: Int

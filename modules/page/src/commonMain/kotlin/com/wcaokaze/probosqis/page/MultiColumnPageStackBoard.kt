@@ -38,7 +38,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -53,7 +52,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import org.jetbrains.annotations.TestOnly
 import kotlin.math.roundToInt
 
@@ -265,19 +263,13 @@ private fun PageStack(
    ) {
       val density by rememberUpdatedState(LocalDensity.current)
 
-      val coroutineScope = rememberCoroutineScope()
-
       Column {
          @OptIn(ExperimentalMaterial3Api::class)
          TopAppBar(
             title = { Text("Home") },
             navigationIcon = {
                IconButton(
-                  onClick = {
-                     coroutineScope.launch {
-                        state.removeFromBoard()
-                     }
-                  }
+                  onClick = { state.removeFromBoard() }
                ) {
                   Icon(Icons.Default.Close, contentDescription = "Close")
                }
