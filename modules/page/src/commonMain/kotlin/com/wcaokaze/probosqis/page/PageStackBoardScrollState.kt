@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.pagestackboard
+package com.wcaokaze.probosqis.page
 
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.MutatorMutex

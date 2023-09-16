@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.pagestackboard
+package com.wcaokaze.probosqis.page
 
 import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
-import com.wcaokaze.probosqis.page.Page
-import com.wcaokaze.probosqis.page.PageStack
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.AfterTest

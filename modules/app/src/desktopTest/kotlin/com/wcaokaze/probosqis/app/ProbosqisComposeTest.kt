@@ -19,8 +19,8 @@ package com.wcaokaze.probosqis.app
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.PageStackBoardRepository
-import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
-import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
+import com.wcaokaze.probosqis.page.PageStackBoard
+import com.wcaokaze.probosqis.page.PageStackRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

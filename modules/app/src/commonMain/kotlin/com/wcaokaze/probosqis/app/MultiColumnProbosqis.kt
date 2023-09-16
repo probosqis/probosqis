@@ -49,8 +49,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.pagestackboard.MultiColumnPageStackBoard
-import com.wcaokaze.probosqis.page.pagestackboard.MultiColumnPageStackBoardState
+import com.wcaokaze.probosqis.page.MultiColumnPageStackBoard
+import com.wcaokaze.probosqis.page.MultiColumnPageStackBoardState
 import com.wcaokaze.probosqis.resources.Strings
 
 @Composable

@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.pagestackboard
+package com.wcaokaze.probosqis.page
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,13 +43,8 @@ import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.Page
-import com.wcaokaze.probosqis.page.PageComposableSwitcher
-import com.wcaokaze.probosqis.page.pageComposable
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.junit.Rule
@@ -66,65 +58,17 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class PageStackBoardComposeTest {
+class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
    @get:Rule
    val rule = createComposeRule()
 
-   private val pageStackBoardTag = "PageStackBoard"
-   private val defaultPageStackBoardWidth = 200.dp
-   private val defaultPageStackCount = 2
+   private val defaultPageStackBoardWidth = 100.dp
 
-   private class TestPage(val i: Int) : Page()
-
-   private val testPageComposable = pageComposable<TestPage>(
-      content = { page, pageStackState ->
-         Column {
-            val coroutineScope = rememberCoroutineScope()
-
-            Text(
-               "${page.i}",
-               modifier = Modifier.fillMaxWidth()
-            )
-
-            Button(
-               onClick = {
-                  coroutineScope.launch {
-                     val newPageStack = PageStack(
-                        PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                        TestPage(page.i + 100)
-                     )
-                     pageStackState.addColumn(newPageStack)
-                  }
-               }
-            ) {
-               Text("Add PageStack ${page.i}")
-            }
-
-            Button(
-               onClick = {
-                  coroutineScope.launch {
-                     pageStackState.removeFromBoard()
-                  }
-               }
-            ) {
-               Text("Remove PageStack ${page.i}")
-            }
-         }
-      },
-      header = { _, _ -> },
-      footer = null
-   )
-
-   private val pageComposableSwitcher = PageComposableSwitcher(
-      allPageComposables = listOf(
-         testPageComposable,
-      )
-   )
-
-   private lateinit var pageStackRepository: PageStackRepository
+   override lateinit var pageStackRepository: PageStackRepository
 
    @BeforeTest
    fun beforeTest() {
@@ -136,7 +80,8 @@ class PageStackBoardComposeTest {
    @Composable
    private fun SingleColumnPageStackBoard(
       state: SingleColumnPageStackBoardState,
-      width: Dp
+      width: Dp = defaultPageStackBoardWidth,
+      pageComposableSwitcher: PageComposableSwitcher = defaultPageComposableSwitcher
    ) {
       SingleColumnPageStackBoard(
          state,
@@ -149,205 +94,83 @@ class PageStackBoardComposeTest {
    }
 
    @Composable
-   private fun MultiColumnPageStackBoard(
-      state: MultiColumnPageStackBoardState,
-      width: Dp = defaultPageStackBoardWidth,
-      pageStackCount: Int = defaultPageStackCount
-   ) {
-      MultiColumnPageStackBoard(
-         state,
-         pageComposableSwitcher,
-         pageStackCount,
-         WindowInsets(0, 0, 0, 0),
-         modifier = Modifier
-            .width(width)
-            .testTag(pageStackBoardTag)
-      )
-   }
-
-   @Stable
-   private class RememberedPageStackBoardState<S : PageStackBoardState>(
-      val pageStackBoardState: S,
-      val coroutineScope: CoroutineScope
-   ) {
-      operator fun component1() = pageStackBoardState
-      operator fun component2() = coroutineScope
-   }
-
-   @Composable
    private fun rememberSingleColumnPageStackBoardState(
       pageStackCount: Int
    ): RememberedPageStackBoardState<SingleColumnPageStackBoardState> {
       val animCoroutineScope = rememberCoroutineScope()
       return remember(animCoroutineScope) {
-         val pageStackBoardState = createPageStackBoardState(
-            ::SingleColumnPageStackBoardState, animCoroutineScope, pageStackCount)
+         val pageStackBoardCache = createPageStackBoard(pageStackCount)
+         val pageStackBoardState = SingleColumnPageStackBoardState(
+            pageStackBoardCache, pageStackRepository, animCoroutineScope)
          RememberedPageStackBoardState(pageStackBoardState, animCoroutineScope)
       }
-   }
-
-   @Composable
-   private fun rememberMultiColumnPageStackBoardState(
-      pageStackCount: Int
-   ): RememberedPageStackBoardState<MultiColumnPageStackBoardState> {
-      val animCoroutineScope = rememberCoroutineScope()
-      return remember(animCoroutineScope) {
-         val pageStackBoardState = createPageStackBoardState(
-            ::MultiColumnPageStackBoardState, animCoroutineScope, pageStackCount)
-         RememberedPageStackBoardState(pageStackBoardState, animCoroutineScope)
-      }
-   }
-
-   private fun <S : PageStackBoardState> createPageStackBoardState(
-      constructor: (
-         WritableCache<PageStackBoard>, PageStackRepository, CoroutineScope
-      ) -> S,
-      animCoroutineScope: CoroutineScope,
-      pageStackCount: Int
-   ): S {
-      val rootRow = PageStackBoard.Row(
-         List(pageStackCount) { createPageStack(it) }.toImmutableList()
-      )
-
-      val pageStackBoard = PageStackBoard(rootRow)
-      val pageStackBoardCache = WritableCache(pageStackBoard)
-      return constructor(pageStackBoardCache, pageStackRepository, animCoroutineScope)
-   }
-
-   private fun createPageStack(i: Int): PageStackBoard.PageStack {
-      val page = TestPage(i)
-      val pageStack = PageStack(
-         PageStack.Id(i.toLong()),
-         page
-      )
-      val cache = pageStackRepository.savePageStack(pageStack)
-      return PageStackBoard.PageStack(cache)
-   }
-
-   private fun expectedPageStackWidth(
-      pageStackBoardWidth: Dp = defaultPageStackBoardWidth,
-      pageStackCount: Int = defaultPageStackCount
-   ): Dp {
-      return (pageStackBoardWidth - 16.dp) / pageStackCount - 16.dp
    }
 
    private fun expectedPageStackLeftPosition(
       indexInBoard: Int,
-      pageStackBoardWidth: Dp = defaultPageStackBoardWidth,
-      pageStackCount: Int = defaultPageStackCount
+      pageStackBoardWidth: Dp = defaultPageStackBoardWidth
    ): Dp {
-      val pageStackWidth = expectedPageStackWidth(
-         pageStackBoardWidth, pageStackCount)
-
-      return 16.dp + (pageStackWidth + 16.dp) * indexInBoard
+      return (pageStackBoardWidth + 16.dp) * indexInBoard
    }
 
    private fun expectedScrollOffset(
       index: Int,
-      pageStackBoardWidth: Dp = defaultPageStackBoardWidth,
-      pageStackCount: Int = defaultPageStackCount
+      pageStackBoardWidth: Dp = defaultPageStackBoardWidth
    ): Float {
       return with (rule.density) {
-         (pageStackBoardWidth - 16.dp).toPx() / pageStackCount * index
+         (pageStackBoardWidth + 16.dp).toPx() * index
       }
    }
 
    @Test
-   fun singleColumnPageStackBoard_layout() {
+   fun layout() {
       rule.setContent {
          val (pageStackBoardState, _)
                = rememberSingleColumnPageStackBoardState(pageStackCount = 2)
-         SingleColumnPageStackBoard(pageStackBoardState, width = 100.dp)
-      }
-
-      rule.onNodeWithText("0")
-         .assertLeftPositionInRootIsEqualTo(0.dp)
-         .assertWidthIsEqualTo(100.dp)
-   }
-
-   @Test
-   fun multiColumnPageStackBoard_layout() {
-      rule.setContent {
-         val (pageStackBoardState, _)
-               = rememberMultiColumnPageStackBoardState(pageStackCount = 2)
-         MultiColumnPageStackBoard(pageStackBoardState)
+         SingleColumnPageStackBoard(pageStackBoardState)
       }
 
       rule.onNodeWithText("0")
          .assertLeftPositionInRootIsEqualTo(expectedPageStackLeftPosition(0))
-         .assertWidthIsEqualTo(expectedPageStackWidth())
-      rule.onNodeWithText("1")
-         .assertLeftPositionInRootIsEqualTo(expectedPageStackLeftPosition(1))
-         .assertWidthIsEqualTo(expectedPageStackWidth())
+         .assertWidthIsEqualTo(defaultPageStackBoardWidth)
    }
 
    @Test
-   fun multiColumnPageStackBoard_layout_notEnoughPageStacks() {
-      rule.setContent {
-         val (pageStackBoardState, _)
-               = rememberMultiColumnPageStackBoardState(pageStackCount = 1)
-         MultiColumnPageStackBoard(pageStackBoardState)
-      }
-
-      rule.onNodeWithText("0")
-         .assertLeftPositionInRootIsEqualTo(expectedPageStackLeftPosition(0))
-         .assertWidthIsEqualTo(expectedPageStackWidth())
-   }
-
-   @Test
-   fun multiColumnPageStackBoard_layout_omitComposingInvisibles() {
-      val boardWidth = 100.dp
-
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+   fun layout_omitComposingInvisibles() {
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 5)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 3)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
             coroutineScope = remembered.coroutineScope
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState, boardWidth)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       rule.onNodeWithText("0").assertExists()
-      rule.onNodeWithText("1").assertExists()
-      rule.onNodeWithText("2").assertExists() // 2はギリギリ存在する（影が見えるため）
-      rule.onNodeWithText("3").assertDoesNotExist()
-      rule.onNodeWithText("4").assertDoesNotExist()
+      rule.onNodeWithText("1").assertDoesNotExist()
+      rule.onNodeWithText("2").assertDoesNotExist()
 
       coroutineScope.launch {
          pageStackBoardState.animateScroll(1, PositionInBoard.FirstVisible)
       }
 
-      rule.onNodeWithText("0").assertExists()
+      rule.onNodeWithText("0").assertDoesNotExist()
       rule.onNodeWithText("1").assertExists()
-      rule.onNodeWithText("2").assertExists()
-      rule.onNodeWithText("3").assertExists()
-      rule.onNodeWithText("4").assertDoesNotExist()
+      rule.onNodeWithText("2").assertDoesNotExist()
 
       coroutineScope.launch {
          pageStackBoardState.animateScroll(2, PositionInBoard.FirstVisible)
       }
 
       rule.onNodeWithText("0").assertDoesNotExist()
-      rule.onNodeWithText("1").assertExists() // 1はギリギリ存在する
-      rule.onNodeWithText("2").assertExists()
-      rule.onNodeWithText("3").assertExists()
-      rule.onNodeWithText("4").assertExists()
-
-      coroutineScope.launch {
-         pageStackBoardState.animateScroll(3, PositionInBoard.FirstVisible)
-      }
-
-      rule.onNodeWithText("0").assertDoesNotExist()
       rule.onNodeWithText("1").assertDoesNotExist()
       rule.onNodeWithText("2").assertExists()
-      rule.onNodeWithText("3").assertExists()
-      rule.onNodeWithText("4").assertExists()
    }
 
    @Test
-   fun multiColumnPageStackBoard_layout_mutatePageStackBoard() {
+   fun layout_mutatePageStackBoard() {
       fun assertPageNumbers(
          expectedPageNumbers: List<Int>,
          pageStackBoard: PageStackBoard
@@ -364,7 +187,7 @@ class PageStackBoardComposeTest {
 
       fun assertPageStackLayoutStatesExist(
          pageStackBoard: PageStackBoard,
-         layoutLogic: LayoutLogic
+         layoutLogic: SingleColumnLayoutLogic
       ) {
          val pageStackCount = pageStackBoard.pageStackCount
          val ids = (0 until pageStackCount)
@@ -378,13 +201,13 @@ class PageStackBoardComposeTest {
          }
       }
 
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 2)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 2)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       rule.runOnIdle {
@@ -511,20 +334,18 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+   fun scroll() {
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 3)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 3)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       rule.onNodeWithText("0")
          .assertLeftPositionInRootIsEqualTo(expectedPageStackLeftPosition(0))
-      rule.onNodeWithText("1")
-         .assertLeftPositionInRootIsEqualTo(expectedPageStackLeftPosition(1))
       rule.runOnIdle {
          assertEquals(0.0f, pageStackBoardState.scrollState.scrollOffset)
       }
@@ -541,8 +362,6 @@ class PageStackBoardComposeTest {
 
       rule.onNodeWithText("0").assertLeftPositionInRootIsEqualTo(
          expectedPageStackLeftPosition(0) - scrollAmount)
-      rule.onNodeWithText("1").assertLeftPositionInRootIsEqualTo(
-         expectedPageStackLeftPosition(1) - scrollAmount)
       rule.runOnIdle {
          assertEquals(
             with (rule.density) { scrollAmount.toPx() },
@@ -552,14 +371,14 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scrollEdge() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+   fun scrollEdge() {
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 3)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 2)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       rule.onNodeWithText("0")
@@ -612,18 +431,18 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scrollEdge_afterSizeChanged() {
+   fun scrollEdge_afterSizeChanged() {
       var boardWidth by mutableStateOf(200.dp)
 
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 3)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 2)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
             coroutineScope = remembered.coroutineScope
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState, boardWidth)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState, boardWidth)
       }
 
       coroutineScope.launch {
@@ -636,7 +455,7 @@ class PageStackBoardComposeTest {
          )
       }
 
-      boardWidth = 190.dp
+      boardWidth = 90.dp
       rule.onNodeWithText("1").assertLeftPositionInRootIsEqualTo(
          expectedPageStackLeftPosition(0, boardWidth))
       rule.runOnIdle {
@@ -668,10 +487,10 @@ class PageStackBoardComposeTest {
          )
       }
 
-      boardWidth = 200.dp
+      boardWidth = 100.dp
       rule.runOnIdle {
          assertEquals(
-            expectedScrollOffset(1, pageStackBoardWidth = 190.dp),
+            expectedScrollOffset(1, pageStackBoardWidth = 90.dp),
             pageStackBoardState.scrollState.scrollOffset
          )
       }
@@ -718,14 +537,14 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll_snap() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+   fun scroll_snap() {
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       rule.runOnIdle {
@@ -753,14 +572,14 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll_snap_tooFast() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+   fun scroll_snap_tooFast() {
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       rule.runOnIdle {
@@ -796,14 +615,14 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll_snap_edges() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+   fun scroll_snap_edges() {
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       rule.runOnIdle {
@@ -821,12 +640,12 @@ class PageStackBoardComposeTest {
          )
       }
 
-      repeat (2) {
+      repeat (3) {
          rule.onNodeWithTag(pageStackBoardTag).swipeLeft(20.dp)
       }
       rule.runOnIdle {
          assertEquals(
-            expectedScrollOffset(2),
+            expectedScrollOffset(3),
             pageStackBoardState.scrollState.scrollOffset
          )
       }
@@ -834,21 +653,21 @@ class PageStackBoardComposeTest {
       rule.onNodeWithTag(pageStackBoardTag).swipeLeft(20.dp)
       rule.runOnIdle {
          assertEquals(
-            expectedScrollOffset(2),
+            expectedScrollOffset(3),
             pageStackBoardState.scrollState.scrollOffset
          )
       }
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll_snap_afterImmobility() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+   fun scroll_snap_afterImmobility() {
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).swipeLeft(20.dp)
@@ -859,7 +678,7 @@ class PageStackBoardComposeTest {
          )
       }
 
-      val halfWidth = (expectedPageStackWidth() + 16.dp) / 2
+      val halfWidth = (defaultPageStackBoardWidth + 16.dp) / 2
 
       rule.onNodeWithTag(pageStackBoardTag)
          .swipeLeft(halfWidth - 2.dp, duration = 1000L, decayInterpolator)
@@ -899,50 +718,16 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_scroll_swipe_overMultiplePageStacks() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
-      rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
-         SideEffect {
-            pageStackBoardState = remembered.pageStackBoardState
-         }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
-      }
-
-      rule.runOnIdle {
-         assertEquals(0.0f, pageStackBoardState.scrollState.scrollOffset)
-      }
-
-      rule.onNodeWithTag(pageStackBoardTag)
-         .swipeLeft(expectedPageStackWidth() + 20.dp, duration = 400L)
-      rule.runOnIdle {
-         assertEquals(
-            expectedScrollOffset(2),
-            pageStackBoardState.scrollState.scrollOffset
-         )
-      }
-
-      rule.onNodeWithTag(pageStackBoardTag)
-         .swipeRight(expectedPageStackWidth() + 20.dp, duration = 400L)
-      rule.runOnIdle {
-         assertEquals(
-            expectedScrollOffset(0),
-            pageStackBoardState.scrollState.scrollOffset
-         )
-      }
-   }
-
-   @Test
    fun overscroll() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
             coroutineScope = remembered.coroutineScope
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       val scrollDistance = with (rule.density) { 32.dp.toPx() }
@@ -986,14 +771,14 @@ class PageStackBoardComposeTest {
             scrollBy(scrollDistance)
 
             assertEquals(
-               expectedScrollOffset(2),
+               expectedScrollOffset(3),
                pageStackBoardState.scrollState.scrollOffset,
                absoluteTolerance = 0.05f
             )
          }
 
          assertEquals(
-            expectedScrollOffset(2),
+            expectedScrollOffset(3),
             pageStackBoardState.scrollState.scrollOffset,
             absoluteTolerance = 0.05f
          )
@@ -1002,14 +787,14 @@ class PageStackBoardComposeTest {
             scrollBy(scrollDistance)
 
             assertEquals(
-               expectedScrollOffset(2) + scrollDistance,
+               expectedScrollOffset(3) + scrollDistance,
                pageStackBoardState.scrollState.scrollOffset,
                absoluteTolerance = 0.05f
             )
          }
 
          assertEquals(
-            expectedScrollOffset(2),
+            expectedScrollOffset(3),
             pageStackBoardState.scrollState.scrollOffset,
             absoluteTolerance = 0.05f
          )
@@ -1020,19 +805,15 @@ class PageStackBoardComposeTest {
 
    @Test
    fun animateScroll() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       lateinit var coroutineScope: CoroutineScope
-      var pageStackCount by mutableStateOf(2)
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
             coroutineScope = remembered.coroutineScope
          }
-         MultiColumnPageStackBoard(
-            remembered.pageStackBoardState,
-            pageStackCount = pageStackCount
-         )
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       class ScrollParameterType
@@ -1060,201 +841,17 @@ class PageStackBoardComposeTest {
 
       fun assertScrollOffset(leftmostPageStackIndex: Int) {
          rule.onNodeWithText("$leftmostPageStackIndex")
-            .assertLeftPositionInRootIsEqualTo(
-               expectedPageStackLeftPosition(0, pageStackCount = pageStackCount)
-            )
+            .assertLeftPositionInRootIsEqualTo(expectedPageStackLeftPosition(0))
 
          rule.runOnIdle {
             assertEquals(
-               expectedScrollOffset(
-                  leftmostPageStackIndex, pageStackCount = pageStackCount
-               ),
+               expectedScrollOffset(leftmostPageStackIndex),
                pageStackBoardState.scrollState.scrollOffset
             )
          }
       }
 
       for (parameterType in listOf(byIndex, byId)) {
-         // -------- pageStackCount = 2 --------
-         pageStackCount = 2
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.FirstVisible, byIndex)
-         }
-         assertScrollOffset(0)
-
-         // ==== FirstVisible ====
-
-         //  0]1 2]3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0[1 2]3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         coroutineScope.launch {
-            assertFails {
-               animateScroll(4, PositionInBoard.FirstVisible, parameterType)
-            }
-            assertFails {
-               animateScroll(-1, PositionInBoard.FirstVisible, parameterType)
-            }
-         }
-
-         // ==== LastVisible ====
-
-         //  0[1 2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0[1 2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         coroutineScope.launch {
-            assertFails {
-               pageStackBoardState.animateScroll(4, PositionInBoard.LastVisible)
-            }
-            assertFails {
-               pageStackBoardState.animateScroll(-1, PositionInBoard.LastVisible)
-            }
-         }
-
-         // ==== NearestVisible ====
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         //  0[1 2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0[1 2]3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         coroutineScope.launch {
-            assertFails {
-               animateScroll(4, PositionInBoard.NearestVisible, parameterType)
-            }
-            assertFails {
-               animateScroll(-1, PositionInBoard.NearestVisible, parameterType)
-            }
-         }
-
-         // -------- pageStackCount = 1 --------
-         pageStackCount = 1
          coroutineScope.launch {
             animateScroll(0, PositionInBoard.FirstVisible, byIndex)
          }
@@ -1440,21 +1037,21 @@ class PageStackBoardComposeTest {
    }
 
    @Test
-   fun multiColumnPageStackBoard_firstVisibleIndex() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+   fun firstVisibleIndex() {
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       rule.runOnIdle {
          assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
       }
 
-      val pageStackWidth = expectedScrollOffset(1)
+      val pageStackWidth = with (rule.density) { defaultPageStackBoardWidth.toPx() }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
          down(Offset(0.0f, 0.0f))
@@ -1472,10 +1069,16 @@ class PageStackBoardComposeTest {
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
          moveBy(Offset(-2.0f, 0.0f))
       }
-      rule.onNodeWithText("0")
+      rule.onNodeWithText("1")
          .fetchSemanticsNode()
          .boundsInRoot
-         .let { assertEquals(-1.0f, it.left + it.width, absoluteTolerance = 0.05f) }
+         .let {
+            assertEquals(
+               with (rule.density) { 16.dp.toPx() } - 1.0f,
+               it.left,
+               absoluteTolerance = 0.05f
+            )
+         }
       rule.runOnIdle {
          assertEquals(1, pageStackBoardState.firstVisiblePageStackIndex)
       }
@@ -1484,15 +1087,28 @@ class PageStackBoardComposeTest {
    // TODO: Row内のPageStackとかでもテストする
    @Test
    fun addPageStack_viaPageStackState() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
-      lateinit var coroutineScope: CoroutineScope
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 2)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 2)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
-            coroutineScope = remembered.coroutineScope
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         SingleColumnPageStackBoard(
+            remembered.pageStackBoardState,
+            pageComposableSwitcher = pageComposableSwitcher<TestPage> { page, pageStackState ->
+               Button(
+                  onClick = {
+                     val newPageStack = PageStack(
+                        PageStack.Id(pageStackState.pageStack.id.value + 100L),
+                        TestPage(page.i + 100)
+                     )
+                     pageStackState.addColumn(newPageStack)
+                  }
+               ) {
+                  Text("Add PageStack ${page.i}")
+               }
+            }
+         )
       }
 
       fun assertPageNumbers(expected: List<Int>, actual: PageStackBoard) {
@@ -1517,61 +1133,50 @@ class PageStackBoardComposeTest {
          )
       }
 
-      rule.onNodeWithText("Add PageStack 1").performClick()
-      rule.runOnIdle {
-         assertPageNumbers(
-            listOf(0, 1, 101),
-            pageStackBoardState.pageStackBoard
-         )
-
-         assertEquals(
-            expectedScrollOffset(1),
-            pageStackBoardState.scrollState.scrollOffset
-         )
-      }
-
-      coroutineScope.launch {
-         pageStackBoardState.animateScroll(PageStack.Id(0L))
-      }
-
+      rule.mainClock.autoAdvance = false
       rule.onNodeWithText("Add PageStack 0").performClick()
       rule.runOnIdle {
          assertPageNumbers(
-            listOf(0, 100, 1, 101),
+            listOf(0, 100, 1),
             pageStackBoardState.pageStackBoard
          )
 
+         // ボタン押下直後、まだBoardは動いていない
          assertEquals(
             expectedScrollOffset(0),
             pageStackBoardState.scrollState.scrollOffset
          )
+
+         // 挿入されるPageStackは透明
+         assertEquals(0.0f, pageStackBoardState.layout.pageStackLayout(1).alpha)
       }
-
-      rule.onNodeWithText("Add PageStack 100").performClick()
+      // PageStackひとつ分スクロールされるまで進める
+      rule.mainClock.advanceTimeUntil {
+         expectedScrollOffset(1) == pageStackBoardState.scrollState.scrollOffset
+      }
       rule.runOnIdle {
-         assertPageNumbers(
-            listOf(0, 100, 200, 1, 101),
-            pageStackBoardState.pageStackBoard
-         )
-
-         assertEquals(
-            expectedScrollOffset(1),
-            pageStackBoardState.scrollState.scrollOffset
-         )
+         // PageStack挿入アニメーションが開始されているがまだ終わっていない
+         assertNotEquals(1.0f, pageStackBoardState.layout.pageStackLayout(1).alpha)
+      }
+      // アニメーション終了まで進める
+      rule.mainClock.autoAdvance = true
+      rule.runOnIdle {
+         // 挿入アニメーション終了後不透明度は100%
+         assertEquals(1.0f, pageStackBoardState.layout.pageStackLayout(1).alpha)
       }
    }
 
    @Test
    fun removePageStack_viaPageStackState() {
-      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
-         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 6)
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 6)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
             coroutineScope = remembered.coroutineScope
          }
-         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
       fun assertPageNumbers(expected: List<Int>, actual: PageStackBoard) {
@@ -1596,23 +1201,10 @@ class PageStackBoardComposeTest {
          )
       }
 
-      rule.onNodeWithText("Remove PageStack 1").performClick()
-      rule.runOnIdle {
-         assertPageNumbers(
-            listOf(0, 2, 3, 4, 5),
-            pageStackBoardState.pageStackBoard
-         )
-
-         assertEquals(
-            expectedScrollOffset(0),
-            pageStackBoardState.scrollState.scrollOffset
-         )
-      }
-
       rule.onNodeWithText("Remove PageStack 0").performClick()
       rule.runOnIdle {
          assertPageNumbers(
-            listOf(2, 3, 4, 5),
+            listOf(1, 2, 3, 4, 5),
             pageStackBoardState.pageStackBoard
          )
 
@@ -1626,10 +1218,10 @@ class PageStackBoardComposeTest {
          pageStackBoardState.animateScroll(1, PositionInBoard.FirstVisible)
       }
 
-      rule.onNodeWithText("Remove PageStack 3").performClick()
+      rule.onNodeWithText("Remove PageStack 2").performClick()
       rule.runOnIdle {
          assertPageNumbers(
-            listOf(2, 4, 5),
+            listOf(1, 3, 4, 5),
             pageStackBoardState.pageStackBoard
          )
 
@@ -1639,28 +1231,19 @@ class PageStackBoardComposeTest {
          )
       }
 
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(3, PositionInBoard.FirstVisible)
+      }
+
       rule.onNodeWithText("Remove PageStack 5").performClick()
       rule.runOnIdle {
          assertPageNumbers(
-            listOf(2, 4),
+            listOf(1, 3, 4),
             pageStackBoardState.pageStackBoard
          )
 
          assertEquals(
-            expectedScrollOffset(0),
-            pageStackBoardState.scrollState.scrollOffset
-         )
-      }
-
-      rule.onNodeWithText("Remove PageStack 4").performClick()
-      rule.runOnIdle {
-         assertPageNumbers(
-            listOf(2),
-            pageStackBoardState.pageStackBoard
-         )
-
-         assertEquals(
-            expectedScrollOffset(0),
+            expectedScrollOffset(2),
             pageStackBoardState.scrollState.scrollOffset
          )
       }

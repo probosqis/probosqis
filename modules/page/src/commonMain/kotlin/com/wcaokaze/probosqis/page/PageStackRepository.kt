@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.pagestackboard
+package com.wcaokaze.probosqis.page
 
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.page.Page
-import com.wcaokaze.probosqis.page.PageStack
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.PolymorphicModuleBuilder

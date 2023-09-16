@@ -14,23 +14,38 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.page.pagestackboard
+package com.wcaokaze.probosqis.page
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.compose.asMutableState
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.PageStackState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
@@ -40,7 +55,7 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 internal class PageStackCacheSerializer(
    private val pageStackRepository: PageStackRepository
@@ -312,12 +327,7 @@ sealed class PageStackBoardState(
 
    internal val scrollState = PageStackBoardScrollState()
 
-   internal val layout = LayoutLogic(
-      pageStackBoard,
-      pageStackStateConstructor = { pageStackCache,->
-         PageStackState(pageStackCache, pageStackBoardState = this)
-      }
-   )
+   internal abstract val layout: PageStackBoardLayoutLogic
 
    abstract val firstVisiblePageStackIndex: Int
 
@@ -333,8 +343,8 @@ sealed class PageStackBoardState(
    ) {
       val pageStackLayout = layout.pageStackLayout(pageStackIndex)
       pageStackLayout.awaitInitialized()
-      val targetScrollOffset
-            = getScrollOffset(pageStackLayout, targetPositionInBoard)
+      val targetScrollOffset = layout.getScrollOffset(
+         pageStackLayout, targetPositionInBoard, scrollState.scrollOffset)
 
       scrollState.animateScrollBy(
          targetScrollOffset - scrollState.scrollOffset, animationSpec)
@@ -348,8 +358,8 @@ sealed class PageStackBoardState(
       val pageStackLayout = layout.pageStackLayout(pageStackId)
          ?: throw IllegalArgumentException("PageStack not found: $pageStackId")
       pageStackLayout.awaitInitialized()
-      val targetScrollOffset
-            = getScrollOffset(pageStackLayout, targetPositionInBoard)
+      val targetScrollOffset = layout.getScrollOffset(
+         pageStackLayout, targetPositionInBoard, scrollState.scrollOffset)
 
       scrollState.animateScrollBy(
          targetScrollOffset - scrollState.scrollOffset, animationSpec)
@@ -358,50 +368,23 @@ sealed class PageStackBoardState(
    internal fun getScrollOffset(
       pageStackIndex: Int,
       targetPositionInBoard: PositionInBoard
-   ): Int = getScrollOffset(
+   ): Int = layout.getScrollOffset(
       pageStackLayoutState = layout.pageStackLayout(pageStackIndex),
-      targetPositionInBoard
+      targetPositionInBoard,
+      scrollState.scrollOffset
    )
 
    internal fun getScrollOffset(
       pageStackId: PageStack.Id,
       targetPositionInBoard: PositionInBoard
-   ): Int = getScrollOffset(
+   ): Int = layout.getScrollOffset(
       pageStackLayoutState = layout.pageStackLayout(pageStackId)
          ?: throw IllegalArgumentException("PageStack not found: $pageStackId"),
-      targetPositionInBoard
+      targetPositionInBoard,
+      scrollState.scrollOffset
    )
 
-   /**
-    * 指定したPageStackが指定した位置にあるときの
-    * [scrollOffset][PageStackBoardScrollState.scrollOffset]。
-    * ただし実際にその位置までスクロールできるとは限らない。
-    */
-   internal fun getScrollOffset(
-      pageStackLayoutState: LayoutLogic.PageStackLayoutState,
-      targetPositionInBoard: PositionInBoard
-   ): Int {
-      when (targetPositionInBoard) {
-         PositionInBoard.FirstVisible -> {
-            return pageStackLayoutState.position.x - layout.pageStackPadding * 2
-         }
-         PositionInBoard.LastVisible -> {
-            return pageStackLayoutState.position.x - (
-                  layout.pageStackBoardWidth - pageStackLayoutState.width
-                  - layout.pageStackPadding * 2
-            )
-         }
-         PositionInBoard.NearestVisible -> {
-            return scrollState.scrollOffset.roundToInt()
-               .coerceIn(
-                  getScrollOffset(pageStackLayoutState, PositionInBoard.LastVisible),
-                  getScrollOffset(pageStackLayoutState, PositionInBoard.FirstVisible)
-               )
-         }
-      }
-   }
-
-   suspend fun addColumn(index: Int, pageStack: PageStack) {
+   fun addColumn(index: Int, pageStack: PageStack): Job = animCoroutineScope.launch {
       val pageStackCache = pageStackRepository.savePageStack(pageStack)
 
       pageStackBoard = PageStackBoard(
@@ -411,19 +394,17 @@ sealed class PageStackBoardState(
          )
       )
 
-      coroutineScope {
-         launch {
-            animateScroll(pageStack.id, PositionInBoard.NearestVisible,
-               layout.pageStackPositionAnimSpec())
-         }
-         launch {
-            layout.pageStackLayout(pageStack.id)
-               ?.animateInsertion(pageStackInsertionAnimOffset)
-         }
+      launch {
+         animateScroll(pageStack.id, PositionInBoard.NearestVisible,
+            layout.pageStackPositionAnimSpec())
+      }
+      launch {
+         layout.pageStackLayout(pageStack.id)
+            ?.animateInsertion(pageStackInsertionAnimOffset)
       }
    }
 
-   suspend fun removePageStack(id: PageStack.Id) {
+   fun removePageStack(id: PageStack.Id): Job = animCoroutineScope.launch {
       layout.pageStackLayout(id)
          ?.animateRemoving(pageStackInsertionAnimOffset)
 
@@ -442,5 +423,246 @@ sealed class PageStackBoardState(
 
       layout.layout(animCoroutineScope, pageStackBoardWidth, pageStackCount,
          pageStackPadding, scrollState)
+   }
+}
+
+internal abstract class PageStackBoardLayoutLogic(
+   pageStackBoard: PageStackBoard,
+   private val pageStackStateConstructor: (WritableCache<PageStack>) -> PageStackState
+) : Iterable<PageStackBoardLayoutLogic.PageStackLayoutState> {
+   @Stable
+   internal class PageStackLayoutState(val pageStackState: PageStackState) {
+      val pageStackId = pageStackState.pageStack.id
+
+      /**
+       * [PageStackBoardState.pageStackBoard]をセットして生成された直後の
+       * インスタンスの場合 `false`。[layout]が呼ばれて位置とサイズが決まったあと
+       * `true` になる
+       */
+      var isInitialized by mutableStateOf(false)
+         internal set
+
+      private val yOffsetAnimatable = Animatable(0.0f)
+      internal suspend fun animateInsertion(yOffset: Float) {
+         coroutineScope {
+            alphaAnimatable.snapTo(0.0f)
+            yOffsetAnimatable.snapTo(yOffset)
+
+            delay(200.milliseconds)
+
+            launch {
+               alphaAnimatable.animateTo(1.0f, tween(durationMillis = 200))
+            }
+            launch {
+               yOffsetAnimatable.animateTo(0.0f, tween(durationMillis = 200))
+            }
+         }
+      }
+      internal suspend fun animateRemoving(yOffset: Float) {
+         coroutineScope {
+            launch {
+               alphaAnimatable.animateTo(
+                  0.0f, tween(durationMillis = 200, easing = LinearEasing))
+            }
+            launch {
+               yOffsetAnimatable.animateTo(
+                  yOffset, tween(durationMillis = 200, easing = LinearEasing))
+            }
+         }
+      }
+
+      private lateinit var positionAnimatable: Animatable<IntOffset, *>
+      val position: IntOffset get() {
+         require(isInitialized)
+         val (x, y) = positionAnimatable.value
+         return IntOffset(x, y + yOffsetAnimatable.value.toInt())
+      }
+
+      private lateinit var widthAnimatable: Animatable<Int, *>
+      val width: Int get() {
+         require(isInitialized)
+         return widthAnimatable.value
+      }
+
+      private val alphaAnimatable = Animatable(1.0f)
+      val alpha: Float get() = alphaAnimatable.value
+
+      internal fun update(
+         position: IntOffset,
+         width: Int,
+         animCoroutineScope: CoroutineScope,
+         positionAnimationSpec: AnimationSpec<IntOffset>
+      ) {
+         if (!isInitialized) {
+            // 初回コンポジション。アニメーション不要
+            initialize(position, width)
+         } else {
+            // リコンポジション。位置か幅が変化してる場合アニメーションする
+
+            val targetPosition = positionAnimatable.targetValue
+            if (targetPosition != position) {
+               animCoroutineScope.launch {
+                  positionAnimatable
+                     .animateTo(position, positionAnimationSpec)
+               }
+            }
+
+            val targetWidth = widthAnimatable.targetValue
+            if (targetWidth != width) {
+               animCoroutineScope.launch {
+                  widthAnimatable.animateTo(width)
+               }
+            }
+         }
+      }
+
+      internal suspend fun awaitInitialized() {
+         snapshotFlow { isInitialized }
+            .filter { it }
+            .first()
+      }
+
+      private fun initialize(position: IntOffset, width: Int) {
+         assert(!isInitialized)
+         positionAnimatable = Animatable(position, IntOffset.VectorConverter)
+         widthAnimatable = Animatable(width, Int.VectorConverter)
+         isInitialized = true
+      }
+   }
+
+   /** [MultiColumnPageStackBoardState.pageStackBoard]と同じ順 */
+   protected var list: ImmutableList<PageStackLayoutState>
+         by mutableStateOf(persistentListOf())
+
+   protected var map: ImmutableMap<PageStack.Id, PageStackLayoutState>
+         by mutableStateOf(persistentMapOf())
+
+   private var maxScrollOffsetAnimJob: Job
+         by mutableStateOf(Job().apply { complete() })
+   private var maxScrollOffsetAnimTarget by mutableStateOf(0.0f)
+
+   init {
+      recreateLayoutState(pageStackBoard)
+   }
+
+   override operator fun iterator(): Iterator<PageStackLayoutState>
+         = list.iterator()
+
+   /**
+    * @param animCoroutineScope
+    *   PageStackの移動や幅変更があったときのアニメーションを再生するための
+    *   CoroutineScope
+    */
+   internal abstract fun layout(
+      animCoroutineScope: CoroutineScope,
+      pageStackBoardWidth: Int,
+      pageStackCount: Int,
+      pageStackPadding: Int,
+      scrollState: PageStackBoardScrollState
+   )
+
+   fun pageStackLayout(id: PageStack.Id): PageStackLayoutState? = map[id]
+
+   fun pageStackLayout(index: Int): PageStackLayoutState = list[index]
+
+   /**
+    * 指定したPageStackが指定した位置にあるときの
+    * [scrollOffset][PageStackBoardScrollState.scrollOffset]。
+    * ただし実際にその位置までスクロールできるとは限らない。
+    */
+   internal abstract fun getScrollOffset(
+      pageStackLayoutState: PageStackLayoutState,
+      targetPositionInBoard: PositionInBoard,
+      currentScrollOffset: Float
+   ): Int
+
+   internal fun <T> pageStackPositionAnimSpec() = spring<T>()
+
+   internal fun recreateLayoutState(pageStackBoard: PageStackBoard) {
+      val prevLayoutList = list
+      val prevLayoutMap = map
+
+      // 再生成が不要な可能性もあるため、必要になるまでは生成しないまま進める
+      lateinit var resultList: MutableList<PageStackLayoutState>
+      lateinit var resultMap: MutableMap<PageStack.Id, PageStackLayoutState>
+      var i = 0
+
+      fun prepareResults() {
+         resultList = prevLayoutList.subList(0, i).toMutableList()
+         resultMap = mutableMapOf()
+         for (l in resultList) {
+            resultMap[l.pageStackId] = l
+         }
+         i = -1
+      }
+
+      for (pageStackElement in pageStackBoard.sequence()) {
+         val pageStack = pageStackElement.cache.value
+
+         var layoutState = if (i >= 0) {
+            if (prevLayoutList.getOrNull(i)?.pageStackId == pageStack.id) {
+               prevLayoutList[i++]
+            } else {
+               prepareResults()
+               prevLayoutMap[pageStack.id]
+            }
+         } else {
+            prevLayoutMap[pageStack.id]
+         }
+
+         if (i < 0) {
+            if (layoutState == null) {
+               val pageStackState = pageStackStateConstructor(pageStackElement.cache)
+               layoutState = PageStackLayoutState(pageStackState)
+            }
+
+            resultList += layoutState
+            resultMap[pageStack.id] = layoutState
+         }
+      }
+
+      when {
+         i < 0 -> {
+            list = resultList.toImmutableList()
+            map = resultMap.toImmutableMap()
+         }
+         i < prevLayoutList.size -> {
+            prepareResults()
+            list = resultList.toImmutableList()
+            map = resultMap.toImmutableMap()
+         }
+      }
+   }
+
+   protected fun updateMaxScrollOffset(
+      scrollState: PageStackBoardScrollState,
+      maxScrollOffset: Float,
+      animCoroutineScope: CoroutineScope
+   ) {
+      if (!maxScrollOffsetAnimJob.isActive
+         || maxScrollOffsetAnimTarget != maxScrollOffset)
+      {
+         if (scrollState.scrollOffset <= maxScrollOffset) {
+            // スクロール位置の調整不要なためmaxScrollOffsetのセットだけ行う
+            scrollState.setMaxScrollOffset(maxScrollOffset)
+         } else {
+            // maxScrollOffsetまでスクロールアニメーションする
+            maxScrollOffsetAnimTarget = maxScrollOffset
+            maxScrollOffsetAnimJob = animCoroutineScope.launch {
+               scrollState.scroll(enableOverscroll = true) {
+                  scrollState.setMaxScrollOffset(maxScrollOffset)
+
+                  var prevValue = scrollState.scrollOffset
+                  animate(
+                     initialValue = prevValue,
+                     targetValue = maxScrollOffset,
+                     animationSpec = pageStackPositionAnimSpec()
+                  ) { value, _ ->
+                     prevValue += scrollBy(value - prevValue)
+                  }
+               }
+            }
+         }
+      }
    }
 }

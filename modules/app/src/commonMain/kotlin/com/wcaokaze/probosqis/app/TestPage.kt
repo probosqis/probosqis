@@ -21,14 +21,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.Page
 import com.wcaokaze.probosqis.page.pageComposable
-import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -44,14 +42,10 @@ fun TestPage(page: TestPage, pageStackState: PageStackState) {
          fontSize = 48.sp
       )
 
-      val coroutineScope = rememberCoroutineScope()
-
       Button(
          onClick = {
-            coroutineScope.launch {
-               val newPageStack = PageStack(TestPage(page.i + 1))
-               pageStackState.addColumn(newPageStack)
-            }
+            val newPageStack = PageStack(TestPage(page.i + 1))
+            pageStackState.addColumn(newPageStack)
          }
       ) {
          Text("Add Column")

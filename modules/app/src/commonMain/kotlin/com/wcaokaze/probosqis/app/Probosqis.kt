@@ -27,8 +27,8 @@ import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.ext.kotlin.datetime.BehindClock
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackBoardRepository
-import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
-import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
+import com.wcaokaze.probosqis.page.PageStackBoard
+import com.wcaokaze.probosqis.page.PageStackRepository
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
