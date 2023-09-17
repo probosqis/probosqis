@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.page
 
-import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.*
@@ -24,18 +23,21 @@ import kotlin.test.*
 class PageStackTest {
    @Serializable
    @SerialName("com.wcaokaze.probosqis.page.IntPage")
-   class IntPage(val i: Int) : Page()
+   class IntPage(override val id: Id, val i: Int) : Page()
 
    @Serializable
    @SerialName("com.wcaokaze.probosqis.page.StringPage")
-   class StringPage(val s: String) : Page()
+   class StringPage(override val id: Id, val s: String) : Page()
 
    @Test
    fun add_pop() {
-      var pageStack = PageStack(IntPage(0), MockClock())
-      pageStack = pageStack.added(StringPage("1"))
-      pageStack = pageStack.added(StringPage("2"))
-      pageStack = pageStack.added(IntPage(3))
+      var pageStack = PageStack(
+         PageStack.Id(0L),
+         IntPage(Page.Id(0L), 0)
+      )
+      pageStack = pageStack.added(StringPage(Page.Id(1L), "1"))
+      pageStack = pageStack.added(StringPage(Page.Id(2L), "2"))
+      pageStack = pageStack.added(IntPage(Page.Id(3L), 3))
 
       var head = pageStack.head
       assertIs<IntPage>(head)
@@ -62,8 +64,13 @@ class PageStackTest {
 
    @Test
    fun immutability() {
-      var pageStack = PageStack(IntPage(0), MockClock())
-      pageStack = pageStack.added(StringPage("1"))
+      var pageStack = PageStack(
+         PageStack.Id(0L),
+         IntPage(Page.Id(0L), 0)
+      )
+      pageStack = pageStack.added(
+         StringPage(Page.Id(1L), "1")
+      )
 
       val tail = pageStack.tailOrNull()
       assertNotNull(tail)

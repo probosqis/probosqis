@@ -1371,7 +1371,10 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
                   onClick = {
                      val newPageStack = PageStack(
                         PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                        TestPage(page.i + 100)
+                        TestPage(
+                           Page.Id(page.id.value + 100L),
+                           page.i + 100
+                        )
                      )
                      pageStackState.addColumn(newPageStack)
                   }

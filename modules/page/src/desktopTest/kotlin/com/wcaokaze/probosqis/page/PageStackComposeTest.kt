@@ -19,7 +19,6 @@ package com.wcaokaze.probosqis.page
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.Test
@@ -41,10 +40,10 @@ class PageStackComposeTest {
 
    @Test
    fun onlyForefrontComposableIsCalled() {
-      val page1 = SpyPage()
-      val page2 = SpyPage()
+      val page1 = SpyPage(Page.Id(0L))
+      val page2 = SpyPage(Page.Id(1L))
 
-      var pageStack = PageStack(page1, MockClock())
+      var pageStack = PageStack(PageStack.Id(0L), page1)
       pageStack = pageStack.added(page2)
 
       val pageStackState = PageStackState(
@@ -64,12 +63,12 @@ class PageStackComposeTest {
 
    @Test
    fun pageTransition() {
-      val page1 = SpyPage()
-      val page2 = SpyPage()
-      val page3 = SpyPage()
+      val page1 = SpyPage(Page.Id(0L))
+      val page2 = SpyPage(Page.Id(1L))
+      val page3 = SpyPage(Page.Id(2L))
 
       val pageStackState by derivedStateOf {
-         var pageStack = PageStack(page1, MockClock())
+         var pageStack = PageStack(PageStack.Id(0L), page1)
          pageStack = pageStack.added(page2)
 
          PageStackState(

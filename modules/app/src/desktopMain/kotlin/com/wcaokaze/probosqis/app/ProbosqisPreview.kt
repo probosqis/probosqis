@@ -20,7 +20,7 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
+import com.wcaokaze.probosqis.page.Page
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackBoardRepository
@@ -33,8 +33,6 @@ import kotlinx.collections.immutable.persistentListOf
 private fun ProbosqisPreview() {
    val di = remember {
       object : DI {
-         private val clock = MockClock()
-
          override val pageComposableSwitcher = PageComposableSwitcher(
             allPageComposables = persistentListOf(
                testPageComposable,
@@ -46,7 +44,8 @@ private fun ProbosqisPreview() {
                   = throw NotImplementedError()
 
             override fun loadPageStackBoard(): WritableCache<PageStackBoard> {
-               val pageStack = PageStack(TestPage(0), clock)
+               val page = TestPage(Page.Id(0L), 0)
+               val pageStack = PageStack(PageStack.Id(0L), page)
                val pageStackCache = WritableCache(pageStack)
                val children = persistentListOf(
                   PageStackBoard.PageStack(pageStackCache),

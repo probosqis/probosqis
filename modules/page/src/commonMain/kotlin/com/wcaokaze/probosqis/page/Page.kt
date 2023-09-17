@@ -17,10 +17,20 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.Composable
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
 @Serializable
-abstract class Page
+abstract class Page {
+   abstract val id: Id
+
+   @Serializable
+   @JvmInline
+   value class Id(val value: Long) {
+      constructor(clock: Clock = Clock.System)
+            : this(clock.now().toEpochMilliseconds())
+   }
+}
 
 @Composable
 internal fun <P : Page> PageContent(

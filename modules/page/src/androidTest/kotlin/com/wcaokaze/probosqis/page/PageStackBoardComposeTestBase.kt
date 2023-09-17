@@ -32,7 +32,7 @@ abstract class PageStackBoardComposeTestBase {
 
    protected val pageStackBoardTag = "PageStackBoard"
 
-   protected class TestPage(val i: Int) : Page()
+   protected class TestPage(override val id: Id, val i: Int) : Page()
 
    protected inline fun <reified P : Page> pageComposableSwitcher(
       noinline pageComposable: @Composable (P, PageStackState) -> Unit,
@@ -59,7 +59,10 @@ abstract class PageStackBoardComposeTestBase {
                   onClick = {
                      val newPageStack = PageStack(
                         PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                        TestPage(page.i + 100)
+                        TestPage(
+                           Page.Id(page.id.value + 100L),
+                           page.i + 100
+                        )
                      )
                      pageStackState.addColumn(newPageStack)
                   }
@@ -88,7 +91,7 @@ abstract class PageStackBoardComposeTestBase {
    }
 
    protected fun createPageStack(i: Int): PageStackBoard.PageStack {
-      val page = TestPage(i)
+      val page = TestPage(Page.Id(i.toLong()), i)
       val pageStack = PageStack(
          PageStack.Id(i.toLong()),
          page

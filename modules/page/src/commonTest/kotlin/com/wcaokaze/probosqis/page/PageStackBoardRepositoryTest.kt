@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.page
 
-import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -40,11 +39,17 @@ expect fun deleteRepositories(
 class PageStackBoardRepositoryTest {
    @Serializable
    @SerialName("com.wcaokaze.probosqis.page.IntPage")
-   class IntPage(val i: Int) : Page()
+   class IntPage(
+      override val id: Id,
+      val i: Int
+   ) : Page()
 
    @Serializable
    @SerialName("com.wcaokaze.probosqis.page.StringPage")
-   class StringPage(val s: String) : Page()
+   class StringPage(
+      override val id: Id,
+      val s: String
+   ) : Page()
 
    private lateinit var pageStackRepository: PageStackRepository
    private lateinit var pageStackBoardRepository: PageStackBoardRepository
@@ -70,9 +75,9 @@ class PageStackBoardRepositoryTest {
 
    @Test
    fun readWrite() {
-      val intPage = IntPage(42)
-      val stringPage = StringPage("wcaokaze")
-      var pageStack = PageStack(intPage, MockClock())
+      val intPage = IntPage(Page.Id(0L), 42)
+      val stringPage = StringPage(Page.Id(1L), "wcaokaze")
+      var pageStack = PageStack(PageStack.Id(0L), intPage)
       pageStack = pageStack.added(stringPage)
 
       val pageStackCache = pageStackRepository.savePageStack(pageStack)
