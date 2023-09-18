@@ -31,15 +31,15 @@ class PageComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
-   private class PageA(override val id: Id) : Page()
-   private class PageB(override val id: Id) : Page()
+   private class PageA : Page()
+   private class PageB : Page()
 
    @Test
    fun composableCalled() {
       var pageARecompositionCount = 0
       var pageBRecompositionCount = 0
 
-      val pageA = PageA(Page.Id(0L))
+      val pageA = PageA()
 
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
@@ -76,7 +76,7 @@ class PageComposeTest {
 
    @Test
    fun argument() {
-      val page = PageA(Page.Id(0L))
+      val page = PageA()
 
       var argument: PageA? = null
 

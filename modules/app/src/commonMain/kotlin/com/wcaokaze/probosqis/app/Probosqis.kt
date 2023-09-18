@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.ext.kotlin.datetime.BehindClock
-import com.wcaokaze.probosqis.page.Page
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageStackBoard
@@ -78,14 +77,8 @@ private fun createDefaultPageStacks(
    pageStackRepository: PageStackRepository
 ): ImmutableList<PageStackBoard.LayoutElement> {
    return sequenceOf(
-         PageStack(
-            TestPage(Page.Id(BehindClock(Duration.ZERO)), 0),
-            BehindClock(Duration.ZERO)
-         ),
-         PageStack(
-            TestPage(Page.Id(BehindClock(1.milliseconds)), 1),
-            BehindClock(1.milliseconds)
-         ),
+         PageStack(TestPage(0), BehindClock(Duration.ZERO)),
+         PageStack(TestPage(1), BehindClock(1.milliseconds)),
       )
       .map { pageStackRepository.savePageStack(it) }
       .map { PageStackBoard.PageStack(it) }

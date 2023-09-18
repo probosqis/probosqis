@@ -16,13 +16,9 @@
 
 package com.wcaokaze.probosqis.page
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 
-internal class SpyPage(override val id: Id) : Page() {
+internal class SpyPage : Page() {
    var recompositionCount: Int by mutableStateOf(0)
 }
 

@@ -1100,10 +1100,7 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
                   onClick = {
                      val newPageStack = PageStack(
                         PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                        TestPage(
-                           Page.Id(page.id.value + 100L),
-                           page.i + 100
-                        )
+                        TestPage(page.i + 100)
                      )
                      pageStackState.addColumn(newPageStack)
                   }

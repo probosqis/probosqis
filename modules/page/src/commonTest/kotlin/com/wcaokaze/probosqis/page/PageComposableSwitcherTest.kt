@@ -22,9 +22,9 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class PageComposableSwitcherTest {
-   private class PageA(override val id: Id) : Page()
-   private class PageB(override val id: Id) : Page()
-   private class PageC(override val id: Id) : Page()
+   private class PageA : Page()
+   private class PageB : Page()
+   private class PageC : Page()
 
    @Test
    fun getMetadata() {
@@ -43,17 +43,17 @@ class PageComposableSwitcherTest {
          )
       )
 
-      val pageA = PageA(Page.Id(0L))
+      val pageA = PageA()
       val pageComposableA = pageComposableSwitcher[pageA]
       assertNotNull(pageComposableA)
       assertEquals(pageComposableA.pageClass, PageA::class)
 
-      val pageB = PageB(Page.Id(1L))
+      val pageB = PageB()
       val pageComposableB = pageComposableSwitcher[pageB]
       assertNotNull(pageComposableB)
       assertEquals(pageComposableB.pageClass, PageB::class)
 
-      val pageC = PageC(Page.Id(2L))
+      val pageC = PageC()
       val pageComposableC = pageComposableSwitcher[pageC]
       assertNull(pageComposableC)
    }

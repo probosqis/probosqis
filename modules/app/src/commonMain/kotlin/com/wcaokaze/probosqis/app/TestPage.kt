@@ -32,10 +32,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.app.TestPage")
-class TestPage(
-   override val id: Id,
-   val i: Int
-) : Page()
+class TestPage(val i: Int) : Page()
 
 @Composable
 fun TestPage(page: TestPage, pageStackState: PageStackState) {
@@ -47,8 +44,7 @@ fun TestPage(page: TestPage, pageStackState: PageStackState) {
 
       Button(
          onClick = {
-            val newPage = TestPage(Page.Id(), page.i + 1)
-            val newPageStack = PageStack(newPage)
+            val newPageStack = PageStack(TestPage(page.i + 1))
             pageStackState.addColumn(newPageStack)
          }
       ) {

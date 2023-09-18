@@ -31,11 +31,11 @@ import kotlin.test.assertTrue
 
 class PageStackBoardTest {
    @Serializable
-   private class PageImpl(override val id: Id, val i: Int) : Page()
+   private class PageImpl(val i: Int) : Page()
 
    private fun createPageStackElement(i: Int): PageStackBoard.PageStack {
-      val page = PageImpl(Page.Id(i.toLong()), i)
-      val pageStack = PageStack(PageStack.Id(i.toLong()), page)
+      val page = PageImpl(i)
+      val pageStack = PageStack(page)
       val cache = WritableCache(pageStack)
       return PageStackBoard.PageStack(cache)
    }
@@ -626,9 +626,7 @@ class PageStackBoardTest {
    private fun Column(vararg children: PageStackBoard.LayoutElement)
          = PageStackBoard.Column(children.toList())
    private fun PageStack(id: Long): PageStackBoard.PageStack {
-      // XXX: Page IDがカブるがこのテストではIDを使用しない
-      val page = PageImpl(Page.Id(0L), 0)
-      val pageStack = PageStack(PageStack.Id(id), page)
+      val pageStack = PageStack(PageStack.Id(id), PageImpl(0))
       val pageStackCache = WritableCache(pageStack)
       return PageStackBoard.PageStack(pageStackCache)
    }
