@@ -24,16 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.ext.kotlin.datetime.BehindClock
 import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageStackBoard
+import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageStackRepository
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun Probosqis(
@@ -77,10 +74,27 @@ private fun createDefaultPageStacks(
    pageStackRepository: PageStackRepository
 ): ImmutableList<PageStackBoard.LayoutElement> {
    return sequenceOf(
-         PageStack(TestPage(0), BehindClock(Duration.ZERO)),
-         PageStack(TestPage(1), BehindClock(1.milliseconds)),
+         PageStack(
+            PageStack.Id(0L),
+            PageStack.SavedPageState(
+               PageStack.PageId(0L),
+               TestPage(0)
+            )
+         ),
+         PageStack(
+            PageStack.Id(1L),
+            PageStack.SavedPageState(
+               PageStack.PageId(1L),
+               TestPage(1)
+            )
+         ),
       )
       .map { pageStackRepository.savePageStack(it) }
-      .map { PageStackBoard.PageStack(it) }
+      .map { pageStackCache ->
+         PageStackBoard.PageStack(
+            PageStackBoard.PageStackId(pageStackCache.value.id.value),
+            pageStackCache
+         )
+      }
       .toImmutableList()
 }

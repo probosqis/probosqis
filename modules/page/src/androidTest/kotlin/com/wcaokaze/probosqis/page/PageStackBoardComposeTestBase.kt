@@ -57,9 +57,13 @@ abstract class PageStackBoardComposeTestBase {
 
                Button(
                   onClick = {
+                     val newPage = TestPage(page.i + 100)
                      val newPageStack = PageStack(
                         PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                        TestPage(page.i + 100)
+                        PageStack.SavedPageState(
+                           PageStack.PageId(newPage.i.toLong()),
+                           newPage
+                        )
                      )
                      pageStackState.addColumn(newPageStack)
                   }
@@ -91,10 +95,16 @@ abstract class PageStackBoardComposeTestBase {
       val page = TestPage(i)
       val pageStack = PageStack(
          PageStack.Id(i.toLong()),
-         page
+         PageStack.SavedPageState(
+            PageStack.PageId(page.i.toLong()),
+            page
+         )
       )
       val cache = pageStackRepository.savePageStack(pageStack)
-      return PageStackBoard.PageStack(cache)
+      return PageStackBoard.PageStack(
+         PageStackBoard.PageStackId(pageStack.id.value),
+         cache
+      )
    }
 }
 

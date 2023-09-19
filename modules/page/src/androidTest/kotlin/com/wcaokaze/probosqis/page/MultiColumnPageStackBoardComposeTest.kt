@@ -228,7 +228,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          assertEquals(expectedPageNumbers.size, pageStackCount)
 
          for (i in 0 until pageStackCount) {
-            val page = pageStackBoard[i].cache.value.head
+            val page = pageStackBoard[i].pageStackCache.value.head.page
             assertIs<TestPage>(page)
             assertEquals(expectedPageNumbers[i], page.i)
          }
@@ -239,8 +239,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          layoutLogic: MultiColumnLayoutLogic
       ) {
          val pageStackCount = pageStackBoard.pageStackCount
-         val ids = (0 until pageStackCount)
-            .map { pageStackBoard[it].cache.value.id }
+         val ids = (0 until pageStackCount).map { pageStackBoard[it].id }
 
          assertEquals(ids, layoutLogic.layoutStateList.map { it.pageStackId })
 
@@ -923,7 +922,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
             }
             byId -> {
                pageStackBoardState.animateScroll(
-                  PageStack.Id(pageStack.toLong()),
+                  PageStackBoard.PageStackId(pageStack.toLong()),
                   targetPositionInBoard
                )
             }
@@ -1369,9 +1368,13 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
             pageComposableSwitcher = pageComposableSwitcher<TestPage> { page, pageStackState ->
                Button(
                   onClick = {
+                     val newPage = TestPage(page.i + 100)
                      val newPageStack = PageStack(
                         PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                        TestPage(page.i + 100)
+                        PageStack.SavedPageState(
+                           PageStack.PageId(newPage.i.toLong()),
+                           newPage
+                        )
                      )
                      pageStackState.addColumn(newPageStack)
                   }
@@ -1385,8 +1388,8 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       fun assertPageNumbers(expected: List<Int>, actual: PageStackBoard) {
          val pages = actual.sequence()
             .map { assertIs<PageStackBoard.PageStack>(it) }
-            .map { it.cache.value }
-            .map { assertIs<TestPage>(it.head) }
+            .map { it.pageStackCache.value }
+            .map { assertIs<TestPage>(it.head.page) }
             .toList()
 
          assertContentEquals(expected, pages.map { it.i })
@@ -1437,7 +1440,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       }
 
       coroutineScope.launch {
-         pageStackBoardState.animateScroll(PageStack.Id(0L))
+         pageStackBoardState.animateScroll(PageStackBoard.PageStackId(0L))
       }
 
       rule.onNodeWithText("Add PageStack 0").performClick()
@@ -1483,8 +1486,8 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       fun assertPageNumbers(expected: List<Int>, actual: PageStackBoard) {
          val pages = actual.sequence()
             .map { assertIs<PageStackBoard.PageStack>(it) }
-            .map { it.cache.value }
-            .map { assertIs<TestPage>(it.head) }
+            .map { it.pageStackCache.value }
+            .map { assertIs<TestPage>(it.head.page) }
             .toList()
 
          assertContentEquals(expected, pages.map { it.i })

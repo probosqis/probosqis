@@ -25,18 +25,15 @@ import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
-import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageStackBoard
+import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageStackRepository
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 private object PreviewDI : DI {
-   private val clock = MockClock()
-
    override val pageComposableSwitcher = PageComposableSwitcher(
       allPageComposables = persistentListOf(
          testPageComposable,
@@ -48,10 +45,18 @@ private object PreviewDI : DI {
             = throw NotImplementedError()
 
       override fun loadPageStackBoard(): WritableCache<PageStackBoard> {
-         val children = List(4) {
-            val pageStack = PageStack(TestPage(0), clock)
-            val pageStackCache = WritableCache(pageStack)
-            PageStackBoard.PageStack(pageStackCache)
+         val children = List(4) { pageStackId ->
+            val pageStack = PageStack(
+               PageStack.Id(pageStackId.toLong()),
+               PageStack.SavedPageState(
+                  PageStack.PageId(0L),
+                  TestPage(0)
+               )
+            )
+            PageStackBoard.PageStack(
+               PageStackBoard.PageStackId(pageStackId.toLong()),
+               WritableCache(pageStack)
+            )
          } .toImmutableList()
 
          val rootRow = PageStackBoard.Row(children)

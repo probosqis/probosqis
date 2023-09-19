@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.page
 
-import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -72,12 +71,26 @@ class PageStackBoardRepositoryTest {
    fun readWrite() {
       val intPage = IntPage(42)
       val stringPage = StringPage("wcaokaze")
-      var pageStack = PageStack(intPage, MockClock())
-      pageStack = pageStack.added(stringPage)
+      var pageStack = PageStack(
+         PageStack.Id(0L),
+         PageStack.SavedPageState(
+            PageStack.PageId(0L),
+            intPage
+         )
+      )
+      pageStack = pageStack.added(
+         PageStack.SavedPageState(
+            PageStack.PageId(1L),
+            stringPage
+         )
+      )
 
       val pageStackCache = pageStackRepository.savePageStack(pageStack)
       val children = persistentListOf(
-         PageStackBoard.PageStack(pageStackCache),
+         PageStackBoard.PageStack(
+            PageStackBoard.PageStackId(pageStackCache.value.id.value),
+            pageStackCache
+         ),
       )
       val rootRow = PageStackBoard.Row(children)
       val pageStackBoard = PageStackBoard(rootRow)
@@ -90,15 +103,19 @@ class PageStackBoardRepositoryTest {
 
       val loadedPageStack
          = assertIs<PageStackBoard.PageStack>(loadedCache.value.rootRow[0])
-         .cache.value
+         .pageStackCache.value
 
-      val page1 = loadedPageStack.head
+      val pageId1 = loadedPageStack.head.id
+      val page1 = loadedPageStack.head.page
+      assertEquals(PageStack.PageId(1L), pageId1)
       assertIs<StringPage>(page1)
       assertEquals(stringPage.s, page1.s)
 
       var tail = loadedPageStack.tailOrNull()
       assertNotNull(tail)
-      val page2 = tail.head
+      val pageId2 = tail.head.id
+      val page2 = tail.head.page
+      assertEquals(PageStack.PageId(0L), pageId2)
       assertIs<IntPage>(page2)
       assertEquals(intPage.i, page2.i)
 

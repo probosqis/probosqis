@@ -68,12 +68,12 @@ class SingleColumnPageStackBoardState(
 
    override val layout = SingleColumnLayoutLogic(
       pageStackBoard,
-      pageStackStateConstructor = { pageStackCache ->
-         PageStackState(pageStackCache, pageStackBoardState = this)
+      pageStackStateConstructor = { pageStackId, pageStackCache ->
+         PageStackState(pageStackId, pageStackCache, pageStackBoardState = this)
       }
    )
 
-   override fun pageStackState(id: PageStack.Id): PageStackState?
+   override fun pageStackState(id: PageStackBoard.PageStackId): PageStackState?
          = layout.pageStackLayout(id)?.pageStackState
 
    override fun pageStackState(index: Int): PageStackState
@@ -89,7 +89,8 @@ class SingleColumnPageStackBoardState(
 @Stable
 internal class SingleColumnLayoutLogic(
    pageStackBoard: PageStackBoard,
-   pageStackStateConstructor: (WritableCache<PageStack>) -> PageStackState
+   pageStackStateConstructor:
+      (PageStackBoard.PageStackId, WritableCache<PageStack>) -> PageStackState
 ) : PageStackBoardLayoutLogic(pageStackBoard, pageStackStateConstructor) {
    private var pageStackBoardWidth by mutableStateOf(0)
 
