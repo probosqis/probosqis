@@ -75,7 +75,7 @@ private class ElementWritableCache<T>(
 
    private fun updateOrigin(value: T) {
       val jsonValue = Json.encodeToJsonElement(serializer, value)
-      origin.value = JsonObject(origin.value + (key to jsonValue))
+      origin.update { JsonObject(it + (key to jsonValue)) }
    }
 
    private fun initialize(): T {
