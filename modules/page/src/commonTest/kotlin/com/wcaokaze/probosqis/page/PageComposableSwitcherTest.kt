@@ -23,21 +23,25 @@ import kotlin.test.assertNull
 
 class PageComposableSwitcherTest {
    private class PageA : Page()
+   private class PageAState : PageState()
    private class PageB : Page()
+   private class PageBState : PageState()
    private class PageC : Page()
 
    @Test
-   fun getMetadata() {
+   fun getPageComposable() {
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<PageA>(
-               content = { _, _ -> },
-               header = { _, _ -> },
+            pageComposable<PageA, PageAState>(
+               pageStateFactory { PageAState() },
+               content = { _, _, _ -> },
+               header = { _, _, _ -> },
                footer = null
             ),
-            pageComposable<PageB>(
-               content = { _, _ -> },
-               header = { _, _ -> },
+            pageComposable<PageB, PageBState>(
+               pageStateFactory { PageBState() },
+               content = { _, _, _ -> },
+               header = { _, _, _ -> },
                footer = null
             ),
          )

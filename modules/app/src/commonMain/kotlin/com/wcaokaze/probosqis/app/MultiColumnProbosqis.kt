@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.page.MultiColumnPageStackBoard
 import com.wcaokaze.probosqis.page.MultiColumnPageStackBoardState
+import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.PageStateStore
 import com.wcaokaze.probosqis.resources.Strings
 
 @Composable
@@ -89,12 +91,17 @@ internal fun MultiColumnProbosqis(
       }
 
       val pageComposableSwitcher = remember(di) {
-         di.pageComposableSwitcher
+         PageComposableSwitcher(di.allPageComposables)
+      }
+
+      val pageStateStore = remember(di) {
+         PageStateStore(di.allPageComposables.map { it.pageStateFactory })
       }
 
       MultiColumnPageStackBoard(
          pageStackBoardState,
          pageComposableSwitcher,
+         pageStateStore,
          pageStackCount = (maxWidth / 330.dp).toInt(),
          windowInsets = safeDrawingWindowInsets
             .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),

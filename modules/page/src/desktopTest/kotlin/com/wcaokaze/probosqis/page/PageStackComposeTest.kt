@@ -38,6 +38,12 @@ class PageStackComposeTest {
       )
    )
 
+   private val pageStateStore = PageStateStore(
+      listOf(
+         spyPageComposable.pageStateFactory,
+      )
+   )
+
    @Test
    fun onlyForefrontComposableIsCalled() {
       val page1 = SpyPage()
@@ -64,7 +70,7 @@ class PageStackComposeTest {
       )
 
       rule.setContent {
-         PageStackContent(pageStackState, pageComposableSwitcher)
+         PageStackContent(pageStackState, pageComposableSwitcher, pageStateStore)
       }
 
       rule.runOnIdle {
@@ -102,7 +108,7 @@ class PageStackComposeTest {
       }
 
       rule.setContent {
-         PageStackContent(pageStackState, pageComposableSwitcher)
+         PageStackContent(pageStackState, pageComposableSwitcher, pageStateStore)
       }
 
       rule.runOnIdle {

@@ -25,7 +25,6 @@ import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
-import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackBoard
 import com.wcaokaze.probosqis.page.PageStackBoardRepository
@@ -34,10 +33,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 private object PreviewDI : DI {
-   override val pageComposableSwitcher = PageComposableSwitcher(
-      allPageComposables = persistentListOf(
-         testPageComposable,
-      )
+   override val allPageComposables = persistentListOf(
+      testPageComposable,
    )
 
    override val pageStackBoardRepository = object : PageStackBoardRepository {

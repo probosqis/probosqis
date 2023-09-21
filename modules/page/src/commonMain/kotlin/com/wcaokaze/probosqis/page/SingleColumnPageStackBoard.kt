@@ -215,6 +215,7 @@ fun SingleColumnPageStackBoardAppBar(
 fun SingleColumnPageStackBoard(
    state: SingleColumnPageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
 ) {
@@ -265,6 +266,7 @@ fun SingleColumnPageStackBoard(
                PageStackContent(
                   pageStackLayout.pageStackState,
                   pageComposableSwitcher,
+                  pageStateStore,
                   modifier = Modifier.alpha(pageStackLayout.alpha)
                )
             } .single()
@@ -326,6 +328,7 @@ private fun PageStackAppBar(
 private fun PageStackContent(
    state: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    modifier: Modifier = Modifier
 ) {
    Surface(
@@ -333,6 +336,6 @@ private fun PageStackContent(
       shadowElevation = 4.dp,
       modifier = modifier
    ) {
-      PageStackContent(state, pageComposableSwitcher)
+      PageStackContent(state, pageComposableSwitcher, pageStateStore)
    }
 }

@@ -17,18 +17,16 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.Stable
+import kotlin.reflect.KClass
 
 @Stable
-class PageComposableSwitcher(allPageComposables: List<PageComposable<*, *>>) {
-   private val map = buildMap {
-      for (m in allPageComposables) {
-         put(m.pageClass, m)
-      }
-   }
+data class PageStateFactory<P : Page, S : PageState>(
+   val pageClass: KClass<P>,
+   val pageStateFactory: (P) -> S
+)
 
-   @Stable
-   internal operator fun <P : Page> get(page: P): PageComposable<P, *>? {
-      @Suppress("UNCHECKED_CAST")
-      return map[page::class] as PageComposable<P, *>?
-   }
+inline fun <reified P : Page, reified S : PageState>
+      pageStateFactory(noinline factory: (P) -> S): PageStateFactory<P, S>
+{
+   return PageStateFactory(P::class, factory)
 }

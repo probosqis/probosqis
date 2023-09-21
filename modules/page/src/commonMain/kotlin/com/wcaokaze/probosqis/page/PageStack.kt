@@ -126,12 +126,14 @@ class PageStackState internal constructor(
 @Composable
 internal fun PageStackContent(
    state: PageStackState,
-   pageComposableSwitcher: PageComposableSwitcher
+   pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore
 ) {
    val savedPageState = state.pageStack.head
    PageContent(
-      page = savedPageState.page,
+      savedPageState,
       pageComposableSwitcher,
+      pageStateStore,
       pageStackState = state
    )
 }

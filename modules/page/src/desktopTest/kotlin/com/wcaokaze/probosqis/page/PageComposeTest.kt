@@ -32,7 +32,9 @@ class PageComposeTest {
    val rule = createComposeRule()
 
    private class PageA : Page()
+   private class PageAState : PageState()
    private class PageB : Page()
+   private class PageBState : PageState()
 
    @Test
    fun composableCalled() {
@@ -43,29 +45,46 @@ class PageComposeTest {
 
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<PageA>(
-               content = { _, _ ->
+            pageComposable<PageA, PageAState>(
+               pageStateFactory { PageAState() },
+               content = { _, _, _ ->
                   SideEffect {
                      pageARecompositionCount++
                   }
                },
-               header = { _, _ -> },
+               header = { _, _, _ -> },
                footer = null
             ),
-            pageComposable<PageB>(
-               content = { _, _ ->
+            pageComposable<PageB, PageBState>(
+               pageStateFactory { PageBState() },
+               content = { _, _, _ ->
                   SideEffect {
                      pageBRecompositionCount++
                   }
                },
-               header = { _, _ -> },
+               header = { _, _, _ -> },
                footer = null
             ),
          )
       )
 
+      val pageStateStore = PageStateStore(
+         listOf(
+            pageStateFactory<PageA, PageAState> { PageAState() },
+            pageStateFactory<PageB, PageBState> { PageBState() },
+         )
+      )
+
       rule.setContent {
-         PageContent(pageA, pageComposableSwitcher, pageStackState = mockk())
+         PageContent(
+            PageStack.SavedPageState(
+               PageStack.PageId(0L),
+               pageA,
+            ),
+            pageComposableSwitcher,
+            pageStateStore,
+            pageStackState = mockk()
+         )
       }
 
       rule.runOnIdle {
@@ -78,28 +97,52 @@ class PageComposeTest {
    fun argument() {
       val page = PageA()
 
-      var argument: PageA? = null
+      var argumentPage: PageA? = null
+      var argumentPageState: PageA? = null
+
+      class PageStateImpl : PageState() {
+         fun spy(page: PageA) {
+            argumentPageState = page
+         }
+      }
 
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
-            pageComposable<PageA>(
-               content = { p, _ ->
+            pageComposable<PageA, PageStateImpl>(
+               pageStateFactory { PageStateImpl() },
+               content = { p, s, _ ->
                   SideEffect {
-                     argument = p
+                     argumentPage = p
+                     s.spy(p)
                   }
                },
-               header = { _, _ -> },
+               header = { _, _, _ -> },
                footer = null
             ),
          )
       )
 
+      val pageStateStore = PageStateStore(
+         listOf(
+            pageStateFactory<PageA, PageStateImpl> { PageStateImpl() },
+         )
+      )
+
       rule.setContent {
-         PageContent(page, pageComposableSwitcher, pageStackState = mockk())
+         PageContent(
+            PageStack.SavedPageState(
+               PageStack.PageId(0L),
+               page
+            ),
+            pageComposableSwitcher,
+            pageStateStore,
+            pageStackState = mockk()
+         )
       }
 
       rule.runOnIdle {
-         assertSame(page, argument)
+         assertSame(page, argumentPage)
+         assertSame(page, argumentPageState)
       }
    }
 }

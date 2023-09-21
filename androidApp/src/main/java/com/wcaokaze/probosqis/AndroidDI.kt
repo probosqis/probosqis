@@ -22,7 +22,6 @@ import com.wcaokaze.probosqis.app.DI
 import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.page.JvmPageStackBoardRepository
-import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.JvmPageStackRepository
 import com.wcaokaze.probosqis.page.pageSerializer
 import kotlinx.collections.immutable.persistentListOf
@@ -30,10 +29,8 @@ import java.io.File
 
 @Stable
 class AndroidDI(context: Context) : DI {
-   override val pageComposableSwitcher = PageComposableSwitcher(
-      allPageComposables = persistentListOf(
-         testPageComposable,
-      )
+   override val allPageComposables = persistentListOf(
+      testPageComposable,
    )
 
    override val pageStackRepository = JvmPageStackRepository(

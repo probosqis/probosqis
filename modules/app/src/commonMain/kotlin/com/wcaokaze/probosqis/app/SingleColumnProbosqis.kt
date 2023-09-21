@@ -60,6 +60,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.PageStateStore
 import com.wcaokaze.probosqis.page.SingleColumnPageStackBoard
 import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardAppBar
 import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardState
@@ -82,6 +83,14 @@ internal fun SingleColumnProbosqis(
          pageStackBoardCache, di.pageStackRepository, coroutineScope)
    }
 
+   val pageComposableSwitcher = remember(di) {
+      PageComposableSwitcher(di.allPageComposables)
+   }
+
+   val pageStateStore = remember(di) {
+      PageStateStore(di.allPageComposables.map { it.pageStateFactory })
+   }
+
    // 現状Desktopで動作しないため自前実装する
    // val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
    val appBarScrollState = remember { AppBarScrollState() }
@@ -94,7 +103,7 @@ internal fun SingleColumnProbosqis(
          AppBar(
             appBarScrollState,
             pageStackBoardState,
-            di.pageComposableSwitcher,
+            pageComposableSwitcher,
             safeDrawingWindowInsets
          )
       },
@@ -104,7 +113,8 @@ internal fun SingleColumnProbosqis(
    ) { paddingValues ->
       SingleColumnPageStackBoard(
          pageStackBoardState,
-         di.pageComposableSwitcher,
+         pageComposableSwitcher,
+         pageStateStore,
          windowInsets = safeDrawingWindowInsets,
          modifier = Modifier
             .padding(paddingValues)

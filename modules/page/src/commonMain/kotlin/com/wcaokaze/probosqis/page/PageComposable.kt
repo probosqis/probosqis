@@ -17,21 +17,26 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import kotlin.reflect.KClass
 
-data class PageComposable<P : Page>(
+@Stable
+data class PageComposable<P : Page, S : PageState>(
    val pageClass: KClass<P>,
-   val contentComposable: @Composable (P, PageStackState) -> Unit,
-   val headerComposable: @Composable (P, PageStackState) -> Unit,
-   val footerComposable: (@Composable (P, PageStackState) -> Unit)?
+   val pageStateFactory: PageStateFactory<P, S>,
+   val contentComposable: @Composable (P, S, PageStackState) -> Unit,
+   val headerComposable: @Composable (P, S, PageStackState) -> Unit,
+   val footerComposable: (@Composable (P, S, PageStackState) -> Unit)?
 )
 
-inline fun <reified P : Page> pageComposable(
-   noinline content: @Composable (P, PageStackState) -> Unit,
-   noinline header: @Composable (P, PageStackState) -> Unit,
-   noinline footer: (@Composable (P, PageStackState) -> Unit)?
+inline fun <reified P : Page, S : PageState> pageComposable(
+   pageStateFactory: PageStateFactory<P, S>,
+   noinline content: @Composable (P, S, PageStackState) -> Unit,
+   noinline header: @Composable (P, S, PageStackState) -> Unit,
+   noinline footer: (@Composable (P, S, PageStackState) -> Unit)?
 ) = PageComposable(
    P::class,
+   pageStateFactory,
    content,
    header,
    footer

@@ -165,6 +165,7 @@ internal class MultiColumnLayoutLogic(
 fun MultiColumnPageStackBoard(
    state: MultiColumnPageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    pageStackCount: Int,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
@@ -219,6 +220,7 @@ fun MultiColumnPageStackBoard(
                   isActive = pageStackCount == 1,
                   windowInsets.only(WindowInsetsSides.Bottom),
                   pageComposableSwitcher,
+                  pageStateStore,
                   onTopAppBarHeightChanged,
                   modifier = Modifier
                      .alpha(pageStackLayout.alpha)
@@ -253,6 +255,7 @@ private fun PageStack(
    isActive: Boolean,
    windowInsets: WindowInsets,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    onTopAppBarHeightChanged: (Dp) -> Unit,
    modifier: Modifier = Modifier
 ) {
@@ -297,7 +300,8 @@ private fun PageStack(
 
          PageStackContent(
             state,
-            pageComposableSwitcher
+            pageComposableSwitcher,
+            pageStateStore
          )
       }
    }

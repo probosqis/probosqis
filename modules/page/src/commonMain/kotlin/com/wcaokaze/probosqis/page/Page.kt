@@ -17,22 +17,49 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import kotlinx.serialization.Serializable
 
 @Serializable
 abstract class Page
 
+@Stable
+abstract class PageState
+
 @Composable
-internal fun <P : Page> PageContent(
-   page: P,
+internal fun PageContent(
+   savedPageState: PageStack.SavedPageState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    pageStackState: PageStackState
 ) {
+   val page = savedPageState.page
    val pageContentComposable = pageComposableSwitcher[page]
+   val pageState = pageStateStore.get(savedPageState)
 
    if (pageContentComposable == null) {
       TODO()
    } else {
-      pageContentComposable.contentComposable(page, pageStackState)
+      PageContent(
+         pageContentComposable.contentComposable,
+         page,
+         pageState,
+         pageStackState
+      )
    }
+}
+
+@Composable
+inline fun <P : Page, S : PageState> PageContent(
+   pageContentComposable: @Composable (P, S, PageStackState) -> Unit,
+   page: P,
+   pageState: PageState,
+   pageStackState: PageStackState
+) {
+   @Suppress("UNCHECKED_CAST")
+   pageContentComposable(
+      page,
+      pageState as S,
+      pageStackState
+   )
 }
