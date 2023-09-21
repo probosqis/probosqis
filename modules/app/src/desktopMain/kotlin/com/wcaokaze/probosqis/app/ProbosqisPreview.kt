@@ -20,11 +20,9 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
-import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageStackBoard
+import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageStackRepository
 import kotlinx.collections.immutable.persistentListOf
 
@@ -33,12 +31,8 @@ import kotlinx.collections.immutable.persistentListOf
 private fun ProbosqisPreview() {
    val di = remember {
       object : DI {
-         private val clock = MockClock()
-
-         override val pageComposableSwitcher = PageComposableSwitcher(
-            allPageComposables = persistentListOf(
-               testPageComposable,
-            )
+         override val allPageComposables = persistentListOf(
+            testPageComposable,
          )
 
          override val pageStackBoardRepository = object : PageStackBoardRepository {
@@ -46,10 +40,18 @@ private fun ProbosqisPreview() {
                   = throw NotImplementedError()
 
             override fun loadPageStackBoard(): WritableCache<PageStackBoard> {
-               val pageStack = PageStack(TestPage(0), clock)
-               val pageStackCache = WritableCache(pageStack)
+               val pageStack = PageStack(
+                  PageStack.Id(0L),
+                  PageStack.SavedPageState(
+                     PageStack.PageId(0L),
+                     TestPage(0)
+                  )
+               )
                val children = persistentListOf(
-                  PageStackBoard.PageStack(pageStackCache),
+                  PageStackBoard.PageStack(
+                     PageStackBoard.PageStackId(0L),
+                     WritableCache(pageStack)
+                  ),
                )
                val rootRow = PageStackBoard.Row(children)
                val pageStackBoard = PageStackBoard(rootRow)

@@ -33,22 +33,39 @@ abstract class PageStackBoardComposeTestBase {
    protected val pageStackBoardTag = "PageStackBoard"
 
    protected class TestPage(val i: Int) : Page()
+   protected class TestPageState : PageState()
 
    protected inline fun <reified P : Page> pageComposableSwitcher(
-      noinline pageComposable: @Composable (P, PageStackState) -> Unit,
-   ): PageComposableSwitcher {
-      val headerComposable: @Composable (Page, PageStackState) -> Unit = { _, _ -> }
+      noinline pageStateFactory: (P) -> PageState,
+      noinline pageComposable: @Composable (P, PageState, PageStackState) -> Unit,
+   ): Pair<PageComposableSwitcher, PageStateStore> {
+      val headerComposable: @Composable (Page, PageState, PageStackState) -> Unit
+            = { _, _, _ -> }
 
-      val testPageComposable
-            = pageComposable(pageComposable, headerComposable, footer = null)
+      val testPageComposable = pageComposable(
+         pageStateFactory(pageStateFactory),
+         pageComposable,
+         headerComposable,
+         footer = null
+      )
 
-      return PageComposableSwitcher(
-         allPageComposables = listOf(testPageComposable)
+      return Pair(
+         PageComposableSwitcher(
+            allPageComposables = listOf(testPageComposable)
+         ),
+         PageStateStore(
+            allPageStateFactories = listOf(testPageComposable.pageStateFactory)
+         )
       )
    }
 
-   protected val defaultPageComposableSwitcher
-         = pageComposableSwitcher<TestPage> { page, pageStackState ->
+   protected val defaultPageComposableSwitcher: PageComposableSwitcher
+   protected val defaultPageStateStore: PageStateStore
+
+   init {
+      val (switcher, stateStore) = pageComposableSwitcher<TestPage>(
+         { TestPageState() },
+         { page, _, pageStackState ->
             Column {
                Text(
                   "${page.i}",
@@ -57,9 +74,13 @@ abstract class PageStackBoardComposeTestBase {
 
                Button(
                   onClick = {
+                     val newPage = TestPage(page.i + 100)
                      val newPageStack = PageStack(
                         PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                        TestPage(page.i + 100)
+                        PageStack.SavedPageState(
+                           PageStack.PageId(newPage.i.toLong()),
+                           newPage
+                        )
                      )
                      pageStackState.addColumn(newPageStack)
                   }
@@ -76,6 +97,10 @@ abstract class PageStackBoardComposeTestBase {
                }
             }
          }
+      )
+      defaultPageComposableSwitcher = switcher
+      defaultPageStateStore = stateStore
+   }
 
    protected fun createPageStackBoard(
       pageStackCount: Int
@@ -91,10 +116,16 @@ abstract class PageStackBoardComposeTestBase {
       val page = TestPage(i)
       val pageStack = PageStack(
          PageStack.Id(i.toLong()),
-         page
+         PageStack.SavedPageState(
+            PageStack.PageId(page.i.toLong()),
+            page
+         )
       )
       val cache = pageStackRepository.savePageStack(pageStack)
-      return PageStackBoard.PageStack(cache)
+      return PageStackBoard.PageStack(
+         PageStackBoard.PageStackId(pageStack.id.value),
+         cache
+      )
    }
 }
 

@@ -18,8 +18,8 @@ package com.wcaokaze.probosqis.app
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageStackBoard
+import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageStackRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -74,15 +74,15 @@ class ProbosqisComposeTest {
 
       val pageStack1
          = assertIs<PageStackBoard.PageStack>(loadedCache.value.rootRow[0])
-         .cache.value
-      assertIs<TestPage>(pageStack1.head)
+         .pageStackCache.value
+      assertIs<TestPage>(pageStack1.head.page)
       assertNull(pageStack1.tailOrNull())
       verify { pageStackRepository.savePageStack(pageStack1) }
 
       val pageStack2
          = assertIs<PageStackBoard.PageStack>(loadedCache.value.rootRow[1])
-         .cache.value
-      assertIs<TestPage>(pageStack2.head)
+         .pageStackCache.value
+      assertIs<TestPage>(pageStack2.head.page)
       assertNull(pageStack2.tailOrNull())
       verify { pageStackRepository.savePageStack(pageStack2) }
    }

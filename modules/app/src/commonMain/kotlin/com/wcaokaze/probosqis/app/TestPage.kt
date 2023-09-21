@@ -21,12 +21,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
+import com.wcaokaze.probosqis.page.Page
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackState
-import com.wcaokaze.probosqis.page.Page
+import com.wcaokaze.probosqis.page.PageState
 import com.wcaokaze.probosqis.page.pageComposable
+import com.wcaokaze.probosqis.page.pageStateFactory
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -44,7 +47,14 @@ fun TestPage(page: TestPage, pageStackState: PageStackState) {
 
       Button(
          onClick = {
-            val newPageStack = PageStack(TestPage(page.i + 1))
+            val newPageStack = PageStack(
+               PageStack.SavedPageState(
+                  // XXX: PageIdはアプリ全体で重複するべきではないが
+                  // 現段階ではPageStack内で重複しなければ動作する
+                  PageStack.PageId(0L),
+                  TestPage(page.i + 1)
+               )
+            )
             pageStackState.addColumn(newPageStack)
          }
       ) {
@@ -53,8 +63,12 @@ fun TestPage(page: TestPage, pageStackState: PageStackState) {
    }
 }
 
-val testPageComposable = pageComposable<TestPage>(
-   content = { page, pageStackState -> TestPage(page, pageStackState) },
-   header = { _, _ -> },
+@Stable
+class TestPageState : PageState()
+
+val testPageComposable = pageComposable<TestPage, TestPageState>(
+   pageStateFactory { TestPageState() },
+   content = { page, _, pageStackState -> TestPage(page, pageStackState) },
+   header = { _, _, _ -> },
    footer = null
 )

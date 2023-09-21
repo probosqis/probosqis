@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.page
 
-import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.AfterTest
@@ -66,22 +65,35 @@ class PageStackRepositoryTest {
    fun readWrite() {
       val intPage = IntPage(42)
       val stringPage = StringPage("wcaokaze")
-      var pageStack = PageStack(intPage, MockClock())
-      pageStack = pageStack.added(stringPage)
+      var pageStack = PageStack(
+         PageStack.Id(0L),
+         PageStack.SavedPageState(
+            PageStack.PageId(42L),
+            intPage
+         )
+      )
+      pageStack = pageStack.added(
+         PageStack.SavedPageState(
+            PageStack.PageId(43L),
+            stringPage
+         )
+      )
 
       pageStackRepository.savePageStack(pageStack)
 
       val loadedCache = pageStackRepository.loadPageStack(pageStack.id)
 
-      assertEquals(pageStack.id, loadedCache.value.id)
-
-      val page1 = loadedCache.value.head
+      val pageId1 = loadedCache.value.head.id
+      val page1 = loadedCache.value.head.page
+      assertEquals(PageStack.PageId(43L), pageId1)
       assertIs<StringPage>(page1)
       assertEquals(stringPage.s, page1.s)
 
       var tail = loadedCache.value.tailOrNull()
       assertNotNull(tail)
-      val page2 = tail.head
+      val pageId2 = tail.head.id
+      val page2 = tail.head.page
+      assertEquals(PageStack.PageId(42L), pageId2)
       assertIs<IntPage>(page2)
       assertEquals(intPage.i, page2.i)
 
@@ -91,15 +103,21 @@ class PageStackRepositoryTest {
 
    @Test
    fun identifyFiles() {
-      val pageStack1 = run {
-         val page = IntPage(42)
-         PageStack(page, MockClock(1))
-      }
+      val pageStack1 = PageStack(
+         PageStack.Id(1L),
+         PageStack.SavedPageState(
+            PageStack.PageId(42L),
+            IntPage(42)
+         )
+      )
 
-      val pageStack2 = run {
-         val page = IntPage(43)
-         PageStack(page, MockClock(2))
-      }
+      val pageStack2 = PageStack(
+         PageStack.Id(2L),
+         PageStack.SavedPageState(
+            PageStack.PageId(43L),
+            IntPage(43)
+         )
+      )
 
       pageStackRepository.savePageStack(pageStack1)
       pageStackRepository.savePageStack(pageStack2)
@@ -107,8 +125,8 @@ class PageStackRepositoryTest {
       val loadedCache1 = pageStackRepository.loadPageStack(pageStack1.id)
       val loadedCache2 = pageStackRepository.loadPageStack(pageStack2.id)
 
-      val page1 = loadedCache1.value.head
-      val page2 = loadedCache2.value.head
+      val page1 = loadedCache1.value.head.page
+      val page2 = loadedCache2.value.head.page
 
       assertIs<IntPage>(page1)
       assertEquals(42, page1.i)

@@ -16,11 +16,17 @@
 
 package com.wcaokaze.probosqis.page
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 internal class SpyPage : Page() {
    var recompositionCount: Int by mutableStateOf(0)
 }
+
+internal class SpyPageState : PageState()
 
 @Composable
 private fun SpyPage(page: SpyPage) {
@@ -29,8 +35,9 @@ private fun SpyPage(page: SpyPage) {
    }
 }
 
-internal val spyPageComposable = pageComposable<SpyPage>(
-   content = { page, _ -> SpyPage(page) },
-   header = { _, _ -> },
+internal val spyPageComposable = pageComposable<SpyPage, SpyPageState>(
+   pageStateFactory { SpyPageState() },
+   content = { page, _, _ -> SpyPage(page) },
+   header = { _, _, _ -> },
    footer = null
 )

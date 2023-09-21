@@ -72,12 +72,12 @@ class MultiColumnPageStackBoardState(
 
    override val layout = MultiColumnLayoutLogic(
       pageStackBoard,
-      pageStackStateConstructor = { pageStackCache ->
-         PageStackState(pageStackCache, pageStackBoardState = this)
+      pageStackStateConstructor = { pageStackId, pageStackCache ->
+         PageStackState(pageStackId, pageStackCache, pageStackBoardState = this)
       }
    )
 
-   override fun pageStackState(id: PageStack.Id): PageStackState?
+   override fun pageStackState(id: PageStackBoard.PageStackId): PageStackState?
          = layout.pageStackLayout(id)?.pageStackState
 
    override fun pageStackState(index: Int): PageStackState
@@ -87,7 +87,8 @@ class MultiColumnPageStackBoardState(
 @Stable
 internal class MultiColumnLayoutLogic(
    pageStackBoard: PageStackBoard,
-   pageStackStateConstructor: (WritableCache<PageStack>) -> PageStackState
+   pageStackStateConstructor:
+      (PageStackBoard.PageStackId, WritableCache<PageStack>) -> PageStackState
 ) : PageStackBoardLayoutLogic(pageStackBoard, pageStackStateConstructor) {
    private var pageStackBoardWidth by mutableStateOf(0)
    private var pageStackPadding by mutableStateOf(0)
@@ -164,6 +165,7 @@ internal class MultiColumnLayoutLogic(
 fun MultiColumnPageStackBoard(
    state: MultiColumnPageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    pageStackCount: Int,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
@@ -218,6 +220,7 @@ fun MultiColumnPageStackBoard(
                   isActive = pageStackCount == 1,
                   windowInsets.only(WindowInsetsSides.Bottom),
                   pageComposableSwitcher,
+                  pageStateStore,
                   onTopAppBarHeightChanged,
                   modifier = Modifier
                      .alpha(pageStackLayout.alpha)
@@ -252,6 +255,7 @@ private fun PageStack(
    isActive: Boolean,
    windowInsets: WindowInsets,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    onTopAppBarHeightChanged: (Dp) -> Unit,
    modifier: Modifier = Modifier
 ) {
@@ -296,7 +300,8 @@ private fun PageStack(
 
          PageStackContent(
             state,
-            pageComposableSwitcher
+            pageComposableSwitcher,
+            pageStateStore
          )
       }
    }

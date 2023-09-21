@@ -24,9 +24,12 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
-fun PageStack(page: Page, clock: Clock = Clock.System) = PageStack(
+fun PageStack(
+   savedPageState: PageStack.SavedPageState,
+   clock: Clock = Clock.System
+) = PageStack(
    PageStack.Id(clock.now()),
-   page
+   savedPageState
 )
 
 /**
@@ -39,8 +42,8 @@ fun PageStack(page: Page, clock: Clock = Clock.System) = PageStack(
  */
 @Serializable
 class PageStack private constructor(
-   val id: Id,
-   private val pages: List<Page>
+   val id: Id, // TODO: キャッシュシステムの完成後Cache自体が識別子となるため削除する
+   private val savedPageStates: List<SavedPageState>
 ) {
    @Serializable
    @JvmInline
@@ -48,10 +51,22 @@ class PageStack private constructor(
       constructor(createdTime: Instant) : this(createdTime.toEpochMilliseconds())
    }
 
-   constructor(id: Id, page: Page) : this(id, listOf(page))
+   @Serializable
+   class SavedPageState(
+      val id: PageId,
+      val page: Page
+   )
 
-   /** このPageStackの一番上の[Page] */
-   val head: Page get() = pages.last()
+   @Serializable
+   @JvmInline
+   value class PageId(val value: Long)
+
+   constructor(id: Id, savedPageState: SavedPageState) : this(
+      id, listOf(savedPageState)
+   )
+
+   /** このPageStackの一番上の[SavedPageState] */
+   val head: SavedPageState get() = savedPageStates.last()
 
    /**
     * @return
@@ -59,7 +74,7 @@ class PageStack private constructor(
     * このPageStackにPageがひとつしかない場合はnull
     */
    fun tailOrNull(): PageStack? {
-      val tailPages = pages.dropLast(1)
+      val tailPages = savedPageStates.dropLast(1)
       return if (tailPages.isEmpty()) {
          null
       } else {
@@ -67,11 +82,14 @@ class PageStack private constructor(
       }
    }
 
-   fun added(page: Page) = PageStack(id, pages + page)
+   fun added(savedPageState: SavedPageState) = PageStack(
+      id, savedPageStates + savedPageState
+   )
 }
 
 @Stable
 class PageStackState internal constructor(
+   val pageStackId: PageStackBoard.PageStackId,
    internal val pageStackCache: WritableCache<PageStack>,
    val pageStackBoardState: PageStackBoardState
 ) {
@@ -80,8 +98,7 @@ class PageStackState internal constructor(
    fun addColumn(pageStack: PageStack) {
       val board = pageStackBoardState.pageStackBoard
 
-      val index = board.sequence()
-         .indexOfFirst { it.cache.value.id == this.pageStack.id }
+      val index = board.sequence().indexOfFirst { it.id == pageStackId }
 
       val insertionIndex = if (index < 0) {
          board.pageStackCount
@@ -102,18 +119,21 @@ class PageStackState internal constructor(
    }
 
    fun removeFromBoard() {
-      pageStackBoardState.removePageStack(pageStack.id)
+      pageStackBoardState.removePageStack(pageStackId)
    }
 }
 
 @Composable
 internal fun PageStackContent(
    state: PageStackState,
-   pageComposableSwitcher: PageComposableSwitcher
+   pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore
 ) {
+   val savedPageState = state.pageStack.head
    PageContent(
-      page = state.pageStack.head,
+      savedPageState,
       pageComposableSwitcher,
+      pageStateStore,
       pageStackState = state
    )
 }

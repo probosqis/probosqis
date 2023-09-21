@@ -76,12 +76,17 @@ internal class PageStackCacheSerializer(
 @Serializable
 class PageStackBoard(val rootRow: Row) {
    @Serializable
+   @JvmInline
+   value class PageStackId(val value: Long)
+
+   @Serializable
    sealed class LayoutElement
 
    @Serializable
    class PageStack(
+      val id: PageStackId,
       @Contextual
-      val cache: WritableCache<com.wcaokaze.probosqis.page.PageStack>
+      val pageStackCache: WritableCache<com.wcaokaze.probosqis.page.PageStack>
    ) : LayoutElement()
 
    @Serializable
@@ -228,8 +233,11 @@ operator fun PageStackBoard.get(index: Int): PageStackBoard.PageStack {
    return rootRow.findSubtree(index)
 }
 
-internal fun PageStackBoard.removed(id: PageStack.Id): PageStackBoard {
-   val index = sequence().indexOfFirst { it.cache.value.id == id }
+internal fun PageStackBoard.removed(
+   id: PageStackBoard.PageStackId
+): PageStackBoard {
+   val index = sequence().indexOfFirst { it.id == id }
+
    if (index < 0) { return this }
    return removed(index)
 }
@@ -333,7 +341,10 @@ sealed class PageStackBoardState(
 
    private var pageStackInsertionAnimOffset by mutableStateOf(0.0f)
 
-   internal abstract fun pageStackState(id: PageStack.Id): PageStackState?
+   internal abstract fun pageStackState(
+      id: PageStackBoard.PageStackId
+   ): PageStackState?
+
    internal abstract fun pageStackState(index: Int): PageStackState
 
    suspend fun animateScroll(
@@ -351,7 +362,7 @@ sealed class PageStackBoardState(
    }
 
    suspend fun animateScroll(
-      pageStackId: PageStack.Id,
+      pageStackId: PageStackBoard.PageStackId,
       targetPositionInBoard: PositionInBoard = PositionInBoard.NearestVisible,
       animationSpec: AnimationSpec<Float> = spring()
    ) {
@@ -375,7 +386,7 @@ sealed class PageStackBoardState(
    )
 
    internal fun getScrollOffset(
-      pageStackId: PageStack.Id,
+      pageStackId: PageStackBoard.PageStackId,
       targetPositionInBoard: PositionInBoard
    ): Int = layout.getScrollOffset(
       pageStackLayoutState = layout.pageStackLayout(pageStackId)
@@ -386,29 +397,32 @@ sealed class PageStackBoardState(
 
    fun addColumn(index: Int, pageStack: PageStack): Job = animCoroutineScope.launch {
       val pageStackCache = pageStackRepository.savePageStack(pageStack)
+      val pageStackId = PageStackBoard.PageStackId(pageStack.id.value)
 
       pageStackBoard = PageStackBoard(
          pageStackBoard.rootRow.inserted(
             index,
-            PageStackBoard.PageStack(pageStackCache)
+            PageStackBoard.PageStack(pageStackId, pageStackCache)
          )
       )
 
       launch {
-         animateScroll(pageStack.id, PositionInBoard.NearestVisible,
+         animateScroll(pageStackId, PositionInBoard.NearestVisible,
             layout.pageStackPositionAnimSpec())
       }
       launch {
-         layout.pageStackLayout(pageStack.id)
+         layout.pageStackLayout(pageStackId)
             ?.animateInsertion(pageStackInsertionAnimOffset)
       }
    }
 
-   fun removePageStack(id: PageStack.Id): Job = animCoroutineScope.launch {
-      layout.pageStackLayout(id)
-         ?.animateRemoving(pageStackInsertionAnimOffset)
+   fun removePageStack(id: PageStackBoard.PageStackId): Job {
+      return animCoroutineScope.launch {
+         layout.pageStackLayout(id)
+            ?.animateRemoving(pageStackInsertionAnimOffset)
 
-      pageStackBoard = pageStackBoard.removed(id)
+         pageStackBoard = pageStackBoard.removed(id)
+      }
    }
 
    internal fun layout(
@@ -428,11 +442,12 @@ sealed class PageStackBoardState(
 
 internal abstract class PageStackBoardLayoutLogic(
    pageStackBoard: PageStackBoard,
-   private val pageStackStateConstructor: (WritableCache<PageStack>) -> PageStackState
+   private val pageStackStateConstructor:
+      (PageStackBoard.PageStackId, WritableCache<PageStack>) -> PageStackState
 ) : Iterable<PageStackBoardLayoutLogic.PageStackLayoutState> {
    @Stable
    internal class PageStackLayoutState(val pageStackState: PageStackState) {
-      val pageStackId = pageStackState.pageStack.id
+      val pageStackId = pageStackState.pageStackId
 
       /**
        * [PageStackBoardState.pageStackBoard]をセットして生成された直後の
@@ -534,7 +549,7 @@ internal abstract class PageStackBoardLayoutLogic(
    protected var list: ImmutableList<PageStackLayoutState>
          by mutableStateOf(persistentListOf())
 
-   protected var map: ImmutableMap<PageStack.Id, PageStackLayoutState>
+   protected var map: ImmutableMap<PageStackBoard.PageStackId, PageStackLayoutState>
          by mutableStateOf(persistentMapOf())
 
    private var maxScrollOffsetAnimJob: Job
@@ -561,9 +576,11 @@ internal abstract class PageStackBoardLayoutLogic(
       scrollState: PageStackBoardScrollState
    )
 
-   fun pageStackLayout(id: PageStack.Id): PageStackLayoutState? = map[id]
+   fun pageStackLayout(id: PageStackBoard.PageStackId): PageStackLayoutState?
+         = map[id]
 
-   fun pageStackLayout(index: Int): PageStackLayoutState = list[index]
+   fun pageStackLayout(index: Int): PageStackLayoutState
+         = list[index]
 
    /**
     * 指定したPageStackが指定した位置にあるときの
@@ -584,7 +601,7 @@ internal abstract class PageStackBoardLayoutLogic(
 
       // 再生成が不要な可能性もあるため、必要になるまでは生成しないまま進める
       lateinit var resultList: MutableList<PageStackLayoutState>
-      lateinit var resultMap: MutableMap<PageStack.Id, PageStackLayoutState>
+      lateinit var resultMap: MutableMap<PageStackBoard.PageStackId, PageStackLayoutState>
       var i = 0
 
       fun prepareResults() {
@@ -597,27 +614,30 @@ internal abstract class PageStackBoardLayoutLogic(
       }
 
       for (pageStackElement in pageStackBoard.sequence()) {
-         val pageStack = pageStackElement.cache.value
+         val pageStackId = pageStackElement.id
 
          var layoutState = if (i >= 0) {
-            if (prevLayoutList.getOrNull(i)?.pageStackId == pageStack.id) {
+            if (prevLayoutList.getOrNull(i)?.pageStackId == pageStackId) {
                prevLayoutList[i++]
             } else {
                prepareResults()
-               prevLayoutMap[pageStack.id]
+               prevLayoutMap[pageStackId]
             }
          } else {
-            prevLayoutMap[pageStack.id]
+            prevLayoutMap[pageStackId]
          }
 
          if (i < 0) {
             if (layoutState == null) {
-               val pageStackState = pageStackStateConstructor(pageStackElement.cache)
+               val pageStackState = pageStackStateConstructor(
+                  pageStackId,
+                  pageStackElement.pageStackCache
+               )
                layoutState = PageStackLayoutState(pageStackState)
             }
 
             resultList += layoutState
-            resultMap[pageStack.id] = layoutState
+            resultMap[pageStackId] = layoutState
          }
       }
 

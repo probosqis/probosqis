@@ -19,7 +19,6 @@ package com.wcaokaze.probosqis.page
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
-import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.Test
@@ -39,21 +38,39 @@ class PageStackComposeTest {
       )
    )
 
+   private val pageStateStore = PageStateStore(
+      listOf(
+         spyPageComposable.pageStateFactory,
+      )
+   )
+
    @Test
    fun onlyForefrontComposableIsCalled() {
       val page1 = SpyPage()
       val page2 = SpyPage()
 
-      var pageStack = PageStack(page1, MockClock())
-      pageStack = pageStack.added(page2)
+      var pageStack = PageStack(
+         PageStack.Id(0L),
+         PageStack.SavedPageState(
+            PageStack.PageId(0L),
+            page1
+         )
+      )
+      pageStack = pageStack.added(
+         PageStack.SavedPageState(
+            PageStack.PageId(1L),
+            page2
+         )
+      )
 
       val pageStackState = PageStackState(
+         PageStackBoard.PageStackId(pageStack.id.value),
          WritableCache(pageStack),
          mockk<SingleColumnPageStackBoardState>()
       )
 
       rule.setContent {
-         PageStackContent(pageStackState, pageComposableSwitcher)
+         PageStackContent(pageStackState, pageComposableSwitcher, pageStateStore)
       }
 
       rule.runOnIdle {
@@ -69,17 +86,29 @@ class PageStackComposeTest {
       val page3 = SpyPage()
 
       val pageStackState by derivedStateOf {
-         var pageStack = PageStack(page1, MockClock())
-         pageStack = pageStack.added(page2)
+         var pageStack = PageStack(
+            PageStack.Id(0L),
+            PageStack.SavedPageState(
+               PageStack.PageId(0L),
+               page1
+            )
+         )
+         pageStack = pageStack.added(
+            PageStack.SavedPageState(
+               PageStack.PageId(1L),
+               page2
+            )
+         )
 
          PageStackState(
+            PageStackBoard.PageStackId(pageStack.id.value),
             WritableCache(pageStack),
             mockk<SingleColumnPageStackBoardState>()
          )
       }
 
       rule.setContent {
-         PageStackContent(pageStackState, pageComposableSwitcher)
+         PageStackContent(pageStackState, pageComposableSwitcher, pageStateStore)
       }
 
       rule.runOnIdle {
@@ -97,8 +126,12 @@ class PageStackComposeTest {
          assertEquals(0, page3.recompositionCount)
       }
 
-      pageStackState.pageStackCache.value =
-         pageStackState.pageStack.added(page3)
+      pageStackState.pageStackCache.value = pageStackState.pageStack.added(
+         PageStack.SavedPageState(
+            PageStack.PageId(2L),
+            page3
+         )
+      )
 
       rule.runOnIdle {
          assertEquals(1, page1.recompositionCount)

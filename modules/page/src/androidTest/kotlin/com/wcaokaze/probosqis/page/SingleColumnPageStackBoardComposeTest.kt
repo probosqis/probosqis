@@ -81,11 +81,13 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
    private fun SingleColumnPageStackBoard(
       state: SingleColumnPageStackBoardState,
       width: Dp = defaultPageStackBoardWidth,
-      pageComposableSwitcher: PageComposableSwitcher = defaultPageComposableSwitcher
+      pageComposableSwitcher: PageComposableSwitcher = defaultPageComposableSwitcher,
+      pageStateStore: PageStateStore = defaultPageStateStore
    ) {
       SingleColumnPageStackBoard(
          state,
          pageComposableSwitcher,
+         pageStateStore,
          WindowInsets(0, 0, 0, 0),
          modifier = Modifier
             .width(width)
@@ -179,7 +181,7 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          assertEquals(expectedPageNumbers.size, pageStackCount)
 
          for (i in 0 until pageStackCount) {
-            val page = pageStackBoard[i].cache.value.head
+            val page = pageStackBoard[i].pageStackCache.value.head.page
             assertIs<TestPage>(page)
             assertEquals(expectedPageNumbers[i], page.i)
          }
@@ -190,8 +192,7 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          layoutLogic: SingleColumnLayoutLogic
       ) {
          val pageStackCount = pageStackBoard.pageStackCount
-         val ids = (0 until pageStackCount)
-            .map { pageStackBoard[it].cache.value.id }
+         val ids = (0 until pageStackCount).map { pageStackBoard[it].id }
 
          assertEquals(ids, layoutLogic.layoutStateList.map { it.pageStackId })
 
@@ -832,7 +833,7 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
             }
             byId -> {
                pageStackBoardState.animateScroll(
-                  PageStack.Id(pageStack.toLong()),
+                  PageStackBoard.PageStackId(pageStack.toLong()),
                   targetPositionInBoard
                )
             }
@@ -1093,29 +1094,41 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
          }
+         val (pageComposableSwitcher, pageStateStore) = remember {
+            pageComposableSwitcher<TestPage>(
+               { TestPageState() },
+               { page, _, pageStackState ->
+                  Button(
+                     onClick = {
+                        val newPage = TestPage(page.i + 100)
+                        val newPageStack = PageStack(
+                           PageStack.Id(pageStackState.pageStack.id.value + 100L),
+                           PageStack.SavedPageState(
+                              PageStack.PageId(newPage.i.toLong()),
+                              newPage
+                           )
+                        )
+                        pageStackState.addColumn(newPageStack)
+                     }
+                  ) {
+                     Text("Add PageStack ${page.i}")
+                  }
+               }
+            )
+         }
+
          SingleColumnPageStackBoard(
             remembered.pageStackBoardState,
-            pageComposableSwitcher = pageComposableSwitcher<TestPage> { page, pageStackState ->
-               Button(
-                  onClick = {
-                     val newPageStack = PageStack(
-                        PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                        TestPage(page.i + 100)
-                     )
-                     pageStackState.addColumn(newPageStack)
-                  }
-               ) {
-                  Text("Add PageStack ${page.i}")
-               }
-            }
+            pageComposableSwitcher = pageComposableSwitcher,
+            pageStateStore = pageStateStore
          )
       }
 
       fun assertPageNumbers(expected: List<Int>, actual: PageStackBoard) {
          val pages = actual.sequence()
             .map { assertIs<PageStackBoard.PageStack>(it) }
-            .map { it.cache.value }
-            .map { assertIs<TestPage>(it.head) }
+            .map { it.pageStackCache.value }
+            .map { assertIs<TestPage>(it.head.page) }
             .toList()
 
          assertContentEquals(expected, pages.map { it.i })
@@ -1182,8 +1195,8 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       fun assertPageNumbers(expected: List<Int>, actual: PageStackBoard) {
          val pages = actual.sequence()
             .map { assertIs<PageStackBoard.PageStack>(it) }
-            .map { it.cache.value }
-            .map { assertIs<TestPage>(it.head) }
+            .map { it.pageStackCache.value }
+            .map { assertIs<TestPage>(it.head.page) }
             .toList()
 
          assertContentEquals(expected, pages.map { it.i })

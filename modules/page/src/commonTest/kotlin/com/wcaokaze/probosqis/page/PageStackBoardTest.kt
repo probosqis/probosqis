@@ -35,9 +35,17 @@ class PageStackBoardTest {
 
    private fun createPageStackElement(i: Int): PageStackBoard.PageStack {
       val page = PageImpl(i)
-      val pageStack = PageStack(page)
-      val cache = WritableCache(pageStack)
-      return PageStackBoard.PageStack(cache)
+      val pageStack = PageStack(
+         PageStack.Id(i.toLong()),
+         PageStack.SavedPageState(
+            PageStack.PageId(i.toLong()),
+            page
+         )
+      )
+      return PageStackBoard.PageStack(
+         PageStackBoard.PageStackId(pageStack.id.value),
+         WritableCache(pageStack)
+      )
    }
 
    private fun createColumn(pageStackCount: Int): PageStackBoard.Column {
@@ -56,7 +64,7 @@ class PageStackBoardTest {
 
    private fun assertPage(expected: Int, element: PageStackBoard.LayoutElement) {
       assertIs<PageStackBoard.PageStack>(element)
-      val page = assertIs<PageImpl>(element.cache.value.head)
+      val page = assertIs<PageImpl>(element.pageStackCache.value.head.page)
       assertEquals(expected, page.i)
    }
 
@@ -83,8 +91,8 @@ class PageStackBoardTest {
                is PageStackBoard.PageStack -> {
                   if (actualChild !is PageStackBoard.PageStack) { return false }
 
-                  val expectedPageStack = expectedChild.cache.value
-                  val actualPageStack   = actualChild  .cache.value
+                  val expectedPageStack = expectedChild.pageStackCache.value
+                  val actualPageStack   = actualChild  .pageStackCache.value
                   if (expectedPageStack.id != actualPageStack.id) { return false }
                }
 
@@ -626,9 +634,17 @@ class PageStackBoardTest {
    private fun Column(vararg children: PageStackBoard.LayoutElement)
          = PageStackBoard.Column(children.toList())
    private fun PageStack(id: Long): PageStackBoard.PageStack {
-      val pageStack = PageStack(PageStack.Id(id), PageImpl(0))
-      val pageStackCache = WritableCache(pageStack)
-      return PageStackBoard.PageStack(pageStackCache)
+      val pageStack = PageStack(
+         PageStack.Id(id),
+         PageStack.SavedPageState(
+            PageStack.PageId(id),
+            PageImpl(0)
+         )
+      )
+      return PageStackBoard.PageStack(
+         PageStackBoard.PageStackId(pageStack.id.value),
+         WritableCache(pageStack)
+      )
    }
 
    @Test
@@ -662,18 +678,18 @@ class PageStackBoardTest {
          )
       )
 
-      assertEquals( 0L, pageStackBoard[ 0].cache.value.id.value)
-      assertEquals( 2L, pageStackBoard[ 1].cache.value.id.value)
-      assertEquals( 3L, pageStackBoard[ 2].cache.value.id.value)
-      assertEquals( 5L, pageStackBoard[ 3].cache.value.id.value)
-      assertEquals( 6L, pageStackBoard[ 4].cache.value.id.value)
-      assertEquals( 8L, pageStackBoard[ 5].cache.value.id.value)
-      assertEquals(11L, pageStackBoard[ 6].cache.value.id.value)
-      assertEquals(12L, pageStackBoard[ 7].cache.value.id.value)
-      assertEquals(14L, pageStackBoard[ 8].cache.value.id.value)
-      assertEquals(17L, pageStackBoard[ 9].cache.value.id.value)
-      assertEquals(18L, pageStackBoard[10].cache.value.id.value)
-      assertEquals(20L, pageStackBoard[11].cache.value.id.value)
+      assertEquals( 0L, pageStackBoard[ 0].pageStackCache.value.id.value)
+      assertEquals( 2L, pageStackBoard[ 1].pageStackCache.value.id.value)
+      assertEquals( 3L, pageStackBoard[ 2].pageStackCache.value.id.value)
+      assertEquals( 5L, pageStackBoard[ 3].pageStackCache.value.id.value)
+      assertEquals( 6L, pageStackBoard[ 4].pageStackCache.value.id.value)
+      assertEquals( 8L, pageStackBoard[ 5].pageStackCache.value.id.value)
+      assertEquals(11L, pageStackBoard[ 6].pageStackCache.value.id.value)
+      assertEquals(12L, pageStackBoard[ 7].pageStackCache.value.id.value)
+      assertEquals(14L, pageStackBoard[ 8].pageStackCache.value.id.value)
+      assertEquals(17L, pageStackBoard[ 9].pageStackCache.value.id.value)
+      assertEquals(18L, pageStackBoard[10].pageStackCache.value.id.value)
+      assertEquals(20L, pageStackBoard[11].pageStackCache.value.id.value)
       assertFails { pageStackBoard[12] }
       assertFails { pageStackBoard[-1] }
    }
@@ -712,7 +728,7 @@ class PageStackBoardTest {
       val expected = listOf(0L, 2L, 3L, 5L, 6L, 8L, 11L, 12L, 14L, 17L, 18L, 20L)
 
       val actual = pageStackBoard.sequence()
-         .map { it.cache.value.id.value }
+         .map { it.pageStackCache.value.id.value }
          .toList()
 
       assertContentEquals(expected, actual)
@@ -744,7 +760,7 @@ class PageStackBoardTest {
       )
 
       assertTrue(
-         pageStackBoard.removed(PageStack.Id(0L)) treeEquals PageStackBoard(
+         pageStackBoard.removed(PageStackBoard.PageStackId(0L)) treeEquals PageStackBoard(
             Row(
                Column(
                   Column(
@@ -768,7 +784,7 @@ class PageStackBoardTest {
       )
 
       assertTrue(
-         pageStackBoard.removed(PageStack.Id(1L)) treeEquals PageStackBoard(
+         pageStackBoard.removed(PageStackBoard.PageStackId(1L)) treeEquals PageStackBoard(
             Row(
                Column(
                   PageStack(0L),
@@ -792,7 +808,7 @@ class PageStackBoardTest {
       )
 
       assertTrue(
-         pageStackBoard.removed(PageStack.Id(2L)) treeEquals PageStackBoard(
+         pageStackBoard.removed(PageStackBoard.PageStackId(2L)) treeEquals PageStackBoard(
             Row(
                Column(
                   PageStack(0L),
@@ -816,7 +832,7 @@ class PageStackBoardTest {
       )
 
       assertTrue(
-         pageStackBoard.removed(PageStack.Id(3L)) treeEquals PageStackBoard(
+         pageStackBoard.removed(PageStackBoard.PageStackId(3L)) treeEquals PageStackBoard(
             Row(
                Column(
                   PageStack(0L),
@@ -840,7 +856,7 @@ class PageStackBoardTest {
       )
 
       assertTrue(
-         pageStackBoard.removed(PageStack.Id(4L)) treeEquals PageStackBoard(
+         pageStackBoard.removed(PageStackBoard.PageStackId(4L)) treeEquals PageStackBoard(
             Row(
                Column(
                   PageStack(0L),
@@ -864,7 +880,7 @@ class PageStackBoardTest {
       )
 
       assertTrue(
-         pageStackBoard.removed(PageStack.Id(5L)) treeEquals PageStackBoard(
+         pageStackBoard.removed(PageStackBoard.PageStackId(5L)) treeEquals PageStackBoard(
             Row(
                Column(
                   PageStack(0L),
@@ -888,7 +904,7 @@ class PageStackBoardTest {
       )
 
       assertTrue(
-         pageStackBoard.removed(PageStack.Id(6L)) treeEquals PageStackBoard(
+         pageStackBoard.removed(PageStackBoard.PageStackId(6L)) treeEquals PageStackBoard(
             Row(
                Column(
                   PageStack(0L),
@@ -912,7 +928,7 @@ class PageStackBoardTest {
       )
 
       assertTrue(
-         pageStackBoard.removed(PageStack.Id(7L)) treeEquals PageStackBoard(
+         pageStackBoard.removed(PageStackBoard.PageStackId(7L)) treeEquals PageStackBoard(
             Row(
                Column(
                   PageStack(0L),
@@ -936,7 +952,7 @@ class PageStackBoardTest {
       )
 
       assertTrue(
-         pageStackBoard.removed(PageStack.Id(8L)) treeEquals PageStackBoard(
+         pageStackBoard.removed(PageStackBoard.PageStackId(8L)) treeEquals PageStackBoard(
             Row(
                Column(
                   PageStack(0L),
@@ -960,7 +976,7 @@ class PageStackBoardTest {
       )
 
       assertTrue(
-         pageStackBoard.removed(PageStack.Id(9L)) treeEquals PageStackBoard(
+         pageStackBoard.removed(PageStackBoard.PageStackId(9L)) treeEquals PageStackBoard(
             Row(
                Column(
                   PageStack(0L),

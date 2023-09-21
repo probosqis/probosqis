@@ -68,12 +68,12 @@ class SingleColumnPageStackBoardState(
 
    override val layout = SingleColumnLayoutLogic(
       pageStackBoard,
-      pageStackStateConstructor = { pageStackCache ->
-         PageStackState(pageStackCache, pageStackBoardState = this)
+      pageStackStateConstructor = { pageStackId, pageStackCache ->
+         PageStackState(pageStackId, pageStackCache, pageStackBoardState = this)
       }
    )
 
-   override fun pageStackState(id: PageStack.Id): PageStackState?
+   override fun pageStackState(id: PageStackBoard.PageStackId): PageStackState?
          = layout.pageStackLayout(id)?.pageStackState
 
    override fun pageStackState(index: Int): PageStackState
@@ -89,7 +89,8 @@ class SingleColumnPageStackBoardState(
 @Stable
 internal class SingleColumnLayoutLogic(
    pageStackBoard: PageStackBoard,
-   pageStackStateConstructor: (WritableCache<PageStack>) -> PageStackState
+   pageStackStateConstructor:
+      (PageStackBoard.PageStackId, WritableCache<PageStack>) -> PageStackState
 ) : PageStackBoardLayoutLogic(pageStackBoard, pageStackStateConstructor) {
    private var pageStackBoardWidth by mutableStateOf(0)
 
@@ -214,6 +215,7 @@ fun SingleColumnPageStackBoardAppBar(
 fun SingleColumnPageStackBoard(
    state: SingleColumnPageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
 ) {
@@ -264,6 +266,7 @@ fun SingleColumnPageStackBoard(
                PageStackContent(
                   pageStackLayout.pageStackState,
                   pageComposableSwitcher,
+                  pageStateStore,
                   modifier = Modifier.alpha(pageStackLayout.alpha)
                )
             } .single()
@@ -325,6 +328,7 @@ private fun PageStackAppBar(
 private fun PageStackContent(
    state: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    modifier: Modifier = Modifier
 ) {
    Surface(
@@ -332,6 +336,6 @@ private fun PageStackContent(
       shadowElevation = 4.dp,
       modifier = modifier
    ) {
-      PageStackContent(state, pageComposableSwitcher)
+      PageStackContent(state, pageComposableSwitcher, pageStateStore)
    }
 }
