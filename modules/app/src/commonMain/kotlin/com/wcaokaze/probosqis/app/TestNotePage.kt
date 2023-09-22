@@ -17,7 +17,6 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,13 +25,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,40 +37,20 @@ import com.wcaokaze.probosqis.page.Page
 import com.wcaokaze.probosqis.page.PageState
 import com.wcaokaze.probosqis.page.pageComposable
 import com.wcaokaze.probosqis.page.pageStateFactory
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-@SerialName("com.wcaokaze.probosqis.app.TestTimelinePage")
-class TestTimelinePage : Page()
+@SerialName("com.wcaokaze.probosqis.app.TestNotePage")
+class TestNotePage(val i: Int) : Page()
 
 @Stable
-class TestTimelinePageState : PageState() {
-   val notes: ImmutableList<Int> by mutableStateOf(
-      (0..200).toImmutableList()
-   )
-}
+class TestNotePageState : PageState()
 
-val testTimelinePageComposable = pageComposable<TestTimelinePage, TestTimelinePageState>(
-   pageStateFactory { TestTimelinePageState() },
-   content = { _, pageState, pageStackState ->
-      LazyColumn(Modifier.fillMaxSize()) {
-         items(pageState.notes) { i ->
-            Note(
-               i,
-               modifier = Modifier
-                  .fillMaxWidth()
-                  .clickable(
-                     onClick = {
-                        val notePage = TestNotePage(i)
-                        pageStackState.startPage(notePage)
-                     }
-                  )
-            )
-         }
-      }
+val testNotePageComposable = pageComposable<TestNotePage, TestNotePageState>(
+   pageStateFactory { TestNotePageState() },
+   content = { page, _, _ ->
+      Note(page.i, Modifier.fillMaxSize())
    },
    header = { _, _, _ -> },
    footer = null
@@ -83,6 +58,32 @@ val testTimelinePageComposable = pageComposable<TestTimelinePage, TestTimelinePa
 
 @Composable
 private fun Note(
+   i: Int,
+   modifier: Modifier = Modifier
+) {
+   Column(modifier) {
+      Account(i, Modifier.fillMaxWidth())
+
+      Box(
+         Modifier
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .fillMaxWidth()
+            .height(12.dp)
+            .background(Color.Gray)
+      )
+
+      Box(
+         Modifier
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .fillMaxWidth()
+            .height(12.dp)
+            .background(Color.Gray)
+      )
+   }
+}
+
+@Composable
+private fun Account(
    i: Int,
    modifier: Modifier = Modifier
 ) {
@@ -112,17 +113,9 @@ private fun Note(
 
          Box(
             Modifier
-               .padding(vertical = 4.dp)
+               .padding(vertical = 8.dp)
                .fillMaxWidth()
-               .height(12.dp)
-               .background(Color.Gray)
-         )
-
-         Box(
-            Modifier
-               .padding(vertical = 4.dp)
-               .fillMaxWidth()
-               .height(12.dp)
+               .height(16.dp)
                .background(Color.Gray)
          )
       }

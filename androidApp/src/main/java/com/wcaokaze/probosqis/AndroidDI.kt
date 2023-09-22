@@ -19,8 +19,10 @@ package com.wcaokaze.probosqis
 import android.content.Context
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.app.DI
+import com.wcaokaze.probosqis.app.TestNotePage
 import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.TestTimelinePage
+import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
 import com.wcaokaze.probosqis.page.JvmPageStackBoardRepository
@@ -34,12 +36,14 @@ class AndroidDI(context: Context) : DI {
    override val allPageComposables = persistentListOf(
       testPageComposable,
       testTimelinePageComposable,
+      testNotePageComposable,
    )
 
    override val pageStackRepository = JvmPageStackRepository(
       allPageSerializers = listOf(
          pageSerializer<TestPage>(),
          pageSerializer<TestTimelinePage>(),
+         pageSerializer<TestNotePage>(),
       ),
       File(context.filesDir, "probosqisData/pageStackCache")
    )
