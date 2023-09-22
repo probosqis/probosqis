@@ -113,6 +113,17 @@ class PageStackState internal constructor(
       }
    }
 
+   fun finishPage() {
+      val tail = pageStackCache.value.tailOrNull()
+
+      if (tail == null) {
+         removeFromBoard()
+         return
+      }
+
+      pageStackCache.value = tail
+   }
+
    fun addColumn(pageStack: PageStack) {
       val board = pageStackBoardState.pageStackBoard
 

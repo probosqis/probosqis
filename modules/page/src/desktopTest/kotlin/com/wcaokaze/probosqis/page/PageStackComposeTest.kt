@@ -19,7 +19,10 @@ package com.wcaokaze.probosqis.page
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.Job
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -146,18 +149,24 @@ class PageStackComposeTest {
       val page2 = SpyPage()
       val page3 = SpyPage()
 
+      val pageStackId = PageStackBoard.PageStackId(0L)
+
       val initialPageStack = PageStack(
-         PageStack.Id(0L),
+         PageStack.Id(pageStackId.value),
          PageStack.SavedPageState(
             PageStack.PageId(0L),
             page1
          )
       )
 
+      val pageStackBoardState = mockk<SingleColumnPageStackBoardState> {
+         every { removePageStack(any()) } returns Job().apply { complete() }
+      }
+
       val pageStackState = PageStackState(
-         PageStackBoard.PageStackId(initialPageStack.id.value),
+         pageStackId,
          WritableCache(initialPageStack),
-         mockk<SingleColumnPageStackBoardState>()
+         pageStackBoardState
       )
 
       rule.setContent {
@@ -168,6 +177,7 @@ class PageStackComposeTest {
          assertEquals(1, page1.recompositionCount)
          assertEquals(0, page2.recompositionCount)
          assertEquals(0, page3.recompositionCount)
+         verify(inverse = true) { pageStackBoardState.removePageStack(pageStackId) }
       }
 
       pageStackState.startPage(page2)
@@ -176,6 +186,43 @@ class PageStackComposeTest {
          assertEquals(1, page1.recompositionCount)
          assertEquals(1, page2.recompositionCount)
          assertEquals(0, page3.recompositionCount)
+         verify(inverse = true) { pageStackBoardState.removePageStack(pageStackId) }
+      }
+
+      pageStackState.finishPage()
+
+      rule.runOnIdle {
+         assertEquals(2, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+         assertEquals(0, page3.recompositionCount)
+         verify(inverse = true) { pageStackBoardState.removePageStack(pageStackId) }
+      }
+
+      pageStackState.startPage(page3)
+
+      rule.runOnIdle {
+         assertEquals(2, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+         assertEquals(1, page3.recompositionCount)
+         verify(inverse = true) { pageStackBoardState.removePageStack(pageStackId) }
+      }
+
+      pageStackState.finishPage()
+
+      rule.runOnIdle {
+         assertEquals(3, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+         assertEquals(1, page3.recompositionCount)
+         verify(inverse = true) { pageStackBoardState.removePageStack(pageStackId) }
+      }
+
+      pageStackState.finishPage()
+
+      rule.runOnIdle {
+         assertEquals(3, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+         assertEquals(1, page3.recompositionCount)
+         verify { pageStackBoardState.removePageStack(pageStackId) }
       }
    }
 }

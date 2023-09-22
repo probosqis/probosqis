@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -311,9 +312,15 @@ private fun PageStackAppBar(
       },
       navigationIcon = {
          IconButton(
-            onClick = { state.removeFromBoard() }
+            onClick = { state.finishPage() }
          ) {
-            Icon(Icons.Default.Close, contentDescription = "Close")
+            val icon = if (state.pageStack.tailOrNull() != null) {
+               Icons.Default.ArrowBack
+            } else {
+               Icons.Default.Close
+            }
+
+            Icon(icon, contentDescription = "Close")
          }
       },
       windowInsets = windowInsets,

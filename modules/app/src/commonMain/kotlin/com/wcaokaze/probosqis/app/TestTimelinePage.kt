@@ -42,7 +42,6 @@ import com.wcaokaze.probosqis.page.PageState
 import com.wcaokaze.probosqis.page.pageComposable
 import com.wcaokaze.probosqis.page.pageStateFactory
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
