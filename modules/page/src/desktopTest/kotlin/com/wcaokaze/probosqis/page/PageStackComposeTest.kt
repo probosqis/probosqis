@@ -139,4 +139,43 @@ class PageStackComposeTest {
          assertEquals(1, page3.recompositionCount)
       }
    }
+
+   @Test
+   fun pageTransition_viaPageStackState() {
+      val page1 = SpyPage()
+      val page2 = SpyPage()
+      val page3 = SpyPage()
+
+      val initialPageStack = PageStack(
+         PageStack.Id(0L),
+         PageStack.SavedPageState(
+            PageStack.PageId(0L),
+            page1
+         )
+      )
+
+      val pageStackState = PageStackState(
+         PageStackBoard.PageStackId(initialPageStack.id.value),
+         WritableCache(initialPageStack),
+         mockk<SingleColumnPageStackBoardState>()
+      )
+
+      rule.setContent {
+         PageStackContent(pageStackState, pageComposableSwitcher, pageStateStore)
+      }
+
+      rule.runOnIdle {
+         assertEquals(1, page1.recompositionCount)
+         assertEquals(0, page2.recompositionCount)
+         assertEquals(0, page3.recompositionCount)
+      }
+
+      pageStackState.startPage(page2)
+
+      rule.runOnIdle {
+         assertEquals(1, page1.recompositionCount)
+         assertEquals(1, page2.recompositionCount)
+         assertEquals(0, page3.recompositionCount)
+      }
+   }
 }
