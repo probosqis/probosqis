@@ -1040,10 +1040,12 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
    @Test
    fun firstVisibleIndex() {
       lateinit var pageStackBoardState: SingleColumnPageStackBoardState
+      lateinit var coroutineScope: CoroutineScope
       rule.setContent {
          val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
+            coroutineScope = remembered.coroutineScope
          }
          SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
@@ -1052,12 +1054,10 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
       }
 
-      val pageStackWidth = with (rule.density) { defaultPageStackBoardWidth.toPx() }
-
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
          down(Offset(0.0f, 0.0f))
          moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
-         moveBy(Offset(-pageStackWidth + 1.0f, 0.0f))
+         moveBy(Offset(-defaultPageStackBoardWidth.toPx() + 1.0f, 0.0f))
       }
       rule.onNodeWithText("0")
          .fetchSemanticsNode()
@@ -1082,6 +1082,166 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          }
       rule.runOnIdle {
          assertEquals(1, pageStackBoardState.firstVisiblePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         up()
+      }
+      rule.onNodeWithText("1")
+         .fetchSemanticsNode()
+         .boundsInRoot
+         .let { assertEquals(0.0f, it.left, absoluteTolerance = 0.05f) }
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.firstVisiblePageStackIndex)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(0, PositionInBoard.FirstVisible)
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(1, PositionInBoard.FirstVisible)
+      }
+
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.firstVisiblePageStackIndex)
+      }
+   }
+
+   @Test
+   fun lastVisibleIndex() {
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
+      lateinit var coroutineScope: CoroutineScope
+      rule.setContent {
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
+         SideEffect {
+            pageStackBoardState = remembered.pageStackBoardState
+            coroutineScope = remembered.coroutineScope
+         }
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.lastVisiblePageStackIndex)
+      }
+
+      val pageStackBoardWidth = with (rule.density) {
+         defaultPageStackBoardWidth.toPx()
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         down(Offset(0.0f, 0.0f))
+         moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
+         moveBy(Offset(-expectedScrollOffset(1) + 1.0f, 0.0f))
+      }
+      rule.onNodeWithText("1")
+         .fetchSemanticsNode()
+         .boundsInRoot
+         .let {
+            assertEquals(
+               pageStackBoardWidth + 1.0f,
+               it.left + it.width,
+               absoluteTolerance = 0.05f
+            )
+         }
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.lastVisiblePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         moveBy(Offset(-16.dp.toPx() - 2.0f, 0.0f))
+      }
+      rule.onNodeWithText("2")
+         .fetchSemanticsNode()
+         .boundsInRoot
+         .let {
+            assertEquals(
+               pageStackBoardWidth - 1.0f,
+               it.left,
+               absoluteTolerance = 0.05f
+            )
+         }
+      rule.runOnIdle {
+         assertEquals(2, pageStackBoardState.lastVisiblePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         up()
+      }
+      rule.onNodeWithText("1")
+         .fetchSemanticsNode()
+         .boundsInRoot
+         .let { assertEquals(0.0f, it.left, absoluteTolerance = 0.05f) }
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.lastVisiblePageStackIndex)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(0, PositionInBoard.LastVisible)
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.lastVisiblePageStackIndex)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(1, PositionInBoard.LastVisible)
+      }
+
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.lastVisiblePageStackIndex)
+      }
+   }
+
+   @Test
+   fun activePageStack() {
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
+      lateinit var coroutineScope: CoroutineScope
+      rule.setContent {
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
+         SideEffect {
+            pageStackBoardState = remembered.pageStackBoardState
+            coroutineScope = remembered.coroutineScope
+         }
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.activePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         down(Offset(0.0f, 0.0f))
+         moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
+         moveBy(Offset(-(defaultPageStackBoardWidth / 2 + 8.dp).toPx() + 1.0f, 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.activePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         moveBy(Offset(-2.0f, 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.activePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         up()
+      }
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.activePageStackIndex)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(0)
+      }
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.activePageStackIndex)
       }
    }
 

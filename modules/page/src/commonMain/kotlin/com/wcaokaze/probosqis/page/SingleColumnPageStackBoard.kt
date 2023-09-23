@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -65,6 +66,28 @@ class SingleColumnPageStackBoardState(
 ) {
    override var firstVisiblePageStackIndex by mutableStateOf(0)
       internal set
+   override var lastVisiblePageStackIndex by mutableStateOf(0)
+      internal set
+
+   override val activePageStackIndex: Int get() {
+      val firstVisibleIndex = firstVisiblePageStackIndex
+      val lastVisibleIndex = lastVisiblePageStackIndex
+      if (firstVisibleIndex == lastVisibleIndex) { return firstVisibleIndex }
+
+      val firstVisibleLayout = layout.pageStackLayout(firstVisibleIndex)
+      val lastVisibleLayout  = layout.pageStackLayout(lastVisibleIndex)
+      val boardWidth = firstVisibleLayout.width
+
+      return if (
+         scrollState.scrollOffset + boardWidth / 2.0f
+            < (firstVisibleLayout.position.x
+               + lastVisibleLayout.position.x + lastVisibleLayout.width) / 2.0f
+      ) {
+         firstVisiblePageStackIndex
+      } else {
+         firstVisiblePageStackIndex + 1
+      }
+   }
 
    override val layout = SingleColumnLayoutLogic(
       pageStackBoard,
@@ -243,6 +266,7 @@ fun SingleColumnPageStackBoard(
          val scrollOffset = state.scrollState.scrollOffset.toInt()
 
          var firstVisibleIndex = -1
+         var lastVisibleIndex = -1
 
          val placeables = state.layout.mapIndexedNotNull { index, pageStackLayout ->
             val pageStackPosition = pageStackLayout.position
@@ -252,6 +276,10 @@ fun SingleColumnPageStackBoard(
                if (pageStackPosition.x + pageStackWidth > scrollOffset) {
                   firstVisibleIndex = index
                }
+            }
+
+            if (pageStackPosition.x < scrollOffset + pageStackBoardWidth) {
+               lastVisibleIndex = index
             }
 
             // TODO: PageStackに影がつくかつかないか未定のためギリギリ範囲外の
@@ -279,6 +307,7 @@ fun SingleColumnPageStackBoard(
          }
 
          state.firstVisiblePageStackIndex = firstVisibleIndex
+         state.lastVisiblePageStackIndex = lastVisibleIndex
 
          layout(pageStackBoardWidth, pageStackBoardHeight) {
             for ((layout, placeable) in placeables) {
@@ -311,9 +340,15 @@ private fun PageStackAppBar(
       },
       navigationIcon = {
          IconButton(
-            onClick = { state.removeFromBoard() }
+            onClick = { state.finishPage() }
          ) {
-            Icon(Icons.Default.Close, contentDescription = "Close")
+            val icon = if (state.pageStack.tailOrNull() != null) {
+               Icons.Default.ArrowBack
+            } else {
+               Icons.Default.Close
+            }
+
+            Icon(icon, contentDescription = "Close")
          }
       },
       windowInsets = windowInsets,

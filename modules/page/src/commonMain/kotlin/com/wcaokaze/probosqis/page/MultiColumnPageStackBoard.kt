@@ -17,12 +17,14 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -43,6 +45,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerType
+import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
+import androidx.compose.ui.input.pointer.isPrimaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -68,6 +75,11 @@ class MultiColumnPageStackBoardState(
    animCoroutineScope
 ) {
    override var firstVisiblePageStackIndex by mutableStateOf(0)
+      internal set
+   override var lastVisiblePageStackIndex by mutableStateOf(0)
+      internal set
+
+   override var activePageStackIndex by mutableStateOf(0)
       internal set
 
    override val layout = MultiColumnLayoutLogic(
@@ -195,6 +207,7 @@ fun MultiColumnPageStackBoard(
          val scrollOffset = state.scrollState.scrollOffset.toInt()
 
          var firstVisibleIndex = -1
+         var lastVisibleIndex = -1
 
          val placeables = state.layout.mapIndexedNotNull { index, pageStackLayout ->
             val pageStackPosition = pageStackLayout.position
@@ -204,6 +217,10 @@ fun MultiColumnPageStackBoard(
                if (pageStackPosition.x + pageStackWidth > scrollOffset) {
                   firstVisibleIndex = index
                }
+            }
+
+            if (pageStackPosition.x < scrollOffset + pageStackBoardWidth) {
+               lastVisibleIndex = index
             }
 
             // TODO: PageStackに影がつくかつかないか未定のためギリギリ範囲外の
@@ -217,13 +234,16 @@ fun MultiColumnPageStackBoard(
             val measurable = subcompose(pageStackLayout.pageStackId) {
                PageStack(
                   pageStackLayout.pageStackState,
-                  isActive = pageStackCount == 1,
+                  isActive = index == state.activePageStackIndex,
                   windowInsets.only(WindowInsetsSides.Bottom),
                   pageComposableSwitcher,
                   pageStateStore,
                   onTopAppBarHeightChanged,
                   modifier = Modifier
                      .alpha(pageStackLayout.alpha)
+                     .detectTouch(
+                        onTouch = { state.activePageStackIndex = index }
+                     )
                )
             } .single()
 
@@ -235,6 +255,9 @@ fun MultiColumnPageStackBoard(
          }
 
          state.firstVisiblePageStackIndex = firstVisibleIndex
+         state.lastVisiblePageStackIndex = lastVisibleIndex
+         state.activePageStackIndex = state.activePageStackIndex
+            .coerceIn(firstVisibleIndex, lastVisibleIndex)
 
          layout(pageStackBoardWidth, pageStackBoardHeight) {
             for ((layout, placeable) in placeables) {
@@ -273,9 +296,15 @@ private fun PageStack(
             title = { Text("Home") },
             navigationIcon = {
                IconButton(
-                  onClick = { state.removeFromBoard() }
+                  onClick = { state.finishPage() }
                ) {
-                  Icon(Icons.Default.Close, contentDescription = "Close")
+                  val icon = if (state.pageStack.tailOrNull() != null) {
+                     Icons.Default.ArrowBack
+                  } else {
+                     Icons.Default.Close
+                  }
+
+                  Icon(icon, contentDescription = "Close")
                }
             },
             windowInsets = WindowInsets(0, 0, 0, 0),
@@ -303,6 +332,29 @@ private fun PageStack(
             pageComposableSwitcher,
             pageStateStore
          )
+      }
+   }
+}
+
+@Stable
+private fun Modifier.detectTouch(onTouch: () -> Unit): Modifier {
+   return pointerInput(onTouch) {
+      forEachGesture {
+         awaitPointerEventScope {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+
+            val isDownEvent = event.changes.any {
+               if (it.type == PointerType.Mouse) {
+                  event.buttons.isPrimaryPressed && it.changedToDownIgnoreConsumed()
+               } else {
+                  it.changedToDownIgnoreConsumed()
+               }
+            }
+
+            if (isDownEvent) {
+               onTouch()
+            }
+         }
       }
    }
 }

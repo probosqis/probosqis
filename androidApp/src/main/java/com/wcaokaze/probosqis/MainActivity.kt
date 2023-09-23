@@ -22,12 +22,25 @@ import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.wcaokaze.probosqis.app.Probosqis
+import com.wcaokaze.probosqis.app.ProbosqisState
+import com.wcaokaze.probosqis.app.TestNotePage
+import com.wcaokaze.probosqis.app.TestPage
+import com.wcaokaze.probosqis.app.TestTimelinePage
+import com.wcaokaze.probosqis.app.testNotePageComposable
+import com.wcaokaze.probosqis.app.testPageComposable
+import com.wcaokaze.probosqis.app.testTimelinePageComposable
+import com.wcaokaze.probosqis.page.JvmPageStackBoardRepository
+import com.wcaokaze.probosqis.page.JvmPageStackRepository
+import com.wcaokaze.probosqis.page.pageSerializer
+import kotlinx.collections.immutable.persistentListOf
+import java.io.File
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,8 +50,36 @@ class MainActivity : ComponentActivity() {
 
       setContent {
          val context = LocalContext.current
-         val di = remember(context) { AndroidDI(context) }
-         Probosqis(di)
+
+         val probosqisState = remember(context) {
+            val allPageComposables = persistentListOf(
+               testPageComposable,
+               testTimelinePageComposable,
+               testNotePageComposable,
+            )
+            val pageStackRepository = JvmPageStackRepository(
+               allPageSerializers = listOf(
+                  pageSerializer<TestPage>(),
+                  pageSerializer<TestTimelinePage>(),
+                  pageSerializer<TestNotePage>(),
+               ),
+               File(context.filesDir, "probosqisData/pageStackCache")
+            )
+            val pageStackBoardRepository = JvmPageStackBoardRepository(
+               pageStackRepository,
+               File(context.filesDir, "probosqisData/pageStackBoardCache")
+            )
+
+            ProbosqisState(
+               allPageComposables, pageStackBoardRepository, pageStackRepository)
+         }
+
+         BackHandler {
+            val boardState = probosqisState.pageStackBoardState
+            boardState.pageStackState(boardState.activePageStackIndex).finishPage()
+         }
+
+         Probosqis(probosqisState)
       }
    }
 

@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.cache.compose.asState
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.cache.core.update
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -59,7 +60,13 @@ class PageStack private constructor(
 
    @Serializable
    @JvmInline
-   value class PageId(val value: Long)
+   value class PageId(val value: Long) {
+      companion object {
+         operator fun invoke(clock: Clock = Clock.System) = PageId(
+            clock.now().toEpochMilliseconds()
+         )
+      }
+   }
 
    constructor(id: Id, savedPageState: SavedPageState) : this(
       id, listOf(savedPageState)
@@ -94,6 +101,28 @@ class PageStackState internal constructor(
    val pageStackBoardState: PageStackBoardState
 ) {
    internal val pageStack: PageStack by pageStackCache.asState()
+
+   fun startPage(page: Page) {
+      pageStackCache.update {
+         it.added(
+            PageStack.SavedPageState(
+               PageStack.PageId(),
+               page
+            )
+         )
+      }
+   }
+
+   fun finishPage() {
+      val tail = pageStackCache.value.tailOrNull()
+
+      if (tail == null) {
+         removeFromBoard()
+         return
+      }
+
+      pageStackCache.value = tail
+   }
 
    fun addColumn(pageStack: PageStack) {
       val board = pageStackBoardState.pageStackBoard
