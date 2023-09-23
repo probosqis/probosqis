@@ -60,7 +60,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
-import com.wcaokaze.probosqis.page.PageStateStore
 import com.wcaokaze.probosqis.page.SingleColumnPageStackBoard
 import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardAppBar
 import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardState
@@ -69,26 +68,15 @@ import com.wcaokaze.probosqis.resources.Strings
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SingleColumnProbosqis(
-   di: DI,
+   state: ProbosqisState,
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    val coroutineScope = rememberCoroutineScope()
-   val pageStackBoardState = remember(di) {
-      val pageStackBoardCache = loadPageStackBoardOrDefault(
-         di.pageStackBoardRepository,
-         di.pageStackRepository
-      )
+   val pageStackBoardState = remember(state, coroutineScope) {
+      val pageStackBoardCache = state.loadPageStackBoardOrDefault()
 
       SingleColumnPageStackBoardState(
-         pageStackBoardCache, di.pageStackRepository, coroutineScope)
-   }
-
-   val pageComposableSwitcher = remember(di) {
-      PageComposableSwitcher(di.allPageComposables)
-   }
-
-   val pageStateStore = remember(di) {
-      PageStateStore(di.allPageComposables.map { it.pageStateFactory })
+         pageStackBoardCache, state.pageStackRepository, coroutineScope)
    }
 
    // 現状Desktopで動作しないため自前実装する
@@ -103,7 +91,7 @@ internal fun SingleColumnProbosqis(
          AppBar(
             appBarScrollState,
             pageStackBoardState,
-            pageComposableSwitcher,
+            state.pageComposableSwitcher,
             safeDrawingWindowInsets
          )
       },
@@ -113,8 +101,8 @@ internal fun SingleColumnProbosqis(
    ) { paddingValues ->
       SingleColumnPageStackBoard(
          pageStackBoardState,
-         pageComposableSwitcher,
-         pageStateStore,
+         state.pageComposableSwitcher,
+         state.pageStateStore,
          windowInsets = safeDrawingWindowInsets,
          modifier = Modifier
             .padding(paddingValues)

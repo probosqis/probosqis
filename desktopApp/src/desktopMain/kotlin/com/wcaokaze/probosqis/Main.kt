@@ -21,7 +21,19 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.wcaokaze.probosqis.app.App
 import com.wcaokaze.probosqis.app.Probosqis
+import com.wcaokaze.probosqis.app.ProbosqisState
+import com.wcaokaze.probosqis.app.TestNotePage
+import com.wcaokaze.probosqis.app.TestPage
+import com.wcaokaze.probosqis.app.TestTimelinePage
+import com.wcaokaze.probosqis.app.testNotePageComposable
+import com.wcaokaze.probosqis.app.testPageComposable
+import com.wcaokaze.probosqis.app.testTimelinePageComposable
+import com.wcaokaze.probosqis.page.JvmPageStackBoardRepository
+import com.wcaokaze.probosqis.page.JvmPageStackRepository
+import com.wcaokaze.probosqis.page.pageSerializer
 import com.wcaokaze.probosqis.resources.Strings
+import kotlinx.collections.immutable.persistentListOf
+import java.io.File
 
 fun main() {
    application {
@@ -29,8 +41,32 @@ fun main() {
          title = Strings.App.topAppBar,
          onCloseRequest = { exitApplication() }
       ) {
-         val di = remember { DesktopDI() }
-         Probosqis(di)
+         val probosqisState = remember {
+            val allPageComposables = persistentListOf(
+               testPageComposable,
+               testTimelinePageComposable,
+               testNotePageComposable,
+            )
+
+            val pageStackRepository = JvmPageStackRepository(
+               allPageSerializers = listOf(
+                  pageSerializer<TestPage>(),
+                  pageSerializer<TestTimelinePage>(),
+                  pageSerializer<TestNotePage>(),
+               ),
+               File(System.getProperty("user.home"), ".probosqisData/pageStackCache")
+            )
+
+            val pageStackBoardRepository = JvmPageStackBoardRepository(
+               pageStackRepository,
+               File(System.getProperty("user.home"), ".probosqisData/pageStackBoardCache")
+            )
+
+            ProbosqisState(
+               allPageComposables, pageStackBoardRepository, pageStackRepository)
+         }
+
+         Probosqis(probosqisState)
       }
    }
 }

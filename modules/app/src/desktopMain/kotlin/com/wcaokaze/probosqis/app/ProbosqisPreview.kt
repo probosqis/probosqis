@@ -29,46 +29,47 @@ import kotlinx.collections.immutable.persistentListOf
 @Preview
 @Composable
 private fun ProbosqisPreview() {
-   val di = remember {
-      object : DI {
-         override val allPageComposables = persistentListOf(
-            testPageComposable,
-         )
+   val probosqisState = remember {
+      val allPageComposables = persistentListOf(
+         testPageComposable,
+      )
 
-         override val pageStackBoardRepository = object : PageStackBoardRepository {
-            override fun savePageStackBoard(pageStackBoard: PageStackBoard)
-                  = throw NotImplementedError()
+      val pageStackBoardRepository = object : PageStackBoardRepository {
+         override fun savePageStackBoard(pageStackBoard: PageStackBoard)
+               = throw NotImplementedError()
 
-            override fun loadPageStackBoard(): WritableCache<PageStackBoard> {
-               val pageStack = PageStack(
-                  PageStack.Id(0L),
-                  PageStack.SavedPageState(
-                     PageStack.PageId(0L),
-                     TestPage(0)
-                  )
+         override fun loadPageStackBoard(): WritableCache<PageStackBoard> {
+            val pageStack = PageStack(
+               PageStack.Id(0L),
+               PageStack.SavedPageState(
+                  PageStack.PageId(0L),
+                  TestPage(0)
                )
-               val children = persistentListOf(
-                  PageStackBoard.PageStack(
-                     PageStackBoard.PageStackId(0L),
-                     WritableCache(pageStack)
-                  ),
-               )
-               val rootRow = PageStackBoard.Row(children)
-               val pageStackBoard = PageStackBoard(rootRow)
-               return WritableCache(pageStackBoard)
-            }
-         }
-
-         override val pageStackRepository = object : PageStackRepository {
-            override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
-                  = throw NotImplementedError()
-            override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
-                  = throw NotImplementedError()
-            override fun deleteAllPageStacks()
-                  = throw NotImplementedError()
+            )
+            val children = persistentListOf(
+               PageStackBoard.PageStack(
+                  PageStackBoard.PageStackId(0L),
+                  WritableCache(pageStack)
+               ),
+            )
+            val rootRow = PageStackBoard.Row(children)
+            val pageStackBoard = PageStackBoard(rootRow)
+            return WritableCache(pageStackBoard)
          }
       }
+
+      val pageStackRepository = object : PageStackRepository {
+         override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
+               = throw NotImplementedError()
+         override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
+               = throw NotImplementedError()
+         override fun deleteAllPageStacks()
+               = throw NotImplementedError()
+      }
+
+      ProbosqisState(
+         allPageComposables, pageStackBoardRepository, pageStackRepository)
    }
 
-   Probosqis(di)
+   Probosqis(probosqisState)
 }

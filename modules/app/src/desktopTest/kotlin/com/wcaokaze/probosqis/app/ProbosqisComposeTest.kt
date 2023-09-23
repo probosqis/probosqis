@@ -48,8 +48,13 @@ class ProbosqisComposeTest {
 
       val pageStackRepository = mockk<PageStackRepository>()
 
-      val loadedCache = loadPageStackBoardOrDefault(
-         pageStackBoardRepository, pageStackRepository)
+      val probosqisState = ProbosqisState(
+         allPageComposables = emptyList(),
+         pageStackBoardRepository,
+         pageStackRepository
+      )
+
+      val loadedCache = probosqisState.loadPageStackBoardOrDefault()
 
       assertSame(pageStackBoard, loadedCache.value)
    }
@@ -66,8 +71,13 @@ class ProbosqisComposeTest {
          every { deleteAllPageStacks() } returns Unit
       }
 
-      val loadedCache = loadPageStackBoardOrDefault(
-         pageStackBoardRepository, pageStackRepository)
+      val probosqisState = ProbosqisState(
+         allPageComposables = emptyList(),
+         pageStackBoardRepository,
+         pageStackRepository
+      )
+
+      val loadedCache = probosqisState.loadPageStackBoardOrDefault()
 
       verify { pageStackRepository.deleteAllPageStacks() }
       assertEquals(2, loadedCache.value.rootRow.childCount)

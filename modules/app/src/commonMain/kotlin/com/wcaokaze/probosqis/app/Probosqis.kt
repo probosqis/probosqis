@@ -21,29 +21,88 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.page.PageComposable
+import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackBoard
 import com.wcaokaze.probosqis.page.PageStackBoardRepository
 import com.wcaokaze.probosqis.page.PageStackRepository
+import com.wcaokaze.probosqis.page.PageStateStore
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
+@Stable
+class ProbosqisState(
+   allPageComposables: List<PageComposable<*, *>>,
+   val pageStackBoardRepository: PageStackBoardRepository,
+   val pageStackRepository: PageStackRepository
+) {
+   val pageComposableSwitcher = PageComposableSwitcher(allPageComposables)
+   val pageStateStore = PageStateStore(
+      allPageComposables.map { it.pageStateFactory }
+   )
+
+   internal fun loadPageStackBoardOrDefault(): WritableCache<PageStackBoard> {
+      return try {
+         pageStackBoardRepository.loadPageStackBoard()
+      } catch (e: Exception) {
+         pageStackRepository.deleteAllPageStacks()
+
+         val rootRow = PageStackBoard.Row(
+            createDefaultPageStacks(pageStackRepository)
+         )
+         val pageStackBoard = PageStackBoard(rootRow)
+         pageStackBoardRepository.savePageStackBoard(pageStackBoard)
+      }
+   }
+
+   private fun createDefaultPageStacks(
+      pageStackRepository: PageStackRepository
+   ): ImmutableList<PageStackBoard.LayoutElement> {
+      return sequenceOf(
+            PageStack(
+               PageStack.Id(0L),
+               PageStack.SavedPageState(
+                  PageStack.PageId(0L),
+                  TestPage(0)
+               )
+            ),
+            PageStack(
+               PageStack.Id(1L),
+               PageStack.SavedPageState(
+                  PageStack.PageId(1L),
+                  TestPage(1)
+               )
+            ),
+         )
+         .map { pageStackRepository.savePageStack(it) }
+         .map { pageStackCache ->
+            PageStackBoard.PageStack(
+               PageStackBoard.PageStackId(pageStackCache.value.id.value),
+               pageStackCache
+            )
+         }
+         .toImmutableList()
+   }
+}
+
 @Composable
 fun Probosqis(
-   di: DI,
+   state: ProbosqisState,
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    ProbosqisTheme {
       MaterialTheme(colorScheme()) {
          BoxWithConstraints {
             if (maxWidth < 512.dp) {
-               SingleColumnProbosqis(di, safeDrawingWindowInsets)
+               SingleColumnProbosqis(state, safeDrawingWindowInsets)
             } else {
-               MultiColumnProbosqis(di, safeDrawingWindowInsets)
+               MultiColumnProbosqis(state, safeDrawingWindowInsets)
             }
          }
       }
@@ -52,49 +111,3 @@ fun Probosqis(
 
 @Composable
 expect fun colorScheme(): ColorScheme
-
-internal fun loadPageStackBoardOrDefault(
-   pageStackBoardRepository: PageStackBoardRepository,
-   pageStackRepository: PageStackRepository
-): WritableCache<PageStackBoard> {
-   return try {
-      pageStackBoardRepository.loadPageStackBoard()
-   } catch (e: Exception) {
-      pageStackRepository.deleteAllPageStacks()
-
-      val rootRow = PageStackBoard.Row(
-         createDefaultPageStacks(pageStackRepository)
-      )
-      val pageStackBoard = PageStackBoard(rootRow)
-      pageStackBoardRepository.savePageStackBoard(pageStackBoard)
-   }
-}
-
-private fun createDefaultPageStacks(
-   pageStackRepository: PageStackRepository
-): ImmutableList<PageStackBoard.LayoutElement> {
-   return sequenceOf(
-         PageStack(
-            PageStack.Id(0L),
-            PageStack.SavedPageState(
-               PageStack.PageId(0L),
-               TestPage(0)
-            )
-         ),
-         PageStack(
-            PageStack.Id(1L),
-            PageStack.SavedPageState(
-               PageStack.PageId(1L),
-               TestPage(1)
-            )
-         ),
-      )
-      .map { pageStackRepository.savePageStack(it) }
-      .map { pageStackCache ->
-         PageStackBoard.PageStack(
-            PageStackBoard.PageStackId(pageStackCache.value.id.value),
-            pageStackCache
-         )
-      }
-      .toImmutableList()
-}
