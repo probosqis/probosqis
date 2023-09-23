@@ -76,7 +76,8 @@ internal fun SingleColumnProbosqis(
       val pageStackBoardCache = state.loadPageStackBoardOrDefault()
 
       SingleColumnPageStackBoardState(
-         pageStackBoardCache, state.pageStackRepository, coroutineScope)
+         pageStackBoardCache, state.pageStackRepository, coroutineScope
+      ).also { state.pageStackBoardState = it }
    }
 
    // 現状Desktopで動作しないため自前実装する

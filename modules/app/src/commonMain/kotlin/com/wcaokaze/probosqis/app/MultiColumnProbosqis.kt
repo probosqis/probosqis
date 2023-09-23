@@ -82,7 +82,8 @@ internal fun MultiColumnProbosqis(
          val pageStackBoardCache = state.loadPageStackBoardOrDefault()
 
          MultiColumnPageStackBoardState(
-            pageStackBoardCache, state.pageStackRepository, coroutineScope)
+            pageStackBoardCache, state.pageStackRepository, coroutineScope
+         ).also { state.pageStackBoardState = it }
       }
 
       MultiColumnPageStackBoard(

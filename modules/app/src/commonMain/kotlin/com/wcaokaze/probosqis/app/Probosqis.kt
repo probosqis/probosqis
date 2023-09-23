@@ -30,6 +30,7 @@ import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackBoard
 import com.wcaokaze.probosqis.page.PageStackBoardRepository
+import com.wcaokaze.probosqis.page.PageStackBoardState
 import com.wcaokaze.probosqis.page.PageStackRepository
 import com.wcaokaze.probosqis.page.PageStateStore
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
@@ -46,6 +47,16 @@ class ProbosqisState(
    val pageStateStore = PageStateStore(
       allPageComposables.map { it.pageStateFactory }
    )
+
+   private var _pageStackBoardState: PageStackBoardState? = null
+   var pageStackBoardState: PageStackBoardState
+      get() {
+         return _pageStackBoardState ?: throw IllegalStateException(
+            "attempt to get pageStackBoardState before the first Composition")
+      }
+      internal set(value) {
+         _pageStackBoardState = value
+      }
 
    internal fun loadPageStackBoardOrDefault(): WritableCache<PageStackBoard> {
       return try {

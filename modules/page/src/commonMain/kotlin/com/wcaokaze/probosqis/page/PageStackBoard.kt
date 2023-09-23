@@ -344,11 +344,11 @@ sealed class PageStackBoardState(
 
    private var pageStackInsertionAnimOffset by mutableStateOf(0.0f)
 
-   internal abstract fun pageStackState(
+   abstract fun pageStackState(
       id: PageStackBoard.PageStackId
    ): PageStackState?
 
-   internal abstract fun pageStackState(index: Int): PageStackState
+   abstract fun pageStackState(index: Int): PageStackState
 
    suspend fun animateScroll(
       pageStackIndex: Int,
