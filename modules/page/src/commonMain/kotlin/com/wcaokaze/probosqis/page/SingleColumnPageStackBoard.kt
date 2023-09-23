@@ -66,6 +66,8 @@ class SingleColumnPageStackBoardState(
 ) {
    override var firstVisiblePageStackIndex by mutableStateOf(0)
       internal set
+   override var lastVisiblePageStackIndex by mutableStateOf(0)
+      internal set
 
    override val layout = SingleColumnLayoutLogic(
       pageStackBoard,
@@ -244,6 +246,7 @@ fun SingleColumnPageStackBoard(
          val scrollOffset = state.scrollState.scrollOffset.toInt()
 
          var firstVisibleIndex = -1
+         var lastVisibleIndex = -1
 
          val placeables = state.layout.mapIndexedNotNull { index, pageStackLayout ->
             val pageStackPosition = pageStackLayout.position
@@ -253,6 +256,10 @@ fun SingleColumnPageStackBoard(
                if (pageStackPosition.x + pageStackWidth > scrollOffset) {
                   firstVisibleIndex = index
                }
+            }
+
+            if (pageStackPosition.x < scrollOffset + pageStackBoardWidth) {
+               lastVisibleIndex = index
             }
 
             // TODO: PageStackに影がつくかつかないか未定のためギリギリ範囲外の
@@ -280,6 +287,7 @@ fun SingleColumnPageStackBoard(
          }
 
          state.firstVisiblePageStackIndex = firstVisibleIndex
+         state.lastVisiblePageStackIndex = lastVisibleIndex
 
          layout(pageStackBoardWidth, pageStackBoardHeight) {
             for ((layout, placeable) in placeables) {

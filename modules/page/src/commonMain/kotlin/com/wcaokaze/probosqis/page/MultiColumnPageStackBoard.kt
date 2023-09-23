@@ -36,6 +36,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,6 +70,8 @@ class MultiColumnPageStackBoardState(
    animCoroutineScope
 ) {
    override var firstVisiblePageStackIndex by mutableStateOf(0)
+      internal set
+   override var lastVisiblePageStackIndex by mutableStateOf(0)
       internal set
 
    override val layout = MultiColumnLayoutLogic(
@@ -196,6 +199,7 @@ fun MultiColumnPageStackBoard(
          val scrollOffset = state.scrollState.scrollOffset.toInt()
 
          var firstVisibleIndex = -1
+         var lastVisibleIndex = -1
 
          val placeables = state.layout.mapIndexedNotNull { index, pageStackLayout ->
             val pageStackPosition = pageStackLayout.position
@@ -205,6 +209,10 @@ fun MultiColumnPageStackBoard(
                if (pageStackPosition.x + pageStackWidth > scrollOffset) {
                   firstVisibleIndex = index
                }
+            }
+
+            if (pageStackPosition.x < scrollOffset + pageStackBoardWidth) {
+               lastVisibleIndex = index
             }
 
             // TODO: PageStackに影がつくかつかないか未定のためギリギリ範囲外の
@@ -236,6 +244,7 @@ fun MultiColumnPageStackBoard(
          }
 
          state.firstVisiblePageStackIndex = firstVisibleIndex
+         state.lastVisiblePageStackIndex = lastVisibleIndex
 
          layout(pageStackBoardWidth, pageStackBoardHeight) {
             for ((layout, placeable) in placeables) {
