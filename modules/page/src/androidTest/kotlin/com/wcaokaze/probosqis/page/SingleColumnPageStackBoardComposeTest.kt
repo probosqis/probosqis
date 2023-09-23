@@ -1197,6 +1197,54 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       }
    }
 
+   @Test
+   fun activePageStack() {
+      lateinit var pageStackBoardState: SingleColumnPageStackBoardState
+      lateinit var coroutineScope: CoroutineScope
+      rule.setContent {
+         val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
+         SideEffect {
+            pageStackBoardState = remembered.pageStackBoardState
+            coroutineScope = remembered.coroutineScope
+         }
+         SingleColumnPageStackBoard(remembered.pageStackBoardState)
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.activePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         down(Offset(0.0f, 0.0f))
+         moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
+         moveBy(Offset(-(defaultPageStackBoardWidth / 2 + 8.dp).toPx() + 1.0f, 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.activePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         moveBy(Offset(-2.0f, 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.activePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         up()
+      }
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.activePageStackIndex)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(0)
+      }
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.activePageStackIndex)
+      }
+   }
+
    // TODO: Row内のPageStackとかでもテストする
    @Test
    fun addPageStack_viaPageStackState() {

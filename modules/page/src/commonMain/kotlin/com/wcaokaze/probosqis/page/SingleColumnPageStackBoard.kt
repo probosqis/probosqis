@@ -69,6 +69,26 @@ class SingleColumnPageStackBoardState(
    override var lastVisiblePageStackIndex by mutableStateOf(0)
       internal set
 
+   override val activePageStackIndex: Int get() {
+      val firstVisibleIndex = firstVisiblePageStackIndex
+      val lastVisibleIndex = lastVisiblePageStackIndex
+      if (firstVisibleIndex == lastVisibleIndex) { return firstVisibleIndex }
+
+      val firstVisibleLayout = layout.pageStackLayout(firstVisibleIndex)
+      val lastVisibleLayout  = layout.pageStackLayout(lastVisibleIndex)
+      val boardWidth = firstVisibleLayout.width
+
+      return if (
+         scrollState.scrollOffset + boardWidth / 2.0f
+            < (firstVisibleLayout.position.x
+               + lastVisibleLayout.position.x + lastVisibleLayout.width) / 2.0f
+      ) {
+         firstVisiblePageStackIndex
+      } else {
+         firstVisiblePageStackIndex + 1
+      }
+   }
+
    override val layout = SingleColumnLayoutLogic(
       pageStackBoard,
       pageStackStateConstructor = { pageStackId, pageStackCache ->

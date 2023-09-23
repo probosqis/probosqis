@@ -340,6 +340,8 @@ sealed class PageStackBoardState(
    abstract val firstVisiblePageStackIndex: Int
    abstract val lastVisiblePageStackIndex: Int
 
+   abstract val activePageStackIndex: Int
+
    private var pageStackInsertionAnimOffset by mutableStateOf(0.0f)
 
    internal abstract fun pageStackState(

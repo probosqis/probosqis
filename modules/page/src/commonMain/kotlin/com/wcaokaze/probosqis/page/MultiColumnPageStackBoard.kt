@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -36,7 +37,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +45,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerType
+import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
+import androidx.compose.ui.input.pointer.isPrimaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -72,6 +77,9 @@ class MultiColumnPageStackBoardState(
    override var firstVisiblePageStackIndex by mutableStateOf(0)
       internal set
    override var lastVisiblePageStackIndex by mutableStateOf(0)
+      internal set
+
+   override var activePageStackIndex by mutableStateOf(0)
       internal set
 
    override val layout = MultiColumnLayoutLogic(
@@ -226,13 +234,16 @@ fun MultiColumnPageStackBoard(
             val measurable = subcompose(pageStackLayout.pageStackId) {
                PageStack(
                   pageStackLayout.pageStackState,
-                  isActive = pageStackCount == 1,
+                  isActive = index == state.activePageStackIndex,
                   windowInsets.only(WindowInsetsSides.Bottom),
                   pageComposableSwitcher,
                   pageStateStore,
                   onTopAppBarHeightChanged,
                   modifier = Modifier
                      .alpha(pageStackLayout.alpha)
+                     .detectTouch(
+                        onTouch = { state.activePageStackIndex = index }
+                     )
                )
             } .single()
 
@@ -245,6 +256,8 @@ fun MultiColumnPageStackBoard(
 
          state.firstVisiblePageStackIndex = firstVisibleIndex
          state.lastVisiblePageStackIndex = lastVisibleIndex
+         state.activePageStackIndex = state.activePageStackIndex
+            .coerceIn(firstVisibleIndex, lastVisibleIndex)
 
          layout(pageStackBoardWidth, pageStackBoardHeight) {
             for ((layout, placeable) in placeables) {
@@ -319,6 +332,29 @@ private fun PageStack(
             pageComposableSwitcher,
             pageStateStore
          )
+      }
+   }
+}
+
+@Stable
+private fun Modifier.detectTouch(onTouch: () -> Unit): Modifier {
+   return pointerInput(onTouch) {
+      forEachGesture {
+         awaitPointerEventScope {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+
+            val isDownEvent = event.changes.any {
+               if (it.type == PointerType.Mouse) {
+                  event.buttons.isPrimaryPressed && it.changedToDownIgnoreConsumed()
+               } else {
+                  it.changedToDownIgnoreConsumed()
+               }
+            }
+
+            if (isDownEvent) {
+               onTouch()
+            }
+         }
       }
    }
 }

@@ -1472,6 +1472,82 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       }
    }
 
+   @Test
+   fun activePageStack_detectClick() {
+      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var coroutineScope: CoroutineScope
+      rule.setContent {
+         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         SideEffect {
+            pageStackBoardState = remembered.pageStackBoardState
+            coroutineScope = remembered.coroutineScope
+         }
+         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+      }
+
+      rule.onNodeWithText("1").performClick()
+
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.activePageStackIndex)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(2)
+      }
+
+      rule.onNodeWithText("2").performClick()
+
+      rule.runOnIdle {
+         assertEquals(2, pageStackBoardState.activePageStackIndex)
+      }
+
+      rule.onNodeWithText("1").performClick()
+
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.activePageStackIndex)
+      }
+   }
+
+   @Test
+   fun activePageStack_scrolling() {
+      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var coroutineScope: CoroutineScope
+      rule.setContent {
+         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         SideEffect {
+            pageStackBoardState = remembered.pageStackBoardState
+            coroutineScope = remembered.coroutineScope
+         }
+         MultiColumnPageStackBoard(remembered.pageStackBoardState)
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.activePageStackIndex)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(1, PositionInBoard.FirstVisible)
+      }
+
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.activePageStackIndex)
+      }
+
+      rule.onNodeWithText("2").performClick()
+
+      rule.runOnIdle {
+         assertEquals(2, pageStackBoardState.activePageStackIndex)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(1, PositionInBoard.LastVisible)
+      }
+
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.activePageStackIndex)
+      }
+   }
+
    // TODO: Row内のPageStackとかでもテストする
    @Test
    fun addPageStack_viaPageStackState() {
