@@ -39,7 +39,7 @@ class TestPage(val i: Int) : Page()
 class TestPageState : PageState()
 
 val testPageComposable = pageComposable<TestPage, TestPageState>(
-   pageStateFactory { TestPageState() },
+   pageStateFactory { _, _ -> TestPageState() },
    content = { page, _, pageStackState ->
       Column(Modifier.fillMaxSize()) {
          Text(

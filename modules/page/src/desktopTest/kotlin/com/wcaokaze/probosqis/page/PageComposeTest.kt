@@ -46,7 +46,7 @@ class PageComposeTest {
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
             pageComposable<PageA, PageAState>(
-               pageStateFactory { PageAState() },
+               pageStateFactory { _, _ -> PageAState() },
                content = { _, _, _ ->
                   SideEffect {
                      pageARecompositionCount++
@@ -56,7 +56,7 @@ class PageComposeTest {
                footer = null
             ),
             pageComposable<PageB, PageBState>(
-               pageStateFactory { PageBState() },
+               pageStateFactory { _, _ -> PageBState() },
                content = { _, _, _ ->
                   SideEffect {
                      pageBRecompositionCount++
@@ -70,8 +70,8 @@ class PageComposeTest {
 
       val pageStateStore = PageStateStore(
          listOf(
-            pageStateFactory<PageA, PageAState> { PageAState() },
-            pageStateFactory<PageB, PageBState> { PageBState() },
+            pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            pageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
          )
       )
 
@@ -109,7 +109,7 @@ class PageComposeTest {
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
             pageComposable<PageA, PageStateImpl>(
-               pageStateFactory { PageStateImpl() },
+               pageStateFactory { _, _ -> PageStateImpl() },
                content = { p, s, _ ->
                   SideEffect {
                      argumentPage = p
@@ -124,7 +124,7 @@ class PageComposeTest {
 
       val pageStateStore = PageStateStore(
          listOf(
-            pageStateFactory<PageA, PageStateImpl> { PageStateImpl() },
+            pageStateFactory<PageA, PageStateImpl> { _, _ -> PageStateImpl() },
          )
       )
 

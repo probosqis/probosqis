@@ -36,7 +36,7 @@ private fun SpyPage(page: SpyPage) {
 }
 
 internal val spyPageComposable = pageComposable<SpyPage, SpyPageState>(
-   pageStateFactory { SpyPageState() },
+   pageStateFactory { _, _ -> SpyPageState() },
    content = { page, _, _ -> SpyPage(page) },
    header = { _, _, _ -> },
    footer = null

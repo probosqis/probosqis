@@ -36,7 +36,7 @@ abstract class PageStackBoardComposeTestBase {
    protected class TestPageState : PageState()
 
    protected inline fun <reified P : Page> pageComposableSwitcher(
-      noinline pageStateFactory: (P) -> PageState,
+      noinline pageStateFactory: (P, PageState.StateSaver) -> PageState,
       noinline pageComposable: @Composable (P, PageState, PageStackState) -> Unit,
    ): Pair<PageComposableSwitcher, PageStateStore> {
       val headerComposable: @Composable (Page, PageState, PageStackState) -> Unit
@@ -64,7 +64,7 @@ abstract class PageStackBoardComposeTestBase {
 
    init {
       val (switcher, stateStore) = pageComposableSwitcher<TestPage>(
-         { TestPageState() },
+         { _, _ -> TestPageState() },
          { page, _, pageStackState ->
             Column {
                Text(

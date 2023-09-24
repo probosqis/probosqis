@@ -24,7 +24,10 @@ import kotlinx.serialization.Serializable
 abstract class Page
 
 @Stable
-abstract class PageState
+abstract class PageState {
+   @Stable
+   class StateSaver
+}
 
 @Composable
 internal fun PageContent(

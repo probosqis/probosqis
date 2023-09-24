@@ -34,7 +34,8 @@ class PageStateStore(allPageStateFactories: List<PageStateFactory<*, *>>) {
          val page = savedPageState.page
          val factory = getStateFactory(page) ?: throw IllegalArgumentException(
             "cannot instantiate PageState for ${page::class}")
-         factory.pageStateFactory(page)
+         val stateSaver = PageState.StateSaver()
+         factory.pageStateFactory(page, stateSaver)
       }
    }
 
