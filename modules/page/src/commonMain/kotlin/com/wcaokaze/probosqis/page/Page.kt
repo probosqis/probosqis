@@ -17,8 +17,14 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
+import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.cache.core.update
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 
 @Serializable
 abstract class Page
@@ -26,7 +32,59 @@ abstract class Page
 @Stable
 abstract class PageState {
    @Stable
-   class StateSaver
+   class StateSaver(private val cache: WritableCache<JsonObject>) {
+      fun <T> save(
+         key: String,
+         serializer: KSerializer<T>,
+         init: () -> T
+      ): MutableState<T> {
+         return ElementState(cache, key, serializer, init)
+      }
+
+      private class ElementState<T>(
+         private val source: WritableCache<JsonObject>,
+         private val key: String,
+         private val serializer: KSerializer<T>,
+         private val init: () -> T
+      ) : MutableState<T> {
+         init {
+            if (!source.value.containsKey(key)) {
+               initialize()
+            }
+         }
+
+         override var value: T
+            get() {
+               val element = source.value[key]
+               return if (element != null) {
+                  try {
+                     Json.decodeFromJsonElement(serializer, element)
+                  } catch (_: Exception) {
+                     initialize()
+                  }
+               } else {
+                  initialize()
+               }
+            }
+            set(value) {
+               updateSource(value)
+            }
+
+         override fun component1(): T = value
+         override fun component2(): (T) -> Unit = { value = it }
+
+         private fun updateSource(value: T) {
+            val jsonValue = Json.encodeToJsonElement(serializer, value)
+            source.update { JsonObject(it + (key to jsonValue)) }
+         }
+
+         private fun initialize(): T {
+            val initValue = init()
+            updateSource(initValue)
+            return initValue
+         }
+      }
+   }
 }
 
 @Composable
