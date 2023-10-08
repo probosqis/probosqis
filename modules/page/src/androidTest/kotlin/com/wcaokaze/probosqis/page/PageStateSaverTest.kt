@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.page
 
+import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
@@ -23,14 +24,21 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
-import kotlin.test.Test
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 
+@RunWith(RobolectricTestRunner::class)
 class PageStateSaverTest {
+   @get:Rule
+   val rule = createComposeRule()
+
    @Test
    fun getValue() {
       val cache = WritableCache(buildJsonObject {
