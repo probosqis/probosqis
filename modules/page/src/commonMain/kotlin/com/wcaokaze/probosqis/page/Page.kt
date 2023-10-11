@@ -29,8 +29,10 @@ import com.wcaokaze.probosqis.cache.compose.asState
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.cache.core.update
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -43,6 +45,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 abstract class Page
@@ -132,7 +135,9 @@ abstract class PageState {
             @OptIn(DelicateCoroutinesApi::class)
             GlobalScope.launch {
                launch {
+                  @OptIn(FlowPreview::class)
                   snapshotFlow { save(value) }
+                     .debounce(2.seconds)
                      .collectLatest(::updateSource)
                }
 

@@ -22,10 +22,13 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.autoSaver
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -37,6 +40,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import io.mockk.spyk
+import io.mockk.verify
 import kotlinx.datetime.Clock
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
@@ -218,7 +223,7 @@ class PageStateSaverTest {
    ) {
       val startTime = Clock.System.now()
 
-      waitUntil {
+      waitUntil(timeoutMillis = 3000) {
          waitForIdle()
          condition(Clock.System.now() - startTime)
       }
@@ -1173,7 +1178,7 @@ class PageStateSaverTest {
 
       assertEquals(42, savedState.value)
 
-      rule.waitForSnapshotFlow { it > 50.milliseconds }
+      rule.waitForSnapshotFlow { it > 2050.milliseconds }
 
       cache.value = buildJsonObject {}
       assertFalse(cache.value.containsKey("key"))
@@ -1271,6 +1276,47 @@ class PageStateSaverTest {
       rule.waitForSnapshotFlow {
          val valueElement = getTypedValue(cache.value["scrollState"], 13)
          isIntElement(valueElement, 50)
+      }
+   }
+
+   @Test
+   fun saver_debounce() {
+      rule.setContent { Box(Modifier) }
+
+      val cache = WritableCache(buildJsonObject {})
+      val spyCache = spyk(cache)
+      val saver = PageState.StateSaver(spyCache)
+
+      @Stable
+      class State(initialI: Int) {
+         var i by mutableStateOf(initialI)
+      }
+      val stateSaver = Saver<State, Int>(save = { it.i }, restore = { State(it) })
+      val savedState by saver.save("state", stateSaver) { State(0) }
+
+      savedState.i++
+      rule.waitForSnapshotFlow { it > 500.milliseconds }
+      savedState.i++
+      rule.waitForSnapshotFlow { it > 1000.milliseconds }
+      savedState.i++
+      rule.waitForSnapshotFlow { it > 750.milliseconds }
+      savedState.i++
+      rule.waitForSnapshotFlow { it > 2100.milliseconds }
+      savedState.i++
+      rule.waitForSnapshotFlow { it > 1000.milliseconds }
+      savedState.i++
+      rule.waitForSnapshotFlow { it > 2500.milliseconds }
+      savedState.i++
+      rule.waitForSnapshotFlow { it > 2050.milliseconds }
+
+      rule.runOnIdle {
+         assertEquals(7, savedState.i)
+
+         assertTypedElement(cache.value["state"], 13) {
+            assertTrue(isIntElement(it, 7))
+         }
+
+         verify(exactly = 3) { spyCache.value = any() }
       }
    }
 }
