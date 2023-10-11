@@ -17,6 +17,8 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.Stable
+import com.wcaokaze.probosqis.cache.core.WritableCache
+import kotlinx.serialization.json.JsonObject
 
 @Stable
 class PageStateStore(allPageStateFactories: List<PageStateFactory<*, *>>) {
@@ -34,7 +36,11 @@ class PageStateStore(allPageStateFactories: List<PageStateFactory<*, *>>) {
          val page = savedPageState.page
          val factory = getStateFactory(page) ?: throw IllegalArgumentException(
             "cannot instantiate PageState for ${page::class}")
-         factory.pageStateFactory(page)
+         val cache = WritableCache(
+            JsonObject(emptyMap())
+         )
+         val stateSaver = PageState.StateSaver(cache)
+         factory.pageStateFactory(page, stateSaver)
       }
    }
 

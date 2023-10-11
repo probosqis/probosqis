@@ -48,7 +48,7 @@ class TestNotePage(val i: Int) : Page()
 class TestNotePageState : PageState()
 
 val testNotePageComposable = pageComposable<TestNotePage, TestNotePageState>(
-   pageStateFactory { TestNotePageState() },
+   pageStateFactory { _, _ -> TestNotePageState() },
    content = { page, _, _ ->
       Note(page.i, Modifier.fillMaxSize())
    },

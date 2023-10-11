@@ -33,13 +33,13 @@ class PageComposableSwitcherTest {
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
             pageComposable<PageA, PageAState>(
-               pageStateFactory { PageAState() },
+               pageStateFactory { _, _ -> PageAState() },
                content = { _, _, _ -> },
                header = { _, _, _ -> },
                footer = null
             ),
             pageComposable<PageB, PageBState>(
-               pageStateFactory { PageBState() },
+               pageStateFactory { _, _ -> PageBState() },
                content = { _, _, _ -> },
                header = { _, _, _ -> },
                footer = null

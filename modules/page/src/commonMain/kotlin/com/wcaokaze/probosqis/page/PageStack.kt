@@ -52,6 +52,7 @@ class PageStack private constructor(
       constructor(createdTime: Instant) : this(createdTime.toEpochMilliseconds())
    }
 
+   @Stable
    @Serializable
    class SavedPageState(
       val id: PageId,

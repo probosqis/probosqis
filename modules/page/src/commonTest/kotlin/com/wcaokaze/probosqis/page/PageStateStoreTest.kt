@@ -33,8 +33,8 @@ class PageStateStoreTest {
    fun instantiate() {
       val pageStateStore = PageStateStore(
          listOf(
-            pageStateFactory<PageA, PageAState> { PageAState() },
-            pageStateFactory<PageB, PageBState> { PageBState() },
+            pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            pageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
          )
       )
 
@@ -67,8 +67,8 @@ class PageStateStoreTest {
    fun cache() {
       val pageStateStore = PageStateStore(
          listOf(
-            pageStateFactory<PageA, PageAState> { PageAState() },
-            pageStateFactory<PageB, PageBState> { PageBState() },
+            pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            pageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
          )
       )
 

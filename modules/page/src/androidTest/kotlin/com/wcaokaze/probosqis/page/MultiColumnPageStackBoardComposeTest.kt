@@ -1561,7 +1561,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          }
          val (pageComposableSwitcher, pageStateStore) = remember {
             pageComposableSwitcher<TestPage>(
-               { TestPageState() },
+               { _, _ -> TestPageState() },
                { page, _, pageStackState ->
                   Button(
                      onClick = {

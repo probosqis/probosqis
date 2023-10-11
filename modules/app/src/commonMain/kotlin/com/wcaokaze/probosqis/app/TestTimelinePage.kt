@@ -62,7 +62,7 @@ class TestTimelinePageState : PageState() {
 }
 
 val testTimelinePageComposable = pageComposable<TestTimelinePage, TestTimelinePageState>(
-   pageStateFactory { TestTimelinePageState() },
+   pageStateFactory { _, _ -> TestTimelinePageState() },
    content = { _, pageState, pageStackState ->
       LazyColumn(
          state = pageState.lazyListState,
