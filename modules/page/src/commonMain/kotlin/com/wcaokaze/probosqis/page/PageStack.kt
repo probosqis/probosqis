@@ -16,8 +16,22 @@
 
 package com.wcaokaze.probosqis.page
 
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.LocalAbsoluteTonalElevation
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.compose.asState
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.cache.core.update
@@ -75,6 +89,12 @@ class PageStack private constructor(
 
    /** このPageStackの一番上の[SavedPageState] */
    val head: SavedPageState get() = savedPageStates.last()
+
+   internal val indexedHead: IndexedValue<SavedPageState> get() {
+      val list = savedPageStates
+      val idx = list.lastIndex
+      return IndexedValue(idx, list[idx])
+   }
 
    /**
     * @return
@@ -159,11 +179,81 @@ internal fun PageStackContent(
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore
 ) {
-   val savedPageState = state.pageStack.head
-   PageContent(
-      savedPageState,
-      pageComposableSwitcher,
-      pageStateStore,
-      pageStackState = state
+   val pageStack = state.pageStack
+
+   val transition = updateTransition(
+      pageStack.indexedHead,
+      label = "PageStackContentTransition"
    )
+
+   val visiblePages: List<IndexedValue<PageStack.SavedPageState>>
+   val forefrontPageIndex: Int
+
+   when {
+      transition.currentState.index < transition.targetState.index -> {
+         visiblePages = listOf(
+            transition.currentState,
+            transition.targetState
+         )
+         forefrontPageIndex = transition.targetState.index
+      }
+      transition.currentState.index > transition.targetState.index -> {
+         visiblePages = listOf(
+            transition.targetState,
+            transition.currentState
+         )
+         forefrontPageIndex = transition.currentState.index
+      }
+      else -> {
+         visiblePages = listOf(
+            transition.targetState
+         )
+         forefrontPageIndex = transition.targetState.index
+      }
+   }
+
+   Box {
+      val backgroundColor = MaterialTheme.colorScheme
+         .surfaceColorAtElevation(LocalAbsoluteTonalElevation.current)
+
+      for ((index, savedPageState) in visiblePages) {
+         key(index) {
+            val alpha by transition.animateFloat(
+               transitionSpec = { tween() }
+            ) {
+               when {
+                  index != forefrontPageIndex -> 1.0f
+                  index == it.index -> 1.0f
+                  else -> 0.0f
+               }
+            }
+
+            val translation by transition.animateFloat(
+               transitionSpec = { tween() }
+            ) {
+               when {
+                  index != forefrontPageIndex -> 0.0f
+                  index == it.index -> 0.0f
+                  else -> with(LocalDensity.current) { 32.dp.toPx() }
+               }
+            }
+
+            Box(
+               Modifier
+                  .graphicsLayer {
+                     this.alpha = alpha
+                     this.translationY = translation
+                  }
+                  .background(backgroundColor)
+            ) {
+               PageContent(
+                  savedPageState,
+                  pageComposableSwitcher,
+                  pageStateStore,
+                  pageStackState = state
+               )
+            }
+         }
+      }
+   }
 }
