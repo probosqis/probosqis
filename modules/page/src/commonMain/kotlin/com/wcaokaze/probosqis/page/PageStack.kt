@@ -25,9 +25,11 @@ import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -186,30 +188,47 @@ internal fun PageStackContent(
       label = "PageStackContentTransition"
    )
 
-   val visiblePages: List<IndexedValue<PageStack.SavedPageState>>
-   val forefrontPageIndex: Int
+   val layoutInfoMap = remember { mutableMapOf<Int, MutablePageLayoutInfo>() }
 
-   when {
-      transition.currentState.index < transition.targetState.index -> {
-         visiblePages = listOf(
-            transition.currentState,
-            transition.targetState
-         )
-         forefrontPageIndex = transition.targetState.index
+   val (visiblePages, forefrontPageIndex) = remember(
+      transition.currentState.index,
+      transition.targetState .index
+   ) {
+      val visiblePages: List<IndexedValue<PageStack.SavedPageState>>
+      val forefrontPageIndex: Int
+      when {
+         transition.currentState.index < transition.targetState.index -> {
+            visiblePages = listOf(
+               transition.currentState,
+               transition.targetState
+            )
+            forefrontPageIndex = transition.targetState.index
+         }
+         transition.currentState.index > transition.targetState.index -> {
+            visiblePages = listOf(
+               transition.targetState,
+               transition.currentState
+            )
+            forefrontPageIndex = transition.currentState.index
+         }
+         else -> {
+            visiblePages = listOf(
+               transition.targetState
+            )
+            forefrontPageIndex = transition.targetState.index
+         }
       }
-      transition.currentState.index > transition.targetState.index -> {
-         visiblePages = listOf(
-            transition.targetState,
-            transition.currentState
-         )
-         forefrontPageIndex = transition.currentState.index
+
+      val iter = layoutInfoMap.keys.iterator()
+      while (iter.hasNext()) {
+         val pageIndex = iter.next()
+
+         if (visiblePages.none { it.index == pageIndex }) {
+            iter.remove()
+         }
       }
-      else -> {
-         visiblePages = listOf(
-            transition.targetState
-         )
-         forefrontPageIndex = transition.targetState.index
-      }
+
+      Pair(visiblePages, forefrontPageIndex)
    }
 
    Box {
@@ -238,20 +257,23 @@ internal fun PageStackContent(
                }
             }
 
-            Box(
-               Modifier
-                  .graphicsLayer {
-                     this.alpha = alpha
-                     this.translationY = translation
-                  }
-                  .background(backgroundColor)
-            ) {
-               PageContent(
-                  savedPageState,
-                  pageComposableSwitcher,
-                  pageStateStore,
-                  pageStackState = state
-               )
+            val layoutInfo = layoutInfoMap.getOrPut(index) { PageLayoutInfoImpl() }
+            CompositionLocalProvider(LocalPageLayoutInfo provides layoutInfo) {
+               Box(
+                  Modifier
+                     .graphicsLayer {
+                        this.alpha = alpha
+                        this.translationY = translation
+                     }
+                     .background(backgroundColor)
+               ) {
+                  PageContent(
+                     savedPageState,
+                     pageComposableSwitcher,
+                     pageStateStore,
+                     pageStackState = state
+                  )
+               }
             }
          }
       }
