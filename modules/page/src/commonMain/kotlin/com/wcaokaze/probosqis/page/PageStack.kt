@@ -24,6 +24,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.compose.asState
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.cache.core.update
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -223,10 +225,11 @@ internal fun PageStackContent(
       val (currentIndex, currentPage) = transition.currentState
       val (targetIndex,  targetPage ) = transition.targetState
 
-      val visiblePages = when {
-         currentIndex < targetIndex -> {
-            val enteringCurrentModifier = @Composable { _: Transition<PageTransitionState> -> Modifier }
-            val enteringTargetModifier = @Composable { transition: Transition<PageTransitionState> ->
+      val transitionSpec = PageTransitionSpec(
+         enteringCurrentPageAnimations = persistentMapOf(
+         ),
+         enteringTargetPageAnimations = persistentMapOf(
+            PageLayoutIds.root to { transition ->
                val alpha by transition.animateFloat(
                   transitionSpec = { tween() }
                ) {
@@ -251,52 +254,56 @@ internal fun PageStackContent(
                   this.alpha = alpha
                   this.translationY = translation
                }
-            }
+            },
+         ),
+         exitingCurrentPageAnimations = persistentMapOf(
+            PageLayoutIds.root to { transition ->
+               val alpha by transition.animateFloat(
+                  transitionSpec = { tween() }
+               ) {
+                  if (it.pageId == transition.targetState.pageId) {
+                     0.0f
+                  } else {
+                     1.0f
+                  }
+               }
 
+               val translation by transition.animateFloat(
+                  transitionSpec = { tween() }
+               ) {
+                  if (it.pageId == transition.targetState.pageId) {
+                     with (LocalDensity.current) { 32.dp.toPx() }
+                  } else {
+                     0.0f
+                  }
+               }
+
+               Modifier.graphicsLayer {
+                  this.alpha = alpha
+                  this.translationY = translation
+               }
+            },
+         ),
+         exitingTargetPageAnimations = persistentMapOf(
+         )
+      )
+
+      val visiblePages = when {
+         currentIndex < targetIndex -> {
             listOf(
-               Pair(currentPage, enteringCurrentModifier),
-               Pair(targetPage,  enteringTargetModifier )
+               Pair(currentPage, transitionSpec.enteringCurrentPageAnimations),
+               Pair(targetPage,  transitionSpec.enteringTargetPageAnimations)
             )
          }
          currentIndex > targetIndex -> {
-            val exitingCurrentModifier = @Composable { transition: Transition<PageTransitionState> ->
-               val alpha by transition.animateFloat(
-                  transitionSpec = { tween() }
-               ) {
-                  if (it.pageId == transition.targetState.pageId) {
-                     0.0f
-                  } else {
-                     1.0f
-                  }
-               }
-
-               val translation by transition.animateFloat(
-                  transitionSpec = { tween() }
-               ) {
-                  if (it.pageId == transition.targetState.pageId) {
-                     with (LocalDensity.current) { 32.dp.toPx() }
-                  } else {
-                     0.0f
-                  }
-               }
-
-               Modifier.graphicsLayer {
-                  this.alpha = alpha
-                  this.translationY = translation
-               }
-            }
-            val exitingTargetModifier  = @Composable { _: Transition<PageTransitionState> -> Modifier }
-
             listOf(
-               Pair(targetPage,  exitingTargetModifier),
-               Pair(currentPage, exitingCurrentModifier)
+               Pair(targetPage,  transitionSpec.exitingTargetPageAnimations),
+               Pair(currentPage, transitionSpec.exitingCurrentPageAnimations)
             )
          }
          else -> {
-            val modifier = @Composable { _: Transition<PageTransitionState> -> Modifier }
-
             listOf(
-               Pair(targetPage, modifier)
+               Pair(targetPage, persistentMapOf())
             )
          }
       }
@@ -322,22 +329,32 @@ internal fun PageStackContent(
       val backgroundColor = MaterialTheme.colorScheme
          .surfaceColorAtElevation(LocalAbsoluteTonalElevation.current)
 
-      for ((savedPageState, modifier) in visiblePages) {
+      for ((savedPageState, transitionAnimations) in visiblePages) {
          key(savedPageState.id) {
-            val transitionModifier = modifier(pageTransition)
-            val layoutInfo = layoutInfoMap.getOrPut(savedPageState.id) { PageLayoutInfoImpl() }
-            CompositionLocalProvider(LocalPageLayoutInfo provides layoutInfo) {
-               Box(
-                  Modifier
-                     .then(transitionModifier)
-                     .background(backgroundColor)
-               ) {
-                  PageContent(
-                     savedPageState,
-                     pageComposableSwitcher,
-                     pageStateStore,
-                     pageStackState = state
+            val layoutInfo = layoutInfoMap
+               .getOrPut(savedPageState.id) { PageLayoutInfoImpl() }
+
+            CompositionLocalProvider(
+               LocalPageLayoutInfo provides layoutInfo,
+               LocalPageTransitionAnimations provides transitionAnimations,
+               LocalPageTransition provides pageTransition,
+            ) {
+               Box(Modifier.transitionElement(PageLayoutIds.root)) {
+                  Box(
+                     Modifier
+                        .fillMaxSize()
+                        .background(backgroundColor)
+                        .transitionElement(PageLayoutIds.background)
                   )
+
+                  Box(Modifier.transitionElement(PageLayoutIds.content)) {
+                     PageContent(
+                        savedPageState,
+                        pageComposableSwitcher,
+                        pageStateStore,
+                        pageStackState = state
+                     )
+                  }
                }
             }
          }
