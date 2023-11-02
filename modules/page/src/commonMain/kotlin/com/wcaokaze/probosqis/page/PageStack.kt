@@ -16,7 +16,10 @@
 
 package com.wcaokaze.probosqis.page
 
+import androidx.compose.animation.core.ExperimentalTransitionApi
+import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.createChildTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
@@ -175,6 +178,27 @@ class PageStackState internal constructor(
    }
 }
 
+@Stable
+class PageTransitionState(
+   val pageId: PageStack.PageId,
+   val layoutInfo: PageLayoutInfo
+) {
+   override fun equals(other: Any?): Boolean {
+      if (other !is PageTransitionState) { return false }
+      if (pageId     !=  other.pageId    ) { return false }
+      if (layoutInfo !== other.layoutInfo) { return false }
+      return true
+   }
+
+   override fun hashCode(): Int {
+      var h = 1
+      h = h * 31 + pageId.value.hashCode()
+      h = h * 31 + layoutInfo  .hashCode()
+      return h
+   }
+}
+
+@OptIn(ExperimentalTransitionApi::class)
 @Composable
 internal fun PageStackContent(
    state: PageStackState,
@@ -188,83 +212,124 @@ internal fun PageStackContent(
       label = "PageStackContentTransition"
    )
 
-   val layoutInfoMap = remember { mutableMapOf<Int, MutablePageLayoutInfo>() }
+   val layoutInfoMap = remember {
+      mutableMapOf<PageStack.PageId, MutablePageLayoutInfo>()
+   }
 
-   val (visiblePages, forefrontPageIndex) = remember(
+   val visiblePages = remember(
       transition.currentState.index,
       transition.targetState .index
    ) {
-      val visiblePages: List<IndexedValue<PageStack.SavedPageState>>
-      val forefrontPageIndex: Int
-      when {
-         transition.currentState.index < transition.targetState.index -> {
-            visiblePages = listOf(
-               transition.currentState,
-               transition.targetState
+      val (currentIndex, currentPage) = transition.currentState
+      val (targetIndex,  targetPage ) = transition.targetState
+
+      val visiblePages = when {
+         currentIndex < targetIndex -> {
+            val enteringCurrentModifier = @Composable { _: Transition<PageTransitionState> -> Modifier }
+            val enteringTargetModifier = @Composable { transition: Transition<PageTransitionState> ->
+               val alpha by transition.animateFloat(
+                  transitionSpec = { tween() }
+               ) {
+                  if (it.pageId == transition.targetState.pageId) {
+                     1.0f
+                  } else {
+                     0.0f
+                  }
+               }
+
+               val translation by transition.animateFloat(
+                  transitionSpec = { tween() }
+               ) {
+                  if (it.pageId == transition.targetState.pageId) {
+                     0.0f
+                  } else {
+                     with (LocalDensity.current) { 32.dp.toPx() }
+                  }
+               }
+
+               Modifier.graphicsLayer {
+                  this.alpha = alpha
+                  this.translationY = translation
+               }
+            }
+
+            listOf(
+               Pair(currentPage, enteringCurrentModifier),
+               Pair(targetPage,  enteringTargetModifier )
             )
-            forefrontPageIndex = transition.targetState.index
          }
-         transition.currentState.index > transition.targetState.index -> {
-            visiblePages = listOf(
-               transition.targetState,
-               transition.currentState
+         currentIndex > targetIndex -> {
+            val exitingCurrentModifier = @Composable { transition: Transition<PageTransitionState> ->
+               val alpha by transition.animateFloat(
+                  transitionSpec = { tween() }
+               ) {
+                  if (it.pageId == transition.targetState.pageId) {
+                     0.0f
+                  } else {
+                     1.0f
+                  }
+               }
+
+               val translation by transition.animateFloat(
+                  transitionSpec = { tween() }
+               ) {
+                  if (it.pageId == transition.targetState.pageId) {
+                     with (LocalDensity.current) { 32.dp.toPx() }
+                  } else {
+                     0.0f
+                  }
+               }
+
+               Modifier.graphicsLayer {
+                  this.alpha = alpha
+                  this.translationY = translation
+               }
+            }
+            val exitingTargetModifier  = @Composable { _: Transition<PageTransitionState> -> Modifier }
+
+            listOf(
+               Pair(targetPage,  exitingTargetModifier),
+               Pair(currentPage, exitingCurrentModifier)
             )
-            forefrontPageIndex = transition.currentState.index
          }
          else -> {
-            visiblePages = listOf(
-               transition.targetState
+            val modifier = @Composable { _: Transition<PageTransitionState> -> Modifier }
+
+            listOf(
+               Pair(targetPage, modifier)
             )
-            forefrontPageIndex = transition.targetState.index
          }
       }
 
       val iter = layoutInfoMap.keys.iterator()
       while (iter.hasNext()) {
-         val pageIndex = iter.next()
+         val pageId = iter.next()
 
-         if (visiblePages.none { it.index == pageIndex }) {
+         if (visiblePages.none { it.first.id == pageId }) {
             iter.remove()
          }
       }
 
-      Pair(visiblePages, forefrontPageIndex)
+      visiblePages
+   }
+
+   val pageTransition = transition.createChildTransition(label = "PageTransition") {
+      val layoutInfo = layoutInfoMap.getOrPut(it.value.id) { PageLayoutInfoImpl() }
+      PageTransitionState(it.value.id, layoutInfo)
    }
 
    Box {
       val backgroundColor = MaterialTheme.colorScheme
          .surfaceColorAtElevation(LocalAbsoluteTonalElevation.current)
 
-      for ((index, savedPageState) in visiblePages) {
-         key(index) {
-            val alpha by transition.animateFloat(
-               transitionSpec = { tween() }
-            ) {
-               when {
-                  index != forefrontPageIndex -> 1.0f
-                  index == it.index -> 1.0f
-                  else -> 0.0f
-               }
-            }
-
-            val translation by transition.animateFloat(
-               transitionSpec = { tween() }
-            ) {
-               when {
-                  index != forefrontPageIndex -> 0.0f
-                  index == it.index -> 0.0f
-                  else -> with(LocalDensity.current) { 32.dp.toPx() }
-               }
-            }
-
-            val layoutInfo = layoutInfoMap.getOrPut(index) { PageLayoutInfoImpl() }
+      for ((savedPageState, modifier) in visiblePages) {
+         key(savedPageState.id) {
+            val transitionModifier = modifier(pageTransition)
+            val layoutInfo = layoutInfoMap.getOrPut(savedPageState.id) { PageLayoutInfoImpl() }
             CompositionLocalProvider(LocalPageLayoutInfo provides layoutInfo) {
                Box(
                   Modifier
-                     .graphicsLayer {
-                        this.alpha = alpha
-                        this.translationY = translation
-                     }
+                     .then(transitionModifier)
                      .background(backgroundColor)
                ) {
                   PageContent(
