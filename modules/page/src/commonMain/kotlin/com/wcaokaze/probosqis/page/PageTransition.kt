@@ -60,43 +60,40 @@ class PageTransitionSpec(
       h = h * 31 + exitingTargetPageElementAnimations  .hashCode()
       return h
    }
-}
 
-fun PageTransitionSpec(
-   enter: PageTransitionSpecBuilder,
-   exit:  PageTransitionSpecBuilder
-) = PageTransitionSpec(
-   enter.currentPageAnimations.toImmutableMap(),
-   enter.targetPageAnimations .toImmutableMap(),
-   exit .currentPageAnimations.toImmutableMap(),
-   exit .targetPageAnimations .toImmutableMap()
-)
+   constructor(enter: Builder, exit:  Builder) : this(
+      enter.currentPageAnimations.toImmutableMap(),
+      enter.targetPageAnimations .toImmutableMap(),
+      exit .currentPageAnimations.toImmutableMap(),
+      exit .targetPageAnimations .toImmutableMap()
+   )
 
-class PageTransitionSpecBuilder {
-   internal val currentPageAnimations = mutableMapOf<PageLayoutInfo.LayoutId, PageTransitionElementAnim>()
-   internal val targetPageAnimations  = mutableMapOf<PageLayoutInfo.LayoutId, PageTransitionElementAnim>()
+   class Builder {
+      internal val currentPageAnimations = mutableMapOf<PageLayoutInfo.LayoutId, PageTransitionElementAnim>()
+      internal val targetPageAnimations  = mutableMapOf<PageLayoutInfo.LayoutId, PageTransitionElementAnim>()
 
-   fun currentPageElement(
-      id: PageLayoutInfo.LayoutId,
-      animationModifier: PageTransitionElementAnim
-   ) {
-      currentPageAnimations[id] = animationModifier
-   }
+      fun currentPageElement(
+         id: PageLayoutInfo.LayoutId,
+         animationModifier: PageTransitionElementAnim
+      ) {
+         currentPageAnimations[id] = animationModifier
+      }
 
-   fun targetPageElement(
-      id: PageLayoutInfo.LayoutId,
-      animationModifier: PageTransitionElementAnim
-   ) {
-      targetPageAnimations[id] = animationModifier
+      fun targetPageElement(
+         id: PageLayoutInfo.LayoutId,
+         animationModifier: PageTransitionElementAnim
+      ) {
+         targetPageAnimations[id] = animationModifier
+      }
    }
 }
 
 inline fun pageTransitionSpec(
-   enter: PageTransitionSpecBuilder.() -> Unit,
-   exit:  PageTransitionSpecBuilder.() -> Unit
+   enter: PageTransitionSpec.Builder.() -> Unit,
+   exit:  PageTransitionSpec.Builder.() -> Unit
 ): PageTransitionSpec {
-   val enterTransitionBuilder = PageTransitionSpecBuilder()
-   val exitTransitionBuilder  = PageTransitionSpecBuilder()
+   val enterTransitionBuilder = PageTransitionSpec.Builder()
+   val exitTransitionBuilder  = PageTransitionSpec.Builder()
    enterTransitionBuilder.enter()
    exitTransitionBuilder.exit()
    return PageTransitionSpec(enterTransitionBuilder, exitTransitionBuilder)
