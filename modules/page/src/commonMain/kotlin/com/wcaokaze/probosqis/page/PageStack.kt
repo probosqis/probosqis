@@ -17,7 +17,6 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.animation.core.ExperimentalTransitionApi
-import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.createChildTransition
 import androidx.compose.animation.core.tween
@@ -287,14 +286,14 @@ internal fun PageStackContent(
       val visiblePages = when {
          currentIndex < targetIndex -> {
             listOf(
-               Pair(currentPage, transitionSpec.enteringCurrentPageAnimations),
-               Pair(targetPage,  transitionSpec.enteringTargetPageAnimations)
+               Pair(currentPage, transitionSpec.enteringCurrentPageElementAnimations),
+               Pair(targetPage,  transitionSpec.enteringTargetPageElementAnimations)
             )
          }
          currentIndex > targetIndex -> {
             listOf(
-               Pair(targetPage,  transitionSpec.exitingTargetPageAnimations),
-               Pair(currentPage, transitionSpec.exitingCurrentPageAnimations)
+               Pair(targetPage,  transitionSpec.exitingTargetPageElementAnimations),
+               Pair(currentPage, transitionSpec.exitingCurrentPageElementAnimations)
             )
          }
          else -> {

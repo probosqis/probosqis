@@ -13,7 +13,7 @@ import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
 
 internal val LocalPageTransitionAnimations
-   = compositionLocalOf<PageTransitionAnimations> {
+   = compositionLocalOf<PageTransitionElementAnimSet> {
       throw IllegalStateException(
          "Attempt to get PageTransitionAnimations from outside a Page")
    }
@@ -33,31 +33,31 @@ internal val LocalPageTransition
 internal typealias PageTransitionElementAnim
       = @Composable (Transition<PageTransitionState>) -> Modifier
 
-internal typealias PageTransitionAnimations
+internal typealias PageTransitionElementAnimSet
       = ImmutableMap<PageLayoutInfo.LayoutId, PageTransitionElementAnim>
 
 @Stable
 class PageTransitionSpec(
-   val enteringCurrentPageAnimations: PageTransitionAnimations,
-   val enteringTargetPageAnimations:  PageTransitionAnimations,
-   val exitingCurrentPageAnimations:  PageTransitionAnimations,
-   val exitingTargetPageAnimations:   PageTransitionAnimations
+   val enteringCurrentPageElementAnimations: PageTransitionElementAnimSet,
+   val enteringTargetPageElementAnimations:  PageTransitionElementAnimSet,
+   val exitingCurrentPageElementAnimations:  PageTransitionElementAnimSet,
+   val exitingTargetPageElementAnimations:   PageTransitionElementAnimSet
 ) {
    override fun equals(other: Any?): Boolean {
       if (other !is PageTransitionSpec) { return false }
-      if (enteringCurrentPageAnimations != other.enteringCurrentPageAnimations) { return false }
-      if (enteringTargetPageAnimations  != other.enteringTargetPageAnimations ) { return false }
-      if (exitingCurrentPageAnimations  != other.exitingCurrentPageAnimations ) { return false }
-      if (exitingTargetPageAnimations   != other.exitingTargetPageAnimations  ) { return false }
+      if (enteringCurrentPageElementAnimations != other.enteringCurrentPageElementAnimations) { return false }
+      if (enteringTargetPageElementAnimations  != other.enteringTargetPageElementAnimations ) { return false }
+      if (exitingCurrentPageElementAnimations  != other.exitingCurrentPageElementAnimations ) { return false }
+      if (exitingTargetPageElementAnimations   != other.exitingTargetPageElementAnimations  ) { return false }
       return true
    }
 
    override fun hashCode(): Int {
       var h = 1
-      h = h * 31 + enteringCurrentPageAnimations.hashCode()
-      h = h * 31 + enteringTargetPageAnimations .hashCode()
-      h = h * 31 + exitingCurrentPageAnimations .hashCode()
-      h = h * 31 + exitingTargetPageAnimations  .hashCode()
+      h = h * 31 + enteringCurrentPageElementAnimations.hashCode()
+      h = h * 31 + enteringTargetPageElementAnimations .hashCode()
+      h = h * 31 + exitingCurrentPageElementAnimations .hashCode()
+      h = h * 31 + exitingTargetPageElementAnimations  .hashCode()
       return h
    }
 }
