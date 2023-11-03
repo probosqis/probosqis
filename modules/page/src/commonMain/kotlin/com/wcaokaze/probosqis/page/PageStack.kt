@@ -225,11 +225,9 @@ internal fun PageStackContent(
       val (currentIndex, currentPage) = transition.currentState
       val (targetIndex,  targetPage ) = transition.targetState
 
-      val transitionSpec = PageTransitionSpec(
-         enteringCurrentPageAnimations = persistentMapOf(
-         ),
-         enteringTargetPageAnimations = persistentMapOf(
-            PageLayoutIds.root to { transition ->
+      val transitionSpec = pageTransitionSpec(
+         enter = {
+            targetPageElement(PageLayoutIds.root) { transition ->
                val alpha by transition.animateFloat(
                   transitionSpec = { tween() }
                ) {
@@ -254,10 +252,10 @@ internal fun PageStackContent(
                   this.alpha = alpha
                   this.translationY = translation
                }
-            },
-         ),
-         exitingCurrentPageAnimations = persistentMapOf(
-            PageLayoutIds.root to { transition ->
+            }
+         },
+         exit = {
+            currentPageElement(PageLayoutIds.root) { transition ->
                val alpha by transition.animateFloat(
                   transitionSpec = { tween() }
                ) {
@@ -282,10 +280,8 @@ internal fun PageStackContent(
                   this.alpha = alpha
                   this.translationY = translation
                }
-            },
-         ),
-         exitingTargetPageAnimations = persistentMapOf(
-         )
+            }
+         }
       )
 
       val visiblePages = when {

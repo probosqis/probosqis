@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onPlaced
 import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.toImmutableMap
 
 internal val LocalPageTransitionAnimations
    = compositionLocalOf<PageTransitionAnimations> {
@@ -36,7 +37,7 @@ internal typealias PageTransitionAnimations
       = ImmutableMap<PageLayoutInfo.LayoutId, PageTransitionElementAnim>
 
 @Stable
-internal class PageTransitionSpec(
+class PageTransitionSpec(
    val enteringCurrentPageAnimations: PageTransitionAnimations,
    val enteringTargetPageAnimations:  PageTransitionAnimations,
    val exitingCurrentPageAnimations:  PageTransitionAnimations,
@@ -59,6 +60,46 @@ internal class PageTransitionSpec(
       h = h * 31 + exitingTargetPageAnimations  .hashCode()
       return h
    }
+}
+
+fun PageTransitionSpec(
+   enter: PageTransitionSpecBuilder,
+   exit:  PageTransitionSpecBuilder
+) = PageTransitionSpec(
+   enter.currentPageAnimations.toImmutableMap(),
+   enter.targetPageAnimations .toImmutableMap(),
+   exit .currentPageAnimations.toImmutableMap(),
+   exit .targetPageAnimations .toImmutableMap()
+)
+
+class PageTransitionSpecBuilder {
+   internal val currentPageAnimations = mutableMapOf<PageLayoutInfo.LayoutId, PageTransitionElementAnim>()
+   internal val targetPageAnimations  = mutableMapOf<PageLayoutInfo.LayoutId, PageTransitionElementAnim>()
+
+   fun currentPageElement(
+      id: PageLayoutInfo.LayoutId,
+      animationModifier: PageTransitionElementAnim
+   ) {
+      currentPageAnimations[id] = animationModifier
+   }
+
+   fun targetPageElement(
+      id: PageLayoutInfo.LayoutId,
+      animationModifier: PageTransitionElementAnim
+   ) {
+      targetPageAnimations[id] = animationModifier
+   }
+}
+
+inline fun pageTransitionSpec(
+   enter: PageTransitionSpecBuilder.() -> Unit,
+   exit:  PageTransitionSpecBuilder.() -> Unit
+): PageTransitionSpec {
+   val enterTransitionBuilder = PageTransitionSpecBuilder()
+   val exitTransitionBuilder  = PageTransitionSpecBuilder()
+   enterTransitionBuilder.enter()
+   exitTransitionBuilder.exit()
+   return PageTransitionSpec(enterTransitionBuilder, exitTransitionBuilder)
 }
 
 @Stable
