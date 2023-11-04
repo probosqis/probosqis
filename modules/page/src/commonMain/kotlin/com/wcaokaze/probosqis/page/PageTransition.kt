@@ -119,9 +119,15 @@ interface PageLayoutInfo {
 }
 
 open class PageLayoutIds {
-   val root       = PageLayoutInfo.LayoutId()
-   val background = PageLayoutInfo.LayoutId()
-   val content    = PageLayoutInfo.LayoutId()
+   private object GlobalIds {
+      val root       = PageLayoutInfo.LayoutId()
+      val background = PageLayoutInfo.LayoutId()
+      val content    = PageLayoutInfo.LayoutId()
+   }
+
+   val root       = GlobalIds.root
+   val background = GlobalIds.background
+   val content    = GlobalIds.content
 
    companion object : PageLayoutIds()
 }

@@ -46,9 +46,8 @@ class PageTransitionTest {
       val a = PageLayoutInfo.LayoutId()
       val b = PageLayoutInfo.LayoutId()
       val c = PageLayoutInfo.LayoutId()
-      assertEquals(0, a.id)
-      assertEquals(1, b.id)
-      assertEquals(2, c.id)
+      assertEquals(1, b.id - a.id)
+      assertEquals(2, c.id - a.id)
    }
 
    @Test
