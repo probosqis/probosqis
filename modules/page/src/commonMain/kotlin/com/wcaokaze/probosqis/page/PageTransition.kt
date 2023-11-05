@@ -12,7 +12,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableMap
@@ -208,7 +208,7 @@ fun Modifier.transitionElement(
    val transitionAnimationModifier
       = pageTransitionAnimations[layoutId]?.invoke(transition) ?: Modifier
 
-   return onPlaced { pageLayoutInfo[layoutId] = it }
+   return onGloballyPositioned { pageLayoutInfo[layoutId] = it }
       .then(transitionAnimationModifier)
 }
 
