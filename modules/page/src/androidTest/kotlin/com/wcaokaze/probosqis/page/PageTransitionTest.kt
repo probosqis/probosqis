@@ -77,6 +77,7 @@ class PageTransitionTest {
          },
          header = { _, _, _ -> },
          footer = null,
+         pageTransitions = {}
       )
 
       class PageB : Page()
@@ -88,6 +89,7 @@ class PageTransitionTest {
          },
          header = { _, _, _ -> },
          footer = null,
+         pageTransitions = {}
       )
 
       val pageStackState = createPageStackState(PageA())

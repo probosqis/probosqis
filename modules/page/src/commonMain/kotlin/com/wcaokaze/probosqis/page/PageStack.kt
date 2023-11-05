@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -224,73 +225,30 @@ internal fun PageStackContent(
       val (currentIndex, currentPage) = transition.currentState
       val (targetIndex,  targetPage ) = transition.targetState
 
-      val transitionSpec = pageTransitionSpec(
-         enter = {
-            targetPageElement(PageLayoutIds.root) { transition ->
-               val alpha by transition.animateFloat(
-                  transitionSpec = { tween() }
-               ) {
-                  if (it.pageId == transition.targetState.pageId) {
-                     1.0f
-                  } else {
-                     0.0f
-                  }
-               }
-
-               val translation by transition.animateFloat(
-                  transitionSpec = { tween() }
-               ) {
-                  if (it.pageId == transition.targetState.pageId) {
-                     0.0f
-                  } else {
-                     with (LocalDensity.current) { 32.dp.toPx() }
-                  }
-               }
-
-               Modifier.graphicsLayer {
-                  this.alpha = alpha
-                  this.translationY = translation
-               }
-            }
-         },
-         exit = {
-            currentPageElement(PageLayoutIds.root) { transition ->
-               val alpha by transition.animateFloat(
-                  transitionSpec = { tween() }
-               ) {
-                  if (it.pageId == transition.targetState.pageId) {
-                     0.0f
-                  } else {
-                     1.0f
-                  }
-               }
-
-               val translation by transition.animateFloat(
-                  transitionSpec = { tween() }
-               ) {
-                  if (it.pageId == transition.targetState.pageId) {
-                     with (LocalDensity.current) { 32.dp.toPx() }
-                  } else {
-                     0.0f
-                  }
-               }
-
-               Modifier.graphicsLayer {
-                  this.alpha = alpha
-                  this.translationY = translation
-               }
-            }
-         }
-      )
-
       val visiblePages = when {
          currentIndex < targetIndex -> {
+            val currentPageComposable = pageComposableSwitcher[currentPage.page] ?: TODO()
+            val targetPageComposable  = pageComposableSwitcher[targetPage .page] ?: TODO()
+
+            val transitionSpec
+               =  currentPageComposable.pageTransitionSet.getTransitionTo  (targetPage .page::class)
+               ?: targetPageComposable .pageTransitionSet.getTransitionFrom(currentPage.page::class)
+               ?: defaultPageTransitionSpec
+
             listOf(
                Pair(currentPage, transitionSpec.enteringCurrentPageElementAnimations),
                Pair(targetPage,  transitionSpec.enteringTargetPageElementAnimations)
             )
          }
          currentIndex > targetIndex -> {
+            val currentPageComposable = pageComposableSwitcher[currentPage.page] ?: TODO()
+            val targetPageComposable  = pageComposableSwitcher[targetPage .page] ?: TODO()
+
+            val transitionSpec
+               =  targetPageComposable .pageTransitionSet.getTransitionFrom(currentPage.page::class)
+               ?: currentPageComposable.pageTransitionSet.getTransitionTo  (targetPage .page::class)
+               ?: defaultPageTransitionSpec
+
             listOf(
                Pair(targetPage,  transitionSpec.exitingTargetPageElementAnimations),
                Pair(currentPage, transitionSpec.exitingCurrentPageElementAnimations)

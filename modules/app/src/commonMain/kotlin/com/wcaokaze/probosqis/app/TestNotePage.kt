@@ -53,7 +53,8 @@ val testNotePageComposable = pageComposable<TestNotePage, TestNotePageState>(
       Note(page.i, Modifier.fillMaxSize())
    },
    header = { _, _, _ -> },
-   footer = null
+   footer = null,
+   pageTransitions = {}
 )
 
 @Composable

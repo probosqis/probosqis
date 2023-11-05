@@ -52,7 +52,8 @@ abstract class PageStackBoardComposeTestBase {
             pageStateFactory(pageStateFactory),
             pageComposable,
             headerComposable,
-            footer = null
+            footer = null,
+            pageTransitions = {}
          )
 
          Pair(

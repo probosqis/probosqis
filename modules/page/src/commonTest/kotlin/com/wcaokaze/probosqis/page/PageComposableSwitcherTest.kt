@@ -36,13 +36,15 @@ class PageComposableSwitcherTest {
                pageStateFactory { _, _ -> PageAState() },
                content = { _, _, _ -> },
                header = { _, _, _ -> },
-               footer = null
+               footer = null,
+               pageTransitions = {}
             ),
             pageComposable<PageB, PageBState>(
                pageStateFactory { _, _ -> PageBState() },
                content = { _, _, _ -> },
                header = { _, _, _ -> },
-               footer = null
+               footer = null,
+               pageTransitions = {}
             ),
          )
       )

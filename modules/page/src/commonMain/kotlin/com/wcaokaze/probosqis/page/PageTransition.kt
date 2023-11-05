@@ -2,13 +2,19 @@ package com.wcaokaze.probosqis.page
 
 import androidx.annotation.VisibleForTesting
 import androidx.compose.animation.core.Transition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
 
@@ -98,6 +104,65 @@ inline fun pageTransitionSpec(
    exitTransitionBuilder.exit()
    return PageTransitionSpec(enterTransitionBuilder, exitTransitionBuilder)
 }
+
+internal val defaultPageTransitionSpec = pageTransitionSpec(
+   enter = {
+      targetPageElement(PageLayoutIds.root) { transition ->
+         val alpha by transition.animateFloat(
+            transitionSpec = { tween() }
+         ) {
+            if (it.pageId == transition.targetState.pageId) {
+               1.0f
+            } else {
+               0.0f
+            }
+         }
+
+         val translation by transition.animateFloat(
+            transitionSpec = { tween() }
+         ) {
+            if (it.pageId == transition.targetState.pageId) {
+               0.0f
+            } else {
+               with (LocalDensity.current) { 32.dp.toPx() }
+            }
+         }
+
+         Modifier.graphicsLayer {
+            this.alpha = alpha
+            this.translationY = translation
+         }
+      }
+   },
+   exit = {
+      currentPageElement(PageLayoutIds.root) { transition ->
+         val alpha by transition.animateFloat(
+            transitionSpec = { tween() }
+         ) {
+            if (it.pageId == transition.targetState.pageId) {
+               0.0f
+            } else {
+               1.0f
+            }
+         }
+
+         val translation by transition.animateFloat(
+            transitionSpec = { tween() }
+         ) {
+            if (it.pageId == transition.targetState.pageId) {
+               with (LocalDensity.current) { 32.dp.toPx() }
+            } else {
+               0.0f
+            }
+         }
+
+         Modifier.graphicsLayer {
+            this.alpha = alpha
+            this.translationY = translation
+         }
+      }
+   }
+)
 
 @Stable
 interface PageLayoutInfo {

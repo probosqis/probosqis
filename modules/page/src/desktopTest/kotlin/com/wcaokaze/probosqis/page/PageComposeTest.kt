@@ -57,7 +57,8 @@ class PageComposeTest {
                         }
                      },
                      header = { _, _, _ -> },
-                     footer = null
+                     footer = null,
+                     pageTransitions = {}
                   ),
                   pageComposable<PageB, PageBState>(
                      pageStateFactory { _, _ -> PageBState() },
@@ -67,7 +68,8 @@ class PageComposeTest {
                         }
                      },
                      header = { _, _, _ -> },
-                     footer = null
+                     footer = null,
+                     pageTransitions = {}
                   ),
                )
             )
@@ -128,7 +130,8 @@ class PageComposeTest {
                         }
                      },
                      header = { _, _, _ -> },
-                     footer = null
+                     footer = null,
+                     pageTransitions = {}
                   ),
                )
             )
