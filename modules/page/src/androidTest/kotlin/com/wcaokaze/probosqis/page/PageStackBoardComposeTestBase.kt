@@ -22,6 +22,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import kotlinx.collections.immutable.toImmutableList
@@ -35,35 +37,41 @@ abstract class PageStackBoardComposeTestBase {
    protected class TestPage(val i: Int) : Page()
    protected class TestPageState : PageState()
 
-   protected inline fun <reified P : Page> pageComposableSwitcher(
+   @Composable
+   protected inline fun <reified P : Page> rememberPageComposableSwitcher(
       noinline pageStateFactory: (P, PageState.StateSaver) -> PageState,
       noinline pageComposable: @Composable (P, PageState, PageStackState) -> Unit,
    ): Pair<PageComposableSwitcher, PageStateStore> {
       val headerComposable: @Composable (Page, PageState, PageStackState) -> Unit
             = { _, _, _ -> }
 
-      val testPageComposable = pageComposable(
-         pageStateFactory(pageStateFactory),
-         pageComposable,
-         headerComposable,
-         footer = null
-      )
+      val coroutineScope = rememberCoroutineScope()
 
-      return Pair(
-         PageComposableSwitcher(
-            allPageComposables = listOf(testPageComposable)
-         ),
-         PageStateStore(
-            allPageStateFactories = listOf(testPageComposable.pageStateFactory)
+      return remember {
+         val testPageComposable = pageComposable(
+            pageStateFactory(pageStateFactory),
+            pageComposable,
+            headerComposable,
+            footer = null
          )
-      )
+
+         Pair(
+            PageComposableSwitcher(
+               allPageComposables = listOf(testPageComposable)
+            ),
+            PageStateStore(
+               allPageStateFactories = listOf(testPageComposable.pageStateFactory),
+               coroutineScope
+            )
+         )
+      }
    }
 
-   protected val defaultPageComposableSwitcher: PageComposableSwitcher
-   protected val defaultPageStateStore: PageStateStore
-
-   init {
-      val (switcher, stateStore) = pageComposableSwitcher<TestPage>(
+   @Composable
+   protected fun rememberDefaultPageComposableSwitcher()
+      : Pair<PageComposableSwitcher, PageStateStore>
+   {
+      return rememberPageComposableSwitcher<TestPage>(
          { _, _ -> TestPageState() },
          { page, _, pageStackState ->
             Column {
@@ -98,8 +106,6 @@ abstract class PageStackBoardComposeTestBase {
             }
          }
       )
-      defaultPageComposableSwitcher = switcher
-      defaultPageStateStore = stateStore
    }
 
    protected fun createPageStackBoard(

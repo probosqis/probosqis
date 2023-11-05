@@ -19,6 +19,7 @@ package com.wcaokaze.probosqis.app
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
@@ -72,9 +73,11 @@ private fun rememberPreviewProbosqisState(): ProbosqisState {
             = throw NotImplementedError()
    }
 
+   val coroutineScope = rememberCoroutineScope()
+
    return remember {
-      ProbosqisState(
-         allPageComposables, pageStackBoardRepository, pageStackRepository)
+      ProbosqisState(allPageComposables, pageStackBoardRepository,
+         pageStackRepository, coroutineScope)
    }
 }
 

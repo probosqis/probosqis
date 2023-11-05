@@ -80,9 +80,25 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
    @Composable
    private fun SingleColumnPageStackBoard(
       state: SingleColumnPageStackBoardState,
+      width: Dp = defaultPageStackBoardWidth
+   ) {
+      val (defaultPageComposableSwitcher, defaultPageStateStore)
+            = rememberDefaultPageComposableSwitcher()
+
+      SingleColumnPageStackBoard(
+         state,
+         width,
+         defaultPageComposableSwitcher,
+         defaultPageStateStore
+      )
+   }
+
+   @Composable
+   private fun SingleColumnPageStackBoard(
+      state: SingleColumnPageStackBoardState,
       width: Dp = defaultPageStackBoardWidth,
-      pageComposableSwitcher: PageComposableSwitcher = defaultPageComposableSwitcher,
-      pageStateStore: PageStateStore = defaultPageStateStore
+      pageComposableSwitcher: PageComposableSwitcher,
+      pageStateStore: PageStateStore
    ) {
       SingleColumnPageStackBoard(
          state,
@@ -1254,28 +1270,27 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          SideEffect {
             pageStackBoardState = remembered.pageStackBoardState
          }
-         val (pageComposableSwitcher, pageStateStore) = remember {
-            pageComposableSwitcher<TestPage>(
-               { _, _ -> TestPageState() },
-               { page, _, pageStackState ->
-                  Button(
-                     onClick = {
-                        val newPage = TestPage(page.i + 100)
-                        val newPageStack = PageStack(
-                           PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                           PageStack.SavedPageState(
-                              PageStack.PageId(newPage.i.toLong()),
-                              newPage
+         val (pageComposableSwitcher, pageStateStore)
+               = rememberPageComposableSwitcher<TestPage>(
+                  { _, _ -> TestPageState() },
+                  { page, _, pageStackState ->
+                     Button(
+                        onClick = {
+                           val newPage = TestPage(page.i + 100)
+                           val newPageStack = PageStack(
+                              PageStack.Id(pageStackState.pageStack.id.value + 100L),
+                              PageStack.SavedPageState(
+                                 PageStack.PageId(newPage.i.toLong()),
+                                 newPage
+                              )
                            )
-                        )
-                        pageStackState.addColumn(newPageStack)
+                           pageStackState.addColumn(newPageStack)
+                        }
+                     ) {
+                        Text("Add PageStack ${page.i}")
                      }
-                  ) {
-                     Text("Add PageStack ${page.i}")
                   }
-               }
-            )
-         }
+               )
 
          SingleColumnPageStackBoard(
             remembered.pageStackBoardState,

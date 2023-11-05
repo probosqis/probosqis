@@ -23,8 +23,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.autoSaver
@@ -42,6 +45,7 @@ import androidx.core.os.bundleOf
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.datetime.Clock
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
@@ -85,14 +89,20 @@ class PageStateSaverTest {
 
    @Test
    fun serializer_getValue() {
-      // なにもsetContentしてないとwaitForIdleがめちゃくちゃ遅くなる
-      rule.setContent { Box(Modifier) }
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+
+         // なにもsetContentしてないとwaitForIdleがめちゃくちゃ遅くなる
+         Box(Modifier)
+      }
 
       val cache = WritableCache(buildJsonObject {
          put("key", JsonPrimitive(42))
       })
 
-      val saver = PageState.StateSaver(cache)
+      val saver = PageState.StateSaver(cache, coroutineScope)
       val savedState = saver.save("key", Int.serializer()) { fail() }
 
       assertEquals(42, savedState.value)
@@ -106,11 +116,16 @@ class PageStateSaverTest {
 
    @Test
    fun serializer_initialize() {
-      rule.setContent { Box(Modifier) }
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
 
       val cache = WritableCache(buildJsonObject {})
 
-      val saver = PageState.StateSaver(cache)
+      val saver = PageState.StateSaver(cache, coroutineScope)
       val savedState = saver.save("key", Int.serializer()) { 42 }
 
       assertEquals(1, cache.value.size)
@@ -144,13 +159,18 @@ class PageStateSaverTest {
 
    @Test
    fun serializer_setValue() {
-      rule.setContent { Box(Modifier) }
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
 
       val cache = WritableCache(buildJsonObject {
          put("key", JsonPrimitive(3))
       })
 
-      val saver = PageState.StateSaver(cache)
+      val saver = PageState.StateSaver(cache, coroutineScope)
       val savedState = saver.save("key", Int.serializer()) { fail() }
 
       savedState.value = 42
@@ -165,10 +185,15 @@ class PageStateSaverTest {
 
    @Test
    fun serializer_nullable() {
-      rule.setContent { Box(Modifier) }
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
 
       val cache = WritableCache(buildJsonObject {})
-      val saver = PageState.StateSaver(cache)
+      val saver = PageState.StateSaver(cache, coroutineScope)
 
       val savedState = saver.save("key", Int.serializer().nullable) { 42 }
       assertEquals(42, savedState.value)
@@ -232,7 +257,12 @@ class PageStateSaverTest {
    @OptIn(ExperimentalUnsignedTypes::class)
    @Test
    fun saver_restoredSaveableInstance() {
-      rule.setContent { Box(Modifier) }
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
 
       val cache = WritableCache(buildJsonObject {
          putJsonArray("key") {
@@ -552,12 +582,10 @@ class PageStateSaverTest {
          }
       })
 
-      val stateSaver = PageState.StateSaver(cache)
+      val stateSaver = PageState.StateSaver(cache, coroutineScope)
 
       stateSaver.save("key", init = { fail() }, saver = object : Saver<Unit, Any> {
-         override fun SaverScope.save(value: Unit): Any? {
-            fail()
-         }
+         override fun SaverScope.save(value: Unit) = null
 
          override fun restore(value: Any) {
             assertIs<List<*>>(value)
@@ -695,10 +723,15 @@ class PageStateSaverTest {
    @OptIn(ExperimentalUnsignedTypes::class)
    @Test
    fun saver_savedSaveableInstance() {
-      rule.setContent { Box(Modifier) }
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
 
       val cache = WritableCache(buildJsonObject {})
-      val stateSaver = PageState.StateSaver(cache)
+      val stateSaver = PageState.StateSaver(cache, coroutineScope)
 
       stateSaver.save(
          "key",
@@ -1128,7 +1161,12 @@ class PageStateSaverTest {
 
    @Test
    fun saver_getValue() {
-      rule.setContent { Box(Modifier) }
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
 
       val cache = WritableCache(buildJsonObject {
          putJsonArray("key") {
@@ -1137,7 +1175,7 @@ class PageStateSaverTest {
          }
       })
 
-      val saver = PageState.StateSaver(cache)
+      val saver = PageState.StateSaver(cache, coroutineScope)
       val savedState = saver.save("key", autoSaver<Int>()) { fail() }
       assertEquals(42, savedState.value)
 
@@ -1161,11 +1199,16 @@ class PageStateSaverTest {
 
    @Test
    fun saver_initialize() {
-      rule.setContent { Box(Modifier) }
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
 
       val cache = WritableCache(buildJsonObject {})
 
-      val saver = PageState.StateSaver(cache)
+      val saver = PageState.StateSaver(cache, coroutineScope)
       val savedState = saver.save("key", autoSaver()) { 42 }
 
       rule.waitForSnapshotFlow { cache.value.containsKey("key") }
@@ -1195,7 +1238,12 @@ class PageStateSaverTest {
 
    @Test
    fun saver_setValue() {
-      rule.setContent { Box(Modifier) }
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
 
       val cache = WritableCache(buildJsonObject {
          putJsonArray("key") {
@@ -1204,7 +1252,7 @@ class PageStateSaverTest {
          }
       })
 
-      val saver = PageState.StateSaver(cache)
+      val saver = PageState.StateSaver(cache, coroutineScope)
       val savedState = saver.save("key", autoSaver<Int>()) { fail() }
 
       savedState.value = 42
@@ -1217,10 +1265,15 @@ class PageStateSaverTest {
 
    @Test
    fun saver_nullable() {
-      rule.setContent { Box(Modifier) }
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
 
       val cache = WritableCache(buildJsonObject {})
-      val saver = PageState.StateSaver(cache)
+      val saver = PageState.StateSaver(cache, coroutineScope)
 
       val savedState = saver.save("key", autoSaver<Int?>()) { 42 }
       rule.waitForSnapshotFlow { cache.value.containsKey("key") }
@@ -1246,14 +1299,18 @@ class PageStateSaverTest {
    @Test
    fun saver_updateSourceWhenStateChanged() {
       val cache = WritableCache(buildJsonObject {})
-      val saver = PageState.StateSaver(cache)
 
-      val scrollState by saver.save("scrollState", ScrollState.Saver) {
-         ScrollState(0)
-      }
+      lateinit var savedScrollState: State<ScrollState>
 
       rule.setContent {
-         Box(Modifier.height(100.dp).verticalScroll(scrollState)) {
+         val coroutineScope = rememberCoroutineScope()
+         val saver = remember { PageState.StateSaver(cache, coroutineScope) }
+
+         savedScrollState = remember {
+            saver.save("scrollState", ScrollState.Saver) { ScrollState(0) }
+         }
+
+         Box(Modifier.height(100.dp).verticalScroll(savedScrollState.value)) {
             Box(Modifier.height(300.dp))
          }
       }
@@ -1270,7 +1327,7 @@ class PageStateSaverTest {
          }
 
       rule.runOnIdle {
-         assertEquals(50, scrollState.value)
+         assertEquals(50, savedScrollState.value.value)
       }
 
       rule.waitForSnapshotFlow {
@@ -1281,11 +1338,16 @@ class PageStateSaverTest {
 
    @Test
    fun saver_debounce() {
-      rule.setContent { Box(Modifier) }
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
 
       val cache = WritableCache(buildJsonObject {})
       val spyCache = spyk(cache)
-      val saver = PageState.StateSaver(spyCache)
+      val saver = PageState.StateSaver(spyCache, coroutineScope)
 
       @Stable
       class State(initialI: Int) {

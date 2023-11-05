@@ -54,7 +54,8 @@ class ProbosqisComposeTest {
       val probosqisState = ProbosqisState(
          allPageComposables = emptyList(),
          pageStackBoardRepository,
-         pageStackRepository = mockk()
+         pageStackRepository = mockk(),
+         coroutineScope = mockk()
       )
 
       val loadedCache = probosqisState.loadPageStackBoardOrDefault()
@@ -77,7 +78,8 @@ class ProbosqisComposeTest {
       val probosqisState = ProbosqisState(
          allPageComposables = emptyList(),
          pageStackBoardRepository,
-         pageStackRepository
+         pageStackRepository,
+         coroutineScope = mockk()
       )
 
       val loadedCache = probosqisState.loadPageStackBoardOrDefault()
@@ -110,7 +112,8 @@ class ProbosqisComposeTest {
          pageStackBoardRepository = mockk {
             every { loadPageStackBoard() } returns WritableCache(pageStackBoard)
          },
-         pageStackRepository = mockk()
+         pageStackRepository = mockk(),
+         coroutineScope = mockk()
       )
 
       rule.setContent {
@@ -134,7 +137,8 @@ class ProbosqisComposeTest {
          pageStackBoardRepository = mockk {
             every { loadPageStackBoard() } returns WritableCache(pageStackBoard)
          },
-         pageStackRepository = mockk()
+         pageStackRepository = mockk(),
+         coroutineScope = mockk()
       )
 
       rule.setContent {
@@ -158,7 +162,8 @@ class ProbosqisComposeTest {
          pageStackBoardRepository = mockk {
             every { loadPageStackBoard() } returns WritableCache(pageStackBoard)
          },
-         pageStackRepository = mockk()
+         pageStackRepository = mockk(),
+         coroutineScope = mockk()
       )
 
       var isMultiColumn by mutableStateOf(false)
@@ -199,7 +204,8 @@ class ProbosqisComposeTest {
       val probosqisState = ProbosqisState(
          allPageComposables = emptyList(),
          pageStackBoardRepository = mockk(),
-         pageStackRepository = mockk()
+         pageStackRepository = mockk(),
+         coroutineScope = mockk()
       )
 
       assertFails {

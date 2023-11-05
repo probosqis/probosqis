@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis
 
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.wcaokaze.probosqis.app.App
@@ -41,6 +42,8 @@ fun main() {
          title = Strings.App.topAppBar,
          onCloseRequest = { exitApplication() }
       ) {
+         val coroutineScope = rememberCoroutineScope()
+
          val probosqisState = remember {
             val allPageComposables = persistentListOf(
                testPageComposable,
@@ -62,8 +65,8 @@ fun main() {
                File(System.getProperty("user.home"), ".probosqisData/pageStackBoardCache")
             )
 
-            ProbosqisState(
-               allPageComposables, pageStackBoardRepository, pageStackRepository)
+            ProbosqisState(allPageComposables, pageStackBoardRepository,
+               pageStackRepository, coroutineScope)
          }
 
          Probosqis(probosqisState)

@@ -28,9 +28,8 @@ import androidx.compose.runtime.snapshotFlow
 import com.wcaokaze.probosqis.cache.compose.asState
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.cache.core.update
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
@@ -55,7 +54,10 @@ internal expect class JsonElementSaver<T>(saver: Saver<T, *>) : Saver<T, JsonEle
 @Stable
 abstract class PageState {
    @Stable
-   class StateSaver(private val cache: WritableCache<JsonObject>) {
+   class StateSaver(
+      private val cache: WritableCache<JsonObject>,
+      private val pageStateCoroutineScope: CoroutineScope
+   ) {
       fun <T> save(
          key: String,
          serializer: KSerializer<T>,
@@ -69,7 +71,8 @@ abstract class PageState {
          saver: Saver<T, *>,
          init: () -> T
       ): MutableState<T> {
-         return AutoSaveableElementState(cache, key, saver, init)
+         return AutoSaveableElementState(
+            cache, key, saver, init, pageStateCoroutineScope)
       }
 
       private class ElementState<T>(
@@ -120,7 +123,8 @@ abstract class PageState {
          private val source: WritableCache<JsonObject>,
          private val key: String,
          saver: Saver<T, *>,
-         private val init: () -> T
+         private val init: () -> T,
+         pageStateCoroutineScope: CoroutineScope
       ) : MutableState<T> {
          private val jsonSaver = JsonElementSaver(saver)
 
@@ -132,8 +136,7 @@ abstract class PageState {
          )
 
          init {
-            @OptIn(DelicateCoroutinesApi::class)
-            GlobalScope.launch {
+            pageStateCoroutineScope.launch {
                launch {
                   @OptIn(FlowPreview::class)
                   snapshotFlow { save(value) }

@@ -25,6 +25,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -51,6 +52,8 @@ class MainActivity : ComponentActivity() {
       setContent {
          val context = LocalContext.current
 
+         val coroutineScope = rememberCoroutineScope()
+
          val probosqisState = remember(context) {
             val allPageComposables = persistentListOf(
                testPageComposable,
@@ -70,8 +73,8 @@ class MainActivity : ComponentActivity() {
                File(context.filesDir, "probosqisData/pageStackBoardCache")
             )
 
-            ProbosqisState(
-               allPageComposables, pageStackBoardRepository, pageStackRepository)
+            ProbosqisState(allPageComposables, pageStackBoardRepository,
+               pageStackRepository, coroutineScope)
          }
 
          BackHandler {

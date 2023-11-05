@@ -35,18 +35,6 @@ class PageStackComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
-   private val pageComposableSwitcher = PageComposableSwitcher(
-      listOf(
-         spyPageComposable,
-      )
-   )
-
-   private val pageStateStore = PageStateStore(
-      listOf(
-         spyPageComposable.pageStateFactory,
-      )
-   )
-
    @Test
    fun onlyForefrontComposableIsCalled() {
       val page1 = SpyPage()
@@ -73,6 +61,25 @@ class PageStackComposeTest {
       )
 
       rule.setContent {
+         val pageComposableSwitcher = remember {
+            PageComposableSwitcher(
+               listOf(
+                  spyPageComposable,
+               )
+            )
+         }
+
+         val coroutineScope = rememberCoroutineScope()
+
+         val pageStateStore = remember {
+            PageStateStore(
+               listOf(
+                  spyPageComposable.pageStateFactory,
+               ),
+               coroutineScope
+            )
+         }
+
          PageStackContent(pageStackState, pageComposableSwitcher, pageStateStore)
       }
 
@@ -111,6 +118,25 @@ class PageStackComposeTest {
       }
 
       rule.setContent {
+         val pageComposableSwitcher = remember {
+            PageComposableSwitcher(
+               listOf(
+                  spyPageComposable,
+               )
+            )
+         }
+
+         val coroutineScope = rememberCoroutineScope()
+
+         val pageStateStore = remember {
+            PageStateStore(
+               listOf(
+                  spyPageComposable.pageStateFactory,
+               ),
+               coroutineScope
+            )
+         }
+
          PageStackContent(pageStackState, pageComposableSwitcher, pageStateStore)
       }
 
@@ -170,6 +196,25 @@ class PageStackComposeTest {
       )
 
       rule.setContent {
+         val pageComposableSwitcher = remember {
+            PageComposableSwitcher(
+               listOf(
+                  spyPageComposable,
+               )
+            )
+         }
+
+         val coroutineScope = rememberCoroutineScope()
+
+         val pageStateStore = remember {
+            PageStateStore(
+               listOf(
+                  spyPageComposable.pageStateFactory,
+               ),
+               coroutineScope
+            )
+         }
+
          PageStackContent(pageStackState, pageComposableSwitcher, pageStateStore)
       }
 

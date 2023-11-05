@@ -108,7 +108,8 @@ class PageTransitionTest {
                listOf(
                   pageAComposable.pageStateFactory,
                   pageBComposable.pageStateFactory,
-               )
+               ),
+               coroutineScope
             )
          )
       }
