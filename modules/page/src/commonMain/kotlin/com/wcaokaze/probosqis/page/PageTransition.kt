@@ -20,7 +20,9 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -245,32 +247,62 @@ fun Modifier.transitionElement(
       .then(transitionAnimationModifier)
 }
 
-@OptIn(ExperimentalTransitionApi::class)
-@Composable
-internal fun PageTransition(
-   state: PageStackState,
-   pageComposableSwitcher: PageComposableSwitcher,
-   pageStateStore: PageStateStore
+private typealias PageComposableArguments
+      = Triple<PageStack.SavedPageState, MutablePageLayoutInfo, PageTransitionElementAnimSet>
+
+@Stable
+private class PageTransitionState(
+   private val pageStackState: PageStackState,
+   private val pageComposableSwitcher: PageComposableSwitcher
 ) {
-   val pageStack = state.pageStack
+   private val layoutInfoMap = mutableMapOf<PageStack.PageId, MutablePageLayoutInfo>()
 
-   val transition = updateTransition(
-      pageStack.indexedHead,
-      label = "PageStackContentTransition"
-   )
+   private var currentPageIndex = -1
+   private var targetPageIndex  = -1
 
-   val layoutInfoMap = remember {
-      mutableMapOf<PageStack.PageId, MutablePageLayoutInfo>()
+   var visiblePageStates by mutableStateOf(emptyList<PageComposableArguments>())
+
+   @Composable
+   fun updateTransition(): Transition<PageLayoutInfo> {
+      val pageStack = pageStackState.pageStack
+
+      val transition = updateTransition(
+         pageStack.indexedHead,
+         label = "PageStackContentTransition"
+      )
+
+      if (transition.currentState.index != currentPageIndex ||
+          transition.targetState .index != targetPageIndex)
+      {
+         updateVisiblePageStates(
+            transition.currentState,
+            transition.targetState
+         )
+         currentPageIndex = transition.currentState.index
+         targetPageIndex  = transition.targetState .index
+      }
+
+      @OptIn(ExperimentalTransitionApi::class)
+      val pageTransition: Transition<PageLayoutInfo>
+            = transition.createChildTransition(label = "PageTransition") {
+               getLayoutInfo(it.value.id)
+            }
+
+      return pageTransition
    }
 
-   val visiblePages = remember(
-      transition.currentState.index,
-      transition.targetState .index
-   ) {
-      val (currentIndex, currentPage) = transition.currentState
-      val (targetIndex,  targetPage ) = transition.targetState
+   private fun getLayoutInfo(pageId: PageStack.PageId): MutablePageLayoutInfo {
+      return layoutInfoMap.getOrPut(pageId) { PageLayoutInfoImpl(pageId) }
+   }
 
-      val visiblePages = when {
+   private fun updateVisiblePageStates(
+      currentState: IndexedValue<PageStack.SavedPageState>,
+      targetState:  IndexedValue<PageStack.SavedPageState>
+   ) {
+      val (currentIndex, currentPage) = currentState
+      val (targetIndex,  targetPage ) = targetState
+
+      visiblePageStates = when {
          currentIndex < targetIndex -> {
             val currentPageComposable = pageComposableSwitcher[currentPage.page] ?: TODO()
             val targetPageComposable  = pageComposableSwitcher[targetPage .page] ?: TODO()
@@ -281,8 +313,8 @@ internal fun PageTransition(
                   ?: defaultPageTransitionSpec
 
             listOf(
-               Pair(currentPage, transitionSpec.enteringCurrentPageElementAnimations),
-               Pair(targetPage,  transitionSpec.enteringTargetPageElementAnimations)
+               Triple(currentPage, getLayoutInfo(currentPage.id), transitionSpec.enteringCurrentPageElementAnimations),
+               Triple(targetPage,  getLayoutInfo(targetPage .id), transitionSpec.enteringTargetPageElementAnimations)
             )
          }
          currentIndex > targetIndex -> {
@@ -295,13 +327,13 @@ internal fun PageTransition(
                   ?: defaultPageTransitionSpec
 
             listOf(
-               Pair(targetPage,  transitionSpec.exitingTargetPageElementAnimations),
-               Pair(currentPage, transitionSpec.exitingCurrentPageElementAnimations)
+               Triple(targetPage,  getLayoutInfo(targetPage .id), transitionSpec.exitingTargetPageElementAnimations),
+               Triple(currentPage, getLayoutInfo(currentPage.id), transitionSpec.exitingCurrentPageElementAnimations)
             )
          }
          else -> {
             listOf(
-               Pair(targetPage, persistentMapOf())
+               Triple(targetPage, getLayoutInfo(targetPage.id), persistentMapOf())
             )
          }
       }
@@ -310,31 +342,37 @@ internal fun PageTransition(
       while (iter.hasNext()) {
          val pageId = iter.next()
 
-         if (visiblePages.none { it.first.id == pageId }) {
+         if (visiblePageStates.none { it.first.id == pageId }) {
             iter.remove()
          }
       }
+   }
+}
 
-      visiblePages
+@Composable
+internal fun PageTransition(
+   pageStackState: PageStackState,
+   pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore
+) {
+   val transitionState = remember(pageStackState, pageComposableSwitcher) {
+      PageTransitionState(pageStackState, pageComposableSwitcher)
    }
 
-   val pageTransition: Transition<PageLayoutInfo>
-         = transition.createChildTransition(label = "PageTransition") {
-            layoutInfoMap.getOrInstantiate(it.value.id)
-         }
+   val transition = transitionState.updateTransition()
 
    Box {
       val backgroundColor = MaterialTheme.colorScheme
          .surfaceColorAtElevation(LocalAbsoluteTonalElevation.current)
 
-      for ((savedPageState, transitionAnimations) in visiblePages) {
+      for ((savedPageState, layoutInfo, transitionAnimations)
+         in transitionState.visiblePageStates)
+      {
          key(savedPageState.id) {
-            val layoutInfo = layoutInfoMap.getOrInstantiate(savedPageState.id)
-
             CompositionLocalProvider(
                LocalPageLayoutInfo provides layoutInfo,
                LocalPageTransitionAnimations provides transitionAnimations,
-               LocalPageTransition provides pageTransition,
+               LocalPageTransition provides transition,
             ) {
                Box(Modifier.transitionElement(PageLayoutIds.root)) {
                   Box(
@@ -349,7 +387,7 @@ internal fun PageTransition(
                         savedPageState,
                         pageComposableSwitcher,
                         pageStateStore,
-                        pageStackState = state
+                        pageStackState
                      )
                   }
                }
@@ -357,10 +395,4 @@ internal fun PageTransition(
          }
       }
    }
-}
-
-private fun MutableMap<PageStack.PageId, MutablePageLayoutInfo>
-      .getOrInstantiate(pageId: PageStack.PageId): MutablePageLayoutInfo
-{
-   return getOrPut(pageId) { PageLayoutInfoImpl(pageId) }
 }
