@@ -371,6 +371,6 @@ private fun PageStackContent(
       shadowElevation = 4.dp,
       modifier = modifier
    ) {
-      PageStackContent(state, pageComposableSwitcher, pageStateStore)
+      PageTransition(state, pageComposableSwitcher, pageStateStore)
    }
 }

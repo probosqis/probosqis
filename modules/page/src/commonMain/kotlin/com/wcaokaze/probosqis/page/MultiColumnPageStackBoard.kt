@@ -327,7 +327,7 @@ private fun PageStack(
                }
          )
 
-         PageStackContent(
+         PageTransition(
             state,
             pageComposableSwitcher,
             pageStateStore

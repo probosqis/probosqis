@@ -16,33 +16,10 @@
 
 package com.wcaokaze.probosqis.page
 
-import androidx.compose.animation.core.ExperimentalTransitionApi
-import androidx.compose.animation.core.Transition
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.createChildTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.LocalAbsoluteTonalElevation
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.compose.asState
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.cache.core.update
-import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -179,124 +156,4 @@ class PageStackState internal constructor(
    fun removeFromBoard() {
       pageStackBoardState.removePageStack(pageStackId)
    }
-}
-
-@OptIn(ExperimentalTransitionApi::class)
-@Composable
-internal fun PageStackContent(
-   state: PageStackState,
-   pageComposableSwitcher: PageComposableSwitcher,
-   pageStateStore: PageStateStore
-) {
-   val pageStack = state.pageStack
-
-   val transition = updateTransition(
-      pageStack.indexedHead,
-      label = "PageStackContentTransition"
-   )
-
-   val layoutInfoMap = remember {
-      mutableMapOf<PageStack.PageId, MutablePageLayoutInfo>()
-   }
-
-   val visiblePages = remember(
-      transition.currentState.index,
-      transition.targetState .index
-   ) {
-      val (currentIndex, currentPage) = transition.currentState
-      val (targetIndex,  targetPage ) = transition.targetState
-
-      val visiblePages = when {
-         currentIndex < targetIndex -> {
-            val currentPageComposable = pageComposableSwitcher[currentPage.page] ?: TODO()
-            val targetPageComposable  = pageComposableSwitcher[targetPage .page] ?: TODO()
-
-            val transitionSpec
-               =  currentPageComposable.pageTransitionSet.getTransitionTo  (targetPage .page::class)
-               ?: targetPageComposable .pageTransitionSet.getTransitionFrom(currentPage.page::class)
-               ?: defaultPageTransitionSpec
-
-            listOf(
-               Pair(currentPage, transitionSpec.enteringCurrentPageElementAnimations),
-               Pair(targetPage,  transitionSpec.enteringTargetPageElementAnimations)
-            )
-         }
-         currentIndex > targetIndex -> {
-            val currentPageComposable = pageComposableSwitcher[currentPage.page] ?: TODO()
-            val targetPageComposable  = pageComposableSwitcher[targetPage .page] ?: TODO()
-
-            val transitionSpec
-               =  targetPageComposable .pageTransitionSet.getTransitionFrom(currentPage.page::class)
-               ?: currentPageComposable.pageTransitionSet.getTransitionTo  (targetPage .page::class)
-               ?: defaultPageTransitionSpec
-
-            listOf(
-               Pair(targetPage,  transitionSpec.exitingTargetPageElementAnimations),
-               Pair(currentPage, transitionSpec.exitingCurrentPageElementAnimations)
-            )
-         }
-         else -> {
-            listOf(
-               Pair(targetPage, persistentMapOf())
-            )
-         }
-      }
-
-      val iter = layoutInfoMap.keys.iterator()
-      while (iter.hasNext()) {
-         val pageId = iter.next()
-
-         if (visiblePages.none { it.first.id == pageId }) {
-            iter.remove()
-         }
-      }
-
-      visiblePages
-   }
-
-   val pageTransition: Transition<PageLayoutInfo>
-         = transition.createChildTransition(label = "PageTransition") {
-            layoutInfoMap.getOrInstantiate(it.value.id)
-         }
-
-   Box {
-      val backgroundColor = MaterialTheme.colorScheme
-         .surfaceColorAtElevation(LocalAbsoluteTonalElevation.current)
-
-      for ((savedPageState, transitionAnimations) in visiblePages) {
-         key(savedPageState.id) {
-            val layoutInfo = layoutInfoMap.getOrInstantiate(savedPageState.id)
-
-            CompositionLocalProvider(
-               LocalPageLayoutInfo provides layoutInfo,
-               LocalPageTransitionAnimations provides transitionAnimations,
-               LocalPageTransition provides pageTransition,
-            ) {
-               Box(Modifier.transitionElement(PageLayoutIds.root)) {
-                  Box(
-                     Modifier
-                        .fillMaxSize()
-                        .background(backgroundColor)
-                        .transitionElement(PageLayoutIds.background)
-                  )
-
-                  Box(Modifier.transitionElement(PageLayoutIds.content)) {
-                     PageContent(
-                        savedPageState,
-                        pageComposableSwitcher,
-                        pageStateStore,
-                        pageStackState = state
-                     )
-                  }
-               }
-            }
-         }
-      }
-   }
-}
-
-private fun MutableMap<PageStack.PageId, MutablePageLayoutInfo>
-      .getOrInstantiate(pageId: PageStack.PageId): MutablePageLayoutInfo
-{
-   return getOrPut(pageId) { PageLayoutInfoImpl(pageId) }
 }
