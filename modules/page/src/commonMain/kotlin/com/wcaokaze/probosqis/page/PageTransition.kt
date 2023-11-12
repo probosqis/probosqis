@@ -31,13 +31,13 @@ val LocalPageLayoutInfo
    }
 
 internal val LocalPageTransition
-   = compositionLocalOf<Transition<PageTransitionState>> {
+   = compositionLocalOf<Transition<PageLayoutInfo>> {
       throw IllegalStateException(
          "Attempt to get a PageTransition from outside a Page")
    }
 
 internal typealias PageTransitionElementAnim
-      = @Composable (Transition<PageTransitionState>) -> Modifier
+      = @Composable (Transition<PageLayoutInfo>) -> Modifier
 
 internal typealias PageTransitionElementAnimSet
       = ImmutableMap<PageLayoutInfo.LayoutId, PageTransitionElementAnim>
@@ -180,6 +180,8 @@ interface PageLayoutInfo {
       }
    }
 
+   val pageId: PageStack.PageId
+
    operator fun get(id: LayoutId): LayoutCoordinates?
 }
 
@@ -218,7 +220,9 @@ interface MutablePageLayoutInfo : PageLayoutInfo {
 }
 
 @Stable
-internal class PageLayoutInfoImpl : MutablePageLayoutInfo {
+internal class PageLayoutInfoImpl(
+   override val pageId: PageStack.PageId
+) : MutablePageLayoutInfo {
    private val map = mutableStateMapOf<PageLayoutInfo.LayoutId, LayoutCoordinates>()
 
    override fun get(id: PageLayoutInfo.LayoutId): LayoutCoordinates? = map[id]

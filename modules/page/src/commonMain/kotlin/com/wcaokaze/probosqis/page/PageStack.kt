@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.animation.core.ExperimentalTransitionApi
+import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.createChildTransition
 import androidx.compose.animation.core.tween
@@ -180,26 +181,6 @@ class PageStackState internal constructor(
    }
 }
 
-@Stable
-class PageTransitionState(
-   val pageId: PageStack.PageId,
-   val layoutInfo: PageLayoutInfo
-) {
-   override fun equals(other: Any?): Boolean {
-      if (other !is PageTransitionState) { return false }
-      if (pageId     !=  other.pageId    ) { return false }
-      if (layoutInfo !== other.layoutInfo) { return false }
-      return true
-   }
-
-   override fun hashCode(): Int {
-      var h = 1
-      h = h * 31 + pageId.value.hashCode()
-      h = h * 31 + layoutInfo  .hashCode()
-      return h
-   }
-}
-
 @OptIn(ExperimentalTransitionApi::class)
 @Composable
 internal fun PageStackContent(
@@ -273,10 +254,10 @@ internal fun PageStackContent(
       visiblePages
    }
 
-   val pageTransition = transition.createChildTransition(label = "PageTransition") {
-      val layoutInfo = layoutInfoMap.getOrPut(it.value.id) { PageLayoutInfoImpl() }
-      PageTransitionState(it.value.id, layoutInfo)
-   }
+   val pageTransition: Transition<PageLayoutInfo>
+         = transition.createChildTransition(label = "PageTransition") {
+            layoutInfoMap.getOrInstantiate(it.value.id)
+         }
 
    Box {
       val backgroundColor = MaterialTheme.colorScheme
@@ -284,8 +265,7 @@ internal fun PageStackContent(
 
       for ((savedPageState, transitionAnimations) in visiblePages) {
          key(savedPageState.id) {
-            val layoutInfo = layoutInfoMap
-               .getOrPut(savedPageState.id) { PageLayoutInfoImpl() }
+            val layoutInfo = layoutInfoMap.getOrInstantiate(savedPageState.id)
 
             CompositionLocalProvider(
                LocalPageLayoutInfo provides layoutInfo,
@@ -313,4 +293,10 @@ internal fun PageStackContent(
          }
       }
    }
+}
+
+private fun MutableMap<PageStack.PageId, MutablePageLayoutInfo>
+      .getOrInstantiate(pageId: PageStack.PageId): MutablePageLayoutInfo
+{
+   return getOrPut(pageId) { PageLayoutInfoImpl(pageId) }
 }

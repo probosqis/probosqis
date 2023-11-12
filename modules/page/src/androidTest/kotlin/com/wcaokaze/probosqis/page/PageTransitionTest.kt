@@ -52,7 +52,7 @@ class PageTransitionTest {
 
    @Test
    fun pageLayoutInfo_getAndSet() {
-      val pageLayoutInfo = PageLayoutInfoImpl()
+      val pageLayoutInfo = PageLayoutInfoImpl(PageStack.PageId(0L))
       val layoutId1 = PageLayoutInfo.LayoutId()
       val layoutId2 = PageLayoutInfo.LayoutId()
 
