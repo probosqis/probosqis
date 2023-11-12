@@ -164,6 +164,20 @@ internal val defaultPageTransitionSpec = pageTransitionSpec(
    }
 )
 
+open class PageLayoutIds {
+   private object GlobalIds {
+      val root       = PageLayoutInfo.LayoutId()
+      val background = PageLayoutInfo.LayoutId()
+      val content    = PageLayoutInfo.LayoutId()
+   }
+
+   val root       = GlobalIds.root
+   val background = GlobalIds.background
+   val content    = GlobalIds.content
+
+   companion object : PageLayoutIds()
+}
+
 @Stable
 interface PageLayoutInfo {
    @JvmInline
@@ -185,35 +199,6 @@ interface PageLayoutInfo {
    operator fun get(id: LayoutId): LayoutCoordinates?
 }
 
-open class PageLayoutIds {
-   private object GlobalIds {
-      val root       = PageLayoutInfo.LayoutId()
-      val background = PageLayoutInfo.LayoutId()
-      val content    = PageLayoutInfo.LayoutId()
-   }
-
-   val root       = GlobalIds.root
-   val background = GlobalIds.background
-   val content    = GlobalIds.content
-
-   companion object : PageLayoutIds()
-}
-
-@Composable
-fun Modifier.transitionElement(
-   layoutId: PageLayoutInfo.LayoutId
-): Modifier {
-   val pageLayoutInfo = LocalPageLayoutInfo.current
-   val pageTransitionAnimations = LocalPageTransitionAnimations.current
-   val transition = LocalPageTransition.current
-
-   val transitionAnimationModifier
-      = pageTransitionAnimations[layoutId]?.invoke(transition) ?: Modifier
-
-   return onGloballyPositioned { pageLayoutInfo[layoutId] = it }
-      .then(transitionAnimationModifier)
-}
-
 @Stable
 interface MutablePageLayoutInfo : PageLayoutInfo {
    operator fun set(id: PageLayoutInfo.LayoutId, coordinates: LayoutCoordinates)
@@ -230,4 +215,19 @@ internal class PageLayoutInfoImpl(
    override fun set(id: PageLayoutInfo.LayoutId, coordinates: LayoutCoordinates) {
       map[id] = coordinates
    }
+}
+
+@Composable
+fun Modifier.transitionElement(
+   layoutId: PageLayoutInfo.LayoutId
+): Modifier {
+   val pageLayoutInfo = LocalPageLayoutInfo.current
+   val pageTransitionAnimations = LocalPageTransitionAnimations.current
+   val transition = LocalPageTransition.current
+
+   val transitionAnimationModifier
+      = pageTransitionAnimations[layoutId]?.invoke(transition) ?: Modifier
+
+   return onGloballyPositioned { pageLayoutInfo[layoutId] = it }
+      .then(transitionAnimationModifier)
 }
