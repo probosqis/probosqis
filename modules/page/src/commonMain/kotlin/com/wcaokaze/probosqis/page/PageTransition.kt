@@ -230,6 +230,8 @@ internal class PageLayoutInfoImpl(
    override fun set(id: PageLayoutInfo.LayoutId, coordinates: LayoutCoordinates) {
       map[id] = coordinates
    }
+
+   internal fun isEmpty(): Boolean = map.isEmpty()
 }
 
 @Composable
@@ -255,31 +257,68 @@ private class PageTransitionState(
    private val pageStackState: PageStackState,
    private val pageComposableSwitcher: PageComposableSwitcher
 ) {
-   private val layoutInfoMap = mutableMapOf<PageStack.PageId, MutablePageLayoutInfo>()
+   private val layoutInfoMap = mutableMapOf<PageStack.PageId, PageLayoutInfoImpl>()
 
    private var currentPageIndex = -1
    private var targetPageIndex  = -1
+   private var isTargetFirstComposition = false
+   private var targetPageState: IndexedValue<PageStack.SavedPageState>? = null
 
    var visiblePageStates by mutableStateOf(emptyList<PageComposableArguments>())
 
+   private val emptyPageTransitionAnimSet: PageTransitionElementAnimSet
+         = persistentMapOf()
+
    @Composable
    fun updateTransition(): Transition<PageLayoutInfo> {
+      /*
+       * pageStackState.pageStack.headが変化した際、直前に表示されていたPageを
+       * 表示したまま一度裏で遷移先のPageをコンポーズし、PageLayoutInfoが
+       * 収集できてから遷移先のPageを表にして遷移アニメーションを開始する。
+       * そのため、pageが変化した直後のリコンポジションではTransitionには
+       * まだ遷移後のPageは渡さず、PageLayoutInfoが収集できてからTransitionに
+       * 遷移後のPageを渡すことになる。
+       *
+       * | current | target | transitionTarget | isTargetFirstComposition | visiblePages |
+       * |---------|--------|------------------|--------------------------|--------------|
+       * |       0 |      0 |                0 | false                    | [0]          |
+       * |       0 |      1 |                0 | true                     | [1, 0]       |
+       * |       0 |      1 |                1 | false                    | [0, 1]       |
+       * |       1 |      1 |                1 | false                    | [1]          |
+       *
+       */
+
       val pageStack = pageStackState.pageStack
 
+      val targetPageState = pageStack.indexedHead
+
+      val isTargetFirstComposition = getLayoutInfo(targetPageState.value.id).isEmpty()
+
+      val transitionTargetPageState = if (isTargetFirstComposition) {
+         this.targetPageState ?: targetPageState
+      } else {
+         targetPageState
+      }
+
+      this.targetPageState = transitionTargetPageState
+
       val transition = updateTransition(
-         pageStack.indexedHead,
+         transitionTargetPageState,
          label = "PageStackContentTransition"
       )
 
-      if (transition.currentState.index != currentPageIndex ||
-          transition.targetState .index != targetPageIndex)
+      val currentPageState = transition.currentState
+
+      if (currentPageState.index   != currentPageIndex ||
+          targetPageState .index   != targetPageIndex  ||
+          isTargetFirstComposition != this.isTargetFirstComposition)
       {
          updateVisiblePageStates(
-            transition.currentState,
-            transition.targetState
-         )
-         currentPageIndex = transition.currentState.index
-         targetPageIndex  = transition.targetState .index
+            currentPageState, targetPageState, isTargetFirstComposition)
+
+         currentPageIndex = currentPageState.index
+         targetPageIndex  = targetPageState .index
+         this.isTargetFirstComposition = isTargetFirstComposition
       }
 
       @OptIn(ExperimentalTransitionApi::class)
@@ -291,13 +330,14 @@ private class PageTransitionState(
       return pageTransition
    }
 
-   private fun getLayoutInfo(pageId: PageStack.PageId): MutablePageLayoutInfo {
+   private fun getLayoutInfo(pageId: PageStack.PageId): PageLayoutInfoImpl {
       return layoutInfoMap.getOrPut(pageId) { PageLayoutInfoImpl(pageId) }
    }
 
    private fun updateVisiblePageStates(
       currentState: IndexedValue<PageStack.SavedPageState>,
-      targetState:  IndexedValue<PageStack.SavedPageState>
+      targetState:  IndexedValue<PageStack.SavedPageState>,
+      isTargetFirstComposition: Boolean
    ) {
       val (currentIndex, currentPage) = currentState
       val (targetIndex,  targetPage ) = targetState
@@ -312,10 +352,17 @@ private class PageTransitionState(
                   ?: targetPageComposable .pageTransitionSet.getTransitionFrom(currentPage.page::class)
                   ?: defaultPageTransitionSpec
 
-            listOf(
-               Triple(currentPage, getLayoutInfo(currentPage.id), transitionSpec.enteringCurrentPageElementAnimations),
-               Triple(targetPage,  getLayoutInfo(targetPage .id), transitionSpec.enteringTargetPageElementAnimations)
-            )
+            if (isTargetFirstComposition) {
+               listOf(
+                  Triple(targetPage,  getLayoutInfo(targetPage .id), emptyPageTransitionAnimSet),
+                  Triple(currentPage, getLayoutInfo(currentPage.id), emptyPageTransitionAnimSet)
+               )
+            } else {
+               listOf(
+                  Triple(currentPage, getLayoutInfo(currentPage.id), transitionSpec.enteringCurrentPageElementAnimations),
+                  Triple(targetPage,  getLayoutInfo(targetPage .id), transitionSpec.enteringTargetPageElementAnimations)
+               )
+            }
          }
          currentIndex > targetIndex -> {
             val currentPageComposable = pageComposableSwitcher[currentPage.page] ?: TODO()
@@ -326,14 +373,21 @@ private class PageTransitionState(
                   ?: currentPageComposable.pageTransitionSet.getTransitionTo  (targetPage .page::class)
                   ?: defaultPageTransitionSpec
 
-            listOf(
-               Triple(targetPage,  getLayoutInfo(targetPage .id), transitionSpec.exitingTargetPageElementAnimations),
-               Triple(currentPage, getLayoutInfo(currentPage.id), transitionSpec.exitingCurrentPageElementAnimations)
-            )
+            if (isTargetFirstComposition) {
+               listOf(
+                  Triple(targetPage,  getLayoutInfo(targetPage .id), emptyPageTransitionAnimSet),
+                  Triple(currentPage, getLayoutInfo(currentPage.id), emptyPageTransitionAnimSet)
+               )
+            } else {
+               listOf(
+                  Triple(targetPage,  getLayoutInfo(targetPage .id), transitionSpec.exitingTargetPageElementAnimations),
+                  Triple(currentPage, getLayoutInfo(currentPage.id), transitionSpec.exitingCurrentPageElementAnimations)
+               )
+            }
          }
          else -> {
             listOf(
-               Triple(targetPage, getLayoutInfo(targetPage.id), persistentMapOf())
+               Triple(targetPage, getLayoutInfo(targetPage.id), emptyPageTransitionAnimSet)
             )
          }
       }
