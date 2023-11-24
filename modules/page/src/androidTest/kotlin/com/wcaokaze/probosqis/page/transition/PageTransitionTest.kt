@@ -1,4 +1,4 @@
-package com.wcaokaze.probosqis.page
+package com.wcaokaze.probosqis.page.transition
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -7,6 +7,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.page.Page
+import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.PageStack
+import com.wcaokaze.probosqis.page.PageStackBoard
+import com.wcaokaze.probosqis.page.PageStackState
+import com.wcaokaze.probosqis.page.PageState
+import com.wcaokaze.probosqis.page.PageStateStore
+import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardState
+import com.wcaokaze.probosqis.page.SpyPage
+import com.wcaokaze.probosqis.page.pageComposable
+import com.wcaokaze.probosqis.page.pageStateFactory
+import com.wcaokaze.probosqis.page.spyPageComposable
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

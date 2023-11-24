@@ -34,12 +34,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.page.Page
-import com.wcaokaze.probosqis.page.PageLayoutIds
-import com.wcaokaze.probosqis.page.PageLayoutInfo
+import com.wcaokaze.probosqis.page.transition.PageLayoutIds
+import com.wcaokaze.probosqis.page.transition.PageLayoutInfo
 import com.wcaokaze.probosqis.page.PageState
 import com.wcaokaze.probosqis.page.pageComposable
 import com.wcaokaze.probosqis.page.pageStateFactory
-import com.wcaokaze.probosqis.page.transitionElement
+import com.wcaokaze.probosqis.page.transition.transitionElement
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

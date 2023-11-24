@@ -19,6 +19,8 @@ package com.wcaokaze.probosqis.page
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import com.wcaokaze.probosqis.page.transition.PageTransitionSpec
+import com.wcaokaze.probosqis.page.transition.pageTransitionSpec
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
 import kotlin.reflect.KClass

@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.page.transition.PageTransition
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.annotations.TestOnly
 import kotlin.math.roundToInt

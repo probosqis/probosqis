@@ -1,4 +1,4 @@
-package com.wcaokaze.probosqis.page
+package com.wcaokaze.probosqis.page.transition
 
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Transition
@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ScaleFactor
 import androidx.compose.ui.layout.positionInRoot
 import com.wcaokaze.probosqis.ext.compose.anim.VectorConverter
+import com.wcaokaze.probosqis.page.PageStackBoard
 
 enum class SharedElementAnimatorElement {
    Current,
