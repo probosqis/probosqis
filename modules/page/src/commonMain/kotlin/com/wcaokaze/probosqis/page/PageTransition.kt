@@ -51,18 +51,50 @@ internal val LocalPageTransition
          "Attempt to get a PageTransition from outside a Page")
    }
 
-internal typealias PageTransitionElementAnim
-      = @Composable (Transition<PageLayoutInfo>) -> Modifier
+sealed class PageTransitionElementAnimScope {
+   abstract val transition: Transition<PageLayoutInfo>
+
+   val PageLayoutInfo.isCurrentPage: Boolean
+      get() = pageId != transition.targetState.pageId
+   val PageLayoutInfo.isTargetPage: Boolean
+      get() = pageId == transition.targetState.pageId
+}
+
+class CurrentPageTransitionElementAnimScope(
+   override val transition: Transition<PageLayoutInfo>
+) : PageTransitionElementAnimScope()
+
+class TargetPageTransitionElementAnimScope(
+   override val transition: Transition<PageLayoutInfo>
+) : PageTransitionElementAnimScope()
+
+sealed class PageTransitionElementAnim<S : PageTransitionElementAnimScope> {
+   abstract val createAnimModifier: @Composable S.() -> Modifier
+}
+
+class CurrentPageTransitionElementAnim(
+   override val createAnimModifier:
+         @Composable CurrentPageTransitionElementAnimScope.() -> Modifier
+) : PageTransitionElementAnim<CurrentPageTransitionElementAnimScope>()
+
+class TargetPageTransitionElementAnim(
+   override val createAnimModifier:
+         @Composable TargetPageTransitionElementAnimScope.() -> Modifier
+) : PageTransitionElementAnim<TargetPageTransitionElementAnimScope>()
 
 internal typealias PageTransitionElementAnimSet
-      = ImmutableMap<PageLayoutInfo.LayoutId, PageTransitionElementAnim>
+      = ImmutableMap<PageLayoutInfo.LayoutId, PageTransitionElementAnim<*>>
+internal typealias CurrentPageTransitionElementAnimSet
+      = ImmutableMap<PageLayoutInfo.LayoutId, CurrentPageTransitionElementAnim>
+internal typealias TargetPageTransitionElementAnimSet
+      = ImmutableMap<PageLayoutInfo.LayoutId, TargetPageTransitionElementAnim>
 
 @Stable
 class PageTransitionSpec(
-   val enteringCurrentPageElementAnimations: PageTransitionElementAnimSet,
-   val enteringTargetPageElementAnimations:  PageTransitionElementAnimSet,
-   val exitingCurrentPageElementAnimations:  PageTransitionElementAnimSet,
-   val exitingTargetPageElementAnimations:   PageTransitionElementAnimSet
+   val enteringCurrentPageElementAnimations: CurrentPageTransitionElementAnimSet,
+   val enteringTargetPageElementAnimations:  TargetPageTransitionElementAnimSet,
+   val exitingCurrentPageElementAnimations:  CurrentPageTransitionElementAnimSet,
+   val exitingTargetPageElementAnimations:   TargetPageTransitionElementAnimSet
 ) {
    override fun equals(other: Any?): Boolean {
       if (other !is PageTransitionSpec) { return false }
@@ -90,21 +122,41 @@ class PageTransitionSpec(
    )
 
    class Builder {
-      internal val currentPageAnimations = mutableMapOf<PageLayoutInfo.LayoutId, PageTransitionElementAnim>()
-      internal val targetPageAnimations  = mutableMapOf<PageLayoutInfo.LayoutId, PageTransitionElementAnim>()
+      internal val currentPageAnimations
+            = mutableMapOf<PageLayoutInfo.LayoutId, CurrentPageTransitionElementAnim>()
+      internal val targetPageAnimations
+            = mutableMapOf<PageLayoutInfo.LayoutId, TargetPageTransitionElementAnim>()
 
       fun currentPageElement(
          id: PageLayoutInfo.LayoutId,
-         animationModifier: PageTransitionElementAnim
+         animation: CurrentPageTransitionElementAnim
       ) {
-         currentPageAnimations[id] = animationModifier
+         currentPageAnimations[id] = animation
       }
 
       fun targetPageElement(
          id: PageLayoutInfo.LayoutId,
-         animationModifier: PageTransitionElementAnim
+         animation: TargetPageTransitionElementAnim
       ) {
-         targetPageAnimations[id] = animationModifier
+         targetPageAnimations[id] = animation
+      }
+
+      fun currentPageElement(
+         id: PageLayoutInfo.LayoutId,
+         animationModifier:
+               @Composable CurrentPageTransitionElementAnimScope.() -> Modifier
+      ) {
+         val anim = CurrentPageTransitionElementAnim(animationModifier)
+         currentPageElement(id, anim)
+      }
+
+      fun targetPageElement(
+         id: PageLayoutInfo.LayoutId,
+         animationModifier:
+               @Composable TargetPageTransitionElementAnimScope.() -> Modifier
+      ) {
+         val anim = TargetPageTransitionElementAnim(animationModifier)
+         targetPageElement(id, anim)
       }
    }
 }
@@ -122,7 +174,7 @@ inline fun pageTransitionSpec(
 
 internal val defaultPageTransitionSpec = pageTransitionSpec(
    enter = {
-      targetPageElement(PageLayoutIds.root) { transition ->
+      targetPageElement(PageLayoutIds.root) {
          val alpha by transition.animateFloat(
             transitionSpec = { tween() }
          ) {
@@ -150,7 +202,7 @@ internal val defaultPageTransitionSpec = pageTransitionSpec(
       }
    },
    exit = {
-      currentPageElement(PageLayoutIds.root) { transition ->
+      currentPageElement(PageLayoutIds.root) {
          val alpha by transition.animateFloat(
             transitionSpec = { tween() }
          ) {
@@ -209,6 +261,7 @@ interface PageLayoutInfo {
       }
    }
 
+   val pageStackId: PageStackBoard.PageStackId
    val pageId: PageStack.PageId
 
    operator fun get(id: LayoutId): LayoutCoordinates?
@@ -221,6 +274,7 @@ interface MutablePageLayoutInfo : PageLayoutInfo {
 
 @Stable
 internal class PageLayoutInfoImpl(
+   override val pageStackId: PageStackBoard.PageStackId,
    override val pageId: PageStack.PageId
 ) : MutablePageLayoutInfo {
    private val map = mutableStateMapOf<PageLayoutInfo.LayoutId, LayoutCoordinates>()
@@ -236,14 +290,36 @@ internal class PageLayoutInfoImpl(
 
 @Composable
 fun Modifier.transitionElement(
-   layoutId: PageLayoutInfo.LayoutId
+   layoutId: PageLayoutInfo.LayoutId,
+   enabled: Boolean = true
 ): Modifier {
+   if (!enabled) { return this }
+
    val pageLayoutInfo = LocalPageLayoutInfo.current
    val pageTransitionAnimations = LocalPageTransitionAnimations.current
    val transition = LocalPageTransition.current
 
-   val transitionAnimationModifier
-      = pageTransitionAnimations[layoutId]?.invoke(transition) ?: Modifier
+   val transitionAnimationModifier = when (
+      val elementAnim = pageTransitionAnimations[layoutId]
+   ) {
+      null -> Modifier
+      is CurrentPageTransitionElementAnim -> with (elementAnim) {
+         @OptIn(ExperimentalTransitionApi::class)
+         val elementTransition = transition
+            .createChildTransition(label = "transitionElement$layoutId") { it }
+
+         CurrentPageTransitionElementAnimScope(elementTransition)
+            .createAnimModifier()
+      }
+      is TargetPageTransitionElementAnim -> with (elementAnim) {
+         @OptIn(ExperimentalTransitionApi::class)
+         val elementTransition = transition
+            .createChildTransition(label = "transitionElement$layoutId") { it }
+
+         TargetPageTransitionElementAnimScope(elementTransition)
+            .createAnimModifier()
+      }
+   }
 
    return onGloballyPositioned { pageLayoutInfo[layoutId] = it }
       .then(transitionAnimationModifier)
@@ -331,7 +407,9 @@ private class PageTransitionState(
    }
 
    private fun getLayoutInfo(pageId: PageStack.PageId): PageLayoutInfoImpl {
-      return layoutInfoMap.getOrPut(pageId) { PageLayoutInfoImpl(pageId) }
+      return layoutInfoMap.getOrPut(pageId) {
+         PageLayoutInfoImpl(pageStackState.pageStackId, pageId)
+      }
    }
 
    private fun updateVisiblePageStates(
@@ -369,8 +447,8 @@ private class PageTransitionState(
             val targetPageComposable  = pageComposableSwitcher[targetPage .page] ?: TODO()
 
             val transitionSpec
-                  =  targetPageComposable .pageTransitionSet.getTransitionFrom(currentPage.page::class)
-                  ?: currentPageComposable.pageTransitionSet.getTransitionTo  (targetPage .page::class)
+                  =  targetPageComposable .pageTransitionSet.getTransitionTo  (currentPage.page::class)
+                  ?: currentPageComposable.pageTransitionSet.getTransitionFrom(targetPage .page::class)
                   ?: defaultPageTransitionSpec
 
             if (isTargetFirstComposition) {
@@ -431,9 +509,9 @@ internal fun PageTransition(
                Box(Modifier.transitionElement(PageLayoutIds.root)) {
                   Box(
                      Modifier
+                        .transitionElement(PageLayoutIds.background)
                         .fillMaxSize()
                         .background(backgroundColor)
-                        .transitionElement(PageLayoutIds.background)
                   )
 
                   Box(Modifier.transitionElement(PageLayoutIds.content)) {

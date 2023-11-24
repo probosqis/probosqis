@@ -34,9 +34,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.page.Page
+import com.wcaokaze.probosqis.page.PageLayoutIds
+import com.wcaokaze.probosqis.page.PageLayoutInfo
 import com.wcaokaze.probosqis.page.PageState
 import com.wcaokaze.probosqis.page.pageComposable
 import com.wcaokaze.probosqis.page.pageStateFactory
+import com.wcaokaze.probosqis.page.transitionElement
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -57,29 +60,48 @@ val testNotePageComposable = pageComposable<TestNotePage, TestNotePageState>(
    pageTransitions = {}
 )
 
+object TestNotePageLayoutIds : PageLayoutIds() {
+   val account           = PageLayoutInfo.LayoutId()
+   val accountIcon       = PageLayoutInfo.LayoutId()
+   val accountNameColumn = PageLayoutInfo.LayoutId()
+   val accountName       = PageLayoutInfo.LayoutId()
+   val accountScreenName = PageLayoutInfo.LayoutId()
+   val contentText       = PageLayoutInfo.LayoutId()
+}
+
 @Composable
 private fun Note(
    i: Int,
    modifier: Modifier = Modifier
 ) {
    Column(modifier) {
-      Account(i, Modifier.fillMaxWidth())
-
-      Box(
+      Account(
+         i,
          Modifier
-            .padding(horizontal = 8.dp, vertical = 4.dp)
             .fillMaxWidth()
-            .height(12.dp)
-            .background(Color.Gray)
+            .transitionElement(TestNotePageLayoutIds.account)
       )
 
-      Box(
+      Column(
          Modifier
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-            .fillMaxWidth()
-            .height(12.dp)
-            .background(Color.Gray)
-      )
+            .transitionElement(TestNotePageLayoutIds.contentText)
+      ) {
+         Box(
+            Modifier
+               .padding(horizontal = 8.dp, vertical = 4.dp)
+               .fillMaxWidth()
+               .height(12.dp)
+               .background(Color.Gray)
+         )
+
+         Box(
+            Modifier
+               .padding(horizontal = 8.dp, vertical = 4.dp)
+               .fillMaxWidth()
+               .height(12.dp)
+               .background(Color.Gray)
+         )
+      }
    }
 }
 
@@ -92,6 +114,7 @@ private fun Account(
       Box(
          modifier = Modifier
             .padding(8.dp)
+            .transitionElement(TestNotePageLayoutIds.accountIcon)
             .size(56.dp)
             .background(Color.Gray)
       ) {
@@ -103,10 +126,15 @@ private fun Account(
          )
       }
 
-      Column(Modifier.padding(horizontal = 8.dp)) {
+      Column(
+         Modifier
+            .padding(horizontal = 8.dp)
+            .transitionElement(TestNotePageLayoutIds.accountNameColumn)
+      ) {
          Box(
             Modifier
                .padding(vertical = 8.dp)
+               .transitionElement(TestNotePageLayoutIds.accountName)
                .fillMaxWidth()
                .height(16.dp)
                .background(Color.Gray)
@@ -115,6 +143,7 @@ private fun Account(
          Box(
             Modifier
                .padding(vertical = 8.dp)
+               .transitionElement(TestNotePageLayoutIds.accountScreenName)
                .fillMaxWidth()
                .height(16.dp)
                .background(Color.Gray)
