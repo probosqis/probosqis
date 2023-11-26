@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
@@ -109,43 +108,6 @@ internal val defaultPageTransitionSpec = pageTransitionSpec(
       }
    }
 )
-
-@Composable
-fun Modifier.transitionElement(
-   layoutId: PageLayoutInfo.LayoutId,
-   enabled: Boolean = true
-): Modifier {
-   if (!enabled) { return this }
-
-   val pageLayoutInfo = LocalPageLayoutInfo.current
-   val pageTransitionAnimations = LocalPageTransitionAnimations.current
-   val transition = LocalPageTransition.current
-
-   val transitionAnimationModifier = when (
-      val elementAnim = pageTransitionAnimations[layoutId]
-   ) {
-      null -> Modifier
-      is CurrentPageTransitionElementAnim -> with (elementAnim) {
-         @OptIn(ExperimentalTransitionApi::class)
-         val elementTransition = transition
-            .createChildTransition(label = "transitionElement$layoutId") { it }
-
-         CurrentPageTransitionElementAnimScope(elementTransition)
-            .createAnimModifier()
-      }
-      is TargetPageTransitionElementAnim -> with (elementAnim) {
-         @OptIn(ExperimentalTransitionApi::class)
-         val elementTransition = transition
-            .createChildTransition(label = "transitionElement$layoutId") { it }
-
-         TargetPageTransitionElementAnimScope(elementTransition)
-            .createAnimModifier()
-      }
-   }
-
-   return onGloballyPositioned { pageLayoutInfo[layoutId] = it }
-      .then(transitionAnimationModifier)
-}
 
 private typealias PageComposableArguments
       = Triple<PageStack.SavedPageState, MutablePageLayoutInfo, PageTransitionElementAnimSet>
