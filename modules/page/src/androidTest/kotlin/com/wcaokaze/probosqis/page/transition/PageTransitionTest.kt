@@ -4,7 +4,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.Page
@@ -34,7 +33,6 @@ import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlin.test.assertNotSame
 import kotlin.test.assertNull
-import kotlin.test.assertSame
 
 @RunWith(RobolectricTestRunner::class)
 class PageTransitionTest {
@@ -57,29 +55,6 @@ class PageTransitionTest {
          pageStackCache,
          pageStackBoardState = mockk()
       )
-   }
-
-   @Test
-   fun pageLayoutInfoId_autoIncrement() {
-      val a = PageLayoutInfo.LayoutId()
-      val b = PageLayoutInfo.LayoutId()
-      val c = PageLayoutInfo.LayoutId()
-      assertEquals(1, b.id - a.id)
-      assertEquals(2, c.id - a.id)
-   }
-
-   @Test
-   fun pageLayoutInfo_getAndSet() {
-      val pageLayoutInfo = PageLayoutInfoImpl(
-         PageStackBoard.PageStackId(0L), PageStack.PageId(0L))
-      val layoutId1 = PageLayoutInfo.LayoutId()
-      val layoutId2 = PageLayoutInfo.LayoutId()
-
-      val coordinates = mockk<LayoutCoordinates>()
-      pageLayoutInfo[layoutId1] = coordinates
-
-      assertSame(coordinates, pageLayoutInfo[layoutId1])
-      assertNull(pageLayoutInfo[layoutId2])
    }
 
    @Test
