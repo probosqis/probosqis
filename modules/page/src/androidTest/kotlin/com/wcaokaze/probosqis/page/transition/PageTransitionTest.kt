@@ -1,21 +1,26 @@
 package com.wcaokaze.probosqis.page.transition
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.page.Page
+import com.wcaokaze.probosqis.page.PageComposable
 import com.wcaokaze.probosqis.page.PageComposableSwitcher
 import com.wcaokaze.probosqis.page.PageStack
 import com.wcaokaze.probosqis.page.PageStackBoard
 import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.PageState
 import com.wcaokaze.probosqis.page.PageStateStore
+import com.wcaokaze.probosqis.page.PageTransitionSet
 import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardState
 import com.wcaokaze.probosqis.page.SpyPage
-import com.wcaokaze.probosqis.page.pageComposable
 import com.wcaokaze.probosqis.page.pageStateFactory
 import com.wcaokaze.probosqis.page.spyPageComposable
 import io.mockk.every
@@ -30,14 +35,24 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNotSame
 import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class PageTransitionTest {
    @get:Rule
    val rule = createComposeRule()
+
+   // ==== Test Utils ==========================================================
+
+   private class PageA : Page()
+   private class PageB : Page()
+   private class PageAState : PageState()
+   private class PageBState : PageState()
 
    private fun createPageStackState(initialPage: Page): PageStackState {
       val pageStackCache = WritableCache(
@@ -57,56 +72,79 @@ class PageTransitionTest {
       )
    }
 
+   private fun pageAComposable(
+      pageTransitions: PageTransitionSet.Builder.() -> Unit = {},
+      content: @Composable (PageA, PageAState, PageStackState) -> Unit
+   ) = PageComposable(
+      PageA::class,
+      pageStateFactory { _, _ -> PageAState() },
+      content,
+      headerComposable = { _, _, _ -> },
+      footerComposable = null,
+      pageTransitionSet = PageTransitionSet.Builder().apply(pageTransitions).build()
+   )
+
+   private fun pageBComposable(
+      pageTransitions: PageTransitionSet.Builder.() -> Unit = {},
+      content: @Composable (PageB, PageBState, PageStackState) -> Unit
+   ) = PageComposable(
+      PageB::class,
+      pageStateFactory { _, _ -> PageBState() },
+      content,
+      headerComposable = { _, _, _ -> },
+      footerComposable = null,
+      pageTransitionSet = PageTransitionSet.Builder().apply(pageTransitions).build()
+   )
+
+   private data class RememberedPageStateStore(
+      val coroutineScope: CoroutineScope,
+      val pageComposableSwitcher: PageComposableSwitcher,
+      val pageStateStore: PageStateStore
+   )
+
+   @Composable
+   private fun rememberPageStateStore(
+      vararg pageComposables: PageComposable<*, *>
+   ): RememberedPageStateStore {
+      val coroutineScope = rememberCoroutineScope()
+      return remember(pageComposables) {
+         RememberedPageStateStore(
+            coroutineScope,
+            PageComposableSwitcher(pageComposables.toList()),
+            PageStateStore(pageComposables.map { it.pageStateFactory }, coroutineScope)
+         )
+      }
+   }
+
+   // ==== Tests ===============================================================
+
    @Test
    fun pageLayoutInfo_getViaCompositionLocal() {
       var pageALayoutInfo: PageLayoutInfo? = null
       var pageBLayoutInfo: PageLayoutInfo? = null
 
-      class PageA : Page()
-      class PageAState : PageState()
-      val pageAComposable = pageComposable<PageA, PageAState>(
-         pageStateFactory { _, _ -> PageAState() },
-         content = { _, _, _ ->
-            pageALayoutInfo = LocalPageLayoutInfo.current
-         },
-         header = { _, _, _ -> },
-         footer = null,
-         pageTransitions = {}
-      )
+      val pageAComposable = pageAComposable { _, _, _ ->
+         pageALayoutInfo = LocalPageLayoutInfo.current
+      }
 
-      class PageB : Page()
-      class PageBState : PageState()
-      val pageBComposable = pageComposable<PageB, PageBState>(
-         pageStateFactory { _, _ -> PageBState() },
-         content = { _, _, _ ->
-            pageBLayoutInfo = LocalPageLayoutInfo.current
-         },
-         header = { _, _, _ -> },
-         footer = null,
-         pageTransitions = {}
-      )
+      val pageBComposable = pageBComposable { _, _, _ ->
+         pageBLayoutInfo = LocalPageLayoutInfo.current
+      }
 
       val pageStackState = createPageStackState(PageA())
 
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
-         coroutineScope = rememberCoroutineScope()
+         val remembered = rememberPageStateStore(pageAComposable, pageBComposable)
+
+         SideEffect {
+            coroutineScope = remembered.coroutineScope
+         }
 
          PageTransition(
             pageStackState,
-            PageComposableSwitcher(
-               listOf(
-                  pageAComposable,
-                  pageBComposable,
-               )
-            ),
-            PageStateStore(
-               listOf(
-                  pageAComposable.pageStateFactory,
-                  pageBComposable.pageStateFactory,
-               ),
-               coroutineScope
-            )
+            remembered.pageComposableSwitcher,
+            remembered.pageStateStore
          )
       }
 
@@ -133,60 +171,6 @@ class PageTransitionTest {
             LocalPageLayoutInfo.current
          }
          rule.waitForIdle()
-      }
-   }
-
-   @Test
-   fun onlyForefrontComposableIsCalled() {
-      val page1 = SpyPage()
-      val page2 = SpyPage()
-
-      var pageStack = PageStack(
-         PageStack.Id(0L),
-         PageStack.SavedPageState(
-            PageStack.PageId(0L),
-            page1
-         )
-      )
-      pageStack = pageStack.added(
-         PageStack.SavedPageState(
-            PageStack.PageId(1L),
-            page2
-         )
-      )
-
-      val pageStackState = PageStackState(
-         PageStackBoard.PageStackId(pageStack.id.value),
-         WritableCache(pageStack),
-         mockk<SingleColumnPageStackBoardState>()
-      )
-
-      rule.setContent {
-         val pageComposableSwitcher = remember {
-            PageComposableSwitcher(
-               listOf(
-                  spyPageComposable,
-               )
-            )
-         }
-
-         val coroutineScope = rememberCoroutineScope()
-
-         val pageStateStore = remember {
-            PageStateStore(
-               listOf(
-                  spyPageComposable.pageStateFactory,
-               ),
-               coroutineScope
-            )
-         }
-
-         PageTransition(pageStackState, pageComposableSwitcher, pageStateStore)
-      }
-
-      rule.runOnIdle {
-         assertEquals(0, page1.recompositionCount)
-         assertEquals(1, page2.recompositionCount)
       }
    }
 
@@ -219,26 +203,13 @@ class PageTransitionTest {
       }
 
       rule.setContent {
-         val pageComposableSwitcher = remember {
-            PageComposableSwitcher(
-               listOf(
-                  spyPageComposable,
-               )
-            )
-         }
+         val remembered = rememberPageStateStore(spyPageComposable)
 
-         val coroutineScope = rememberCoroutineScope()
-
-         val pageStateStore = remember {
-            PageStateStore(
-               listOf(
-                  spyPageComposable.pageStateFactory,
-               ),
-               coroutineScope
-            )
-         }
-
-         PageTransition(pageStackState, pageComposableSwitcher, pageStateStore)
+         PageTransition(
+            pageStackState,
+            remembered.pageComposableSwitcher,
+            remembered.pageStateStore
+         )
       }
 
       rule.runOnIdle {
@@ -297,26 +268,13 @@ class PageTransitionTest {
       )
 
       rule.setContent {
-         val pageComposableSwitcher = remember {
-            PageComposableSwitcher(
-               listOf(
-                  spyPageComposable,
-               )
-            )
-         }
+         val remembered = rememberPageStateStore(spyPageComposable)
 
-         val coroutineScope = rememberCoroutineScope()
-
-         val pageStateStore = remember {
-            PageStateStore(
-               listOf(
-                  spyPageComposable.pageStateFactory,
-               ),
-               coroutineScope
-            )
-         }
-
-         PageTransition(pageStackState, pageComposableSwitcher, pageStateStore)
+         PageTransition(
+            pageStackState,
+            remembered.pageComposableSwitcher,
+            remembered.pageStateStore
+         )
       }
 
       rule.runOnIdle {
@@ -370,5 +328,343 @@ class PageTransitionTest {
          assertEquals(1, page3.recompositionCount)
          verify { pageStackBoardState.removePageStack(pageStackId) }
       }
+   }
+
+   @Test
+   fun onlyForefrontComposableIsCalled() {
+      var pageAComposed = false
+      var pageBComposed = false
+
+      val pageAComposable = pageAComposable { _, _, _ ->
+         DisposableEffect(Unit) {
+            pageAComposed = true
+            onDispose {
+               pageAComposed = false
+            }
+         }
+      }
+
+      val pageBComposable = pageBComposable { _, _, _ ->
+         DisposableEffect(Unit) {
+            pageBComposed = true
+            onDispose {
+               pageBComposed = false
+            }
+         }
+      }
+
+      val pageStackState = createPageStackState(PageA())
+
+      rule.setContent {
+         val remembered = rememberPageStateStore(pageAComposable, pageBComposable)
+
+         PageTransition(
+            pageStackState,
+            remembered.pageComposableSwitcher,
+            remembered.pageStateStore
+         )
+      }
+
+      rule.runOnIdle {
+         assertTrue (pageAComposed)
+         assertFalse(pageBComposed)
+      }
+
+      pageStackState.startPage(PageB())
+
+      rule.runOnIdle {
+         assertFalse(pageAComposed)
+         assertTrue (pageBComposed)
+      }
+
+      pageStackState.finishPage()
+
+      rule.runOnIdle {
+         assertTrue (pageAComposed)
+         assertFalse(pageBComposed)
+      }
+   }
+
+   @Test
+   fun composeBothDuringTransition() {
+      var pageAComposed = false
+      var pageBComposed = false
+
+      val pageAComposable = pageAComposable { _, _, _ ->
+         DisposableEffect(Unit) {
+            pageAComposed = true
+            onDispose {
+               pageAComposed = false
+            }
+         }
+      }
+
+      val pageBComposable = pageBComposable { _, _, _ ->
+         DisposableEffect(Unit) {
+            pageBComposed = true
+            onDispose {
+               pageBComposed = false
+            }
+         }
+      }
+
+      val pageStackState = createPageStackState(PageA())
+
+      rule.setContent {
+         val remembered = rememberPageStateStore(pageAComposable, pageBComposable)
+
+         PageTransition(
+            pageStackState,
+            remembered.pageComposableSwitcher,
+            remembered.pageStateStore
+         )
+      }
+
+      rule.waitForIdle()
+
+      assertTrue(pageAComposed)
+      assertFalse(pageBComposed)
+
+      rule.mainClock.autoAdvance = false
+      pageStackState.startPage(PageB())
+
+      rule.waitUntil {
+         rule.waitForIdle()
+         rule.mainClock.advanceTimeByFrame()
+
+         pageAComposed && pageBComposed
+      }
+
+      rule.mainClock.autoAdvance = true
+      rule.waitForIdle()
+
+      assertFalse(pageAComposed)
+      assertTrue(pageBComposed)
+   }
+
+   @Test
+   fun pageLayoutInfo_doesntChangeInstance() {
+      var pageAComposed = false
+      var pageBComposed = false
+      var pageAPageLayoutInfo: PageLayoutInfo? = null
+      var pageBPageLayoutInfo: PageLayoutInfo? = null
+
+      val pageAComposable = pageAComposable { _, _, _ ->
+         pageAPageLayoutInfo = LocalPageLayoutInfo.current
+         DisposableEffect(Unit) {
+            pageAComposed = true
+            onDispose {
+               pageAComposed = false
+            }
+         }
+      }
+
+      val pageBComposable = pageBComposable { _, _, _ ->
+         pageBPageLayoutInfo = LocalPageLayoutInfo.current
+         DisposableEffect(Unit) {
+            pageBComposed = true
+            onDispose {
+               pageBComposed = false
+            }
+         }
+      }
+
+      val pageStackState = createPageStackState(PageA())
+
+      rule.setContent {
+         val remembered = rememberPageStateStore(pageAComposable, pageBComposable)
+
+         PageTransition(
+            pageStackState,
+            remembered.pageComposableSwitcher,
+            remembered.pageStateStore
+         )
+      }
+
+      rule.waitForIdle()
+
+      val prevALayoutInfo = assertNotNull(pageAPageLayoutInfo)
+
+      rule.mainClock.autoAdvance = false
+      pageStackState.startPage(PageB())
+
+      rule.waitUntil {
+         rule.waitForIdle()
+         rule.mainClock.advanceTimeByFrame()
+
+         pageAComposed && pageBComposed
+      }
+
+      assertSame(prevALayoutInfo, pageAPageLayoutInfo)
+      val prevBLayoutInfo = assertNotNull(pageBPageLayoutInfo)
+
+      rule.mainClock.autoAdvance = true
+      rule.waitForIdle()
+
+      assertSame(prevBLayoutInfo, pageBPageLayoutInfo)
+
+      rule.mainClock.autoAdvance = false
+      pageStackState.finishPage()
+
+      rule.waitUntil {
+         rule.waitForIdle()
+         rule.mainClock.advanceTimeByFrame()
+
+         pageAComposed && pageBComposed
+      }
+
+      assertSame(prevBLayoutInfo, pageBPageLayoutInfo)
+      assertNotSame(prevALayoutInfo, pageAPageLayoutInfo)
+   }
+
+   private fun testPageTransitionSpec(
+      expectedTransitionSpec: PageTransitionSpec,
+      pageATransitions: PageTransitionSet.Builder.() -> Unit,
+      pageBTransitions: PageTransitionSet.Builder.() -> Unit
+   ) {
+      var pageATransitionAnimations: PageTransitionElementAnimSet? = null
+      var pageBTransitionAnimations: PageTransitionElementAnimSet? = null
+
+      val pageAComposable = pageAComposable(
+         content = { _, _, _ ->
+            pageATransitionAnimations = LocalPageTransitionAnimations.current
+         },
+         pageTransitions = pageATransitions
+      )
+
+      val pageBComposable = pageBComposable(
+         content = { _, _, _ ->
+            pageBTransitionAnimations = LocalPageTransitionAnimations.current
+         },
+         pageTransitions = pageBTransitions
+      )
+
+      val pageStackState = createPageStackState(PageA())
+
+      rule.setContent {
+         val remembered = rememberPageStateStore(pageAComposable, pageBComposable)
+
+         PageTransition(
+            pageStackState,
+            remembered.pageComposableSwitcher,
+            remembered.pageStateStore
+         )
+      }
+
+      rule.waitForIdle()
+
+      rule.mainClock.autoAdvance = false
+      pageStackState.startPage(PageB())
+
+      rule.waitUntil {
+         rule.waitForIdle()
+         rule.mainClock.advanceTimeByFrame()
+
+         val expectedPageAAnimations
+               = expectedTransitionSpec.enteringCurrentPageElementAnimations
+         val expectedPageBAnimations
+               = expectedTransitionSpec.enteringTargetPageElementAnimations
+
+         pageATransitionAnimations === expectedPageAAnimations &&
+         pageBTransitionAnimations === expectedPageBAnimations
+      }
+
+      rule.mainClock.autoAdvance = true
+      rule.waitForIdle()
+      rule.mainClock.autoAdvance = false
+      pageStackState.finishPage()
+
+      rule.waitUntil {
+         rule.waitForIdle()
+         rule.mainClock.advanceTimeByFrame()
+
+         val expectedPageAAnimations
+               = expectedTransitionSpec.exitingTargetPageElementAnimations
+         val expectedPageBAnimations
+               = expectedTransitionSpec.exitingCurrentPageElementAnimations
+
+         pageATransitionAnimations === expectedPageAAnimations &&
+         pageBTransitionAnimations === expectedPageBAnimations
+      }
+   }
+
+   @Test
+   fun selectPageTransitionSpec_default() {
+      testPageTransitionSpec(
+         expectedTransitionSpec = defaultPageTransitionSpec,
+         pageATransitions = {},
+         pageBTransitions = {}
+      )
+   }
+
+   @Test
+   fun selectPageTransitionSpec_currentSide() {
+      val expectedTransitionSpec = pageTransitionSpec(
+         enter = {
+            currentPageElement(PageLayoutInfo.LayoutId()) { Modifier }
+         },
+         exit = {
+            currentPageElement(PageLayoutInfo.LayoutId()) { Modifier }
+         }
+      )
+
+      testPageTransitionSpec(
+         expectedTransitionSpec,
+         pageATransitions = {
+            transitionTo(PageB::class, expectedTransitionSpec)
+         },
+         pageBTransitions = {}
+      )
+   }
+
+   @Test
+   fun selectPageTransitionSpec_targetSide() {
+      val expectedTransitionSpec = pageTransitionSpec(
+         enter = {
+            currentPageElement(PageLayoutInfo.LayoutId()) { Modifier }
+         },
+         exit = {
+            currentPageElement(PageLayoutInfo.LayoutId()) { Modifier }
+         }
+      )
+
+      testPageTransitionSpec(
+         expectedTransitionSpec,
+         pageATransitions = {},
+         pageBTransitions = {
+            transitionFrom(PageA::class, expectedTransitionSpec)
+         }
+      )
+   }
+
+   @Test
+   fun selectPageTransitionSpec_both() {
+      val expectedTransitionSpec = pageTransitionSpec(
+         enter = {
+            currentPageElement(PageLayoutInfo.LayoutId()) { Modifier }
+         },
+         exit = {
+            currentPageElement(PageLayoutInfo.LayoutId()) { Modifier }
+         }
+      )
+
+      testPageTransitionSpec(
+         expectedTransitionSpec,
+         pageATransitions = {
+            transitionTo(PageB::class, expectedTransitionSpec)
+         },
+         pageBTransitions = {
+            val unexpectedTransitionSpec = pageTransitionSpec(
+               enter = {
+                  currentPageElement(PageLayoutInfo.LayoutId()) { Modifier }
+               },
+               exit = {
+                  currentPageElement(PageLayoutInfo.LayoutId()) { Modifier }
+               }
+            )
+
+            transitionFrom(PageA::class, unexpectedTransitionSpec)
+         }
+      )
    }
 }
