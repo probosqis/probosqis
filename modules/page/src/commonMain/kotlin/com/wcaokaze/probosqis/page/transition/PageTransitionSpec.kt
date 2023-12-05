@@ -3,8 +3,13 @@ package com.wcaokaze.probosqis.page.transition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
+import com.wcaokaze.probosqis.page.PageComposable
+import com.wcaokaze.probosqis.page.pageComposable
 import kotlinx.collections.immutable.toImmutableMap
 
+/**
+ * @see PageTransitionSpec
+ */
 inline fun pageTransitionSpec(
    enter: PageTransitionSpec.Builder.() -> Unit,
    exit:  PageTransitionSpec.Builder.() -> Unit
@@ -16,6 +21,124 @@ inline fun pageTransitionSpec(
    return PageTransitionSpec(enterTransitionBuilder, exitTransitionBuilder)
 }
 
+/**
+ * ページ遷移アニメーション定義。
+ * Probosqisのページ遷移アニメーションは大きく4つの要素で構成される。
+ *
+ * ## [Modifier.transitionElement]
+ * [PageComposable.contentComposable]内のComposableにIDを付与する。
+ * ```kotlin
+ * object AccountPageLayoutIds : PageLayoutIds() {
+ *    val accountIcon = PageLayoutInfo.LayoutId()
+ *    val accountName = PageLayoutInfo.LayoutId()
+ * }
+ *
+ * @Composable
+ * fun AccountPage(state: AccountPageState) {
+ *    Row {
+ *       Image(
+ *          state.account.icon,
+ *          Modifier
+ *             .transitionElement(AccountPageLayoutIds.accountIcon)
+ *       )
+ *
+ *       Text(
+ *          state.account.name,
+ *          Modifier
+ *             .transitionElement(AccountPageLayoutIds.accountName)
+ *       )
+ *    }
+ * }
+ * ```
+ *
+ * ## [PageLayoutInfo]
+ * [PageComposable.contentComposable]内のComposableの位置やサイズをまとめたもの。
+ * [Modifier.transitionElement]が付与されたComposableはその位置とサイズが
+ * 自動的にこのインスタンスに収集される。
+ *
+ * ## [PageTransitionElementAnim]
+ * アニメーションModifierを生成する関数。
+ *
+ * ラムダ式内では[transition][PageTransitionElementAnimScope.transition]に
+ * アクセスでき、ページ遷移の進捗状況や遷移元/遷移先のページの[PageLayoutInfo]を
+ * 取得可能。
+ * ```kotlin
+ * CurrentPageTransitionElementAnim {
+ *    val animatedAlpha by transition.animateAlpha {
+ *       if (it.isTargetPage) { 1.0f } else { 0.0f }
+ *    }
+ *    Modifier.alpha(animatedAlpha)
+ * }
+ * ```
+ *
+ * ## PageTransitionSpec
+ * 特定のPageからPageへの遷移中の各Composableの[PageTransitionElementAnim]を
+ * まとめたもの。
+ *
+ * PageAの上にPageBが起動された場合、PageAの各Composableに
+ * [enteringCurrentPageElementAnimations]が適応され、PageBの各Composableに
+ * [enteringTargetPageElementAnimations]が適応される。
+ * PageBが閉じられ、PageAに戻るとき、PageBの各Composableに
+ * [exitingCurrentPageElementAnimations]が適応され、PageAの各Composableに
+ * [exitingTargetPageElementAnimations]が適応される。
+ *
+ * PageTransitionSpec自体は[pageComposable]でPageのComposableと同時に
+ * 定義することができる。
+ * ```kotlin
+ * pageComposable<PostPage, PostPageState>(
+ *    pageStateFactory { page, stateSaver -> PostPageState(page, stateSaver) },
+ *    content = { page, pageState, pageStackState ->
+ *       PostPage(page, pageState, pageStackState)
+ *    },
+ *    header = { page, pageState, pageStackState ->
+ *       PostPageHeader(page, pageState, pageStackState)
+ *    },
+ *    footer = { page, pageState, pageStackState ->
+ *       PostPageFooter(page, pageState, pageStackState)
+ *    },
+ *    pageTransitions = {
+ *       transitionTo<AccountPage>(
+ *          enter = {
+ *             targetPageElement(AccountPageIds.background) {
+ *                val animatedAlpha by transition.animateFloat(label = "background") {
+ *                   if (it.isTargetPage) { 1.0f } else { 0.0f }
+ *                }
+ *                Modifier.alpha(animatedAlpha)
+ *             }
+ *             sharedElement(
+ *                PostPageLayoutIds.accountIcon,
+ *                AccountPageIds.accountIcon,
+ *                label = "accountIcon"
+ *             )
+ *             sharedElement(
+ *                PostPageLayoutIds.accountName,
+ *                AccountPageIds.accountName,
+ *                label = "accountIcon"
+ *             )
+ *          },
+ *          exit = {
+ *             targetPageElement(AccountPageIds.background) {
+ *                val animatedAlpha by transition.animateFloat(label = "background") {
+ *                   if (it.isCurrentPage) { 1.0f } else { 0.0f }
+ *                }
+ *                Modifier.alpha(animatedAlpha)
+ *             }
+ *             sharedElement(
+ *                AccountPageIds.accountIcon,
+ *                PostPageLayoutIds.accountIcon,
+ *                label = "accountIcon"
+ *             )
+ *             sharedElement(
+ *                AccountPageIds.accountName,
+ *                PostPageLayoutIds.accountName,
+ *                label = "accountIcon"
+ *             )
+ *          }
+ *       )
+ *    }
+ * )
+ * ```
+ */
 @Stable
 class PageTransitionSpec(
    val enteringCurrentPageElementAnimations: CurrentPageTransitionElementAnimSet,
