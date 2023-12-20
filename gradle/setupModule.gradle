@@ -99,6 +99,13 @@ kotlin {
                implementation libs.compose.ui.test.manifest
             }
          }
+
+         if (hasPlugin(libs.plugins.roborazzi)) {
+            commonTest.dependencies {
+               implementation libs.roborazzi.core
+               implementation libs.roborazzi.compose
+            }
+         }
       }
 
       if (!isExtModule) {

@@ -1,6 +1,7 @@
 package com.wcaokaze.probosqis.page.transition
 
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateOffset
@@ -229,7 +230,7 @@ private fun PageTransitionSpec.Builder.sharedElementCrossFade(
 ) {
    currentPageElement(currentPageLayoutElementId) {
       val alphaState = transition.animateFloat(
-         transitionSpec = { tween() },
+         transitionSpec = { tween(easing = LinearEasing) },
          "$label-CrossFade"
       ) {
          if (it.isCurrentPage) { 1.0f } else { 0.0f }
@@ -257,23 +258,26 @@ private fun PageTransitionSpec.Builder.sharedElementCrossFade(
          null
       }
 
-      Modifier.graphicsLayer {
-         transformOrigin = TransformOrigin(0.0f, 0.0f)
-         alpha = alphaState.value
-         if (offsetState != null) {
-            translationX = offsetState.value.x
-            translationY = offsetState.value.y
+      Modifier
+         .graphicsLayer {
+            transformOrigin = TransformOrigin(0.0f, 0.0f)
+            if (offsetState != null) {
+               translationX = offsetState.value.x
+               translationY = offsetState.value.y
+            }
+            if (scaleState != null) {
+               scaleX = scaleState.value.scaleX
+               scaleY = scaleState.value.scaleY
+            }
          }
-         if (scaleState != null) {
-            scaleX = scaleState.value.scaleX
-            scaleY = scaleState.value.scaleY
+         .graphicsLayer {
+            alpha = alphaState.value
          }
-      }
    }
 
    targetPageElement(targetPageLayoutElementId) {
       val alphaState = transition.animateFloat(
-         transitionSpec = { tween() },
+         transitionSpec = { tween(easing = LinearEasing) },
          "$label-CrossFade"
       ) {
          if (it.isTargetPage) { 1.0f } else { 0.0f }
@@ -301,18 +305,21 @@ private fun PageTransitionSpec.Builder.sharedElementCrossFade(
          null
       }
 
-      Modifier.graphicsLayer {
-         transformOrigin = TransformOrigin(0.0f, 0.0f)
-         alpha = alphaState.value
-         if (offsetState != null) {
-            translationX = offsetState.value.x
-            translationY = offsetState.value.y
+      Modifier
+         .graphicsLayer {
+            transformOrigin = TransformOrigin(0.0f, 0.0f)
+            if (offsetState != null) {
+               translationX = offsetState.value.x
+               translationY = offsetState.value.y
+            }
+            if (scaleState != null) {
+               scaleX = scaleState.value.scaleX
+               scaleY = scaleState.value.scaleY
+            }
          }
-         if (scaleState != null) {
-            scaleX = scaleState.value.scaleX
-            scaleY = scaleState.value.scaleY
+         .graphicsLayer {
+            alpha = alphaState.value
          }
-      }
    }
 }
 
