@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.page
 
+import io.mockk.mockk
 import kotlin.test.Test
 import kotlin.test.assertFails
 import kotlin.test.assertIs
@@ -35,7 +36,8 @@ class PageStateStoreTest {
          listOf(
             pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
             pageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
-         )
+         ),
+         appCoroutineScope = mockk()
       )
 
       val pageAState = pageStateStore.get(
@@ -69,7 +71,8 @@ class PageStateStoreTest {
          listOf(
             pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
             pageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
-         )
+         ),
+         appCoroutineScope = mockk()
       )
 
       val pageA = PageA()

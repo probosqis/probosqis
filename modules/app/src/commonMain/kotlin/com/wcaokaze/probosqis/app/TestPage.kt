@@ -73,5 +73,6 @@ val testPageComposable = pageComposable<TestPage, TestPageState>(
       }
    },
    header = { _, _, _ -> },
-   footer = null
+   footer = null,
+   pageTransitions = {}
 )

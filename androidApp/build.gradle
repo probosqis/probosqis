@@ -19,6 +19,7 @@ plugins {
    alias libs.plugins.kotlinx.serialization
    alias libs.plugins.android.application
    alias libs.plugins.compose
+   alias libs.plugins.roborazzi
 }
 
 apply from: rootProject.file('gradle/setupModule.gradle')

@@ -39,5 +39,6 @@ internal val spyPageComposable = pageComposable<SpyPage, SpyPageState>(
    pageStateFactory { _, _ -> SpyPageState() },
    content = { page, _, _ -> SpyPage(page) },
    header = { _, _, _ -> },
-   footer = null
+   footer = null,
+   pageTransitions = {}
 )

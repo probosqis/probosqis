@@ -17,6 +17,8 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
 import org.junit.Rule
@@ -43,39 +45,48 @@ class PageComposeTest {
 
       val pageA = PageA()
 
-      val pageComposableSwitcher = PageComposableSwitcher(
-         listOf(
-            pageComposable<PageA, PageAState>(
-               pageStateFactory { _, _ -> PageAState() },
-               content = { _, _, _ ->
-                  SideEffect {
-                     pageARecompositionCount++
-                  }
-               },
-               header = { _, _, _ -> },
-               footer = null
-            ),
-            pageComposable<PageB, PageBState>(
-               pageStateFactory { _, _ -> PageBState() },
-               content = { _, _, _ ->
-                  SideEffect {
-                     pageBRecompositionCount++
-                  }
-               },
-               header = { _, _, _ -> },
-               footer = null
-            ),
-         )
-      )
-
-      val pageStateStore = PageStateStore(
-         listOf(
-            pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
-            pageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
-         )
-      )
-
       rule.setContent {
+         val pageComposableSwitcher = remember {
+            PageComposableSwitcher(
+               listOf(
+                  pageComposable<PageA, PageAState>(
+                     pageStateFactory { _, _ -> PageAState() },
+                     content = { _, _, _ ->
+                        SideEffect {
+                           pageARecompositionCount++
+                        }
+                     },
+                     header = { _, _, _ -> },
+                     footer = null,
+                     pageTransitions = {}
+                  ),
+                  pageComposable<PageB, PageBState>(
+                     pageStateFactory { _, _ -> PageBState() },
+                     content = { _, _, _ ->
+                        SideEffect {
+                           pageBRecompositionCount++
+                        }
+                     },
+                     header = { _, _, _ -> },
+                     footer = null,
+                     pageTransitions = {}
+                  ),
+               )
+            )
+         }
+
+         val coroutineScope = rememberCoroutineScope()
+
+         val pageStateStore = remember {
+            PageStateStore(
+               listOf(
+                  pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+                  pageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
+               ),
+               coroutineScope
+            )
+         }
+
          PageContent(
             PageStack.SavedPageState(
                PageStack.PageId(0L),
@@ -106,29 +117,37 @@ class PageComposeTest {
          }
       }
 
-      val pageComposableSwitcher = PageComposableSwitcher(
-         listOf(
-            pageComposable<PageA, PageStateImpl>(
-               pageStateFactory { _, _ -> PageStateImpl() },
-               content = { p, s, _ ->
-                  SideEffect {
-                     argumentPage = p
-                     s.spy(p)
-                  }
-               },
-               header = { _, _, _ -> },
-               footer = null
-            ),
-         )
-      )
-
-      val pageStateStore = PageStateStore(
-         listOf(
-            pageStateFactory<PageA, PageStateImpl> { _, _ -> PageStateImpl() },
-         )
-      )
-
       rule.setContent {
+         val pageComposableSwitcher = remember {
+            PageComposableSwitcher(
+               listOf(
+                  pageComposable<PageA, PageStateImpl>(
+                     pageStateFactory { _, _ -> PageStateImpl() },
+                     content = { p, s, _ ->
+                        SideEffect {
+                           argumentPage = p
+                           s.spy(p)
+                        }
+                     },
+                     header = { _, _, _ -> },
+                     footer = null,
+                     pageTransitions = {}
+                  ),
+               )
+            )
+         }
+
+         val coroutineScope = rememberCoroutineScope()
+
+         val pageStateStore = remember {
+            PageStateStore(
+               listOf(
+                  pageStateFactory<PageA, PageStateImpl> { _, _ -> PageStateImpl() },
+               ),
+               coroutineScope
+            )
+         }
+
          PageContent(
             PageStack.SavedPageState(
                PageStack.PageId(0L),

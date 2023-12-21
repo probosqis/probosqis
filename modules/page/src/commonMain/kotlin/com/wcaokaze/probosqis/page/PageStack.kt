@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.page
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.cache.compose.asState
 import com.wcaokaze.probosqis.cache.core.WritableCache
@@ -75,6 +74,12 @@ class PageStack private constructor(
 
    /** このPageStackの一番上の[SavedPageState] */
    val head: SavedPageState get() = savedPageStates.last()
+
+   internal val indexedHead: IndexedValue<SavedPageState> get() {
+      val list = savedPageStates
+      val idx = list.lastIndex
+      return IndexedValue(idx, list[idx])
+   }
 
    /**
     * @return
@@ -151,19 +156,4 @@ class PageStackState internal constructor(
    fun removeFromBoard() {
       pageStackBoardState.removePageStack(pageStackId)
    }
-}
-
-@Composable
-internal fun PageStackContent(
-   state: PageStackState,
-   pageComposableSwitcher: PageComposableSwitcher,
-   pageStateStore: PageStateStore
-) {
-   val savedPageState = state.pageStack.head
-   PageContent(
-      savedPageState,
-      pageComposableSwitcher,
-      pageStateStore,
-      pageStackState = state
-   )
 }

@@ -36,16 +36,19 @@ import com.wcaokaze.probosqis.page.PageStateStore
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
 
 @Stable
 class ProbosqisState(
    allPageComposables: List<PageComposable<*, *>>,
    val pageStackBoardRepository: PageStackBoardRepository,
-   val pageStackRepository: PageStackRepository
+   val pageStackRepository: PageStackRepository,
+   coroutineScope: CoroutineScope
 ) {
    val pageComposableSwitcher = PageComposableSwitcher(allPageComposables)
    val pageStateStore = PageStateStore(
-      allPageComposables.map { it.pageStateFactory }
+      allPageComposables.map { it.pageStateFactory },
+      coroutineScope
    )
 
    private var _pageStackBoardState: PageStackBoardState? = null

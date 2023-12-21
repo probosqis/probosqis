@@ -18,10 +18,14 @@ package com.wcaokaze.probosqis.page
 
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.JsonObject
 
 @Stable
-class PageStateStore(allPageStateFactories: List<PageStateFactory<*, *>>) {
+class PageStateStore(
+   allPageStateFactories: List<PageStateFactory<*, *>>,
+   private val appCoroutineScope: CoroutineScope
+) {
    private val factories = buildMap {
       for (f in allPageStateFactories) {
          put(f.pageClass, f)
@@ -39,7 +43,10 @@ class PageStateStore(allPageStateFactories: List<PageStateFactory<*, *>>) {
          val cache = WritableCache(
             JsonObject(emptyMap())
          )
-         val stateSaver = PageState.StateSaver(cache)
+         val stateSaver = PageState.StateSaver(
+            cache,
+            pageStateCoroutineScope = appCoroutineScope // TODO
+         )
          factory.pageStateFactory(page, stateSaver)
       }
    }
