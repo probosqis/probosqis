@@ -20,7 +20,7 @@ boolean hasPlugin(Provider<? extends PluginDependency> plugin) {
 
 def isAndroidModule = hasPlugin(libs.plugins.android.application)
       || hasPlugin(libs.plugins.android.library)
-def isComposeModule = hasPlugin(libs.plugins.compose)
+def isComposeModule = hasPlugin(libs.plugins.compose.jb)
 def isExtModule = project.path.contains(':modules:ext')
 
 kotlin {
@@ -31,8 +31,10 @@ kotlin {
    }
 
    if (isAndroidModule) {
-      android()
+      androidTarget()
    }
+
+   jvmToolchain(17)
 
    sourceSets {
       jvmMain.dependsOn(commonMain)
@@ -40,8 +42,8 @@ kotlin {
 
       if (isAndroidModule) {
          androidMain.dependsOn(jvmMain)
-         androidTest.dependsOn(jvmTest)
-         androidAndroidTest.dependsOn(jvmTest)
+         androidUnitTest.dependsOn(jvmTest)
+         androidInstrumentedTest.dependsOn(jvmTest)
       }
 
       if (isComposeModule) {
@@ -53,10 +55,17 @@ kotlin {
          implementation libs.kotlinx.datetime
          implementation libs.kotlinx.serialization
          implementation libs.kotlinx.collections.immutable
+         implementation libs.androidx.annotation
       }
 
       commonTest.dependencies {
-         implementation libs.kotlin.test
+         implementation libs.kotlin.test.junit
+      }
+
+      jvmMain.dependencies {
+      }
+
+      jvmTest.dependencies {
          implementation libs.mockk
       }
 
@@ -64,7 +73,7 @@ kotlin {
          androidMain.dependencies {
          }
 
-         androidAndroidTest.dependencies {
+         androidUnitTest.dependencies {
             implementation libs.androidx.test.ext
             implementation libs.robolectric
          }
@@ -95,7 +104,7 @@ kotlin {
                implementation compose.preview
             }
 
-            androidTest.dependencies {
+            androidUnitTest.dependencies {
                implementation libs.compose.ui.test.manifest
             }
          }
@@ -134,12 +143,11 @@ kotlin {
 
 if (isAndroidModule) {
    android {
-      compileSdk 33
-      sourceSets.main.manifest.srcFile 'src/androidMain/AndroidManifest.xml'
+      compileSdk 34
 
       defaultConfig {
          minSdk 21
-         targetSdk 33
+         targetSdk 34
       }
 
       buildFeatures {
@@ -148,10 +156,12 @@ if (isAndroidModule) {
 
       compileOptions {
          coreLibraryDesugaringEnabled true
+         sourceCompatibility = '1.17'
+         targetCompatibility = '1.17'
       }
 
       composeOptions {
-         kotlinCompilerExtensionVersion = libs.versions.compose
+         kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
       }
 
       testOptions {
@@ -175,5 +185,11 @@ if (isAndroidModule) {
 
    dependencies {
       coreLibraryDesugaring libs.android.desugaring.jdk
+   }
+}
+
+if (isComposeModule) {
+   compose {
+      kotlinCompilerPlugin.set("androidx.compose.compiler:compiler:${libs.versions.compose.compiler.get()}")
    }
 }

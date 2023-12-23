@@ -17,7 +17,7 @@
 plugins {
    alias libs.plugins.kotlin.multiplatform
    alias libs.plugins.kotlinx.serialization
-   alias libs.plugins.compose
+   alias libs.plugins.compose.jb
 }
 
 apply from: rootProject.file('gradle/setupModule.gradle')
