@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.page
 
+import android.content.Context
 import com.wcaokaze.probosqis.cache.core.TemporaryCacheApi
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.cache.core.loadCache
@@ -24,10 +25,10 @@ import java.io.File
 import java.io.IOException
 
 class AndroidPageStackRepository(
-   allPageSerializers: List<PageStackRepository.PageSerializer<*>>,
-   directory: File
+   context: Context,
+   allPageSerializers: List<PageStackRepository.PageSerializer<*>>
 ) : AbstractPageStackRepository(allPageSerializers) {
-   private val dir = File(directory, "L9h1Qx3xvfo0M0kX")
+   private val dir = File(context.filesDir, "L9h1Qx3xvfo0M0kX")
       .also { dir ->
          if (dir.exists()) {
             require(dir.isDirectory)

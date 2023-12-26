@@ -45,6 +45,9 @@ fun main() {
          val coroutineScope = rememberCoroutineScope()
 
          val probosqisState = remember {
+            val probosqisDataDir
+                  = File(System.getProperty("user.home"), ".probosqisData")
+
             val allPageComposables = persistentListOf(
                testPageComposable,
                testTimelinePageComposable,
@@ -57,12 +60,12 @@ fun main() {
                   pageSerializer<TestTimelinePage>(),
                   pageSerializer<TestNotePage>(),
                ),
-               File(System.getProperty("user.home"), ".probosqisData/pageStackCache")
+               probosqisDataDir
             )
 
             val pageStackBoardRepository = DesktopPageStackBoardRepository(
                pageStackRepository,
-               File(System.getProperty("user.home"), ".probosqisData/pageStackBoardCache")
+               probosqisDataDir
             )
 
             ProbosqisState(allPageComposables, pageStackBoardRepository,

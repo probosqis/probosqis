@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.page
 
+import android.content.Context
 import com.wcaokaze.probosqis.cache.core.TemporaryCacheApi
 import com.wcaokaze.probosqis.cache.core.WritableCache
 import com.wcaokaze.probosqis.cache.core.loadCache
@@ -23,10 +24,10 @@ import com.wcaokaze.probosqis.cache.core.saveCache
 import java.io.File
 
 class AndroidPageStackBoardRepository(
-   pageStackRepository: PageStackRepository,
-   directory: File
+   context: Context,
+   pageStackRepository: PageStackRepository
 ) : AbstractPageStackBoardRepository(pageStackRepository) {
-   private val file = File(directory, "U61Jfjj954X8OrvZ")
+   private val file = File(context.filesDir, "U61Jfjj954X8OrvZ")
 
    @TemporaryCacheApi
    override fun savePageStackBoard(

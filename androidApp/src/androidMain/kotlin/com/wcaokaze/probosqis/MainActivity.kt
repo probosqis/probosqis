@@ -61,16 +61,15 @@ class MainActivity : ComponentActivity() {
                testNotePageComposable,
             )
             val pageStackRepository = AndroidPageStackRepository(
+               context,
                allPageSerializers = listOf(
                   pageSerializer<TestPage>(),
                   pageSerializer<TestTimelinePage>(),
                   pageSerializer<TestNotePage>(),
-               ),
-               File(context.filesDir, "probosqisData/pageStackCache")
+               )
             )
             val pageStackBoardRepository = AndroidPageStackBoardRepository(
-               pageStackRepository,
-               File(context.filesDir, "probosqisData/pageStackBoardCache")
+               context, pageStackRepository
             )
 
             ProbosqisState(allPageComposables, pageStackBoardRepository,
