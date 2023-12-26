@@ -29,8 +29,8 @@ import com.wcaokaze.probosqis.app.TestTimelinePage
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
-import com.wcaokaze.probosqis.page.JvmPageStackBoardRepository
-import com.wcaokaze.probosqis.page.JvmPageStackRepository
+import com.wcaokaze.probosqis.page.DesktopPageStackBoardRepository
+import com.wcaokaze.probosqis.page.DesktopPageStackRepository
 import com.wcaokaze.probosqis.page.pageSerializer
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.collections.immutable.persistentListOf
@@ -51,7 +51,7 @@ fun main() {
                testNotePageComposable,
             )
 
-            val pageStackRepository = JvmPageStackRepository(
+            val pageStackRepository = DesktopPageStackRepository(
                allPageSerializers = listOf(
                   pageSerializer<TestPage>(),
                   pageSerializer<TestTimelinePage>(),
@@ -60,7 +60,7 @@ fun main() {
                File(System.getProperty("user.home"), ".probosqisData/pageStackCache")
             )
 
-            val pageStackBoardRepository = JvmPageStackBoardRepository(
+            val pageStackBoardRepository = DesktopPageStackBoardRepository(
                pageStackRepository,
                File(System.getProperty("user.home"), ".probosqisData/pageStackBoardCache")
             )

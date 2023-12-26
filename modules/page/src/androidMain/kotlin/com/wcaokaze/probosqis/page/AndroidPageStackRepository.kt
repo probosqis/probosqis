@@ -23,7 +23,7 @@ import com.wcaokaze.probosqis.cache.core.saveCache
 import java.io.File
 import java.io.IOException
 
-class JvmPageStackRepository(
+class AndroidPageStackRepository(
    allPageSerializers: List<PageStackRepository.PageSerializer<*>>,
    directory: File
 ) : AbstractPageStackRepository(allPageSerializers) {

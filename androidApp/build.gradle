@@ -26,7 +26,11 @@ apply from: rootProject.file('gradle/setupModule.gradle')
 
 android {
    namespace 'com.wcaokaze.probosqis'
-   sourceSets.main.manifest.srcFile 'src/main/AndroidManifest.xml'
+   sourceSets.main {
+      manifest.srcFile 'src/androidMain/AndroidManifest.xml'
+      kotlin.srcDirs = ['src/androidMain/kotlin']
+      res.srcDirs = ['src/androidMain/res']
+   }
 
    defaultConfig {
       applicationId "com.wcaokaze.probosqis"

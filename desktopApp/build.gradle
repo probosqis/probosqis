@@ -30,7 +30,7 @@ compose.desktop {
 
 kotlin {
    sourceSets {
-      jvmMain.dependencies {
+      desktopMain.dependencies {
          implementation compose.desktop.linux_x64
          implementation project(':modules:app')
          implementation project(':modules:resources')

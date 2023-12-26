@@ -24,31 +24,34 @@ def isComposeModule = hasPlugin(libs.plugins.compose.jb)
 def isExtModule = project.path.contains(':modules:ext')
 
 kotlin {
-   if (isComposeModule) {
+   if (isAndroidModule) {
+      androidTarget()
+      jvm('desktop')
+   } else if (isComposeModule) {
       jvm('desktop')
    } else {
       jvm()
    }
 
-   if (isAndroidModule) {
-      androidTarget()
+   compilerOptions {
+      freeCompilerArgs = ['-Xexpect-actual-classes']
    }
 
    jvmToolchain(17)
 
-   sourceSets {
-      jvmMain.dependsOn(commonMain)
-      jvmTest.dependsOn(commonTest)
+   applyDefaultHierarchyTemplate()
 
-      if (isAndroidModule) {
-         androidMain.dependsOn(jvmMain)
-         androidUnitTest.dependsOn(jvmTest)
-         androidInstrumentedTest.dependsOn(jvmTest)
+   sourceSets {
+      if (isAndroidModule || isComposeModule) {
+         jvmAndroidMain.dependsOn(commonMain)
+         jvmAndroidTest.dependsOn(commonTest)
+         desktopMain.dependsOn(jvmAndroidMain)
+         desktopTest.dependsOn(jvmAndroidTest)
       }
 
-      if (isComposeModule) {
-         desktopMain.dependsOn(jvmMain)
-         desktopTest.dependsOn(jvmTest)
+      if (isAndroidModule) {
+         androidMain.dependsOn(jvmAndroidMain)
+         androidUnitTest.dependsOn(jvmAndroidTest)
       }
 
       commonMain.dependencies {
@@ -62,11 +65,20 @@ kotlin {
          implementation libs.kotlin.test.junit
       }
 
-      jvmMain.dependencies {
-      }
+      if (isAndroidModule || isComposeModule) {
+         jvmAndroidMain.dependencies {
+         }
 
-      jvmTest.dependencies {
-         implementation libs.mockk
+         jvmAndroidTest.dependencies {
+            implementation libs.mockk
+         }
+      } else {
+         jvmMain.dependencies {
+         }
+
+         jvmTest.dependencies {
+            implementation libs.mockk
+         }
       }
 
       if (isAndroidModule) {

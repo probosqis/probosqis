@@ -22,7 +22,7 @@ import com.wcaokaze.probosqis.cache.core.loadCache
 import com.wcaokaze.probosqis.cache.core.saveCache
 import java.io.File
 
-class JvmPageStackBoardRepository(
+class AndroidPageStackBoardRepository(
    pageStackRepository: PageStackRepository,
    directory: File
 ) : AbstractPageStackBoardRepository(pageStackRepository) {
