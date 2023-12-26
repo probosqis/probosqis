@@ -71,9 +71,9 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Probosqis"
-include ':androidApp'
-include ':desktopApp'
-// include ':jsApp'
+include ':app:android'
+include ':app:desktop'
+// include ':app:js'
 include ':modules:app'
 include ':modules:ext:kotlin'
 include ':modules:ext:kotlinTest'
