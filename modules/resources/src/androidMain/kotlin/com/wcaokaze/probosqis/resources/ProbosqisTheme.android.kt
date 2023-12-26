@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.resources
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
