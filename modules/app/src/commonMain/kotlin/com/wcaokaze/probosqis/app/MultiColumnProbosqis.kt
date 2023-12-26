@@ -126,7 +126,7 @@ private fun AppBar(
                onClick = {}
             )
          },
-         colors = TopAppBarDefaults.smallTopAppBarColors(
+         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent
          ),
          windowInsets = safeDrawingWindowInsets
