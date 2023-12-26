@@ -17,21 +17,42 @@
 plugins {
    alias libs.plugins.kotlin.multiplatform
    alias libs.plugins.kotlinx.serialization
-   alias libs.plugins.android.library
+   alias libs.plugins.android.application
    alias libs.plugins.compose.jb
+   alias libs.plugins.roborazzi
 }
 
 apply from: rootProject.file('gradle/setupModule.gradle')
 
 android {
-   namespace 'com.wcaokaze.probosqis.ext.compose'
+   namespace 'com.wcaokaze.probosqis'
+   sourceSets.main {
+      manifest.srcFile 'src/androidMain/AndroidManifest.xml'
+      kotlin.srcDirs = ['src/androidMain/kotlin']
+      res.srcDirs = ['src/androidMain/res']
+   }
+
+   defaultConfig {
+      applicationId "com.wcaokaze.probosqis"
+      versionCode 1
+      versionName "0.0.0"
+
+      testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+   }
+
+   buildTypes {
+      release {
+         minifyEnabled false
+         proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+      }
+   }
 }
 
 kotlin {
    sourceSets {
-      commonMain.dependencies {
-         implementation project(':modules:ext:kotlin')
-         implementation project(':modules:ext:android')
+      androidMain.dependencies {
+         implementation project(':modules:app')
+         implementation project(':modules:page')
       }
    }
 }

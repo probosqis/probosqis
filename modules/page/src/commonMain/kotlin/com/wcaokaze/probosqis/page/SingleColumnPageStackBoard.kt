@@ -353,7 +353,7 @@ private fun PageStackAppBar(
          }
       },
       windowInsets = windowInsets,
-      colors = TopAppBarDefaults.smallTopAppBarColors(
+      colors = TopAppBarDefaults.topAppBarColors(
          containerColor = Color.Transparent
       ),
       modifier = modifier

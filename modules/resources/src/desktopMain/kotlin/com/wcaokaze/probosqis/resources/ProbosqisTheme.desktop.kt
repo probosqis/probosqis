@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
-   alias libs.plugins.android.library
-   alias libs.plugins.compose.jb
-}
+package com.wcaokaze.probosqis.resources
 
-apply from: rootProject.file('gradle/setupModule.gradle')
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
 
-android {
-   namespace 'com.wcaokaze.probosqis.ext.compose'
-}
-
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         implementation project(':modules:ext:kotlin')
-         implementation project(':modules:ext:android')
-      }
+@Composable
+actual fun colorScheme(): ColorScheme {
+   return if (isSystemInDarkTheme()) {
+      darkColorScheme()
+   } else {
+      lightColorScheme()
    }
 }

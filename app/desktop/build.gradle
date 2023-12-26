@@ -17,21 +17,24 @@
 plugins {
    alias libs.plugins.kotlin.multiplatform
    alias libs.plugins.kotlinx.serialization
-   alias libs.plugins.android.library
    alias libs.plugins.compose.jb
 }
 
 apply from: rootProject.file('gradle/setupModule.gradle')
 
-android {
-   namespace 'com.wcaokaze.probosqis.ext.compose'
+compose.desktop {
+   application {
+      mainClass = "com.wcaokaze.probosqis.MainKt"
+   }
 }
 
 kotlin {
    sourceSets {
-      commonMain.dependencies {
-         implementation project(':modules:ext:kotlin')
-         implementation project(':modules:ext:android')
+      desktopMain.dependencies {
+         implementation compose.desktop.linux_x64
+         implementation project(':modules:app')
+         implementation project(':modules:resources')
+         implementation project(':modules:page')
       }
    }
 }

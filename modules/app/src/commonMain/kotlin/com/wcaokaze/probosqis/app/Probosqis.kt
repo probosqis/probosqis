@@ -18,8 +18,6 @@ package com.wcaokaze.probosqis.app
 
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.unit.dp
@@ -111,17 +109,12 @@ fun Probosqis(
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    ProbosqisTheme {
-      MaterialTheme(colorScheme()) {
-         BoxWithConstraints {
-            if (maxWidth < 512.dp) {
-               SingleColumnProbosqis(state, safeDrawingWindowInsets)
-            } else {
-               MultiColumnProbosqis(state, safeDrawingWindowInsets)
-            }
+      BoxWithConstraints {
+         if (maxWidth < 512.dp) {
+            SingleColumnProbosqis(state, safeDrawingWindowInsets)
+         } else {
+            MultiColumnProbosqis(state, safeDrawingWindowInsets)
          }
       }
    }
 }
-
-@Composable
-expect fun colorScheme(): ColorScheme

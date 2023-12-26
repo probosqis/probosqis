@@ -17,7 +17,7 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.forEachGesture
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -309,7 +309,7 @@ private fun PageStack(
                }
             },
             windowInsets = WindowInsets(0, 0, 0, 0),
-            colors = TopAppBarDefaults.smallTopAppBarColors(
+            colors = TopAppBarDefaults.topAppBarColors(
                containerColor = if (isActive) {
                   MaterialTheme.colorScheme.primaryContainer
                   MaterialTheme.colorScheme
@@ -340,21 +340,19 @@ private fun PageStack(
 @Stable
 private fun Modifier.detectTouch(onTouch: () -> Unit): Modifier {
    return pointerInput(onTouch) {
-      forEachGesture {
-         awaitPointerEventScope {
-            val event = awaitPointerEvent(PointerEventPass.Initial)
+      awaitEachGesture {
+         val event = awaitPointerEvent(PointerEventPass.Initial)
 
-            val isDownEvent = event.changes.any {
-               if (it.type == PointerType.Mouse) {
-                  event.buttons.isPrimaryPressed && it.changedToDownIgnoreConsumed()
-               } else {
-                  it.changedToDownIgnoreConsumed()
-               }
+         val isDownEvent = event.changes.any {
+            if (it.type == PointerType.Mouse) {
+               event.buttons.isPrimaryPressed && it.changedToDownIgnoreConsumed()
+            } else {
+               it.changedToDownIgnoreConsumed()
             }
+         }
 
-            if (isDownEvent) {
-               onTouch()
-            }
+         if (isDownEvent) {
+            onTouch()
          }
       }
    }

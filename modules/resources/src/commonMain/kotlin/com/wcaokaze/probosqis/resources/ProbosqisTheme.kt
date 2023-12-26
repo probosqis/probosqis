@@ -16,6 +16,8 @@
 
 package com.wcaokaze.probosqis.resources
 
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 
@@ -26,6 +28,11 @@ fun ProbosqisTheme(
    CompositionLocalProvider(
       LocalLanguage provides language(),
    ) {
-      content()
+      MaterialTheme(colorScheme()) {
+         content()
+      }
    }
 }
+
+@Composable
+expect fun colorScheme(): ColorScheme

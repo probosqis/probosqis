@@ -155,7 +155,7 @@ private fun AppBar(
                )
             },
             windowInsets = safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
-            colors = TopAppBarDefaults.smallTopAppBarColors(
+            colors = TopAppBarDefaults.topAppBarColors(
                containerColor = Color.Transparent
             ),
             modifier = Modifier
