@@ -59,17 +59,27 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoard
-import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoardAppBar
-import com.wcaokaze.probosqis.page.pagestackboard.SingleColumnPageStackBoardState
+import com.wcaokaze.probosqis.page.PageComposableSwitcher
+import com.wcaokaze.probosqis.page.SingleColumnPageStackBoard
+import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardAppBar
+import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardState
 import com.wcaokaze.probosqis.resources.Strings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SingleColumnProbosqis(
-   di: DI,
+   state: ProbosqisState,
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
+   val coroutineScope = rememberCoroutineScope()
+   val pageStackBoardState = remember(state, coroutineScope) {
+      val pageStackBoardCache = state.loadPageStackBoardOrDefault()
+
+      SingleColumnPageStackBoardState(
+         pageStackBoardCache, state.pageStackRepository, coroutineScope
+      ).also { state.pageStackBoardState = it }
+   }
+
    // 現状Desktopで動作しないため自前実装する
    // val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
    val appBarScrollState = remember { AppBarScrollState() }
@@ -78,29 +88,22 @@ internal fun SingleColumnProbosqis(
    }
 
    Scaffold(
-      topBar = { AppBar(appBarScrollState, safeDrawingWindowInsets) },
+      topBar = {
+         AppBar(
+            appBarScrollState,
+            pageStackBoardState,
+            state.pageComposableSwitcher,
+            safeDrawingWindowInsets
+         )
+      },
       contentWindowInsets = WindowInsets(0, 0, 0, 0),
       modifier = Modifier
          .nestedScroll(nestedScrollConnection)
    ) { paddingValues ->
-      val coroutineScope = rememberCoroutineScope()
-      val pageStackBoardState = remember(di) {
-         val pageStackBoardCache = loadPageStackBoardOrDefault(
-            di.pageStackBoardRepository,
-            di.pageStackRepository
-         )
-
-         SingleColumnPageStackBoardState(
-            pageStackBoardCache, di.pageStackRepository, coroutineScope)
-      }
-
-      val pageComposableSwitcher = remember(di) {
-         di.pageComposableSwitcher
-      }
-
       SingleColumnPageStackBoard(
          pageStackBoardState,
-         pageComposableSwitcher,
+         state.pageComposableSwitcher,
+         state.pageStateStore,
          windowInsets = safeDrawingWindowInsets,
          modifier = Modifier
             .padding(paddingValues)
@@ -112,7 +115,9 @@ internal fun SingleColumnProbosqis(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AppBar(
-   state: AppBarScrollState,
+   scrollState: AppBarScrollState,
+   boardState: SingleColumnPageStackBoardState,
+   pageComposableSwitcher: PageComposableSwitcher,
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    Column(
@@ -130,9 +135,9 @@ private fun AppBar(
 
                layout(
                   placeable.width,
-                  placeable.height + state.scrollOffset.toInt()
+                  placeable.height + scrollState.scrollOffset.toInt()
                ) {
-                  placeable.place(0, state.scrollOffset.toInt())
+                  placeable.place(0, scrollState.scrollOffset.toInt())
                }
             }
       ) {
@@ -150,14 +155,16 @@ private fun AppBar(
                )
             },
             windowInsets = safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
-            colors = TopAppBarDefaults.smallTopAppBarColors(
+            colors = TopAppBarDefaults.topAppBarColors(
                containerColor = Color.Transparent
             ),
             modifier = Modifier
-               .onSizeChanged { state.updateAppBarHeight(it.height) },
+               .onSizeChanged { scrollState.updateAppBarHeight(it.height) },
          )
 
          SingleColumnPageStackBoardAppBar(
+            boardState,
+            pageComposableSwitcher,
             safeDrawingWindowInsets = safeDrawingWindowInsets
          )
       }

@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.page
 
-import com.wcaokaze.probosqis.ext.kotlin.datetime.MockClock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.*
@@ -32,46 +31,86 @@ class PageStackTest {
 
    @Test
    fun add_pop() {
-      var pageStack = PageStack(IntPage(0), MockClock())
-      pageStack = pageStack.added(StringPage("1"))
-      pageStack = pageStack.added(StringPage("2"))
-      pageStack = pageStack.added(IntPage(3))
+      var pageStack = PageStack(
+         PageStack.Id(0L),
+         PageStack.SavedPageState(
+            PageStack.PageId(0L),
+            IntPage(0)
+         )
+      )
+      pageStack = pageStack.added(
+         PageStack.SavedPageState(
+            PageStack.PageId(1L),
+            StringPage("1")
+         )
+      )
+      pageStack = pageStack.added(
+         PageStack.SavedPageState(
+            PageStack.PageId(2L),
+            StringPage("2")
+         )
+      )
+      pageStack = pageStack.added(
+         PageStack.SavedPageState(
+            PageStack.PageId(3L),
+            IntPage(3)
+         )
+      )
 
-      var head = pageStack.head
-      assertIs<IntPage>(head)
-      assertEquals(3, head.i)
+      var headId = pageStack.head.id
+      var headPage = pageStack.head.page
+      assertEquals(PageStack.PageId(3L), headId)
+      assertIs<IntPage>(headPage)
+      assertEquals(3, headPage.i)
 
       var tail = pageStack.tailOrNull()
       assertNotNull(tail)
-      head = tail.head
-      assertIs<StringPage>(head)
-      assertEquals("2", head.s)
+      headId = tail.head.id
+      headPage = tail.head.page
+      assertEquals(PageStack.PageId(2L), headId)
+      assertIs<StringPage>(headPage)
+      assertEquals("2", headPage.s)
 
       tail = tail.tailOrNull() ?: fail()
-      head = tail.head
-      assertIs<StringPage>(head)
-      assertEquals("1", head.s)
+      headId = tail.head.id
+      headPage = tail.head.page
+      assertEquals(PageStack.PageId(1L), headId)
+      assertIs<StringPage>(headPage)
+      assertEquals("1", headPage.s)
 
       tail = tail.tailOrNull() ?: fail()
-      head = tail.head
-      assertIs<IntPage>(head)
-      assertEquals(0, head.i)
+      headId = tail.head.id
+      headPage = tail.head.page
+      assertEquals(PageStack.PageId(0L), headId)
+      assertIs<IntPage>(headPage)
+      assertEquals(0, headPage.i)
 
       assertNull(tail.tailOrNull())
    }
 
    @Test
    fun immutability() {
-      var pageStack = PageStack(IntPage(0), MockClock())
-      pageStack = pageStack.added(StringPage("1"))
+      var pageStack = PageStack(
+         PageStack.Id(0L),
+         PageStack.SavedPageState(
+            PageStack.PageId(0L),
+            IntPage(0)
+         )
+      )
+      pageStack = pageStack.added(
+         PageStack.SavedPageState(
+            PageStack.PageId(1L),
+            StringPage("1")
+         )
+      )
 
       val tail = pageStack.tailOrNull()
       assertNotNull(tail)
-      val tailHead = tail.head
+      val tailHead = tail.head.page
       assertIs<IntPage>(tailHead)
       assertEquals(0, tailHead.i)
 
-      val pageStackHead = pageStack.head
+      val pageStackHead = pageStack.head.page
       assertIs<StringPage>(pageStackHead)
       assertEquals("1", pageStackHead.s)
    }

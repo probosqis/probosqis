@@ -28,7 +28,6 @@ interface Cache<out T> {
    val state: State<T>
 }
 
-@Suppress("FunctionName")
 fun <T> Cache(initialValue: T): Cache<T>
       = CacheImpl(initialValue)
 
@@ -41,9 +40,12 @@ interface WritableCache<T> {
    val mutableState: MutableState<T>
 }
 
-@Suppress("FunctionName")
 fun <T> WritableCache(initialValue: T): WritableCache<T>
       = CacheImpl(initialValue)
+
+inline fun <T> WritableCache<T>.update(update: (T) -> T) {
+   value = update(value)
+}
 
 private class CacheImpl<T>(initialValue: T) : Cache<T>, WritableCache<T> {
    private val _state = mutableStateOf(initialValue)

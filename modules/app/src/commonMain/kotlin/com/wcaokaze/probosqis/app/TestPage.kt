@@ -20,15 +20,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.PageStackState
 import com.wcaokaze.probosqis.page.Page
+import com.wcaokaze.probosqis.page.PageStack
+import com.wcaokaze.probosqis.page.PageState
 import com.wcaokaze.probosqis.page.pageComposable
-import kotlinx.coroutines.launch
+import com.wcaokaze.probosqis.page.pageStateFactory
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -36,31 +35,44 @@ import kotlinx.serialization.Serializable
 @SerialName("com.wcaokaze.probosqis.app.TestPage")
 class TestPage(val i: Int) : Page()
 
-@Composable
-fun TestPage(page: TestPage, pageStackState: PageStackState) {
-   Column(Modifier.fillMaxSize()) {
-      Text(
-         "${page.i}",
-         fontSize = 48.sp
-      )
+@Stable
+class TestPageState : PageState()
 
-      val coroutineScope = rememberCoroutineScope()
+val testPageComposable = pageComposable<TestPage, TestPageState>(
+   pageStateFactory { _, _ -> TestPageState() },
+   content = { page, _, pageStackState ->
+      Column(Modifier.fillMaxSize()) {
+         Text(
+            "${page.i}",
+            fontSize = 48.sp
+         )
 
-      Button(
-         onClick = {
-            coroutineScope.launch {
-               val newPageStack = PageStack(TestPage(page.i + 1))
+         Button(
+            onClick = {
+               val newPageStack = PageStack(
+                  PageStack.SavedPageState(
+                     PageStack.PageId(),
+                     TestPage(page.i + 1)
+                  )
+               )
                pageStackState.addColumn(newPageStack)
             }
+         ) {
+            Text("Add Column")
          }
-      ) {
-         Text("Add Column")
-      }
-   }
-}
 
-val testPageComposable = pageComposable<TestPage>(
-   content = { page, pageStackState -> TestPage(page, pageStackState) },
-   header = { _, _ -> },
-   footer = null
+         Button(
+            onClick = {
+               pageStackState.startPage(
+                  TestTimelinePage()
+               )
+            }
+         ) {
+            Text("Start Timeline")
+         }
+      }
+   },
+   header = { _, _, _ -> },
+   footer = null,
+   pageTransitions = {}
 )

@@ -20,51 +20,72 @@ boolean hasPlugin(Provider<? extends PluginDependency> plugin) {
 
 def isAndroidModule = hasPlugin(libs.plugins.android.application)
       || hasPlugin(libs.plugins.android.library)
-def isComposeModule = hasPlugin(libs.plugins.compose)
+def isComposeModule = hasPlugin(libs.plugins.compose.jb)
 def isExtModule = project.path.contains(':modules:ext')
 
 kotlin {
-   if (isComposeModule) {
+   if (isAndroidModule) {
+      androidTarget()
+      jvm('desktop')
+   } else if (isComposeModule) {
       jvm('desktop')
    } else {
       jvm()
    }
 
-   if (isAndroidModule) {
-      android()
+   compilerOptions {
+      freeCompilerArgs = ['-Xexpect-actual-classes']
    }
 
-   sourceSets {
-      jvmMain.dependsOn(commonMain)
-      jvmTest.dependsOn(commonTest)
+   jvmToolchain(17)
 
-      if (isAndroidModule) {
-         androidMain.dependsOn(jvmMain)
-         androidTest.dependsOn(jvmTest)
-         androidAndroidTest.dependsOn(jvmTest)
+   applyDefaultHierarchyTemplate()
+
+   sourceSets {
+      if (isAndroidModule || isComposeModule) {
+         jvmAndroidMain.dependsOn(commonMain)
+         jvmAndroidTest.dependsOn(commonTest)
+         desktopMain.dependsOn(jvmAndroidMain)
+         desktopTest.dependsOn(jvmAndroidTest)
       }
 
-      if (isComposeModule) {
-         desktopMain.dependsOn(jvmMain)
-         desktopTest.dependsOn(jvmTest)
+      if (isAndroidModule) {
+         androidMain.dependsOn(jvmAndroidMain)
+         androidUnitTest.dependsOn(jvmAndroidTest)
       }
 
       commonMain.dependencies {
          implementation libs.kotlinx.datetime
          implementation libs.kotlinx.serialization
          implementation libs.kotlinx.collections.immutable
+         implementation libs.androidx.annotation
       }
 
       commonTest.dependencies {
-         implementation libs.kotlin.test
-         implementation libs.mockk
+         implementation libs.kotlin.test.junit
+      }
+
+      if (isAndroidModule || isComposeModule) {
+         jvmAndroidMain.dependencies {
+         }
+
+         jvmAndroidTest.dependencies {
+            implementation libs.mockk
+         }
+      } else {
+         jvmMain.dependencies {
+         }
+
+         jvmTest.dependencies {
+            implementation libs.mockk
+         }
       }
 
       if (isAndroidModule) {
          androidMain.dependencies {
          }
 
-         androidAndroidTest.dependencies {
+         androidUnitTest.dependencies {
             implementation libs.androidx.test.ext
             implementation libs.robolectric
          }
@@ -95,8 +116,15 @@ kotlin {
                implementation compose.preview
             }
 
-            androidTest.dependencies {
+            androidUnitTest.dependencies {
                implementation libs.compose.ui.test.manifest
+            }
+         }
+
+         if (hasPlugin(libs.plugins.roborazzi)) {
+            commonTest.dependencies {
+               implementation libs.roborazzi.core
+               implementation libs.roborazzi.compose
             }
          }
       }
@@ -127,12 +155,11 @@ kotlin {
 
 if (isAndroidModule) {
    android {
-      compileSdk 33
-      sourceSets.main.manifest.srcFile 'src/androidMain/AndroidManifest.xml'
+      compileSdk 34
 
       defaultConfig {
          minSdk 21
-         targetSdk 33
+         targetSdk 34
       }
 
       buildFeatures {
@@ -141,10 +168,12 @@ if (isAndroidModule) {
 
       compileOptions {
          coreLibraryDesugaringEnabled true
+         sourceCompatibility = '1.17'
+         targetCompatibility = '1.17'
       }
 
       composeOptions {
-         kotlinCompilerExtensionVersion = libs.versions.compose
+         kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
       }
 
       testOptions {
@@ -168,5 +197,11 @@ if (isAndroidModule) {
 
    dependencies {
       coreLibraryDesugaring libs.android.desugaring.jdk
+   }
+}
+
+if (isComposeModule) {
+   compose {
+      kotlinCompilerPlugin.set("androidx.compose.compiler:compiler:${libs.versions.compose.compiler.get()}")
    }
 }

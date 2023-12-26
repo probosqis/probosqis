@@ -49,13 +49,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.pagestackboard.MultiColumnPageStackBoard
-import com.wcaokaze.probosqis.page.pagestackboard.MultiColumnPageStackBoardState
+import com.wcaokaze.probosqis.page.MultiColumnPageStackBoard
+import com.wcaokaze.probosqis.page.MultiColumnPageStackBoardState
 import com.wcaokaze.probosqis.resources.Strings
 
 @Composable
 internal fun MultiColumnProbosqis(
-   di: DI,
+   state: ProbosqisState,
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    BoxWithConstraints(
@@ -78,23 +78,18 @@ internal fun MultiColumnProbosqis(
       )
 
       val coroutineScope = rememberCoroutineScope()
-      val pageStackBoardState = remember(di, coroutineScope) {
-         val pageStackBoardCache = loadPageStackBoardOrDefault(
-            di.pageStackBoardRepository,
-            di.pageStackRepository
-         )
+      val pageStackBoardState = remember(state, coroutineScope) {
+         val pageStackBoardCache = state.loadPageStackBoardOrDefault()
 
          MultiColumnPageStackBoardState(
-            pageStackBoardCache, di.pageStackRepository, coroutineScope)
-      }
-
-      val pageComposableSwitcher = remember(di) {
-         di.pageComposableSwitcher
+            pageStackBoardCache, state.pageStackRepository, coroutineScope
+         ).also { state.pageStackBoardState = it }
       }
 
       MultiColumnPageStackBoard(
          pageStackBoardState,
-         pageComposableSwitcher,
+         state.pageComposableSwitcher,
+         state.pageStateStore,
          pageStackCount = (maxWidth / 330.dp).toInt(),
          windowInsets = safeDrawingWindowInsets
             .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
@@ -131,7 +126,7 @@ private fun AppBar(
                onClick = {}
             )
          },
-         colors = TopAppBarDefaults.smallTopAppBarColors(
+         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent
          ),
          windowInsets = safeDrawingWindowInsets

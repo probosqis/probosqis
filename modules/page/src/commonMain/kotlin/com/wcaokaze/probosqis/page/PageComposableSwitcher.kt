@@ -19,7 +19,7 @@ package com.wcaokaze.probosqis.page
 import androidx.compose.runtime.Stable
 
 @Stable
-class PageComposableSwitcher(allPageComposables: List<PageComposable<*>>) {
+class PageComposableSwitcher(allPageComposables: List<PageComposable<*, *>>) {
    private val map = buildMap {
       for (m in allPageComposables) {
          put(m.pageClass, m)
@@ -27,8 +27,8 @@ class PageComposableSwitcher(allPageComposables: List<PageComposable<*>>) {
    }
 
    @Stable
-   internal operator fun <P : Page> get(page: P): PageComposable<P>? {
+   internal operator fun <P : Page> get(page: P): PageComposable<P, *>? {
       @Suppress("UNCHECKED_CAST")
-      return map[page::class] as PageComposable<P>?
+      return map[page::class] as PageComposable<P, *>?
    }
 }

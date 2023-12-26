@@ -16,11 +16,16 @@
 
 package com.wcaokaze.probosqis.app
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.page.MultiColumnPageStackBoardState
+import com.wcaokaze.probosqis.page.PageStackBoard
 import com.wcaokaze.probosqis.page.PageStackBoardRepository
-import com.wcaokaze.probosqis.page.pagestackboard.PageStackBoard
-import com.wcaokaze.probosqis.page.pagestackboard.PageStackRepository
+import com.wcaokaze.probosqis.page.PageStackRepository
+import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardState
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -46,10 +51,14 @@ class ProbosqisComposeTest {
          every { loadPageStackBoard() } returns WritableCache(pageStackBoard)
       }
 
-      val pageStackRepository = mockk<PageStackRepository>()
+      val probosqisState = ProbosqisState(
+         allPageComposables = emptyList(),
+         pageStackBoardRepository,
+         pageStackRepository = mockk(),
+         coroutineScope = mockk()
+      )
 
-      val loadedCache = loadPageStackBoardOrDefault(
-         pageStackBoardRepository, pageStackRepository)
+      val loadedCache = probosqisState.loadPageStackBoardOrDefault()
 
       assertSame(pageStackBoard, loadedCache.value)
    }
@@ -66,24 +75,141 @@ class ProbosqisComposeTest {
          every { deleteAllPageStacks() } returns Unit
       }
 
-      val loadedCache = loadPageStackBoardOrDefault(
-         pageStackBoardRepository, pageStackRepository)
+      val probosqisState = ProbosqisState(
+         allPageComposables = emptyList(),
+         pageStackBoardRepository,
+         pageStackRepository,
+         coroutineScope = mockk()
+      )
+
+      val loadedCache = probosqisState.loadPageStackBoardOrDefault()
 
       verify { pageStackRepository.deleteAllPageStacks() }
       assertEquals(2, loadedCache.value.rootRow.childCount)
 
       val pageStack1
          = assertIs<PageStackBoard.PageStack>(loadedCache.value.rootRow[0])
-         .cache.value
-      assertIs<TestPage>(pageStack1.head)
+         .pageStackCache.value
+      assertIs<TestPage>(pageStack1.head.page)
       assertNull(pageStack1.tailOrNull())
       verify { pageStackRepository.savePageStack(pageStack1) }
 
       val pageStack2
          = assertIs<PageStackBoard.PageStack>(loadedCache.value.rootRow[1])
-         .cache.value
-      assertIs<TestPage>(pageStack2.head)
+         .pageStackCache.value
+      assertIs<TestPage>(pageStack2.head.page)
       assertNull(pageStack2.tailOrNull())
       verify { pageStackRepository.savePageStack(pageStack2) }
+   }
+
+   @Test
+   fun getBoardState_singleColumn() {
+      val rootRow = PageStackBoard.Row(persistentListOf())
+      val pageStackBoard = PageStackBoard(rootRow)
+
+      val probosqisState = ProbosqisState(
+         allPageComposables = emptyList(),
+         pageStackBoardRepository = mockk {
+            every { loadPageStackBoard() } returns WritableCache(pageStackBoard)
+         },
+         pageStackRepository = mockk(),
+         coroutineScope = mockk()
+      )
+
+      rule.setContent {
+         SingleColumnProbosqis(probosqisState)
+      }
+
+      rule.runOnIdle {
+         assertIs<SingleColumnPageStackBoardState>(
+            probosqisState.pageStackBoardState
+         )
+      }
+   }
+
+   @Test
+   fun getBoardState_multiColumn() {
+      val rootRow = PageStackBoard.Row(persistentListOf())
+      val pageStackBoard = PageStackBoard(rootRow)
+
+      val probosqisState = ProbosqisState(
+         allPageComposables = emptyList(),
+         pageStackBoardRepository = mockk {
+            every { loadPageStackBoard() } returns WritableCache(pageStackBoard)
+         },
+         pageStackRepository = mockk(),
+         coroutineScope = mockk()
+      )
+
+      rule.setContent {
+         MultiColumnProbosqis(probosqisState)
+      }
+
+      rule.runOnIdle {
+         assertIs<MultiColumnPageStackBoardState>(
+            probosqisState.pageStackBoardState
+         )
+      }
+   }
+
+   @Test
+   fun getBoardState_switchingSingleColumnMultiColumn() {
+      val rootRow = PageStackBoard.Row(persistentListOf())
+      val pageStackBoard = PageStackBoard(rootRow)
+
+      val probosqisState = ProbosqisState(
+         allPageComposables = emptyList(),
+         pageStackBoardRepository = mockk {
+            every { loadPageStackBoard() } returns WritableCache(pageStackBoard)
+         },
+         pageStackRepository = mockk(),
+         coroutineScope = mockk()
+      )
+
+      var isMultiColumn by mutableStateOf(false)
+
+      rule.setContent {
+         if (isMultiColumn) {
+            MultiColumnProbosqis(probosqisState)
+         } else {
+            SingleColumnProbosqis(probosqisState)
+         }
+      }
+
+      rule.runOnIdle {
+         assertIs<SingleColumnPageStackBoardState>(
+            probosqisState.pageStackBoardState
+         )
+      }
+
+      isMultiColumn = true
+
+      rule.runOnIdle {
+         assertIs<MultiColumnPageStackBoardState>(
+            probosqisState.pageStackBoardState
+         )
+      }
+
+      isMultiColumn = false
+
+      rule.runOnIdle {
+         assertIs<SingleColumnPageStackBoardState>(
+            probosqisState.pageStackBoardState
+         )
+      }
+   }
+
+   @Test
+   fun getBoardState_beforeComposition() {
+      val probosqisState = ProbosqisState(
+         allPageComposables = emptyList(),
+         pageStackBoardRepository = mockk(),
+         pageStackRepository = mockk(),
+         coroutineScope = mockk()
+      )
+
+      assertFails {
+         probosqisState.pageStackBoardState
+      }
    }
 }
