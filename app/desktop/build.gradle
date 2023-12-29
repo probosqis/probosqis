@@ -32,9 +32,9 @@ kotlin {
    sourceSets {
       desktopMain.dependencies {
          implementation compose.desktop.linux_x64
+         implementation project(':capsiqum')
          implementation project(':modules:app')
          implementation project(':modules:resources')
-         implementation project(':modules:page')
       }
    }
 }

@@ -29,9 +29,9 @@ import com.wcaokaze.probosqis.app.TestTimelinePage
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
-import com.wcaokaze.probosqis.page.DesktopPageStackBoardRepository
-import com.wcaokaze.probosqis.page.DesktopPageStackRepository
-import com.wcaokaze.probosqis.page.pageSerializer
+import com.wcaokaze.probosqis.capsiqum.DesktopPageStackBoardRepository
+import com.wcaokaze.probosqis.capsiqum.DesktopPageStackRepository
+import com.wcaokaze.probosqis.capsiqum.pageSerializer
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.collections.immutable.persistentListOf
 import java.io.File

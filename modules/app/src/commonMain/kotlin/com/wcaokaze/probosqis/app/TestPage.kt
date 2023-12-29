@@ -23,11 +23,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.page.Page
-import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.PageState
-import com.wcaokaze.probosqis.page.pageComposable
-import com.wcaokaze.probosqis.page.pageStateFactory
+import com.wcaokaze.probosqis.capsiqum.Page
+import com.wcaokaze.probosqis.capsiqum.PageStack
+import com.wcaokaze.probosqis.capsiqum.PageState
+import com.wcaokaze.probosqis.capsiqum.pageComposable
+import com.wcaokaze.probosqis.capsiqum.pageStateFactory
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
