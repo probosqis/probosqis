@@ -65,7 +65,6 @@ import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoardState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SingleColumnProbosqis(
    state: ProbosqisState,

@@ -41,7 +41,6 @@ import com.wcaokaze.probosqis.capsiqum.AndroidPageStackBoardRepository
 import com.wcaokaze.probosqis.capsiqum.AndroidPageStackRepository
 import com.wcaokaze.probosqis.capsiqum.pageSerializer
 import kotlinx.collections.immutable.persistentListOf
-import java.io.File
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
