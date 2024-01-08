@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.Page
@@ -55,8 +56,14 @@ val testNotePageComposable = pageComposable<TestNotePage, TestNotePageState>(
    content = { page, _, _ ->
       Note(page.i, Modifier.fillMaxSize())
    },
-   header = { _, _, _ -> },
-   footer = null,
+   header = { _, _, _ ->
+      Text(
+         "Note",
+         maxLines = 1,
+         overflow = TextOverflow.Ellipsis
+      )
+   },
+   footer = { _, _, _ -> },
    pageTransitions = {}
 )
 
