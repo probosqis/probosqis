@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
+import com.wcaokaze.probosqis.capsiqum.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoard
 import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoardAppBar
 import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoardState
@@ -92,6 +93,7 @@ internal fun SingleColumnProbosqis(
             appBarScrollState,
             pageStackBoardState,
             state.pageComposableSwitcher,
+            state.pageStateStore,
             safeDrawingWindowInsets
          )
       },
@@ -117,6 +119,7 @@ private fun AppBar(
    scrollState: AppBarScrollState,
    boardState: SingleColumnPageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    Column(
@@ -140,6 +143,14 @@ private fun AppBar(
                }
             }
       ) {
+         val colorScheme = MaterialTheme.colorScheme
+         val innerTopAppBarColors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent,
+            navigationIconContentColor = colorScheme.onPrimaryContainer,
+            titleContentColor = colorScheme.onPrimaryContainer,
+            actionIconContentColor = colorScheme.onPrimaryContainer,
+         )
+
          TopAppBar(
             title = {
                Text(
@@ -154,9 +165,7 @@ private fun AppBar(
                )
             },
             windowInsets = safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
-            colors = TopAppBarDefaults.topAppBarColors(
-               containerColor = Color.Transparent
-            ),
+            colors = innerTopAppBarColors,
             modifier = Modifier
                .onSizeChanged { scrollState.updateAppBarHeight(it.height) },
          )
@@ -164,7 +173,9 @@ private fun AppBar(
          SingleColumnPageStackBoardAppBar(
             boardState,
             pageComposableSwitcher,
-            safeDrawingWindowInsets = safeDrawingWindowInsets
+            pageStateStore,
+            safeDrawingWindowInsets = safeDrawingWindowInsets,
+            colors = innerTopAppBarColors
          )
       }
    }
