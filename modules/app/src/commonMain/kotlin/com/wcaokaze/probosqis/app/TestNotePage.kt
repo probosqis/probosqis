@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,26 +20,31 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.page.Page
-import com.wcaokaze.probosqis.page.transition.PageLayoutIds
-import com.wcaokaze.probosqis.page.transition.PageLayoutInfo
-import com.wcaokaze.probosqis.page.PageState
-import com.wcaokaze.probosqis.page.pageComposable
-import com.wcaokaze.probosqis.page.pageStateFactory
-import com.wcaokaze.probosqis.page.transition.transitionElement
+import com.wcaokaze.probosqis.capsiqum.Page
+import com.wcaokaze.probosqis.capsiqum.PageState
+import com.wcaokaze.probosqis.capsiqum.pageComposable
+import com.wcaokaze.probosqis.capsiqum.pageStateFactory
+import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutIds
+import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
+import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -52,11 +57,17 @@ class TestNotePageState : PageState()
 
 val testNotePageComposable = pageComposable<TestNotePage, TestNotePageState>(
    pageStateFactory { _, _ -> TestNotePageState() },
-   content = { page, _, _ ->
-      Note(page.i, Modifier.fillMaxSize())
+   content = { page, _, _, windowInsets ->
+      Note(page.i, windowInsets, Modifier.fillMaxSize())
    },
-   header = { _, _, _ -> },
-   footer = null,
+   header = { _, _, _ ->
+      Text(
+         "Note",
+         maxLines = 1,
+         overflow = TextOverflow.Ellipsis
+      )
+   },
+   footer = { _, _, _ -> },
    pageTransitions = {}
 )
 
@@ -72,9 +83,14 @@ object TestNotePageLayoutIds : PageLayoutIds() {
 @Composable
 private fun Note(
    i: Int,
+   windowInsets: WindowInsets,
    modifier: Modifier = Modifier
 ) {
-   Column(modifier) {
+   Column(
+      modifier = modifier
+         .windowInsetsPadding(windowInsets)
+         .verticalScroll(rememberScrollState())
+   ) {
       Account(
          i,
          Modifier

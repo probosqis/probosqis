@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,9 +48,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoard
+import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoardState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.MultiColumnPageStackBoard
-import com.wcaokaze.probosqis.page.MultiColumnPageStackBoardState
 import com.wcaokaze.probosqis.resources.Strings
 
 @Composable
@@ -86,6 +86,7 @@ internal fun MultiColumnProbosqis(
          ).also { state.pageStackBoardState = it }
       }
 
+      @OptIn(ExperimentalMaterial3Api::class)
       MultiColumnPageStackBoard(
          pageStackBoardState,
          state.pageComposableSwitcher,

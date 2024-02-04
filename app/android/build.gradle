@@ -51,8 +51,8 @@ android {
 kotlin {
    sourceSets {
       androidMain.dependencies {
+         implementation project(':capsiqum')
          implementation project(':modules:app')
-         implementation project(':modules:page')
       }
    }
 }

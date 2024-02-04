@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,14 +23,27 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -41,21 +54,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.page.Page
-import com.wcaokaze.probosqis.page.transition.PageLayoutIds
-import com.wcaokaze.probosqis.page.transition.PageLayoutInfo
-import com.wcaokaze.probosqis.page.PageStackState
-import com.wcaokaze.probosqis.page.PageState
-import com.wcaokaze.probosqis.page.transition.SharedElementAnimations
-import com.wcaokaze.probosqis.page.transition.SharedElementAnimatorElement
-import com.wcaokaze.probosqis.page.transition.animatePosition
-import com.wcaokaze.probosqis.page.transition.animateScale
-import com.wcaokaze.probosqis.page.pageComposable
-import com.wcaokaze.probosqis.page.pageStateFactory
-import com.wcaokaze.probosqis.page.transition.sharedElement
-import com.wcaokaze.probosqis.page.transition.transitionElement
+import com.wcaokaze.probosqis.capsiqum.FooterButton
+import com.wcaokaze.probosqis.capsiqum.Page
+import com.wcaokaze.probosqis.capsiqum.PageStackState
+import com.wcaokaze.probosqis.capsiqum.PageState
+import com.wcaokaze.probosqis.capsiqum.pageComposable
+import com.wcaokaze.probosqis.capsiqum.pageStateFactory
+import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutIds
+import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
+import com.wcaokaze.probosqis.capsiqum.transition.SharedElementAnimations
+import com.wcaokaze.probosqis.capsiqum.transition.SharedElementAnimatorElement
+import com.wcaokaze.probosqis.capsiqum.transition.animatePosition
+import com.wcaokaze.probosqis.capsiqum.transition.animateScale
+import com.wcaokaze.probosqis.capsiqum.transition.sharedElement
+import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -79,13 +94,52 @@ class TestTimelinePageState(stateSaver: StateSaver) : PageState() {
       .save("clickedNoteIndex", Int.serializer().nullable) { null }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 val testTimelinePageComposable = pageComposable<TestTimelinePage, TestTimelinePageState>(
    pageStateFactory { _, stateSaver -> TestTimelinePageState(stateSaver) },
-   content = { _, pageState, pageStackState ->
-      TestTimeline(pageState, pageStackState)
+   content = { _, pageState, pageStackState, windowInsets ->
+      TestTimeline(pageState, pageStackState, windowInsets)
    },
-   header = { _, _, _ -> },
-   footer = null,
+   header = { _, _, _ ->
+      Text(
+         "HomeTimeline",
+         maxLines = 1,
+         overflow = TextOverflow.Ellipsis
+      )
+   },
+   headerActions = { _, _, _ ->
+      IconButton(
+         onClick = {}
+      ) {
+         Icon(Icons.Default.AccountBox, contentDescription = "Account")
+      }
+   },
+   footer = { _, _, _ ->
+      Row {
+         FooterButton(
+            onClick = {},
+            modifier = Modifier.weight(1.0f)
+         ) {
+            Icon(Icons.Default.Send, contentDescription = "Send")
+         }
+
+         Spacer(Modifier.weight(1.0f))
+
+         FooterButton(
+            onClick = {},
+            modifier = Modifier.weight(1.0f)
+         ) {
+            Icon(Icons.Default.Share, contentDescription = "Share")
+         }
+
+         FooterButton(
+            onClick = {},
+            modifier = Modifier.weight(1.0f)
+         ) {
+            Icon(Icons.Default.Favorite, contentDescription = "Favorite")
+         }
+      }
+   },
    pageTransitions = {
       transitionTo<TestNotePage>(
          enter = {
@@ -196,10 +250,12 @@ object TestTimelinePageLayoutIds : PageLayoutIds() {
 @Composable
 private fun TestTimeline(
    pageState: TestTimelinePageState,
-   pageStackState: PageStackState
+   pageStackState: PageStackState,
+   windowInsets: WindowInsets
 ) {
    LazyColumn(
       state = pageState.lazyListState,
+      contentPadding = windowInsets.asPaddingValues(),
       modifier = Modifier.fillMaxSize()
    ) {
       items(pageState.notes) { i ->

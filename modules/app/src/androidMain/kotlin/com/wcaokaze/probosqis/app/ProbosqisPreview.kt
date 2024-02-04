@@ -21,15 +21,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import com.wcaokaze.probosqis.cache.core.WritableCache
+import com.wcaokaze.probosqis.capsiqum.PageStack
+import com.wcaokaze.probosqis.capsiqum.PageStackBoard
+import com.wcaokaze.probosqis.capsiqum.PageStackBoardRepository
+import com.wcaokaze.probosqis.capsiqum.PageStackRepository
 import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
-import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.PageStackBoard
-import com.wcaokaze.probosqis.page.PageStackBoardRepository
-import com.wcaokaze.probosqis.page.PageStackRepository
+import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 

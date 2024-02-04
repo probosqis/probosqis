@@ -70,16 +70,21 @@ dependencyResolutionManagement {
    }
 }
 
+void includeSubmodule(String moduleName, String projectDir) {
+   include moduleName
+   project(moduleName).projectDir = file(projectDir)
+}
+
 rootProject.name = "Probosqis"
 include ':app:android'
 include ':app:desktop'
 // include ':app:js'
+includeSubmodule ':panoptiqon', 'modules/panoptiqon/panoptiqon'
+includeSubmodule ':panoptiqon-compose', 'modules/panoptiqon/panoptiqon-compose'
+includeSubmodule ':capsiqum', 'modules/capsiqum'
 include ':modules:app'
 include ':modules:ext:kotlin'
 include ':modules:ext:kotlinTest'
 include ':modules:ext:android'
 include ':modules:ext:compose'
 include ':modules:resources'
-include ':modules:cache:core'
-include ':modules:cache:compose'
-include ':modules:page'

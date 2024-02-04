@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -58,14 +57,14 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
+import com.wcaokaze.probosqis.capsiqum.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoard
+import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoardAppBar
+import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoardState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
-import com.wcaokaze.probosqis.page.PageComposableSwitcher
-import com.wcaokaze.probosqis.page.SingleColumnPageStackBoard
-import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardAppBar
-import com.wcaokaze.probosqis.page.SingleColumnPageStackBoardState
 import com.wcaokaze.probosqis.resources.Strings
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SingleColumnProbosqis(
    state: ProbosqisState,
@@ -87,26 +86,26 @@ internal fun SingleColumnProbosqis(
       AppBarNestedScrollConnection(appBarScrollState)
    }
 
-   Scaffold(
-      topBar = {
-         AppBar(
-            appBarScrollState,
-            pageStackBoardState,
-            state.pageComposableSwitcher,
-            safeDrawingWindowInsets
-         )
-      },
-      contentWindowInsets = WindowInsets(0, 0, 0, 0),
+   Column(
       modifier = Modifier
          .nestedScroll(nestedScrollConnection)
-   ) { paddingValues ->
+   ) {
+      AppBar(
+         appBarScrollState,
+         pageStackBoardState,
+         state.pageComposableSwitcher,
+         state.pageStateStore,
+         windowInsets = safeDrawingWindowInsets
+            .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+      )
+
       SingleColumnPageStackBoard(
          pageStackBoardState,
          state.pageComposableSwitcher,
          state.pageStateStore,
-         windowInsets = safeDrawingWindowInsets,
+         windowInsets = safeDrawingWindowInsets
+            .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
          modifier = Modifier
-            .padding(paddingValues)
             .fillMaxSize()
       )
    }
@@ -118,13 +117,14 @@ private fun AppBar(
    scrollState: AppBarScrollState,
    boardState: SingleColumnPageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
-   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
+   pageStateStore: PageStateStore,
+   windowInsets: WindowInsets
 ) {
    Column(
       Modifier
          .shadow(4.dp)
          .background(MaterialTheme.colorScheme.primaryContainer)
-         .windowInsetsPadding(safeDrawingWindowInsets.only(WindowInsetsSides.Top))
+         .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
          .clipToBounds()
          .scrollable(rememberScrollState(), Orientation.Vertical)
    ) {
@@ -141,6 +141,14 @@ private fun AppBar(
                }
             }
       ) {
+         val colorScheme = MaterialTheme.colorScheme
+         val innerTopAppBarColors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent,
+            navigationIconContentColor = colorScheme.onPrimaryContainer,
+            titleContentColor = colorScheme.onPrimaryContainer,
+            actionIconContentColor = colorScheme.onPrimaryContainer,
+         )
+
          TopAppBar(
             title = {
                Text(
@@ -154,10 +162,8 @@ private fun AppBar(
                   onClick = {}
                )
             },
-            windowInsets = safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
-            colors = TopAppBarDefaults.topAppBarColors(
-               containerColor = Color.Transparent
-            ),
+            windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
+            colors = innerTopAppBarColors,
             modifier = Modifier
                .onSizeChanged { scrollState.updateAppBarHeight(it.height) },
          )
@@ -165,7 +171,9 @@ private fun AppBar(
          SingleColumnPageStackBoardAppBar(
             boardState,
             pageComposableSwitcher,
-            safeDrawingWindowInsets = safeDrawingWindowInsets
+            pageStateStore,
+            windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
+            colors = innerTopAppBarColors
          )
       }
    }

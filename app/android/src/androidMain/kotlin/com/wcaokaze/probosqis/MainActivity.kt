@@ -37,11 +37,10 @@ import com.wcaokaze.probosqis.app.TestTimelinePage
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
-import com.wcaokaze.probosqis.page.AndroidPageStackBoardRepository
-import com.wcaokaze.probosqis.page.AndroidPageStackRepository
-import com.wcaokaze.probosqis.page.pageSerializer
+import com.wcaokaze.probosqis.capsiqum.AndroidPageStackBoardRepository
+import com.wcaokaze.probosqis.capsiqum.AndroidPageStackRepository
+import com.wcaokaze.probosqis.capsiqum.pageSerializer
 import kotlinx.collections.immutable.persistentListOf
-import java.io.File
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {

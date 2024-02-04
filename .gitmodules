@@ -1,0 +1,6 @@
+[submodule "modules/panoptiqon"]
+	path = modules/panoptiqon
+	url = ssh://github.com/probosqis/panoptiqon.git
+[submodule "modules/capsiqum"]
+	path = modules/capsiqum
+	url = ssh://github.com/probosqis/capsiqum.git

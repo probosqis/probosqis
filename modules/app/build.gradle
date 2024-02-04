@@ -31,10 +31,10 @@ android {
 kotlin {
    sourceSets {
       commonMain.dependencies {
+         implementation project(':panoptiqon')
+         implementation project(':panoptiqon-compose')
+         implementation project(':capsiqum')
          implementation project(':modules:resources')
-         implementation project(':modules:cache:core')
-         implementation project(':modules:cache:compose')
-         implementation project(':modules:page')
       }
    }
 }

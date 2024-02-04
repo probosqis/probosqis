@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.page.Page
-import com.wcaokaze.probosqis.page.PageStack
-import com.wcaokaze.probosqis.page.PageState
-import com.wcaokaze.probosqis.page.pageComposable
-import com.wcaokaze.probosqis.page.pageStateFactory
+import com.wcaokaze.probosqis.capsiqum.Page
+import com.wcaokaze.probosqis.capsiqum.PageStack
+import com.wcaokaze.probosqis.capsiqum.PageState
+import com.wcaokaze.probosqis.capsiqum.pageComposable
+import com.wcaokaze.probosqis.capsiqum.pageStateFactory
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -40,7 +40,7 @@ class TestPageState : PageState()
 
 val testPageComposable = pageComposable<TestPage, TestPageState>(
    pageStateFactory { _, _ -> TestPageState() },
-   content = { page, _, pageStackState ->
+   content = { page, _, pageStackState, _ ->
       Column(Modifier.fillMaxSize()) {
          Text(
             "${page.i}",
