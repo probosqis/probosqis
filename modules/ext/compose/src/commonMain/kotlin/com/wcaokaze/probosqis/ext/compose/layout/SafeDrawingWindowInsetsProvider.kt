@@ -21,5 +21,5 @@ import androidx.compose.ui.unit.dp
 
 internal val safeDrawingWindowInsetsPreviewParameters = listOf(
    WindowInsets(0, 0, 0, 0),
-   WindowInsets(left = 56.dp, top = 24.dp, right = 48.dp),
+   WindowInsets(left = 56.dp, top = 24.dp, right = 48.dp, bottom = 32.dp),
 )

@@ -20,11 +20,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -53,8 +57,8 @@ class TestNotePageState : PageState()
 
 val testNotePageComposable = pageComposable<TestNotePage, TestNotePageState>(
    pageStateFactory { _, _ -> TestNotePageState() },
-   content = { page, _, _ ->
-      Note(page.i, Modifier.fillMaxSize())
+   content = { page, _, _, windowInsets ->
+      Note(page.i, windowInsets, Modifier.fillMaxSize())
    },
    header = { _, _, _ ->
       Text(
@@ -79,9 +83,14 @@ object TestNotePageLayoutIds : PageLayoutIds() {
 @Composable
 private fun Note(
    i: Int,
+   windowInsets: WindowInsets,
    modifier: Modifier = Modifier
 ) {
-   Column(modifier) {
+   Column(
+      modifier = modifier
+         .windowInsetsPadding(windowInsets)
+         .verticalScroll(rememberScrollState())
+   ) {
       Account(
          i,
          Modifier

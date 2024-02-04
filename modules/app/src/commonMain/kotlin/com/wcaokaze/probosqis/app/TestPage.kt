@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ class TestPageState : PageState()
 
 val testPageComposable = pageComposable<TestPage, TestPageState>(
    pageStateFactory { _, _ -> TestPageState() },
-   content = { page, _, pageStackState ->
+   content = { page, _, pageStackState, _ ->
       Column(Modifier.fillMaxSize()) {
          Text(
             "${page.i}",

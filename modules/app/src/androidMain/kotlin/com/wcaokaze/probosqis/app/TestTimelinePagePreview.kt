@@ -16,17 +16,24 @@
 
 package com.wcaokaze.probosqis.app
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.wcaokaze.probosqis.capsiqum.preview.PagePreview
 import com.wcaokaze.probosqis.capsiqum.preview.PageTransitionPreview
+import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
 
 @Preview
 @Composable
-private fun TestTimelinePagePreview() {
+private fun TestTimelinePagePreview(
+   @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
+   safeDrawingWindowInsets: WindowInsets
+) {
    PagePreview(
       page = TestTimelinePage(),
-      pageComposable = testTimelinePageComposable
+      pageComposable = testTimelinePageComposable,
+      safeDrawingWindowInsets
    )
 }
 
