@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,18 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.PageComposable
-import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
-import com.wcaokaze.probosqis.capsiqum.PageStack
-import com.wcaokaze.probosqis.capsiqum.PageStackBoard
-import com.wcaokaze.probosqis.capsiqum.PageStackBoardRepository
-import com.wcaokaze.probosqis.capsiqum.PageStackBoardState
-import com.wcaokaze.probosqis.capsiqum.PageStackRepository
-import com.wcaokaze.probosqis.capsiqum.PageStateStore
+import com.wcaokaze.probosqis.app.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.app.pagedeck.CombinedPageSwitcherState
+import com.wcaokaze.probosqis.app.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.app.pagedeck.PageDeck
+import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.PageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.deck.Deck
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageId
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
@@ -38,67 +42,63 @@ import kotlinx.coroutines.CoroutineScope
 
 @Stable
 class ProbosqisState(
-   allPageComposables: List<PageComposable<*, *>>,
-   val pageStackBoardRepository: PageStackBoardRepository,
+   allPageComposables: List<CombinedPageComposable<*, *>>,
+   val pageDeckRepository: PageDeckRepository,
    val pageStackRepository: PageStackRepository,
    coroutineScope: CoroutineScope
 ) {
-   val pageComposableSwitcher = PageComposableSwitcher(allPageComposables)
+   val pageComposableSwitcher = CombinedPageSwitcherState(allPageComposables)
    val pageStateStore = PageStateStore(
       allPageComposables.map { it.pageStateFactory },
       coroutineScope
    )
 
-   private var _pageStackBoardState: PageStackBoardState? = null
-   var pageStackBoardState: PageStackBoardState
+   private var _pageDeckState: PageDeckState? = null
+   var pageDeckState: PageDeckState
       get() {
-         return _pageStackBoardState ?: throw IllegalStateException(
-            "attempt to get pageStackBoardState before the first Composition")
+         return _pageDeckState ?: throw IllegalStateException(
+            "attempt to get pageDeckState before the first Composition")
       }
       internal set(value) {
-         _pageStackBoardState = value
+         _pageDeckState = value
       }
 
-   internal fun loadPageStackBoardOrDefault(): WritableCache<PageStackBoard> {
+   internal fun loadPageDeckOrDefault(): WritableCache<PageDeck> {
       return try {
-         pageStackBoardRepository.loadPageStackBoard()
+         pageDeckRepository.loadPageDeck()
       } catch (e: Exception) {
          pageStackRepository.deleteAllPageStacks()
 
-         val rootRow = PageStackBoard.Row(
+         val rootRow = Deck.Row(
             createDefaultPageStacks(pageStackRepository)
          )
-         val pageStackBoard = PageStackBoard(rootRow)
-         pageStackBoardRepository.savePageStackBoard(pageStackBoard)
+         val pageDeck = Deck(rootRow)
+         pageDeckRepository.savePageDeck(pageDeck)
       }
    }
 
    private fun createDefaultPageStacks(
       pageStackRepository: PageStackRepository
-   ): ImmutableList<PageStackBoard.LayoutElement> {
+   ): ImmutableList<Deck.Layout<LazyPageStackState>> {
       return sequenceOf(
             PageStack(
                PageStack.Id(0L),
-               PageStack.SavedPageState(
-                  PageStack.PageId(0L),
+               SavedPageState(
+                  PageId(0L),
                   TestPage(0)
                )
             ),
             PageStack(
                PageStack.Id(1L),
-               PageStack.SavedPageState(
-                  PageStack.PageId(1L),
+               SavedPageState(
+                  PageId(1L),
                   TestPage(1)
                )
             ),
          )
          .map { pageStackRepository.savePageStack(it) }
-         .map { pageStackCache ->
-            PageStackBoard.PageStack(
-               PageStackBoard.PageStackId(pageStackCache.value.id.value),
-               pageStackCache
-            )
-         }
+         .map { LazyPageStackState(it.value.id, it, initialVisibility = true) }
+         .map { Deck.Card(it) }
          .toImmutableList()
    }
 }

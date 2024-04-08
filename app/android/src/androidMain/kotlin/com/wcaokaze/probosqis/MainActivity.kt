@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,12 +34,12 @@ import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.TestNotePage
 import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.TestTimelinePage
+import com.wcaokaze.probosqis.app.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
-import com.wcaokaze.probosqis.capsiqum.AndroidPageStackBoardRepository
-import com.wcaokaze.probosqis.capsiqum.AndroidPageStackRepository
-import com.wcaokaze.probosqis.capsiqum.pageSerializer
+import com.wcaokaze.probosqis.app.pagedeck.AndroidPageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
 import kotlinx.collections.immutable.persistentListOf
 
 class MainActivity : ComponentActivity() {
@@ -67,17 +67,16 @@ class MainActivity : ComponentActivity() {
                   pageSerializer<TestNotePage>(),
                )
             )
-            val pageStackBoardRepository = AndroidPageStackBoardRepository(
+            val pageDeckRepository = AndroidPageDeckRepository(
                context, pageStackRepository
             )
 
-            ProbosqisState(allPageComposables, pageStackBoardRepository,
+            ProbosqisState(allPageComposables, pageDeckRepository,
                pageStackRepository, coroutineScope)
          }
 
          BackHandler {
-            val boardState = probosqisState.pageStackBoardState
-            boardState.pageStackState(boardState.activePageStackIndex).finishPage()
+            probosqisState.pageDeckState.activePageStackState.finishPage()
          }
 
          Probosqis(probosqisState)

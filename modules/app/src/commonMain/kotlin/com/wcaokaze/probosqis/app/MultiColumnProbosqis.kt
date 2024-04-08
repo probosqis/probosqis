@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -38,7 +39,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -48,8 +48,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoard
-import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoardState
+import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeck
+import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
 
@@ -77,18 +77,17 @@ internal fun MultiColumnProbosqis(
          onHeightChanged = { appBarHeight = it }
       )
 
-      val coroutineScope = rememberCoroutineScope()
-      val pageStackBoardState = remember(state, coroutineScope) {
-         val pageStackBoardCache = state.loadPageStackBoardOrDefault()
+      val pageDeckState = remember(state) {
+         val pageDeckCache = state.loadPageDeckOrDefault()
 
-         MultiColumnPageStackBoardState(
-            pageStackBoardCache, state.pageStackRepository, coroutineScope
-         ).also { state.pageStackBoardState = it }
+         MultiColumnPageDeckState(
+            pageDeckCache, state.pageStackRepository
+         ).also { state.pageDeckState = it }
       }
 
       @OptIn(ExperimentalMaterial3Api::class)
-      MultiColumnPageStackBoard(
-         pageStackBoardState,
+      MultiColumnPageDeck(
+         pageDeckState,
          state.pageComposableSwitcher,
          state.pageStateStore,
          pageStackCount = (maxWidth / 330.dp).toInt(),
@@ -96,6 +95,7 @@ internal fun MultiColumnProbosqis(
             .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
          onTopAppBarHeightChanged = { pageStackTopAppBarHeight = it },
          modifier = Modifier
+            .fillMaxSize()
             .padding(top = appBarHeight)
       )
    }

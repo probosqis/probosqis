@@ -38,11 +38,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.capsiqum.Page
-import com.wcaokaze.probosqis.capsiqum.PageState
-import com.wcaokaze.probosqis.capsiqum.pageComposable
-import com.wcaokaze.probosqis.capsiqum.pageStateFactory
-import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutIds
+import com.wcaokaze.probosqis.app.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.app.pagedeck.PageLayoutIds
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
 import kotlinx.serialization.SerialName
@@ -55,8 +55,8 @@ class TestNotePage(val i: Int) : Page()
 @Stable
 class TestNotePageState : PageState()
 
-val testNotePageComposable = pageComposable<TestNotePage, TestNotePageState>(
-   pageStateFactory { _, _ -> TestNotePageState() },
+val testNotePageComposable = CombinedPageComposable<TestNotePage, TestNotePageState>(
+   PageStateFactory { _, _ -> TestNotePageState() },
    content = { page, _, _, windowInsets ->
       Note(page.i, windowInsets, Modifier.fillMaxSize())
    },

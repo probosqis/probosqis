@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import com.wcaokaze.probosqis.capsiqum.PageStack
-import com.wcaokaze.probosqis.capsiqum.PageStackBoard
-import com.wcaokaze.probosqis.capsiqum.PageStackBoardRepository
-import com.wcaokaze.probosqis.capsiqum.PageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.app.pagedeck.PageDeck
+import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.deck.Deck
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageId
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
@@ -39,28 +43,30 @@ private fun rememberPreviewProbosqisState(): ProbosqisState {
       testPageComposable,
    )
 
-   val pageStackBoardRepository = object : PageStackBoardRepository {
-      override fun savePageStackBoard(pageStackBoard: PageStackBoard)
+   val pageDeckRepository = object : PageDeckRepository {
+      override fun savePageDeck(pageDeck: PageDeck): WritableCache<PageDeck>
             = throw NotImplementedError()
 
-      override fun loadPageStackBoard(): WritableCache<PageStackBoard> {
+      override fun loadPageDeck(): WritableCache<PageDeck> {
          val children = List(4) { pageStackId ->
             val pageStack = PageStack(
                PageStack.Id(pageStackId.toLong()),
-               PageStack.SavedPageState(
-                  PageStack.PageId(0L),
+               SavedPageState(
+                  PageId(0L),
                   TestPage(0)
                )
             )
-            PageStackBoard.PageStack(
-               PageStackBoard.PageStackId(pageStackId.toLong()),
-               WritableCache(pageStack)
+            val lazyPageStackState = LazyPageStackState(
+               pageStack.id,
+               WritableCache(pageStack),
+               initialVisibility = true
             )
+            Deck.Card(lazyPageStackState)
          } .toImmutableList()
 
-         val rootRow = PageStackBoard.Row(children)
-         val pageStackBoard = PageStackBoard(rootRow)
-         return WritableCache(pageStackBoard)
+         val rootRow = Deck.Row(children)
+         val deck = Deck(rootRow)
+         return WritableCache(deck)
       }
    }
 
@@ -76,7 +82,7 @@ private fun rememberPreviewProbosqisState(): ProbosqisState {
    val coroutineScope = rememberCoroutineScope()
 
    return remember {
-      ProbosqisState(allPageComposables, pageStackBoardRepository,
+      ProbosqisState(allPageComposables, pageDeckRepository,
          pageStackRepository, coroutineScope)
    }
 }

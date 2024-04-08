@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +26,12 @@ import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.TestNotePage
 import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.TestTimelinePage
+import com.wcaokaze.probosqis.app.pagedeck.DesktopPageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.DesktopPageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
-import com.wcaokaze.probosqis.capsiqum.DesktopPageStackBoardRepository
-import com.wcaokaze.probosqis.capsiqum.DesktopPageStackRepository
-import com.wcaokaze.probosqis.capsiqum.pageSerializer
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.collections.immutable.persistentListOf
 import java.io.File
@@ -63,12 +63,12 @@ fun main() {
                probosqisDataDir
             )
 
-            val pageStackBoardRepository = DesktopPageStackBoardRepository(
+            val pageDeckRepository = DesktopPageDeckRepository(
                pageStackRepository,
                probosqisDataDir
             )
 
-            ProbosqisState(allPageComposables, pageStackBoardRepository,
+            ProbosqisState(allPageComposables, pageDeckRepository,
                pageStackRepository, coroutineScope)
          }
 

@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
@@ -43,7 +42,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -57,11 +55,11 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
-import com.wcaokaze.probosqis.capsiqum.PageStateStore
-import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoard
-import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoardAppBar
-import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoardState
+import com.wcaokaze.probosqis.app.pagedeck.CombinedPageSwitcherState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeck
+import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckAppBar
+import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
 
@@ -70,13 +68,12 @@ internal fun SingleColumnProbosqis(
    state: ProbosqisState,
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
-   val coroutineScope = rememberCoroutineScope()
-   val pageStackBoardState = remember(state, coroutineScope) {
-      val pageStackBoardCache = state.loadPageStackBoardOrDefault()
+   val pageDeckState = remember(state) {
+      val pageDeckCache = state.loadPageDeckOrDefault()
 
-      SingleColumnPageStackBoardState(
-         pageStackBoardCache, state.pageStackRepository, coroutineScope
-      ).also { state.pageStackBoardState = it }
+      SingleColumnPageDeckState(
+         pageDeckCache, state.pageStackRepository
+      ).also { state.pageDeckState = it }
    }
 
    // 現状Desktopで動作しないため自前実装する
@@ -92,15 +89,15 @@ internal fun SingleColumnProbosqis(
    ) {
       AppBar(
          appBarScrollState,
-         pageStackBoardState,
+         pageDeckState,
          state.pageComposableSwitcher,
          state.pageStateStore,
          windowInsets = safeDrawingWindowInsets
             .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
       )
 
-      SingleColumnPageStackBoard(
-         pageStackBoardState,
+      SingleColumnPageDeck(
+         pageDeckState,
          state.pageComposableSwitcher,
          state.pageStateStore,
          windowInsets = safeDrawingWindowInsets
@@ -115,8 +112,8 @@ internal fun SingleColumnProbosqis(
 @Composable
 private fun AppBar(
    scrollState: AppBarScrollState,
-   boardState: SingleColumnPageStackBoardState,
-   pageComposableSwitcher: PageComposableSwitcher,
+   deckState: SingleColumnPageDeckState,
+   pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    windowInsets: WindowInsets
 ) {
@@ -168,9 +165,9 @@ private fun AppBar(
                .onSizeChanged { scrollState.updateAppBarHeight(it.height) },
          )
 
-         SingleColumnPageStackBoardAppBar(
-            boardState,
-            pageComposableSwitcher,
+         SingleColumnPageDeckAppBar(
+            deckState,
+            pageSwitcher,
             pageStateStore,
             windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
             colors = innerTopAppBarColors

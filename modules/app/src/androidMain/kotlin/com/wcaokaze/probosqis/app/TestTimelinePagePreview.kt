@@ -20,8 +20,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import com.wcaokaze.probosqis.capsiqum.preview.PagePreview
-import com.wcaokaze.probosqis.capsiqum.preview.PageTransitionPreview
+import com.wcaokaze.probosqis.app.pagedeck.preview.PagePreview
+import com.wcaokaze.probosqis.app.pagedeck.preview.PageTransitionPreview
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
 
 @Preview

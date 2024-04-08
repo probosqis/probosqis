@@ -23,11 +23,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.capsiqum.Page
-import com.wcaokaze.probosqis.capsiqum.PageStack
-import com.wcaokaze.probosqis.capsiqum.PageState
-import com.wcaokaze.probosqis.capsiqum.pageComposable
-import com.wcaokaze.probosqis.capsiqum.pageStateFactory
+import com.wcaokaze.probosqis.app.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageId
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -38,8 +40,8 @@ class TestPage(val i: Int) : Page()
 @Stable
 class TestPageState : PageState()
 
-val testPageComposable = pageComposable<TestPage, TestPageState>(
-   pageStateFactory { _, _ -> TestPageState() },
+val testPageComposable = CombinedPageComposable<TestPage, TestPageState>(
+   PageStateFactory { _, _ -> TestPageState() },
    content = { page, _, pageStackState, _ ->
       Column(Modifier.fillMaxSize()) {
          Text(
@@ -50,8 +52,8 @@ val testPageComposable = pageComposable<TestPage, TestPageState>(
          Button(
             onClick = {
                val newPageStack = PageStack(
-                  PageStack.SavedPageState(
-                     PageStack.PageId(),
+                  SavedPageState(
+                     PageId(),
                      TestPage(page.i + 1)
                   )
                )
