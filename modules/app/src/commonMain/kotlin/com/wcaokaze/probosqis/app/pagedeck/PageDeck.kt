@@ -42,7 +42,6 @@ import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
@@ -132,9 +131,8 @@ sealed class PageDeckState(
                )
                launch {
                   // リコンポジションを待機する
-                  snapshotFlow { deckState.layoutInfo.cardsInfo.getOrNull(index) }
-                     .filterNotNull()
-                     .first()
+                  snapshotFlow { deckState.layoutInfo.cardsInfo }
+                     .first { cards -> cards.any { it.key == pageStack.id } }
 
                   deckState.animateScroll(index)
                }
