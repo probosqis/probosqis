@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import com.wcaokaze.probosqis.resources.Strings
 interface AppStrings {
    val topAppBar: String
    val topAppBarNavigationContentDescription: String
+
+   val pageStackAppBarCloseDescription: String
 }
 
 val Strings.Companion.App: AppStrings
@@ -33,10 +35,15 @@ val Strings.Companion.App: AppStrings
       Strings.Language.ENGLISH -> object : AppStrings {
          override val topAppBar = "Probosqis"
          override val topAppBarNavigationContentDescription = "Menu"
+
+         override val pageStackAppBarCloseDescription = "Close"
+
       }
 
       Strings.Language.JAPANESE -> object : AppStrings {
          override val topAppBar = "Probosqis"
          override val topAppBarNavigationContentDescription = "メニュー"
+
+         override val pageStackAppBarCloseDescription = "閉じる"
       }
    }

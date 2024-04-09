@@ -31,12 +31,14 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import com.wcaokaze.probosqis.app.App
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageComposable
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.PageSwitcher
 import com.wcaokaze.probosqis.capsiqum.page.PageSwitcherState
+import com.wcaokaze.probosqis.resources.Strings
 
 @ExperimentalMaterial3Api
 private fun <P : Page, S : PageState> extractPageComposable(
@@ -114,7 +116,10 @@ internal fun <P : Page, S : PageState> PageStackAppBar(
                Icons.Default.Close
             }
 
-            Icon(icon, contentDescription = "Close")
+            Icon(
+               icon,
+               contentDescription = Strings.App.pageStackAppBarCloseDescription
+            )
          }
       },
       actions = {
