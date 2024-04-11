@@ -110,7 +110,7 @@ fun MultiColumnPageDeck(
    onTopAppBarHeightChanged: (Dp) -> Unit = {}
 ) {
    ActiveCardCorrector(state)
-   
+
    val coroutineScope = rememberCoroutineScope()
    LaunchedEffect(coroutineScope) {
       state.setCoroutineScope(coroutineScope)
@@ -177,7 +177,7 @@ private fun PageStack(
 ) {
    Surface(
       shape = MaterialTheme.shapes.large,
-      tonalElevation = if (isActive) { 3.dp } else { 1.dp },
+      tonalElevation = if (isActive) { 1.dp } else { 0.dp },
       shadowElevation = if (isActive) { 4.dp } else { 2.dp },
       modifier = modifier
    ) {
