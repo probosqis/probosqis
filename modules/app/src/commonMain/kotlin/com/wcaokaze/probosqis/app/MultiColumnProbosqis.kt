@@ -112,7 +112,7 @@ private fun AppBar(
 
    Column(
       Modifier
-         .background(MaterialTheme.colorScheme.primaryContainer)
+         // .background(MaterialTheme.colorScheme.primaryContainer)
    ) {
       TopAppBar(
          title = {
