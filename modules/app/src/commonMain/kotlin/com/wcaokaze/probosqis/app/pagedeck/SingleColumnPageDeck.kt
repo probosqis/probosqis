@@ -55,16 +55,7 @@ import kotlin.time.DurationUnit
 object SingleColumnPageDeckDefaults {
    @ExperimentalMaterial3Api
    @Composable
-   fun appBarColors(): TopAppBarColors {
-      val colorScheme = MaterialTheme.colorScheme
-
-      return TopAppBarDefaults.topAppBarColors(
-         containerColor = colorScheme.primaryContainer,
-         navigationIconContentColor = colorScheme.onPrimaryContainer,
-         titleContentColor = colorScheme.onPrimaryContainer,
-         actionIconContentColor = colorScheme.onPrimaryContainer,
-      )
-   }
+   fun appBarColors(): TopAppBarColors = TopAppBarDefaults.topAppBarColors()
 }
 
 @Stable

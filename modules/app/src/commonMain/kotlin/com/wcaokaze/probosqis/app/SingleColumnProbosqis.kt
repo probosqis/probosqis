@@ -18,7 +18,6 @@ package com.wcaokaze.probosqis.app
 
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateTo
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
@@ -33,10 +32,9 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -45,9 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -56,10 +52,10 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.CombinedPageSwitcherState
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
 
@@ -117,16 +113,15 @@ private fun AppBar(
    pageStateStore: PageStateStore,
    windowInsets: WindowInsets
 ) {
-   Column(
-      Modifier
-         .shadow(4.dp)
-         .background(MaterialTheme.colorScheme.primaryContainer)
-         .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
-         .clipToBounds()
+   Surface(
+      tonalElevation = 3.dp,
+      modifier = Modifier
          .scrollable(rememberScrollState(), Orientation.Vertical)
    ) {
       Column(
          Modifier
+            .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
+            .clipToBounds()
             .layout { measurable, constraints ->
                val placeable = measurable.measure(constraints)
 
@@ -138,14 +133,6 @@ private fun AppBar(
                }
             }
       ) {
-         val colorScheme = MaterialTheme.colorScheme
-         val innerTopAppBarColors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent,
-            navigationIconContentColor = colorScheme.onPrimaryContainer,
-            titleContentColor = colorScheme.onPrimaryContainer,
-            actionIconContentColor = colorScheme.onPrimaryContainer,
-         )
-
          TopAppBar(
             title = {
                Text(
@@ -160,17 +147,15 @@ private fun AppBar(
                )
             },
             windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
-            colors = innerTopAppBarColors,
             modifier = Modifier
-               .onSizeChanged { scrollState.updateAppBarHeight(it.height) },
+               .onSizeChanged { scrollState.updateAppBarHeight(it.height) }
          )
 
          SingleColumnPageDeckAppBar(
             deckState,
             pageSwitcher,
             pageStateStore,
-            windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
-            colors = innerTopAppBarColors
+            windowInsets = windowInsets.only(WindowInsetsSides.Horizontal)
          )
       }
    }
