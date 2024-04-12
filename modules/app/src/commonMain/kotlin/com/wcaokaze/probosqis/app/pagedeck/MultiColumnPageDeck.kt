@@ -23,12 +23,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -69,9 +70,7 @@ object MultiColumnPageDeckDefaults {
             titleContentColor = colorScheme.onPrimaryContainer,
             actionIconContentColor = colorScheme.onPrimaryContainer,
          ),
-         inactive = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorScheme.surfaceColorAtElevation(4.dp),
-         )
+         inactive = TopAppBarDefaults.topAppBarColors()
       )
    }
 }
@@ -223,15 +222,19 @@ private fun MultiColumnPageStackAppBar(
    colors: MultiColumnPageStackAppBarColors,
    modifier: Modifier = Modifier
 ) {
-   @OptIn(ExperimentalMaterial3Api::class)
-   PageStackAppBar(
-      pageStackState,
-      pageSwitcherState,
-      pageStateStore,
-      windowInsets = WindowInsets(0),
-      colors = if (isActive) { colors.active } else { colors.inactive },
-      modifier = modifier
-   )
+   val elevation = LocalAbsoluteTonalElevation.current + 3.dp
+
+   CompositionLocalProvider(LocalAbsoluteTonalElevation provides elevation) {
+      @OptIn(ExperimentalMaterial3Api::class)
+      PageStackAppBar(
+         pageStackState,
+         pageSwitcherState,
+         pageStateStore,
+         windowInsets = WindowInsets(0),
+         colors = if (isActive) { colors.active } else { colors.inactive },
+         modifier = modifier
+      )
+   }
 }
 
 @Stable
