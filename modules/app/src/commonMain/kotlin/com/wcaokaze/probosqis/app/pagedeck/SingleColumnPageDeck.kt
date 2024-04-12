@@ -52,12 +52,6 @@ import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlin.time.DurationUnit
 
-object SingleColumnPageDeckDefaults {
-   @ExperimentalMaterial3Api
-   @Composable
-   fun appBarColors(): TopAppBarColors = TopAppBarDefaults.topAppBarColors()
-}
-
 @Stable
 class SingleColumnPageDeckState(
    pageDeckCache: WritableCache<PageDeck>,
@@ -98,8 +92,7 @@ fun SingleColumnPageDeckAppBar(
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    windowInsets: WindowInsets = WindowInsets
-      .safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-   colors: TopAppBarColors = SingleColumnPageDeckDefaults.appBarColors()
+      .safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
 ) {
    Box {
       // PageDeckState.removePageStack等によって一瞬PageStackが画面内に
@@ -136,7 +129,7 @@ fun SingleColumnPageDeckAppBar(
             val pageStackState = lazyPageStackState.get(state)
 
             SingleColumnPageStackAppBar(pageStackState, pageSwitcherState,
-               pageStateStore, windowInsets, colors)
+               pageStateStore, windowInsets)
          }
       }
    }
@@ -187,7 +180,6 @@ private fun SingleColumnPageStackAppBar(
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    windowInsets: WindowInsets,
-   colors: TopAppBarColors,
    modifier: Modifier = Modifier
 ) {
    PageStackAppBar(
@@ -195,7 +187,7 @@ private fun SingleColumnPageStackAppBar(
       pageSwitcher,
       pageStateStore,
       windowInsets,
-      colors,
+      colors = TopAppBarDefaults.topAppBarColors(),
       modifier = modifier
    )
 }
