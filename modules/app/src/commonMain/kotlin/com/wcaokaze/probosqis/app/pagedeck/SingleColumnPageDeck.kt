@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -171,26 +170,21 @@ fun SingleColumnPageDeck(
       cardPadding = 8.dp,
       modifier = modifier
    ) { _, lazyPageStackState ->
-      Surface(
-         tonalElevation = 3.dp,
-         shadowElevation = 4.dp
+      val density = LocalDensity.current
+
+      AnimatedVisibility(
+         lazyPageStackState.isVisible,
+         enter = remember(density) { cardAnimEnterTransitionSpec(density) },
+         exit  = remember(density) { cardAnimExitTransitionSpec (density) }
       ) {
-         val density = LocalDensity.current
+         val pageStackState = lazyPageStackState.get(state)
 
-         AnimatedVisibility(
-            lazyPageStackState.isVisible,
-            enter = remember(density) { cardAnimEnterTransitionSpec(density) },
-            exit  = remember(density) { cardAnimExitTransitionSpec (density) }
-         ) {
-            val pageStackState = lazyPageStackState.get(state)
-
-            PageStackContent(
-               pageStackState,
-               pageSwitcherState,
-               pageStateStore,
-               windowInsets = windowInsets,
-            )
-         }
+         PageStackContent(
+            pageStackState,
+            pageSwitcherState,
+            pageStateStore,
+            windowInsets = windowInsets,
+         )
       }
    }
 }
