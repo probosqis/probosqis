@@ -236,14 +236,13 @@ internal fun <P : Page, S : PageState> PageFooter(
 ) {
    val absoluteElevation = LocalAbsoluteTonalElevation.current
    val background = MaterialTheme.colorScheme
-      .surfaceColorAtElevation(absoluteElevation + 4.dp)
+      .surfaceColorAtElevation(absoluteElevation + 3.dp)
 
    val footerWindowInsets = windowInsets
       .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
 
    Box(
       modifier = modifier
-         .shadow(4.dp)
          .background(background)
          .pointerInput(Unit) {}
          .windowInsetsPadding(footerWindowInsets)
