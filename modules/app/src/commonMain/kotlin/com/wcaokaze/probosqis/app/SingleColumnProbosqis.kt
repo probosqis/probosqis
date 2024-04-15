@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.app
 
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateTo
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -81,6 +83,7 @@ internal fun SingleColumnProbosqis(
 
    Column(
       modifier = Modifier
+         .background(MaterialTheme.colorScheme.background)
          .nestedScroll(nestedScrollConnection)
    ) {
       AppBar(
