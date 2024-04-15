@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.app.pagedeck
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -81,6 +82,8 @@ fun MultiColumnPageDeck(
       state.setCoroutineScope(coroutineScope)
    }
 
+   val isDarkTheme = isSystemInDarkTheme()
+
    MultiColumnDeck(
       state.deck,
       state.deckState,
@@ -104,6 +107,7 @@ fun MultiColumnPageDeck(
             windowInsets.only(WindowInsetsSides.Bottom),
             pageSwitcherState,
             pageStateStore,
+            isDarkTheme,
             // onTopAppBarHeightChanged,
             modifier = Modifier
                .detectTouch(
@@ -135,12 +139,17 @@ private fun PageStack(
    windowInsets: WindowInsets,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
+   isDarkTheme: Boolean,
    // onTopAppBarHeightChanged: (Dp) -> Unit,
    modifier: Modifier = Modifier
 ) {
    Surface(
       shape = MaterialTheme.shapes.large,
-      tonalElevation = if (isActive) { 1.dp } else { 0.dp },
+      tonalElevation = when {
+         isDarkTheme -> 1.dp
+         isActive    -> 1.dp
+         else        -> 0.dp
+      },
       shadowElevation = if (isActive) { 4.dp } else { 2.dp },
       modifier = modifier
    ) {
