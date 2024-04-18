@@ -64,6 +64,7 @@ import com.wcaokaze.probosqis.resources.Strings
 @Composable
 internal fun SingleColumnProbosqis(
    state: ProbosqisState,
+   colorScheme: SingleColumnProbosqisColorScheme = rememberSingleColumnProbosqisColorScheme(),
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    val pageDeckState = remember(state) {

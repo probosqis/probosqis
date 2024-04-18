@@ -46,6 +46,7 @@ import com.wcaokaze.probosqis.resources.Strings
 @Composable
 internal fun MultiColumnProbosqis(
    state: ProbosqisState,
+   colorScheme: MultiColumnProbosqisColorScheme = rememberMultiColumnProbosqisColorScheme(),
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    BoxWithConstraints(
