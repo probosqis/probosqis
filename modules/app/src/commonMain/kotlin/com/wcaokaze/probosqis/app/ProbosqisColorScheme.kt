@@ -16,20 +16,32 @@
 
 package com.wcaokaze.probosqis.app
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 @Composable
 internal fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisColorScheme {
-   return remember {
+   val materialColorScheme = MaterialTheme.colorScheme
+
+   return remember(materialColorScheme) {
       SingleColumnProbosqisColorScheme(
+         background = materialColorScheme.background,
+         appBar = materialColorScheme.surfaceColorAtElevation(3.dp),
+         pageStackBackground = materialColorScheme.surface,
       )
    }
 }
 
 @Immutable
 internal class SingleColumnProbosqisColorScheme(
+   val background: Color,
+   val appBar: Color,
+   val pageStackBackground: Color,
 )
 
 @Composable

@@ -27,8 +27,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -140,6 +139,7 @@ fun SingleColumnPageDeck(
    state: SingleColumnPageDeckState,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
+   pageStackBackgroundColor: Color,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
 ) {
@@ -167,6 +167,7 @@ fun SingleColumnPageDeck(
             pageStackState,
             pageSwitcherState,
             pageStateStore,
+            pageStackBackgroundColor,
             windowInsets = windowInsets,
          )
       }
@@ -187,7 +188,9 @@ private fun SingleColumnPageStackAppBar(
       pageSwitcher,
       pageStateStore,
       windowInsets,
-      colors = TopAppBarDefaults.topAppBarColors(),
+      colors = TopAppBarDefaults.topAppBarColors(
+         containerColor = Color.Transparent,
+      ),
       modifier = modifier
    )
 }
@@ -197,6 +200,7 @@ private fun PageStackContent(
    state: PageStackState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
+   backgroundColor: Color,
    windowInsets: WindowInsets
 ) {
    val transitionState = remember(pageSwitcher) {
@@ -208,6 +212,6 @@ private fun PageStackContent(
       state.pageStack
    ) { pageStack ->
       PageContentFooter(pageStack.head, state, pageSwitcher,
-         pageStateStore, windowInsets)
+         pageStateStore, backgroundColor, windowInsets)
    }
 }

@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -142,7 +143,8 @@ class SingleColumnDeckTest {
 
          SingleColumnPageDeck(
             deckState, rememberPageSwitcherState(),
-            rememberPageStateStore(coroutineScope), WindowInsets(0),
+            rememberPageStateStore(coroutineScope),
+            pageStackBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier
                .testTag(deckTestTag)
                .width(deckWidth)
@@ -208,7 +210,8 @@ class SingleColumnDeckTest {
 
          SingleColumnPageDeck(
             deckState, rememberPageSwitcherState(),
-            rememberPageStateStore(coroutineScope), WindowInsets(0),
+            rememberPageStateStore(coroutineScope),
+            pageStackBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier.fillMaxSize()
          )
       }

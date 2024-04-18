@@ -20,6 +20,7 @@ import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.createChildTransition
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -155,7 +156,9 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       pageStateTransition
    ) { pageStack ->
       PageContentFooter(pageStack.head, pageStackState,
-         pageComposableSwitcher, pageStateStore, WindowInsets(0, 0, 0, 0)
+         pageComposableSwitcher, pageStateStore,
+         backgroundColor = MaterialTheme.colorScheme.surface,
+         WindowInsets(0, 0, 0, 0)
       )
    }
 }

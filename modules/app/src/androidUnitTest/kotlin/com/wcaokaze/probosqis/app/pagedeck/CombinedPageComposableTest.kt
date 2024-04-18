@@ -23,6 +23,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
@@ -181,7 +182,8 @@ class CombinedPageComposableTest {
                targetState = pageStackState.pageStack
             ) {
                PageContentFooter(savedPageState = it.head, pageStackState,
-                  pageSwitcherState, pageStateStore, WindowInsets(0))
+                  pageSwitcherState, pageStateStore,
+                  backgroundColor = Color.Transparent, WindowInsets(0))
             }
          }
       }
@@ -304,7 +306,8 @@ class CombinedPageComposableTest {
                targetState = pageStackState.pageStack
             ) {
                PageContentFooter(savedPageState = it.head, pageStackState,
-                  pageSwitcherState, pageStateStore, WindowInsets(0))
+                  pageSwitcherState, pageStateStore,
+                  backgroundColor = Color.Transparent, WindowInsets(0))
             }
          }
       }

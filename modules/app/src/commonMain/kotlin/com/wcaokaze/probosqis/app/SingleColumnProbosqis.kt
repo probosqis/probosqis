@@ -33,10 +33,10 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -84,7 +85,7 @@ internal fun SingleColumnProbosqis(
 
    Column(
       modifier = Modifier
-         .background(MaterialTheme.colorScheme.background)
+         .background(colorScheme.background)
          .nestedScroll(nestedScrollConnection)
    ) {
       AppBar(
@@ -92,6 +93,7 @@ internal fun SingleColumnProbosqis(
          pageDeckState,
          state.pageComposableSwitcher,
          state.pageStateStore,
+         backgroundColor = colorScheme.appBar,
          windowInsets = safeDrawingWindowInsets
             .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
       )
@@ -100,6 +102,7 @@ internal fun SingleColumnProbosqis(
          pageDeckState,
          state.pageComposableSwitcher,
          state.pageStateStore,
+         pageStackBackgroundColor = colorScheme.pageStackBackground,
          windowInsets = safeDrawingWindowInsets
             .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
          modifier = Modifier
@@ -115,53 +118,53 @@ private fun AppBar(
    deckState: SingleColumnPageDeckState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
+   backgroundColor: Color,
    windowInsets: WindowInsets
 ) {
-   Surface(
-      tonalElevation = 3.dp,
-      modifier = Modifier
+   Column(
+      Modifier
          .scrollable(rememberScrollState(), Orientation.Vertical)
-   ) {
-      Column(
-         Modifier
-            .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
-            .clipToBounds()
-            .layout { measurable, constraints ->
-               val placeable = measurable.measure(constraints)
+         .background(backgroundColor)
+         .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
+         .clipToBounds()
+         .layout { measurable, constraints ->
+            val placeable = measurable.measure(constraints)
 
-               layout(
-                  placeable.width,
-                  placeable.height + scrollState.scrollOffset.toInt()
-               ) {
-                  placeable.place(0, scrollState.scrollOffset.toInt())
-               }
+            layout(
+               placeable.width,
+               placeable.height + scrollState.scrollOffset.toInt()
+            ) {
+               placeable.place(0, scrollState.scrollOffset.toInt())
             }
-      ) {
-         TopAppBar(
-            title = {
-               Text(
-                  text = Strings.App.topAppBar,
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis
-               )
-            },
-            navigationIcon = {
-               MenuButton(
-                  onClick = {}
-               )
-            },
-            windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
-            modifier = Modifier
-               .onSizeChanged { scrollState.updateAppBarHeight(it.height) }
-         )
+         }
+   ) {
+      TopAppBar(
+         title = {
+            Text(
+               text = Strings.App.topAppBar,
+               maxLines = 1,
+               overflow = TextOverflow.Ellipsis
+            )
+         },
+         navigationIcon = {
+            MenuButton(
+               onClick = {}
+            )
+         },
+         colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent,
+         ),
+         windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
+         modifier = Modifier
+            .onSizeChanged { scrollState.updateAppBarHeight(it.height) }
+      )
 
-         SingleColumnPageDeckAppBar(
-            deckState,
-            pageSwitcher,
-            pageStateStore,
-            windowInsets = windowInsets.only(WindowInsetsSides.Horizontal)
-         )
-      }
+      SingleColumnPageDeckAppBar(
+         deckState,
+         pageSwitcher,
+         pageStateStore,
+         windowInsets = windowInsets.only(WindowInsetsSides.Horizontal)
+      )
    }
 }
 
