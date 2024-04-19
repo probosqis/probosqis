@@ -37,6 +37,7 @@ internal fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisCo
          background = materialColorScheme.background,
          appBar = materialColorScheme.surfaceColorAtElevation(3.dp),
          pageStackBackground = materialColorScheme.surface,
+         pageStackFooter = materialColorScheme.surfaceColorAtElevation(3.dp),
       )
    }
 }
@@ -46,6 +47,7 @@ internal class SingleColumnProbosqisColorScheme(
    val background: Color,
    val appBar: Color,
    val pageStackBackground: Color,
+   val pageStackFooter: Color,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,6 +73,7 @@ internal fun rememberMultiColumnProbosqisColorScheme(): MultiColumnProbosqisColo
          activePageStackAppBar,
          inactivePageStackAppBar,
          pageStackBackground = materialColorScheme.surfaceColorAtElevation(1.dp),
+         pageStackFooter = materialColorScheme.surfaceColorAtElevation(4.dp),
       )
    }
 }
@@ -82,4 +85,5 @@ internal class MultiColumnProbosqisColorScheme(
    val activePageStackAppBar: TopAppBarColors,
    val inactivePageStackAppBar: TopAppBarColors,
    val pageStackBackground: Color,
+   val pageStackFooter: Color,
 )

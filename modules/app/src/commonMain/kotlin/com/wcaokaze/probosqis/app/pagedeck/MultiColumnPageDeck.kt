@@ -73,6 +73,7 @@ fun MultiColumnPageDeck(
    activeAppBarColors: TopAppBarColors,
    inactiveAppBarColors: TopAppBarColors,
    pageStackBackgroundColor: Color,
+   pageStackFooterBackgroundColor: Color,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
    // onTopAppBarHeightChanged: (Dp) -> Unit = {}
@@ -111,6 +112,7 @@ fun MultiColumnPageDeck(
                inactiveAppBarColors
             },
             pageStackBackgroundColor,
+            pageStackFooterBackgroundColor,
             windowInsets.only(WindowInsetsSides.Bottom),
             // onTopAppBarHeightChanged,
             modifier = Modifier
@@ -142,7 +144,8 @@ private fun PageStack(
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    appBarColors: TopAppBarColors,
-   backgroundColor: Color,
+   contentBackgroundColor: Color,
+   footerBackgroundColor: Color,
    windowInsets: WindowInsets,
    // onTopAppBarHeightChanged: (Dp) -> Unit,
    modifier: Modifier = Modifier
@@ -150,7 +153,7 @@ private fun PageStack(
    Column(
       modifier
          .clip(MaterialTheme.shapes.large)
-         .background(backgroundColor)
+         .background(contentBackgroundColor)
    ) {
       // val density by rememberUpdatedState(LocalDensity.current)
 
@@ -176,7 +179,8 @@ private fun PageStack(
          state.pageStack
       ) { pageStack ->
          PageContentFooter(pageStack.head, state, pageSwitcherState,
-            pageStateStore, backgroundColor, windowInsets)
+            pageStateStore, contentBackgroundColor, footerBackgroundColor,
+            windowInsets)
       }
    }
 }

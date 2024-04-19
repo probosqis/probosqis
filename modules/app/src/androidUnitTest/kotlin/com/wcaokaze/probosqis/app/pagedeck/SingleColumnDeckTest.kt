@@ -144,7 +144,8 @@ class SingleColumnDeckTest {
          SingleColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope),
-            pageStackBackgroundColor = Color.Transparent, WindowInsets(0),
+            pageStackBackgroundColor = Color.Transparent,
+            pageStackFooterBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier
                .testTag(deckTestTag)
                .width(deckWidth)
@@ -211,7 +212,8 @@ class SingleColumnDeckTest {
          SingleColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope),
-            pageStackBackgroundColor = Color.Transparent, WindowInsets(0),
+            pageStackBackgroundColor = Color.Transparent,
+            pageStackFooterBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier.fillMaxSize()
          )
       }

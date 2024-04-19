@@ -54,7 +54,6 @@ class CombinedPageComposableTest {
    private class PageAState : PageState()
    private class PageBState : PageState()
 
-
    @Test
    fun pageComposableCalled() {
       var pageAHeaderComposed = false
@@ -183,7 +182,9 @@ class CombinedPageComposableTest {
             ) {
                PageContentFooter(savedPageState = it.head, pageStackState,
                   pageSwitcherState, pageStateStore,
-                  backgroundColor = Color.Transparent, WindowInsets(0))
+                  contentBackgroundColor = Color.Transparent,
+                  footerBackgroundColor = Color.Transparent,
+                  WindowInsets(0))
             }
          }
       }
@@ -307,7 +308,9 @@ class CombinedPageComposableTest {
             ) {
                PageContentFooter(savedPageState = it.head, pageStackState,
                   pageSwitcherState, pageStateStore,
-                  backgroundColor = Color.Transparent, WindowInsets(0))
+                  contentBackgroundColor = Color.Transparent,
+                  footerBackgroundColor = Color.Transparent,
+                  WindowInsets(0))
             }
          }
       }

@@ -28,10 +28,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
@@ -128,7 +126,8 @@ class PageStackState internal constructor(
 private fun <P : Page, S : PageState> extractPageComposable(
    combined: CombinedPageComposable<P, S>,
    pageStackState: State<PageStackState>,
-   backgroundColor: State<Color>,
+   contentBackgroundColor: State<Color>,
+   footerBackgroundColor: State<Color>,
    windowInsets: State<WindowInsets>
 ): PageComposable<P, S> {
    return PageComposable(
@@ -137,7 +136,8 @@ private fun <P : Page, S : PageState> extractPageComposable(
       composable = { page, pageState ->
          PageContentFooter(
             combined, page, pageState, pageStackState.value,
-            backgroundColor.value, windowInsets.value)
+            contentBackgroundColor.value, footerBackgroundColor.value,
+            windowInsets.value)
       }
    )
 }
@@ -148,18 +148,21 @@ fun PageContentFooter(
    pageStackState: PageStackState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
-   backgroundColor: Color,
+   contentBackgroundColor: Color,
+   footerBackgroundColor: Color,
    windowInsets: WindowInsets
 ) {
    val updatedPageStackState = rememberUpdatedState(pageStackState)
-   val updatedBackgroundColor = rememberUpdatedState(backgroundColor)
+   val updatedContentBackgroundColor = rememberUpdatedState(contentBackgroundColor)
    val updatedWindowInsets = rememberUpdatedState(windowInsets)
+   val updatedFooterBackgroundColor = rememberUpdatedState(footerBackgroundColor)
 
    val switcherState = remember(pageSwitcher, pageStateStore) {
       PageSwitcherState(
          pageSwitcher.allPageComposables.map {
             extractPageComposable(it, updatedPageStackState,
-               updatedBackgroundColor, updatedWindowInsets)
+               updatedContentBackgroundColor, updatedFooterBackgroundColor,
+               updatedWindowInsets)
          },
          pageStateStore
       )
@@ -174,7 +177,8 @@ private fun <P : Page, S : PageState> PageContentFooter(
    page: P,
    pageState: S,
    pageStackState: PageStackState,
-   backgroundColor: Color,
+   contentBackgroundColor: Color,
+   footerBackgroundColor: Color,
    windowInsets: WindowInsets
 ) {
    Box(Modifier.transitionElement(PageLayoutIds.root)) {
@@ -182,7 +186,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
          Modifier
             .transitionElement(PageLayoutIds.background)
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(contentBackgroundColor)
       )
 
       val footerComposable = combined.footerComposable
@@ -198,7 +202,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
       if (footerComposable != null) {
          PageFooter(
             footerComposable, page, pageState,
-            pageStackState, windowInsets,
+            pageStackState, footerBackgroundColor, windowInsets,
             Modifier
                .transitionElement(PageLayoutIds.footer)
                .align(Alignment.BottomCenter)
@@ -234,19 +238,16 @@ internal fun <P : Page, S : PageState> PageFooter(
    page: P,
    pageState: S,
    pageStackState: PageStackState,
+   backgroundColor: Color,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier
 ) {
-   val absoluteElevation = LocalAbsoluteTonalElevation.current
-   val background = MaterialTheme.colorScheme
-      .surfaceColorAtElevation(absoluteElevation + 3.dp)
-
    val footerWindowInsets = windowInsets
       .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
 
    Box(
       modifier = modifier
-         .background(background)
+         .background(backgroundColor)
          .pointerInput(Unit) {}
          .windowInsetsPadding(footerWindowInsets)
          .fillMaxWidth()

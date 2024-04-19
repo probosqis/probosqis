@@ -140,6 +140,7 @@ fun SingleColumnPageDeck(
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    pageStackBackgroundColor: Color,
+   pageStackFooterBackgroundColor: Color,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
 ) {
@@ -168,6 +169,7 @@ fun SingleColumnPageDeck(
             pageSwitcherState,
             pageStateStore,
             pageStackBackgroundColor,
+            pageStackFooterBackgroundColor,
             windowInsets = windowInsets,
          )
       }
@@ -201,6 +203,7 @@ private fun PageStackContent(
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    backgroundColor: Color,
+   footerBackgroundColor: Color,
    windowInsets: WindowInsets
 ) {
    val transitionState = remember(pageSwitcher) {
@@ -212,6 +215,6 @@ private fun PageStackContent(
       state.pageStack
    ) { pageStack ->
       PageContentFooter(pageStack.head, state, pageSwitcher,
-         pageStateStore, backgroundColor, windowInsets)
+         pageStateStore, backgroundColor, footerBackgroundColor,windowInsets)
    }
 }

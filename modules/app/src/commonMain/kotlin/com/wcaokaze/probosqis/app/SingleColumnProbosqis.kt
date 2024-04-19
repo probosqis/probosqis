@@ -102,7 +102,8 @@ internal fun SingleColumnProbosqis(
          pageDeckState,
          state.pageComposableSwitcher,
          state.pageStateStore,
-         pageStackBackgroundColor = colorScheme.pageStackBackground,
+         colorScheme.pageStackBackground,
+         colorScheme.pageStackFooter,
          windowInsets = safeDrawingWindowInsets
             .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
          modifier = Modifier

@@ -87,6 +87,7 @@ internal fun MultiColumnProbosqis(
             colorScheme.activePageStackAppBar,
             colorScheme.inactivePageStackAppBar,
             colorScheme.pageStackBackground,
+            colorScheme.pageStackFooter,
             windowInsets = safeDrawingWindowInsets
                .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
             // onTopAppBarHeightChanged = { pageStackTopAppBarHeight = it },

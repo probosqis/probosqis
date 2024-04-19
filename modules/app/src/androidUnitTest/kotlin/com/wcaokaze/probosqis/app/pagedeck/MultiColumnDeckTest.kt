@@ -141,7 +141,8 @@ class MultiColumnDeckTest {
             rememberPageStateStore(coroutineScope), pageStackCount = 2,
             activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
             inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
-            pageStackBackgroundColor = Color.Transparent, WindowInsets(0),
+            pageStackBackgroundColor = Color.Transparent,
+            pageStackFooterBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier.fillMaxSize()
          )
       }
@@ -188,7 +189,8 @@ class MultiColumnDeckTest {
             rememberPageStateStore(coroutineScope), pageStackCount = 2,
             activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
             inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
-            pageStackBackgroundColor = Color.Transparent, WindowInsets(0),
+            pageStackBackgroundColor = Color.Transparent,
+            pageStackFooterBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier.fillMaxSize()
          )
       }
@@ -237,6 +239,7 @@ class MultiColumnDeckTest {
             activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
             inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
             pageStackBackgroundColor = Color.Transparent,
+            pageStackFooterBackgroundColor = Color.Transparent,
             WindowInsets(left = 32.dp, right = 32.dp),
             modifier = Modifier.fillMaxSize()
          )
@@ -292,7 +295,8 @@ class MultiColumnDeckTest {
             rememberPageStateStore(coroutineScope), pageStackCount = 2,
             activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
             inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
-            pageStackBackgroundColor = Color.Transparent, WindowInsets(0),
+            pageStackBackgroundColor = Color.Transparent,
+            pageStackFooterBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier.fillMaxSize()
          )
       }

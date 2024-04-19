@@ -21,9 +21,11 @@ import androidx.compose.animation.core.createChildTransition
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.app.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.app.pagedeck.LazyPageStackState
@@ -157,7 +159,8 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
    ) { pageStack ->
       PageContentFooter(pageStack.head, pageStackState,
          pageComposableSwitcher, pageStateStore,
-         backgroundColor = MaterialTheme.colorScheme.surface,
+         contentBackgroundColor = MaterialTheme.colorScheme.surface,
+         footerBackgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
          WindowInsets(0, 0, 0, 0)
       )
    }
