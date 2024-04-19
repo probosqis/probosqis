@@ -22,10 +22,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -137,7 +139,10 @@ class MultiColumnDeckTest {
          MultiColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope), pageStackCount = 2,
-            WindowInsets(0), modifier = Modifier.fillMaxSize()
+            activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
+            inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
+            pageStackBackgroundColor = Color.Transparent, WindowInsets(0),
+            modifier = Modifier.fillMaxSize()
          )
       }
 
@@ -181,7 +186,10 @@ class MultiColumnDeckTest {
          MultiColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope), pageStackCount = 2,
-            WindowInsets(0), modifier = Modifier.fillMaxSize()
+            activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
+            inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
+            pageStackBackgroundColor = Color.Transparent, WindowInsets(0),
+            modifier = Modifier.fillMaxSize()
          )
       }
 
@@ -226,6 +234,9 @@ class MultiColumnDeckTest {
          MultiColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope), pageStackCount = 2,
+            activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
+            inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
+            pageStackBackgroundColor = Color.Transparent,
             WindowInsets(left = 32.dp, right = 32.dp),
             modifier = Modifier.fillMaxSize()
          )
@@ -279,7 +290,10 @@ class MultiColumnDeckTest {
          MultiColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope), pageStackCount = 2,
-            WindowInsets(0), modifier = Modifier.fillMaxSize()
+            activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
+            inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
+            pageStackBackgroundColor = Color.Transparent, WindowInsets(0),
+            modifier = Modifier.fillMaxSize()
          )
       }
 

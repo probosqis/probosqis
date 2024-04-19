@@ -17,17 +17,15 @@
 package com.wcaokaze.probosqis.app.pagedeck
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -37,7 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
@@ -71,6 +70,9 @@ fun MultiColumnPageDeck(
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    pageStackCount: Int,
+   activeAppBarColors: TopAppBarColors,
+   inactiveAppBarColors: TopAppBarColors,
+   pageStackBackgroundColor: Color,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
    // onTopAppBarHeightChanged: (Dp) -> Unit = {}
@@ -101,10 +103,15 @@ fun MultiColumnPageDeck(
 
          PageStack(
             pageStackState,
-            isActive = state.activeCardIndex == index,
-            windowInsets.only(WindowInsetsSides.Bottom),
             pageSwitcherState,
             pageStateStore,
+            appBarColors = if (state.activeCardIndex == index) {
+               activeAppBarColors
+            } else {
+               inactiveAppBarColors
+            },
+            pageStackBackgroundColor,
+            windowInsets.only(WindowInsetsSides.Bottom),
             // onTopAppBarHeightChanged,
             modifier = Modifier
                .detectTouch(
@@ -132,48 +139,44 @@ private fun ActiveCardCorrector(state: MultiColumnPageDeckState) {
 @Composable
 private fun PageStack(
    state: PageStackState,
-   isActive: Boolean,
-   windowInsets: WindowInsets,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
+   appBarColors: TopAppBarColors,
+   backgroundColor: Color,
+   windowInsets: WindowInsets,
    // onTopAppBarHeightChanged: (Dp) -> Unit,
    modifier: Modifier = Modifier
 ) {
-   Surface(
-      shape = MaterialTheme.shapes.large,
-      tonalElevation = 1.dp,
-      modifier = modifier
+   Column(
+      modifier
+         .clip(MaterialTheme.shapes.large)
+         .background(backgroundColor)
    ) {
-      Column {
-         // val density by rememberUpdatedState(LocalDensity.current)
+      // val density by rememberUpdatedState(LocalDensity.current)
 
-         MultiColumnPageStackAppBar(
-            state,
-            pageSwitcherState,
-            pageStateStore,
-            isActive,
-            // modifier = Modifier
-            //    .onSizeChanged {
-            //       val heightPx = it.height
-            //       val heightDp = with (density) { heightPx.toDp() }
-            //       onTopAppBarHeightChanged(heightDp)
-            //    }
-         )
+      MultiColumnPageStackAppBar(
+         state,
+         pageSwitcherState,
+         pageStateStore,
+         appBarColors,
+         // modifier = Modifier
+         //    .onSizeChanged {
+         //       val heightPx = it.height
+         //       val heightDp = with (density) { heightPx.toDp() }
+         //       onTopAppBarHeightChanged(heightDp)
+         //    }
+      )
 
-         val transitionState = remember(pageSwitcherState) {
-            PageTransitionStateImpl(pageSwitcherState)
-         }
+      val transitionState = remember(pageSwitcherState) {
+         PageTransitionStateImpl(pageSwitcherState)
+      }
 
-         PageTransition(
-            transitionState,
-            state.pageStack
-         ) { pageStack ->
-            val backgroundColor = MaterialTheme.colorScheme
-               .surfaceColorAtElevation(LocalAbsoluteTonalElevation.current)
-
-            PageContentFooter(pageStack.head, state, pageSwitcherState,
-               pageStateStore, backgroundColor, windowInsets)
-         }
+      PageTransition(
+         transitionState,
+         state.pageStack
+      ) { pageStack ->
+         PageContentFooter(pageStack.head, state, pageSwitcherState,
+            pageStateStore, backgroundColor, windowInsets)
       }
    }
 }
@@ -184,25 +187,9 @@ private fun MultiColumnPageStackAppBar(
    pageStackState: PageStackState,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
-   isActive: Boolean,
+   colors: TopAppBarColors,
    modifier: Modifier = Modifier
 ) {
-   val colorScheme = MaterialTheme.colorScheme
-
-   val colors = if (isActive) {
-      TopAppBarDefaults.topAppBarColors(
-         containerColor = colorScheme.surfaceTint.copy(alpha = 0.13f)
-            .compositeOver(MaterialTheme.colorScheme.primaryContainer),
-         navigationIconContentColor = colorScheme.onPrimaryContainer,
-         titleContentColor = colorScheme.onPrimaryContainer,
-         actionIconContentColor = colorScheme.onPrimaryContainer,
-      )
-   } else {
-      TopAppBarDefaults.topAppBarColors(
-         containerColor = colorScheme.surfaceColorAtElevation(3.dp),
-      )
-   }
-
    @OptIn(ExperimentalMaterial3Api::class)
    PageStackAppBar(
       pageStackState,
