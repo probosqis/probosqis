@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.app
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarColors
@@ -55,26 +56,51 @@ internal class SingleColumnProbosqisColorScheme(
 internal fun rememberMultiColumnProbosqisColorScheme(): MultiColumnProbosqisColorScheme {
    val materialColorScheme = MaterialTheme.colorScheme
 
-   val activePageStackAppBar = TopAppBarDefaults.topAppBarColors(
-      containerColor = materialColorScheme.surfaceTint.copy(alpha = 0.13f)
-         .compositeOver(materialColorScheme.primaryContainer),
-      navigationIconContentColor = materialColorScheme.onPrimaryContainer,
-      titleContentColor = materialColorScheme.onPrimaryContainer,
-      actionIconContentColor = materialColorScheme.onPrimaryContainer,
-   )
-
-   val inactivePageStackAppBar = TopAppBarDefaults.topAppBarColors(
-      containerColor = materialColorScheme.surfaceColorAtElevation(3.dp),
-   )
-
-   return remember(materialColorScheme) {
-      MultiColumnProbosqisColorScheme(
-         background = materialColorScheme.background,
-         activePageStackAppBar,
-         inactivePageStackAppBar,
-         pageStackBackground = materialColorScheme.surfaceColorAtElevation(1.dp),
-         pageStackFooter = materialColorScheme.surfaceColorAtElevation(4.dp),
+   if (isSystemInDarkTheme()) {
+      val activePageStackAppBar = TopAppBarDefaults.topAppBarColors(
+         containerColor = materialColorScheme.primaryContainer
+            .let { materialColorScheme.surface    .copy(alpha = 0.75f).compositeOver(it) }
+            .let { materialColorScheme.surfaceTint.copy(alpha = 0.15f).compositeOver(it) },
+         navigationIconContentColor = materialColorScheme.onPrimaryContainer,
+         titleContentColor = materialColorScheme.onPrimaryContainer,
+         actionIconContentColor = materialColorScheme.onPrimaryContainer,
       )
+
+      val inactivePageStackAppBar = TopAppBarDefaults.topAppBarColors(
+         containerColor = materialColorScheme.surfaceColorAtElevation(6.dp),
+      )
+
+      return remember(materialColorScheme) {
+         MultiColumnProbosqisColorScheme(
+            background = materialColorScheme.surface,
+            activePageStackAppBar,
+            inactivePageStackAppBar,
+            pageStackBackground = materialColorScheme.surfaceColorAtElevation(1.dp),
+            pageStackFooter = materialColorScheme.surfaceColorAtElevation(6.dp),
+         )
+      }
+   } else {
+      val activePageStackAppBar = TopAppBarDefaults.topAppBarColors(
+         containerColor = materialColorScheme.primaryContainer
+            .let { materialColorScheme.surface.copy(alpha = 0.5f).compositeOver(it) },
+         navigationIconContentColor = materialColorScheme.onPrimaryContainer,
+         titleContentColor = materialColorScheme.onPrimaryContainer,
+         actionIconContentColor = materialColorScheme.onPrimaryContainer,
+      )
+
+      val inactivePageStackAppBar = TopAppBarDefaults.topAppBarColors(
+         containerColor = materialColorScheme.surfaceColorAtElevation(6.dp),
+      )
+
+      return remember(materialColorScheme) {
+         MultiColumnProbosqisColorScheme(
+            background = materialColorScheme.surfaceColorAtElevation(1.dp),
+            activePageStackAppBar,
+            inactivePageStackAppBar,
+            pageStackBackground = materialColorScheme.surface,
+            pageStackFooter = materialColorScheme.surfaceColorAtElevation(6.dp),
+         )
+      }
    }
 }
 
