@@ -32,47 +32,50 @@ import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
+import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.collections.immutable.persistentListOf
 import java.io.File
 
 fun main() {
    application {
-      Window(
-         title = Strings.App.topAppBar,
-         onCloseRequest = { exitApplication() }
-      ) {
-         val coroutineScope = rememberCoroutineScope()
+      ProbosqisTheme {
+         Window(
+            title = Strings.App.topAppBar,
+            onCloseRequest = { exitApplication() }
+         ) {
+            val coroutineScope = rememberCoroutineScope()
 
-         val probosqisState = remember {
-            val probosqisDataDir
-                  = File(System.getProperty("user.home"), ".probosqisData")
+            val probosqisState = remember {
+               val probosqisDataDir
+                     = File(System.getProperty("user.home"), ".probosqisData")
 
-            val allPageComposables = persistentListOf(
-               testPageComposable,
-               testTimelinePageComposable,
-               testNotePageComposable,
-            )
+               val allPageComposables = persistentListOf(
+                  testPageComposable,
+                  testTimelinePageComposable,
+                  testNotePageComposable,
+               )
 
-            val pageStackRepository = DesktopPageStackRepository(
-               allPageSerializers = listOf(
-                  pageSerializer<TestPage>(),
-                  pageSerializer<TestTimelinePage>(),
-                  pageSerializer<TestNotePage>(),
-               ),
-               probosqisDataDir
-            )
+               val pageStackRepository = DesktopPageStackRepository(
+                  allPageSerializers = listOf(
+                     pageSerializer<TestPage>(),
+                     pageSerializer<TestTimelinePage>(),
+                     pageSerializer<TestNotePage>(),
+                  ),
+                  probosqisDataDir
+               )
 
-            val pageDeckRepository = DesktopPageDeckRepository(
-               pageStackRepository,
-               probosqisDataDir
-            )
+               val pageDeckRepository = DesktopPageDeckRepository(
+                  pageStackRepository,
+                  probosqisDataDir
+               )
 
-            ProbosqisState(allPageComposables, pageDeckRepository,
-               pageStackRepository, coroutineScope)
+               ProbosqisState(allPageComposables, pageDeckRepository,
+                  pageStackRepository, coroutineScope)
+            }
+
+            Probosqis(probosqisState)
          }
-
-         Probosqis(probosqisState)
       }
    }
 }

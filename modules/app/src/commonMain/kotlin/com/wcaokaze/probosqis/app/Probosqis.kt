@@ -108,13 +108,11 @@ fun Probosqis(
    state: ProbosqisState,
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
-   ProbosqisTheme {
-      BoxWithConstraints {
-         if (maxWidth < 512.dp) {
-            SingleColumnProbosqis(state, safeDrawingWindowInsets = safeDrawingWindowInsets)
-         } else {
-            MultiColumnProbosqis(state, safeDrawingWindowInsets = safeDrawingWindowInsets)
-         }
+   BoxWithConstraints {
+      if (maxWidth < 512.dp) {
+         SingleColumnProbosqis(state, safeDrawingWindowInsets = safeDrawingWindowInsets)
+      } else {
+         MultiColumnProbosqis(state, safeDrawingWindowInsets = safeDrawingWindowInsets)
       }
    }
 }
