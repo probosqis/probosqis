@@ -43,7 +43,7 @@ import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
 
 @Composable
-internal fun MultiColumnProbosqis(
+fun MultiColumnProbosqis(
    state: ProbosqisState,
    colorScheme: MultiColumnProbosqisColorScheme = rememberMultiColumnProbosqisColorScheme(),
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing

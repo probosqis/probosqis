@@ -38,6 +38,7 @@ dependencyResolutionManagement {
          version('compose-jb', '1.5.11')
          version('compose-androidx', '1.5.4')
          version('compose-compiler', '1.5.7')
+         version('compose-material3', '1.2.1')
          version('accompanist', '0.32.0')
          version('roborazzi', '1.7.0-rc-1')
 
@@ -55,6 +56,7 @@ dependencyResolutionManagement {
          library('android-desugaring-jdk', 'com.android.tools', 'desugar_jdk_libs').version('1.2.2')
 
          library('androidx-activity-compose', 'androidx.activity', 'activity-compose').version('1.8.2')
+         library('androidx-compose-material3-window-size', 'androidx.compose.material3', 'material3-window-size-class').versionRef('compose-material3')
          library('accompanist-pager', 'com.google.accompanist', 'accompanist-pager').versionRef('accompanist')
 
          library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.6.2')

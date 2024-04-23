@@ -21,7 +21,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.wcaokaze.probosqis.app.App
-import com.wcaokaze.probosqis.app.Probosqis
+import com.wcaokaze.probosqis.app.MultiColumnProbosqis
 import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.TestNotePage
 import com.wcaokaze.probosqis.app.TestPage
@@ -74,7 +74,7 @@ fun main() {
                   pageStackRepository, coroutineScope)
             }
 
-            Probosqis(probosqisState)
+            MultiColumnProbosqis(probosqisState)
          }
       }
    }

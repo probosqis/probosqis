@@ -30,7 +30,7 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 
 @Composable
-internal fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisColorScheme {
+fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisColorScheme {
    val materialColorScheme = MaterialTheme.colorScheme
 
    return remember(materialColorScheme) {
@@ -44,7 +44,7 @@ internal fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisCo
 }
 
 @Immutable
-internal class SingleColumnProbosqisColorScheme(
+class SingleColumnProbosqisColorScheme(
    val background: Color,
    val appBar: Color,
    val pageStackBackground: Color,
@@ -53,7 +53,7 @@ internal class SingleColumnProbosqisColorScheme(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun rememberMultiColumnProbosqisColorScheme(): MultiColumnProbosqisColorScheme {
+fun rememberMultiColumnProbosqisColorScheme(): MultiColumnProbosqisColorScheme {
    val materialColorScheme = MaterialTheme.colorScheme
 
    if (isSystemInDarkTheme()) {
@@ -106,7 +106,7 @@ internal fun rememberMultiColumnProbosqisColorScheme(): MultiColumnProbosqisColo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Immutable
-internal class MultiColumnProbosqisColorScheme(
+class MultiColumnProbosqisColorScheme(
    val background: Color,
    val activePageStackAppBar: TopAppBarColors,
    val inactivePageStackAppBar: TopAppBarColors,

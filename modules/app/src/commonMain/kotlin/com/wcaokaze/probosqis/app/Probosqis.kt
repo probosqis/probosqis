@@ -102,17 +102,3 @@ class ProbosqisState(
          .toImmutableList()
    }
 }
-
-@Composable
-fun Probosqis(
-   state: ProbosqisState,
-   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
-) {
-   BoxWithConstraints {
-      if (maxWidth < 512.dp) {
-         SingleColumnProbosqis(state, safeDrawingWindowInsets = safeDrawingWindowInsets)
-      } else {
-         MultiColumnProbosqis(state, safeDrawingWindowInsets = safeDrawingWindowInsets)
-      }
-   }
-}

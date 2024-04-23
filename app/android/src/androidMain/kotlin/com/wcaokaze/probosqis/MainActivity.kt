@@ -27,6 +27,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -40,8 +43,9 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.app.Probosqis
+import com.wcaokaze.probosqis.app.MultiColumnProbosqis
 import com.wcaokaze.probosqis.app.ProbosqisState
+import com.wcaokaze.probosqis.app.SingleColumnProbosqis
 import com.wcaokaze.probosqis.app.TestNotePage
 import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.TestTimelinePage
@@ -93,7 +97,14 @@ class MainActivity : ComponentActivity() {
 
             NavigationBarController()
 
-            Probosqis(probosqisState)
+            @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+            val windowSizeClass = calculateWindowSizeClass(activity = this)
+
+            if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
+               MultiColumnProbosqis(probosqisState)
+            } else {
+               SingleColumnProbosqis(probosqisState)
+            }
          }
       }
    }
