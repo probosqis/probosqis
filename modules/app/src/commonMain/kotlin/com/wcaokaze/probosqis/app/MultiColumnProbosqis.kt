@@ -61,7 +61,7 @@ fun MultiColumnProbosqis(
       // }
       // var pageStackTopAppBarHeight by remember { mutableStateOf(64.dp) }
 
-      val pageStackCount = (maxWidth / 330.dp).toInt()
+      val pageStackCount = (maxWidth / 330.dp).toInt().coerceAtLeast(1)
 
       Column {
          AppBar(
