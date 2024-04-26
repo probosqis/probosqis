@@ -116,8 +116,15 @@ class MainActivity : ComponentActivity() {
       val density = LocalDensity.current
       val layoutDirection = LocalLayoutDirection.current
 
-      LaunchedEffect(colorScheme, navigationBarsInsets, layoutDirection) {
-         updateSystemBarColors(colorScheme, navigationBarsInsets, density, layoutDirection)
+      @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+      val windowSizeClass = calculateWindowSizeClass(activity = this)
+
+      LaunchedEffect(
+         colorScheme, navigationBarsInsets, density, layoutDirection,
+         windowSizeClass
+      ) {
+         updateSystemBarColors(colorScheme, windowSizeClass.widthSizeClass,
+            navigationBarsInsets, density, layoutDirection)
       }
    }
 
@@ -143,6 +150,7 @@ class MainActivity : ComponentActivity() {
 
    private fun updateSystemBarColors(
       colorScheme: ColorScheme,
+      windowWidthClass: WindowWidthSizeClass,
       navigationBarsInsets: WindowInsets,
       density: Density,
       layoutDirection: LayoutDirection
@@ -150,13 +158,21 @@ class MainActivity : ComponentActivity() {
       val lightNavigationBarScrim: Color
       val darkNavigationBarScrim:  Color
 
-      // ナビゲーションバーが画面下部にあって十分に低い場合透明にする
-      // 具体的には2ボタン、3ボタンでは半透明、ジェスチャーナビゲーションでは透明
-      val shouldTransparentNavigationBar =
-         navigationBarsInsets.getBottom(density) <= with (density) { 32.dp.toPx() }
-               && navigationBarsInsets.getLeft (density, layoutDirection) <= 0
-               && navigationBarsInsets.getTop  (density)                  <= 0
-               && navigationBarsInsets.getRight(density, layoutDirection) <= 0
+      val isNavigationBarBottom
+            =  navigationBarsInsets.getBottom(density)                  >  0
+            && navigationBarsInsets.getLeft  (density, layoutDirection) <= 0
+            && navigationBarsInsets.getTop   (density)                  <= 0
+            && navigationBarsInsets.getRight (density, layoutDirection) <= 0
+
+      // ナビゲーションバーが十分に薄いときtrue
+      // 具体的にはジェスチャーナビゲーションのときtrue、2ボタン、3ボタンのときfalse
+      val isNavigationBarThin
+            = navigationBarsInsets.getBottom(density) <= with (density) { 32.dp.toPx() }
+
+      val isSingleColumn = windowWidthClass <= WindowWidthSizeClass.Medium
+
+      val shouldTransparentNavigationBar
+            = isNavigationBarBottom && (isNavigationBarThin || isSingleColumn)
 
       if (shouldTransparentNavigationBar) {
          lightNavigationBarScrim = Color.Transparent
