@@ -53,6 +53,8 @@ kotlin {
       androidMain.dependencies {
          implementation project(':capsiqum')
          implementation project(':modules:app')
+         implementation project(':modules:resources')
+         implementation libs.androidx.compose.material3.window.size
       }
    }
 }

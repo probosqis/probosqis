@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.app.pagedeck
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -24,57 +25,30 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarColors
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
 import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.deck.MultiColumnDeck
 import com.wcaokaze.probosqis.capsiqum.deck.MultiColumnDeckState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-
-object MultiColumnPageDeckDefaults {
-   @ExperimentalMaterial3Api
-   @Composable
-   fun pageStackAppBarColors(): MultiColumnPageStackAppBarColors {
-      val colorScheme = MaterialTheme.colorScheme
-
-      return MultiColumnPageStackAppBarColors(
-         active = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorScheme.surfaceTint.copy(alpha = 0.13f)
-               .compositeOver(MaterialTheme.colorScheme.primaryContainer),
-            navigationIconContentColor = colorScheme.onPrimaryContainer,
-            titleContentColor = colorScheme.onPrimaryContainer,
-            actionIconContentColor = colorScheme.onPrimaryContainer,
-         ),
-         inactive = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorScheme.surfaceColorAtElevation(4.dp),
-         )
-      )
-   }
-}
 
 @Stable
 class MultiColumnPageDeckState(
@@ -90,27 +64,22 @@ class MultiColumnPageDeckState(
 }
 
 @ExperimentalMaterial3Api
-@Immutable
-data class MultiColumnPageStackAppBarColors(
-   val active: TopAppBarColors,
-   val inactive: TopAppBarColors
-)
-
-@ExperimentalMaterial3Api
 @Composable
 fun MultiColumnPageDeck(
    state: MultiColumnPageDeckState,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    pageStackCount: Int,
+   activeAppBarColors: TopAppBarColors,
+   inactiveAppBarColors: TopAppBarColors,
+   pageStackBackgroundColor: Color,
+   pageStackFooterBackgroundColor: Color,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
-   pageStackAppBarColors: MultiColumnPageStackAppBarColors
-         = MultiColumnPageDeckDefaults.pageStackAppBarColors(),
-   onTopAppBarHeightChanged: (Dp) -> Unit = {}
+   // onTopAppBarHeightChanged: (Dp) -> Unit = {}
 ) {
    ActiveCardCorrector(state)
-   
+
    val coroutineScope = rememberCoroutineScope()
    LaunchedEffect(coroutineScope) {
       state.setCoroutineScope(coroutineScope)
@@ -135,12 +104,17 @@ fun MultiColumnPageDeck(
 
          PageStack(
             pageStackState,
-            isActive = state.activeCardIndex == index,
-            windowInsets.only(WindowInsetsSides.Bottom),
-            pageStackAppBarColors,
             pageSwitcherState,
             pageStateStore,
-            onTopAppBarHeightChanged,
+            appBarColors = if (state.activeCardIndex == index) {
+               activeAppBarColors
+            } else {
+               inactiveAppBarColors
+            },
+            pageStackBackgroundColor,
+            pageStackFooterBackgroundColor,
+            windowInsets.only(WindowInsetsSides.Bottom),
+            // onTopAppBarHeightChanged,
             modifier = Modifier
                .detectTouch(
                   onTouch = { state.activeCardIndex = index }
@@ -167,48 +141,46 @@ private fun ActiveCardCorrector(state: MultiColumnPageDeckState) {
 @Composable
 private fun PageStack(
    state: PageStackState,
-   isActive: Boolean,
-   windowInsets: WindowInsets,
-   appBarColors: MultiColumnPageStackAppBarColors,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
-   onTopAppBarHeightChanged: (Dp) -> Unit,
+   appBarColors: TopAppBarColors,
+   contentBackgroundColor: Color,
+   footerBackgroundColor: Color,
+   windowInsets: WindowInsets,
+   // onTopAppBarHeightChanged: (Dp) -> Unit,
    modifier: Modifier = Modifier
 ) {
-   Surface(
-      shape = MaterialTheme.shapes.large,
-      tonalElevation = if (isActive) { 3.dp } else { 1.dp },
-      shadowElevation = if (isActive) { 4.dp } else { 2.dp },
-      modifier = modifier
+   Column(
+      modifier
+         .clip(MaterialTheme.shapes.large)
+         .background(contentBackgroundColor)
    ) {
-      Column {
-         val density by rememberUpdatedState(LocalDensity.current)
+      // val density by rememberUpdatedState(LocalDensity.current)
 
-         MultiColumnPageStackAppBar(
-            state,
-            pageSwitcherState,
-            pageStateStore,
-            isActive,
-            appBarColors,
-            modifier = Modifier
-               .onSizeChanged {
-                  val heightPx = it.height
-                  val heightDp = with (density) { heightPx.toDp() }
-                  onTopAppBarHeightChanged(heightDp)
-               }
-         )
+      MultiColumnPageStackAppBar(
+         state,
+         pageSwitcherState,
+         pageStateStore,
+         appBarColors,
+         // modifier = Modifier
+         //    .onSizeChanged {
+         //       val heightPx = it.height
+         //       val heightDp = with (density) { heightPx.toDp() }
+         //       onTopAppBarHeightChanged(heightDp)
+         //    }
+      )
 
-         val transitionState = remember(pageSwitcherState) {
-            PageTransitionStateImpl(pageSwitcherState)
-         }
+      val transitionState = remember(pageSwitcherState) {
+         PageTransitionStateImpl(pageSwitcherState)
+      }
 
-         PageTransition(
-            transitionState,
-            state.pageStack
-         ) { pageStack ->
-            PageContentFooter(pageStack.head, state, pageSwitcherState,
-               pageStateStore, windowInsets)
-         }
+      PageTransition(
+         transitionState,
+         state.pageStack
+      ) { pageStack ->
+         PageContentFooter(pageStack.head, state, pageSwitcherState,
+            pageStateStore, contentBackgroundColor, footerBackgroundColor,
+            windowInsets)
       }
    }
 }
@@ -219,8 +191,7 @@ private fun MultiColumnPageStackAppBar(
    pageStackState: PageStackState,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
-   isActive: Boolean,
-   colors: MultiColumnPageStackAppBarColors,
+   colors: TopAppBarColors,
    modifier: Modifier = Modifier
 ) {
    @OptIn(ExperimentalMaterial3Api::class)
@@ -228,8 +199,8 @@ private fun MultiColumnPageStackAppBar(
       pageStackState,
       pageSwitcherState,
       pageStateStore,
-      windowInsets = WindowInsets(0),
-      colors = if (isActive) { colors.active } else { colors.inactive },
+      WindowInsets(0),
+      colors,
       modifier = modifier
    )
 }

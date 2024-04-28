@@ -82,5 +82,5 @@ private fun ProbosqisPreview() {
          pageStackRepository, coroutineScope)
    }
 
-   Probosqis(probosqisState)
+   MultiColumnProbosqis(probosqisState)
 }

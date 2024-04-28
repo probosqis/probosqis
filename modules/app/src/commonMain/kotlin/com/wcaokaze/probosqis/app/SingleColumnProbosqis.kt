@@ -33,7 +33,6 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -45,7 +44,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -54,18 +52,18 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.CombinedPageSwitcherState
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
 
 @Composable
-internal fun SingleColumnProbosqis(
+fun SingleColumnProbosqis(
    state: ProbosqisState,
+   colorScheme: SingleColumnProbosqisColorScheme = rememberSingleColumnProbosqisColorScheme(),
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    val pageDeckState = remember(state) {
@@ -85,6 +83,7 @@ internal fun SingleColumnProbosqis(
 
    Column(
       modifier = Modifier
+         .background(colorScheme.background)
          .nestedScroll(nestedScrollConnection)
    ) {
       AppBar(
@@ -92,6 +91,7 @@ internal fun SingleColumnProbosqis(
          pageDeckState,
          state.pageComposableSwitcher,
          state.pageStateStore,
+         backgroundColor = colorScheme.appBar,
          windowInsets = safeDrawingWindowInsets
             .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
       )
@@ -100,6 +100,8 @@ internal fun SingleColumnProbosqis(
          pageDeckState,
          state.pageComposableSwitcher,
          state.pageStateStore,
+         colorScheme.pageStackBackground,
+         colorScheme.pageStackFooter,
          windowInsets = safeDrawingWindowInsets
             .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
          modifier = Modifier
@@ -115,64 +117,53 @@ private fun AppBar(
    deckState: SingleColumnPageDeckState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
+   backgroundColor: Color,
    windowInsets: WindowInsets
 ) {
    Column(
       Modifier
-         .shadow(4.dp)
-         .background(MaterialTheme.colorScheme.primaryContainer)
+         .scrollable(rememberScrollState(), Orientation.Vertical)
+         .background(backgroundColor)
          .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
          .clipToBounds()
-         .scrollable(rememberScrollState(), Orientation.Vertical)
-   ) {
-      Column(
-         Modifier
-            .layout { measurable, constraints ->
-               val placeable = measurable.measure(constraints)
+         .layout { measurable, constraints ->
+            val placeable = measurable.measure(constraints)
 
-               layout(
-                  placeable.width,
-                  placeable.height + scrollState.scrollOffset.toInt()
-               ) {
-                  placeable.place(0, scrollState.scrollOffset.toInt())
-               }
+            layout(
+               placeable.width,
+               placeable.height + scrollState.scrollOffset.toInt()
+            ) {
+               placeable.place(0, scrollState.scrollOffset.toInt())
             }
-      ) {
-         val colorScheme = MaterialTheme.colorScheme
-         val innerTopAppBarColors = TopAppBarDefaults.topAppBarColors(
+         }
+   ) {
+      TopAppBar(
+         title = {
+            Text(
+               text = Strings.App.topAppBar,
+               maxLines = 1,
+               overflow = TextOverflow.Ellipsis
+            )
+         },
+         navigationIcon = {
+            MenuButton(
+               onClick = {}
+            )
+         },
+         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent,
-            navigationIconContentColor = colorScheme.onPrimaryContainer,
-            titleContentColor = colorScheme.onPrimaryContainer,
-            actionIconContentColor = colorScheme.onPrimaryContainer,
-         )
+         ),
+         windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
+         modifier = Modifier
+            .onSizeChanged { scrollState.updateAppBarHeight(it.height) }
+      )
 
-         TopAppBar(
-            title = {
-               Text(
-                  text = Strings.App.topAppBar,
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis
-               )
-            },
-            navigationIcon = {
-               MenuButton(
-                  onClick = {}
-               )
-            },
-            windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
-            colors = innerTopAppBarColors,
-            modifier = Modifier
-               .onSizeChanged { scrollState.updateAppBarHeight(it.height) },
-         )
-
-         SingleColumnPageDeckAppBar(
-            deckState,
-            pageSwitcher,
-            pageStateStore,
-            windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
-            colors = innerTopAppBarColors
-         )
-      }
+      SingleColumnPageDeckAppBar(
+         deckState,
+         pageSwitcher,
+         pageStateStore,
+         windowInsets = windowInsets.only(WindowInsetsSides.Horizontal)
+      )
    }
 }
 

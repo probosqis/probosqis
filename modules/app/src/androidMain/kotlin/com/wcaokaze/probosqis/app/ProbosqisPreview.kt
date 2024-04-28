@@ -89,21 +89,36 @@ private fun rememberPreviewProbosqisState(): ProbosqisState {
 
 @MultiDevicePreview
 @Composable
-private fun ProbosqisPreview(
+private fun SingleColumnProbosqisPreview(
    @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
    safeDrawingWindowInsets: WindowInsets
 ) {
-   Probosqis(rememberPreviewProbosqisState(), safeDrawingWindowInsets)
+   SingleColumnProbosqis(
+      rememberPreviewProbosqisState(),
+      safeDrawingWindowInsets = safeDrawingWindowInsets
+   )
+}
+
+@MultiDevicePreview
+@Composable
+private fun MultiColumnProbosqisPreview(
+   @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
+   safeDrawingWindowInsets: WindowInsets
+) {
+   MultiColumnProbosqis(
+      rememberPreviewProbosqisState(),
+      safeDrawingWindowInsets = safeDrawingWindowInsets
+   )
 }
 
 @MultiFontScalePreview
 @Composable
 private fun ProbosqisFontScalePreview() {
-   Probosqis(rememberPreviewProbosqisState())
+   MultiColumnProbosqis(rememberPreviewProbosqisState())
 }
 
 @MultiLanguagePreview
 @Composable
 private fun ProbosqisLanguagePreview() {
-   Probosqis(rememberPreviewProbosqisState())
+   MultiColumnProbosqis(rememberPreviewProbosqisState())
 }
