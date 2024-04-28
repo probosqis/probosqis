@@ -75,8 +75,7 @@ fun MultiColumnPageDeck(
    pageStackBackgroundColor: Color,
    pageStackFooterBackgroundColor: Color,
    windowInsets: WindowInsets,
-   modifier: Modifier = Modifier,
-   // onTopAppBarHeightChanged: (Dp) -> Unit = {}
+   modifier: Modifier = Modifier
 ) {
    ActiveCardCorrector(state)
 
@@ -114,7 +113,6 @@ fun MultiColumnPageDeck(
             pageStackBackgroundColor,
             pageStackFooterBackgroundColor,
             windowInsets.only(WindowInsetsSides.Bottom),
-            // onTopAppBarHeightChanged,
             modifier = Modifier
                .detectTouch(
                   onTouch = { state.activeCardIndex = index }
@@ -147,7 +145,6 @@ private fun PageStack(
    contentBackgroundColor: Color,
    footerBackgroundColor: Color,
    windowInsets: WindowInsets,
-   // onTopAppBarHeightChanged: (Dp) -> Unit,
    modifier: Modifier = Modifier
 ) {
    Column(
@@ -155,19 +152,8 @@ private fun PageStack(
          .clip(MaterialTheme.shapes.large)
          .background(contentBackgroundColor)
    ) {
-      // val density by rememberUpdatedState(LocalDensity.current)
-
       MultiColumnPageStackAppBar(
-         state,
-         pageSwitcherState,
-         pageStateStore,
-         appBarColors,
-         // modifier = Modifier
-         //    .onSizeChanged {
-         //       val heightPx = it.height
-         //       val heightDp = with (density) { heightPx.toDp() }
-         //       onTopAppBarHeightChanged(heightDp)
-         //    }
+         state, pageSwitcherState, pageStateStore, appBarColors
       )
 
       val transitionState = remember(pageSwitcherState) {
@@ -178,9 +164,10 @@ private fun PageStack(
          transitionState,
          state.pageStack
       ) { pageStack ->
-         PageContentFooter(pageStack.head, state, pageSwitcherState,
-            pageStateStore, contentBackgroundColor, footerBackgroundColor,
-            windowInsets)
+         PageContentFooter(
+            pageStack.head, state, pageSwitcherState, pageStateStore,
+            contentBackgroundColor, footerBackgroundColor, windowInsets
+         )
       }
    }
 }

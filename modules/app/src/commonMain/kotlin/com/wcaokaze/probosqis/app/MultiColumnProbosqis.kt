@@ -52,23 +52,10 @@ fun MultiColumnProbosqis(
       Modifier
          .background(colorScheme.background)
    ) {
-      // val density = LocalDensity.current
-      // var appBarHeight by remember(density, safeDrawingWindowInsets) {
-      //    val initialHeight = with (density) {
-      //       safeDrawingWindowInsets.getTop(density).toDp() + 64.dp
-      //    }
-      //    mutableStateOf(initialHeight)
-      // }
-      // var pageStackTopAppBarHeight by remember { mutableStateOf(64.dp) }
-
       val pageStackCount = (maxWidth / 330.dp).toInt().coerceAtLeast(1)
 
       Column {
-         AppBar(
-            safeDrawingWindowInsets,
-            // pageStackTopAppBarHeight,
-            // onHeightChanged = { appBarHeight = it }
-         )
+         AppBar(safeDrawingWindowInsets)
 
          val pageDeckState = remember(state) {
             val pageDeckCache = state.loadPageDeckOrDefault()
@@ -90,10 +77,8 @@ fun MultiColumnProbosqis(
             colorScheme.pageStackFooter,
             windowInsets = safeDrawingWindowInsets
                .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
-            // onTopAppBarHeightChanged = { pageStackTopAppBarHeight = it },
             modifier = Modifier
                .fillMaxSize()
-            // .padding(top = appBarHeight)
          )
       }
    }
@@ -101,45 +86,26 @@ fun MultiColumnProbosqis(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppBar(
-   safeDrawingWindowInsets: WindowInsets,
-   // pageStackTopAppBarHeight: Dp,
-   // onHeightChanged: (Dp) -> Unit
-) {
-   // val density by rememberUpdatedState(LocalDensity.current)
-
-   // Column(
-   //    Modifier
-   //       .background(MaterialTheme.colorScheme.primaryContainer)
-   // ) {
-      TopAppBar(
-         title = {
-            Text(
-               text = Strings.App.topAppBar,
-               maxLines = 1,
-               overflow = TextOverflow.Ellipsis
-            )
-         },
-         navigationIcon = {
-            MenuButton(
-               onClick = {}
-            )
-         },
-         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent
-         ),
-         windowInsets = safeDrawingWindowInsets
-            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
-         // modifier = Modifier
-         //    .onSizeChanged {
-         //       val heightPx = it.height
-         //       val heightDp = with (density) { heightPx.toDp() }
-         //       onHeightChanged(heightDp)
-         //    }
-      )
-
-   //    Spacer(Modifier.height(pageStackTopAppBarHeight))
-   // }
+private fun AppBar(safeDrawingWindowInsets: WindowInsets) {
+   TopAppBar(
+      title = {
+         Text(
+            text = Strings.App.topAppBar,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+         )
+      },
+      navigationIcon = {
+         MenuButton(
+            onClick = {}
+         )
+      },
+      colors = TopAppBarDefaults.topAppBarColors(
+         containerColor = Color.Transparent
+      ),
+      windowInsets = safeDrawingWindowInsets
+         .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+   )
 }
 
 @Composable
