@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
@@ -52,6 +53,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckAppBar
@@ -85,6 +89,8 @@ fun SingleColumnProbosqis(
       modifier = Modifier
          .background(colorScheme.background)
          .nestedScroll(nestedScrollConnection)
+         .padding(horizontal = 8.dp)
+         .inflateWidth(8.dp)
    ) {
       AppBar(
          appBarScrollState,
@@ -107,6 +113,25 @@ fun SingleColumnProbosqis(
          modifier = Modifier
             .fillMaxSize()
       )
+   }
+}
+
+@Stable
+private fun Modifier.inflateWidth(delta: Dp): Modifier {
+   return layout { measurable, constraints ->
+      val width  = constraints.maxWidth
+      val height = constraints.maxHeight
+
+      val placeable = measurable.measure(
+         Constraints.fixed(
+            width + (delta * 2).roundToPx(),
+            height
+         )
+      )
+
+      layout(constraints.maxWidth, constraints.maxHeight) {
+         placeable.place(-delta.roundToPx(), 0)
+      }
    }
 }
 
