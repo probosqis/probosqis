@@ -155,7 +155,7 @@ fun SingleColumnPageDeck(
       state.deckState,
       cardPadding = 0.dp,
       modifier = modifier
-   ) { _, lazyPageStackState ->
+   ) { index, lazyPageStackState ->
       val density = LocalDensity.current
 
       AnimatedVisibility(
@@ -165,13 +165,23 @@ fun SingleColumnPageDeck(
       ) {
          val pageStackState = lazyPageStackState.get(state)
 
+         val cardsInfo = state.deckState.layoutInfo.cardsInfo
+
+         val prevPageStackHasFooter = cardsInfo.getOrNull(index - 1)?.let {
+            val page = it.card.content.pageStackCache.value.head.page
+            pageSwitcherState[page]?.footerComposable != null
+         } ?: false
+
+         val nextPageStackHasFooter = cardsInfo.getOrNull(index + 1)?.let {
+            val page = it.card.content.pageStackCache.value.head.page
+            pageSwitcherState[page]?.footerComposable != null
+         } ?: false
+
          PageStackContent(
-            pageStackState,
-            pageSwitcherState,
-            pageStateStore,
-            pageStackBackgroundColor,
-            pageStackFooterBackgroundColor,
-            windowInsets = windowInsets,
+            pageStackState, pageSwitcherState, pageStateStore,
+            pageStackBackgroundColor, pageStackFooterBackgroundColor,
+            prevPageStackHasFooter, nextPageStackHasFooter,
+            windowInsets
          )
       }
    }
@@ -206,6 +216,8 @@ private fun PageStackContent(
    pageStateStore: PageStateStore,
    backgroundColor: Color,
    footerBackgroundColor: Color,
+   prevPageStackHasFooter: Boolean,
+   nextPageStackHasFooter: Boolean,
    windowInsets: WindowInsets
 ) {
    val transitionState = remember(pageSwitcher) {
@@ -218,7 +230,17 @@ private fun PageStackContent(
    ) { pageStack ->
       PageContentFooter(
          pageStack.head, state, pageSwitcher, pageStateStore, backgroundColor,
-         footerBackgroundColor,windowInsets, horizontalContentPadding = 8.dp
+         footerBackgroundColor, windowInsets, horizontalContentPadding = 8.dp,
+         footerStartPaddingType = if (prevPageStackHasFooter) {
+            FooterPaddingType.Content
+         } else {
+            FooterPaddingType.Entire
+         },
+         footerEndPaddingType = if (nextPageStackHasFooter) {
+            FooterPaddingType.Content
+         } else {
+            FooterPaddingType.Entire
+         }
       )
    }
 }

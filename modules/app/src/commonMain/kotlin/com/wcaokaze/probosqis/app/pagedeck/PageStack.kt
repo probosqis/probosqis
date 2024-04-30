@@ -125,13 +125,20 @@ class PageStackState internal constructor(
    }
 }
 
+internal enum class FooterPaddingType {
+   Entire,  // 背景色を含めた全体
+   Content, // 内部のComposableのみ。背景色には適用されない
+}
+
 private fun <P : Page, S : PageState> extractPageComposable(
    combined: CombinedPageComposable<P, S>,
    pageStackState: State<PageStackState>,
    contentBackgroundColor: State<Color>,
    footerBackgroundColor: State<Color>,
    windowInsets: State<WindowInsets>,
-   horizontalContentPadding: State<Dp>
+   horizontalContentPadding: State<Dp>,
+   footerStartPaddingType: State<FooterPaddingType>,
+   footerEndPaddingType:   State<FooterPaddingType>
 ): PageComposable<P, S> {
    return PageComposable(
       combined.pageClass,
@@ -140,7 +147,8 @@ private fun <P : Page, S : PageState> extractPageComposable(
          PageContentFooter(
             combined, page, pageState, pageStackState.value,
             contentBackgroundColor.value, footerBackgroundColor.value,
-            windowInsets.value, horizontalContentPadding.value
+            windowInsets.value, horizontalContentPadding.value,
+            footerStartPaddingType.value, footerEndPaddingType.value
          )
       }
    )
@@ -155,21 +163,26 @@ internal fun PageContentFooter(
    contentBackgroundColor: Color,
    footerBackgroundColor: Color,
    windowInsets: WindowInsets,
-   horizontalContentPadding: Dp = 0.dp
+   horizontalContentPadding: Dp = 0.dp,
+   footerStartPaddingType: FooterPaddingType = FooterPaddingType.Content,
+   footerEndPaddingType:   FooterPaddingType = FooterPaddingType.Content
 ) {
-   val updatedPageStackState = rememberUpdatedState(pageStackState)
-   val updatedContentBackgroundColor = rememberUpdatedState(contentBackgroundColor)
-   val updatedFooterBackgroundColor = rememberUpdatedState(footerBackgroundColor)
-   val updatedWindowInsets = rememberUpdatedState(windowInsets)
+   val updatedPageStackState           = rememberUpdatedState(pageStackState)
+   val updatedContentBackgroundColor   = rememberUpdatedState(contentBackgroundColor)
+   val updatedFooterBackgroundColor    = rememberUpdatedState(footerBackgroundColor)
+   val updatedWindowInsets             = rememberUpdatedState(windowInsets)
    val updatedHorizontalContentPadding = rememberUpdatedState(horizontalContentPadding)
+   val updatedFooterStartPaddingType   = rememberUpdatedState(footerStartPaddingType)
+   val updatedFooterEndPaddingType     = rememberUpdatedState(footerEndPaddingType)
 
    val switcherState = remember(pageSwitcher, pageStateStore) {
       PageSwitcherState(
          pageSwitcher.allPageComposables.map {
             extractPageComposable(
-               it, updatedPageStackState, updatedContentBackgroundColor,
-               updatedFooterBackgroundColor, updatedWindowInsets,
-               updatedHorizontalContentPadding
+               it, updatedPageStackState,
+               updatedContentBackgroundColor, updatedFooterBackgroundColor,
+               updatedWindowInsets, updatedHorizontalContentPadding,
+               updatedFooterStartPaddingType, updatedFooterEndPaddingType
             )
          },
          pageStateStore
@@ -188,7 +201,9 @@ private fun <P : Page, S : PageState> PageContentFooter(
    contentBackgroundColor: Color,
    footerBackgroundColor: Color,
    windowInsets: WindowInsets,
-   horizontalContentPadding: Dp
+   horizontalContentPadding: Dp,
+   footerStartPaddingType: FooterPaddingType,
+   footerEndPaddingType:   FooterPaddingType
 ) {
    Box(Modifier.transitionElement(PageLayoutIds.root)) {
       Box(
@@ -213,8 +228,25 @@ private fun <P : Page, S : PageState> PageContentFooter(
          PageFooter(
             footerComposable, page, pageState,
             pageStackState, footerBackgroundColor, windowInsets,
-            horizontalContentPadding = horizontalContentPadding,
+            startContentPadding = when (footerStartPaddingType) {
+               FooterPaddingType.Entire  -> 0.dp
+               FooterPaddingType.Content -> horizontalContentPadding
+            },
+            endContentPadding = when (footerEndPaddingType) {
+               FooterPaddingType.Entire  -> 0.dp
+               FooterPaddingType.Content -> horizontalContentPadding
+            },
             modifier = Modifier
+               .padding(
+                  start = when (footerStartPaddingType) {
+                     FooterPaddingType.Entire  -> horizontalContentPadding
+                     FooterPaddingType.Content -> 0.dp
+                  },
+                  end = when (footerEndPaddingType) {
+                     FooterPaddingType.Entire  -> horizontalContentPadding
+                     FooterPaddingType.Content -> 0.dp
+                  }
+               )
                .transitionElement(PageLayoutIds.footer)
                .align(Alignment.BottomCenter)
          )
@@ -255,20 +287,18 @@ internal fun <P : Page, S : PageState> PageFooter(
    backgroundColor: Color,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
-   horizontalContentPadding: Dp = 0.dp
+   startContentPadding: Dp = 0.dp,
+   endContentPadding:   Dp = 0.dp,
 ) {
    val footerWindowInsets = windowInsets
       .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
-      .add(WindowInsets(
-         left  = horizontalContentPadding,
-         right = horizontalContentPadding
-      ))
 
    Box(
       modifier = modifier
          .background(backgroundColor)
          .pointerInput(Unit) {}
          .windowInsetsPadding(footerWindowInsets)
+         .padding(start = startContentPadding, end = endContentPadding)
          .fillMaxWidth()
          .requiredHeight(pageFooterHeight)
    ) {
