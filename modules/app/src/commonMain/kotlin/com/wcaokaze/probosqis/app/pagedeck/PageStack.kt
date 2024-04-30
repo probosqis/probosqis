@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LocalContentColor
@@ -232,14 +233,14 @@ internal fun <P : Page, S : PageState> PageContent(
    modifier: Modifier = Modifier,
    horizontalContentPadding: Dp = 0.dp
 ) {
-   Box(modifier) {
-      val contentWindowInsets = windowInsets.add(
-         WindowInsets(
-            bottom = if (isFooterShown) { pageFooterHeight } else { 0.dp },
-            left  = horizontalContentPadding,
-            right = horizontalContentPadding
-         )
-      )
+   Box(
+      modifier.padding(horizontal = horizontalContentPadding)
+   ) {
+      val contentWindowInsets = if (isFooterShown) {
+         windowInsets.add(WindowInsets(bottom = pageFooterHeight))
+      } else {
+         windowInsets
+      }
 
       contentComposable(page, pageState, pageStackState, contentWindowInsets)
    }
