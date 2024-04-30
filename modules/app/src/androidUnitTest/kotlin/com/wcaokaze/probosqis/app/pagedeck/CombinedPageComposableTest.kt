@@ -173,18 +173,22 @@ class CombinedPageComposableTest {
 
          Column {
             @OptIn(ExperimentalMaterial3Api::class)
-            PageStackAppBar(pageStackState, pageSwitcherState, pageStateStore,
-               WindowInsets(0), TopAppBarDefaults.topAppBarColors())
+            PageStackAppBar(
+               pageStackState, pageSwitcherState, pageStateStore,
+               TopAppBarDefaults.topAppBarColors(), WindowInsets(0)
+            )
 
             PageTransition(
                transitionState,
                targetState = pageStackState.pageStack
             ) {
-               PageContentFooter(savedPageState = it.head, pageStackState,
+               PageContentFooter(
+                  savedPageState = it.head, pageStackState,
                   pageSwitcherState, pageStateStore,
                   contentBackgroundColor = Color.Transparent,
                   footerBackgroundColor = Color.Transparent,
-                  WindowInsets(0))
+                  WindowInsets(0)
+               )
             }
          }
       }
@@ -299,18 +303,22 @@ class CombinedPageComposableTest {
 
          Column {
             @OptIn(ExperimentalMaterial3Api::class)
-            PageStackAppBar(pageStackState, pageSwitcherState, pageStateStore,
-               WindowInsets(0), TopAppBarDefaults.topAppBarColors())
+            PageStackAppBar(
+               pageStackState, pageSwitcherState, pageStateStore,
+               TopAppBarDefaults.topAppBarColors(), WindowInsets(0)
+            )
 
             PageTransition(
                transitionState,
                targetState = pageStackState.pageStack
             ) {
-               PageContentFooter(savedPageState = it.head, pageStackState,
+               PageContentFooter(
+                  savedPageState = it.head, pageStackState,
                   pageSwitcherState, pageStateStore,
                   contentBackgroundColor = Color.Transparent,
                   footerBackgroundColor = Color.Transparent,
-                  WindowInsets(0))
+                  WindowInsets(0)
+               )
             }
          }
       }

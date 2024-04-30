@@ -186,8 +186,8 @@ private fun MultiColumnPageStackAppBar(
       pageStackState,
       pageSwitcherState,
       pageStateStore,
-      WindowInsets(0),
       colors,
+      WindowInsets(0),
       modifier = modifier
    )
 }

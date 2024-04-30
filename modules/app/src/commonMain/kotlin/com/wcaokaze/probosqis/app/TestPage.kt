@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.app
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
@@ -42,8 +43,12 @@ class TestPageState : PageState()
 
 val testPageComposable = CombinedPageComposable<TestPage, TestPageState>(
    PageStateFactory { _, _ -> TestPageState() },
-   content = { page, _, pageStackState, _ ->
-      Column(Modifier.fillMaxSize()) {
+   content = { page, _, pageStackState, windowInsets ->
+      Column(
+         Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(windowInsets)
+      ) {
          Text(
             "${page.i}",
             fontSize = 48.sp

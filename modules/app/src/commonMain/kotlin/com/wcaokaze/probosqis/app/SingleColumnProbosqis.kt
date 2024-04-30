@@ -52,6 +52,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckAppBar
@@ -85,6 +88,7 @@ fun SingleColumnProbosqis(
       modifier = Modifier
          .background(colorScheme.background)
          .nestedScroll(nestedScrollConnection)
+         .inflateWidth(8.dp)
    ) {
       AppBar(
          appBarScrollState,
@@ -107,6 +111,25 @@ fun SingleColumnProbosqis(
          modifier = Modifier
             .fillMaxSize()
       )
+   }
+}
+
+@Stable
+private fun Modifier.inflateWidth(delta: Dp): Modifier {
+   return layout { measurable, constraints ->
+      val width  = constraints.maxWidth
+      val height = constraints.maxHeight
+
+      val placeable = measurable.measure(
+         Constraints.fixed(
+            width + (delta * 2).roundToPx(),
+            height
+         )
+      )
+
+      layout(constraints.maxWidth, constraints.maxHeight) {
+         placeable.place(-delta.roundToPx(), 0)
+      }
    }
 }
 
