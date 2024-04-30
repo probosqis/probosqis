@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.app.pagedeck
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.add
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -31,6 +32,8 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.App
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageComposable
@@ -45,14 +48,18 @@ private fun <P : Page, S : PageState> extractPageComposable(
    combined: CombinedPageComposable<P, S>,
    pageStackState: State<PageStackState>,
    colors: State<TopAppBarColors>,
-   windowInsets: State<WindowInsets>
+   windowInsets: State<WindowInsets>,
+   horizontalContentPadding: State<Dp>
 ): PageComposable<P, S> {
    return PageComposable(
       combined.pageClass,
       combined.pageStateClass,
       composable = { page, pageState ->
-         PageStackAppBar(combined, page, pageState,
-            pageStackState.value, colors.value, windowInsets.value)
+         PageStackAppBar(
+            combined, page, pageState,
+            pageStackState.value, colors.value, windowInsets.value,
+            horizontalContentPadding = horizontalContentPadding.value
+         )
       }
    )
 }
@@ -63,19 +70,23 @@ internal fun PageStackAppBar(
    pageStackState: PageStackState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
-   windowInsets: WindowInsets,
    colors: TopAppBarColors,
-   modifier: Modifier = Modifier
+   windowInsets: WindowInsets,
+   modifier: Modifier = Modifier,
+   horizontalContentPadding: Dp = 0.dp
 ) {
    val updatedPageStackState = rememberUpdatedState(pageStackState)
-   val updatedWindowInsets = rememberUpdatedState(windowInsets)
    val updatedColors = rememberUpdatedState(colors)
+   val updatedWindowInsets = rememberUpdatedState(windowInsets)
+   val updatedHorizontalContentPadding = rememberUpdatedState(horizontalContentPadding)
 
    val switcherState = remember(pageSwitcher, pageStateStore) {
       PageSwitcherState(
          pageSwitcher.allPageComposables.map {
             extractPageComposable(
-               it, updatedPageStackState, updatedColors, updatedWindowInsets)
+               it, updatedPageStackState, updatedColors, updatedWindowInsets,
+               updatedHorizontalContentPadding
+            )
          },
          pageStateStore
       )
@@ -96,7 +107,8 @@ internal fun <P : Page, S : PageState> PageStackAppBar(
    pageStackState: PageStackState,
    colors: TopAppBarColors,
    windowInsets: WindowInsets,
-   modifier: Modifier = Modifier
+   modifier: Modifier = Modifier,
+   horizontalContentPadding: Dp = 0.dp,
 ) {
    TopAppBar(
       title = {
@@ -132,7 +144,12 @@ internal fun <P : Page, S : PageState> PageStackAppBar(
             )
          }
       },
-      windowInsets = windowInsets,
+      windowInsets = windowInsets.add(
+         WindowInsets(
+            left  = horizontalContentPadding,
+            right = horizontalContentPadding
+         )
+      ),
       colors = colors,
       modifier = modifier
    )

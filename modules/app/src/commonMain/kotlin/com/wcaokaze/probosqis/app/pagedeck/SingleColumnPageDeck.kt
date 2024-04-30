@@ -86,7 +86,7 @@ class SingleColumnPageDeckState(
 
 @ExperimentalMaterial3Api
 @Composable
-fun SingleColumnPageDeckAppBar(
+internal fun SingleColumnPageDeckAppBar(
    state: SingleColumnPageDeckState,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
@@ -109,7 +109,7 @@ fun SingleColumnPageDeckAppBar(
       SingleColumnDeck(
          state.deck,
          state.deckState,
-         cardPadding = 8.dp,
+         cardPadding = 0.dp,
          modifier = Modifier
             .fillMaxWidth()
             .onSizeChanged {
@@ -127,8 +127,9 @@ fun SingleColumnPageDeckAppBar(
          ) {
             val pageStackState = lazyPageStackState.get(state)
 
-            SingleColumnPageStackAppBar(pageStackState, pageSwitcherState,
-               pageStateStore, windowInsets)
+            SingleColumnPageStackAppBar(
+               pageStackState, pageSwitcherState, pageStateStore, windowInsets
+            )
          }
       }
    }
@@ -152,7 +153,7 @@ fun SingleColumnPageDeck(
    SingleColumnDeck(
       state.deck,
       state.deckState,
-      cardPadding = 8.dp,
+      cardPadding = 0.dp,
       modifier = modifier
    ) { _, lazyPageStackState ->
       val density = LocalDensity.current
@@ -189,10 +190,11 @@ private fun SingleColumnPageStackAppBar(
       pageStackState,
       pageSwitcher,
       pageStateStore,
-      windowInsets,
       colors = TopAppBarDefaults.topAppBarColors(
          containerColor = Color.Transparent,
       ),
+      windowInsets,
+      horizontalContentPadding = 8.dp,
       modifier = modifier
    )
 }
@@ -214,7 +216,9 @@ private fun PageStackContent(
       transitionState,
       state.pageStack
    ) { pageStack ->
-      PageContentFooter(pageStack.head, state, pageSwitcher,
-         pageStateStore, backgroundColor, footerBackgroundColor,windowInsets)
+      PageContentFooter(
+         pageStack.head, state, pageSwitcher, pageStateStore, backgroundColor,
+         footerBackgroundColor,windowInsets, horizontalContentPadding = 8.dp
+      )
    }
 }
