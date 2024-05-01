@@ -88,7 +88,6 @@ fun SingleColumnProbosqis(
       modifier = Modifier
          .background(colorScheme.background)
          .nestedScroll(nestedScrollConnection)
-         .inflateWidth(8.dp)
    ) {
       AppBar(
          appBarScrollState,
@@ -111,25 +110,6 @@ fun SingleColumnProbosqis(
          modifier = Modifier
             .fillMaxSize()
       )
-   }
-}
-
-@Stable
-private fun Modifier.inflateWidth(delta: Dp): Modifier {
-   return layout { measurable, constraints ->
-      val width  = constraints.maxWidth
-      val height = constraints.maxHeight
-
-      val placeable = measurable.measure(
-         Constraints.fixed(
-            width + (delta * 2).roundToPx(),
-            height
-         )
-      )
-
-      layout(constraints.maxWidth, constraints.maxHeight) {
-         placeable.place(-delta.roundToPx(), 0)
-      }
    }
 }
 

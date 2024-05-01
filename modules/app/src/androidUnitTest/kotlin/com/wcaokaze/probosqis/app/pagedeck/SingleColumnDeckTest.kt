@@ -162,7 +162,7 @@ class SingleColumnDeckTest {
       rule.onNodeWithTag(deckTestTag).performTouchInput {
          down(Offset(0.0f, 0.0f))
          moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
-         moveBy(Offset(-(deckWidth / 2).toPx() + 1.0f, 0.0f))
+         moveBy(Offset(-(deckWidth / 2 + cardPadding).toPx() + 1.0f, 0.0f))
       }
       rule.runOnIdle {
          assertEquals(0, deckState.activeCardIndex)
