@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.error.PErrorActionButton
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
 
@@ -97,6 +98,11 @@ private fun AppBar(safeDrawingWindowInsets: WindowInsets) {
       },
       navigationIcon = {
          MenuButton(
+            onClick = {}
+         )
+      },
+      actions = {
+         PErrorActionButton(
             onClick = {}
          )
       },

@@ -60,6 +60,7 @@ import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.error.PErrorActionButton
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
 
@@ -170,6 +171,11 @@ private fun AppBar(
          },
          navigationIcon = {
             MenuButton(
+               onClick = {}
+            )
+         },
+         actions = {
+            PErrorActionButton(
                onClick = {}
             )
          },

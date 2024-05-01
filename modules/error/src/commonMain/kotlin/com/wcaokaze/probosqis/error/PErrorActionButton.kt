@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
-   alias libs.plugins.android.library
-   alias libs.plugins.compose.jb
-   alias libs.plugins.roborazzi
-}
+package com.wcaokaze.probosqis.error
 
-apply from: rootProject.file('gradle/setupModule.gradle')
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.Composable
+import com.wcaokaze.probosqis.resources.Strings
+import com.wcaokaze.probosqis.resources.icons.Error
 
-android {
-   namespace 'com.wcaokaze.probosqis.error'
-}
-
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         implementation project(':modules:resources')
-      }
+@Composable
+fun PErrorActionButton(onClick: () -> Unit) {
+   IconButton(onClick) {
+      Icon(
+         Icons.Default.Error,
+         contentDescription = Strings.PError.pErrorActionButtonContentDescription
+      )
    }
 }
