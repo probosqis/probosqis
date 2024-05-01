@@ -40,9 +40,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.deck.SingleColumnDeck
 import com.wcaokaze.probosqis.capsiqum.deck.SingleColumnDeckState
@@ -50,6 +53,8 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlin.time.DurationUnit
+
+internal val cardPadding = 8.dp
 
 @Stable
 class SingleColumnPageDeckState(
@@ -93,7 +98,7 @@ internal fun SingleColumnPageDeckAppBar(
    windowInsets: WindowInsets = WindowInsets
       .safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
 ) {
-   Box {
+   Box(Modifier.inflateWidth(cardPadding)) {
       // PageDeckState.removePageStack等によって一瞬PageStackが画面内に
       // ひとつもないことがある
       var appBarHeight by remember { mutableIntStateOf(0) }
@@ -136,7 +141,7 @@ internal fun SingleColumnPageDeckAppBar(
 }
 
 @Composable
-fun SingleColumnPageDeck(
+internal fun SingleColumnPageDeck(
    state: SingleColumnPageDeckState,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
@@ -154,7 +159,7 @@ fun SingleColumnPageDeck(
       state.deck,
       state.deckState,
       cardPadding = 0.dp,
-      modifier = modifier
+      modifier = modifier.inflateWidth(cardPadding)
    ) { index, lazyPageStackState ->
       val density = LocalDensity.current
 
@@ -204,7 +209,7 @@ private fun SingleColumnPageStackAppBar(
          containerColor = Color.Transparent,
       ),
       windowInsets,
-      horizontalContentPadding = 8.dp,
+      horizontalContentPadding = cardPadding,
       modifier = modifier
    )
 }
@@ -230,7 +235,7 @@ private fun PageStackContent(
    ) { pageStack ->
       PageContentFooter(
          pageStack.head, state, pageSwitcher, pageStateStore, backgroundColor,
-         footerBackgroundColor, windowInsets, horizontalContentPadding = 8.dp,
+         footerBackgroundColor, windowInsets, horizontalContentPadding = cardPadding,
          footerStartPaddingType = if (prevPageStackHasFooter) {
             FooterPaddingType.Content
          } else {
@@ -242,5 +247,30 @@ private fun PageStackContent(
             FooterPaddingType.Entire
          }
       )
+   }
+}
+
+@Stable
+private fun Modifier.inflateWidth(delta: Dp): Modifier {
+   return layout { measurable, constraints ->
+      val inflatedConstraints = if (constraints.hasFixedWidth) {
+         constraints.copy(
+            minWidth = constraints.minWidth + (delta * 2).roundToPx(),
+            maxWidth = constraints.maxWidth + (delta * 2).roundToPx()
+         )
+      } else {
+         constraints.copy(
+            maxWidth = constraints.maxWidth + (delta * 2).roundToPx()
+         )
+      }
+
+      val placeable = measurable.measure(inflatedConstraints)
+
+      layout(
+         constraints.constrainWidth (placeable.width),
+         constraints.constrainHeight(placeable.height)
+      ) {
+         placeable.place(-delta.roundToPx(), 0)
+      }
    }
 }
