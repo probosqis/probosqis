@@ -21,11 +21,13 @@ import androidx.compose.animation.core.animateTo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
@@ -39,9 +41,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
@@ -51,6 +55,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -61,6 +66,8 @@ import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.error.PErrorActionButton
+import com.wcaokaze.probosqis.error.PErrorList
+import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
 
@@ -85,33 +92,40 @@ fun SingleColumnProbosqis(
       AppBarNestedScrollConnection(appBarScrollState)
    }
 
-   Column(
-      modifier = Modifier
-         .background(colorScheme.background)
-         .nestedScroll(nestedScrollConnection)
-         .inflateWidth(8.dp)
-   ) {
-      AppBar(
-         appBarScrollState,
-         pageDeckState,
-         state.pageComposableSwitcher,
-         state.pageStateStore,
-         backgroundColor = colorScheme.appBar,
-         windowInsets = safeDrawingWindowInsets
-            .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
-      )
+   Box {
+      val errorListState = remember { PErrorListState() }
 
-      SingleColumnPageDeck(
-         pageDeckState,
-         state.pageComposableSwitcher,
-         state.pageStateStore,
-         colorScheme.pageStackBackground,
-         colorScheme.pageStackFooter,
-         windowInsets = safeDrawingWindowInsets
-            .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
+      Column(
          modifier = Modifier
-            .fillMaxSize()
-      )
+            .background(colorScheme.background)
+            .nestedScroll(nestedScrollConnection)
+            .inflateWidth(8.dp)
+      ) {
+         AppBar(
+            appBarScrollState,
+            pageDeckState,
+            state.pageComposableSwitcher,
+            state.pageStateStore,
+            backgroundColor = colorScheme.appBar,
+            windowInsets = safeDrawingWindowInsets
+               .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+            onErrorButtonClick = { errorListState.show() }
+         )
+
+         SingleColumnPageDeck(
+            pageDeckState,
+            state.pageComposableSwitcher,
+            state.pageStateStore,
+            colorScheme.pageStackBackground,
+            colorScheme.pageStackFooter,
+            windowInsets = safeDrawingWindowInsets
+               .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
+            modifier = Modifier
+               .fillMaxSize()
+         )
+      }
+
+      ErrorList(errorListState, appBarScrollState, safeDrawingWindowInsets)
    }
 }
 
@@ -142,7 +156,8 @@ private fun AppBar(
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    backgroundColor: Color,
-   windowInsets: WindowInsets
+   windowInsets: WindowInsets,
+   onErrorButtonClick: () -> Unit
 ) {
    Column(
       Modifier
@@ -175,9 +190,7 @@ private fun AppBar(
             )
          },
          actions = {
-            PErrorActionButton(
-               onClick = {}
-            )
+            PErrorActionButton(onClick = onErrorButtonClick)
          },
          colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent,
@@ -197,6 +210,31 @@ private fun AppBar(
 }
 
 @Composable
+private fun ErrorList(
+   state: PErrorListState,
+   appBarScrollState: AppBarScrollState,
+   safeDrawingWindowInsets: WindowInsets
+) {
+   Box(Modifier.fillMaxSize()) {
+      val density = LocalDensity.current
+
+      PErrorList(
+         state,
+         modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(
+               start = 32.dp,
+               top = with (density) {
+                  safeDrawingWindowInsets.getTop(density).toDp() +
+                        8.dp + appBarScrollState.scrollOffset.toDp()
+               } .coerceAtLeast(0.dp),
+               end = 8.dp,
+            )
+      )
+   }
+}
+
+@Composable
 private fun MenuButton(
    onClick: () -> Unit
 ) {
@@ -210,10 +248,10 @@ private fun MenuButton(
 
 @Stable
 private class AppBarScrollState {
-   var scrollOffset by mutableStateOf(0.0f)
+   var scrollOffset by mutableFloatStateOf(0.0f)
       private set
 
-   private var appBarHeight by mutableStateOf(0)
+   var appBarHeight by mutableIntStateOf(0)
 
    fun scroll(offset: Float): Float {
       val oldScrollOffset = scrollOffset

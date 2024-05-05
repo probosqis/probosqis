@@ -17,12 +17,14 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,13 +35,17 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.error.PErrorActionButton
+import com.wcaokaze.probosqis.error.PErrorList
+import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
 
@@ -53,10 +59,15 @@ fun MultiColumnProbosqis(
       Modifier
          .background(colorScheme.background)
    ) {
+      val errorListState = remember { PErrorListState() }
+
       val pageStackCount = (maxWidth / 330.dp).toInt().coerceAtLeast(1)
 
       Column {
-         AppBar(safeDrawingWindowInsets)
+         AppBar(
+            safeDrawingWindowInsets,
+            onErrorButtonClick = { errorListState.show() }
+         )
 
          val pageDeckState = remember(state) {
             val pageDeckCache = state.loadPageDeckOrDefault()
@@ -82,12 +93,17 @@ fun MultiColumnProbosqis(
                .fillMaxSize()
          )
       }
+
+      ErrorList(errorListState, safeDrawingWindowInsets)
    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppBar(safeDrawingWindowInsets: WindowInsets) {
+private fun AppBar(
+   safeDrawingWindowInsets: WindowInsets,
+   onErrorButtonClick: () -> Unit
+) {
    TopAppBar(
       title = {
          Text(
@@ -102,9 +118,7 @@ private fun AppBar(safeDrawingWindowInsets: WindowInsets) {
          )
       },
       actions = {
-         PErrorActionButton(
-            onClick = {}
-         )
+         PErrorActionButton(onClick = onErrorButtonClick)
       },
       colors = TopAppBarDefaults.topAppBarColors(
          containerColor = Color.Transparent
@@ -112,6 +126,29 @@ private fun AppBar(safeDrawingWindowInsets: WindowInsets) {
       windowInsets = safeDrawingWindowInsets
          .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
    )
+}
+
+@Composable
+private fun ErrorList(
+   state: PErrorListState,
+   safeDrawingWindowInsets: WindowInsets
+) {
+   Box(Modifier.fillMaxSize()) {
+      val density = LocalDensity.current
+
+      PErrorList(
+         state,
+         modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(
+               start = 32.dp,
+               top = with (density) {
+                  safeDrawingWindowInsets.getTop(density).toDp() + 8.dp
+               },
+               end = 8.dp,
+            )
+      )
+   }
 }
 
 @Composable
