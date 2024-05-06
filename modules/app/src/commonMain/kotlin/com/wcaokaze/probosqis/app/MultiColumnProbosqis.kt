@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -133,7 +135,22 @@ private fun ErrorList(
    state: PErrorListState,
    safeDrawingWindowInsets: WindowInsets
 ) {
-   Box(Modifier.fillMaxSize()) {
+   Box {
+      val tapDetectorModifier = Modifier.pointerInput(Unit) {
+         awaitPointerEventScope {
+            awaitFirstDown()
+            state.hide()
+         }
+      }
+
+      Box(
+         Modifier
+            .fillMaxSize()
+            .then(
+               if (state.isShown) { tapDetectorModifier } else { Modifier }
+            )
+      )
+
       val density = LocalDensity.current
 
       PErrorList(

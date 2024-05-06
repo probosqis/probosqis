@@ -20,6 +20,7 @@ import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateTo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,6 +54,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -215,7 +217,22 @@ private fun ErrorList(
    appBarScrollState: AppBarScrollState,
    safeDrawingWindowInsets: WindowInsets
 ) {
-   Box(Modifier.fillMaxSize()) {
+   Box {
+      val tapDetectorModifier = Modifier.pointerInput(Unit) {
+         awaitPointerEventScope {
+            awaitFirstDown()
+            state.hide()
+         }
+      }
+
+      Box(
+         Modifier
+            .fillMaxSize()
+            .then(
+               if (state.isShown) { tapDetectorModifier } else { Modifier }
+            )
+      )
+
       val density = LocalDensity.current
 
       PErrorList(
