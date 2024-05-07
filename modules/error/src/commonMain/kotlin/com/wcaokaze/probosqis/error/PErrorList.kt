@@ -20,11 +20,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,13 +40,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
 import com.wcaokaze.probosqis.resources.icons.Error
+import kotlin.math.roundToInt
 
 @Stable
 class PErrorListState {
+   internal var buttonBounds by mutableStateOf(Rect.Zero)
+
    var isShown by mutableStateOf(false)
 
    fun show() {
@@ -57,42 +64,60 @@ class PErrorListState {
    }
 }
 
+private val iconRowHeight = 48.dp
+
 @Composable
-fun PErrorList(
-   state: PErrorListState,
-   safeDrawingWindowInsets: WindowInsets
-) {
-   Box {
-      val tapDetectorModifier = Modifier.pointerInput(Unit) {
-         awaitPointerEventScope {
-            awaitFirstDown()
-            state.hide()
+fun PErrorList(state: PErrorListState) {
+   Layout(
+      content = {
+         val tapDetectorModifier = Modifier.pointerInput(Unit) {
+            awaitPointerEventScope {
+               awaitFirstDown()
+               state.hide()
+            }
+         }
+
+         Box(
+            Modifier
+               .fillMaxSize()
+               .then(
+                  if (state.isShown) { tapDetectorModifier } else { Modifier }
+               )
+         )
+
+         PErrorListContent(state)
+      },
+      measurePolicy = { measurables, constraints ->
+         val backgroundPlaceable = measurables[0].measure(constraints)
+
+         val startPadding = 32.dp.roundToPx()
+         val endPadding = when (layoutDirection) {
+            LayoutDirection.Ltr -> (constraints.maxWidth - state.buttonBounds.right).roundToInt()
+            LayoutDirection.Rtl -> state.buttonBounds.left.roundToInt()
+         }
+         val topPadding = state.buttonBounds.top.roundToInt()
+         val bottomPadding = 32.dp.roundToPx()
+
+         val contentPlaceable = measurables[1].measure(
+            constraints.offset(
+               horizontal = -(startPadding + endPadding),
+               vertical   = -(topPadding + bottomPadding)
+            )
+         )
+
+         layout(constraints.maxWidth, constraints.maxHeight) {
+            backgroundPlaceable.place(0, 0)
+
+            contentPlaceable.place(
+               x = when (layoutDirection) {
+                  LayoutDirection.Ltr -> constraints.maxWidth - endPadding - contentPlaceable.width
+                  LayoutDirection.Rtl -> endPadding
+               },
+               y = topPadding
+            )
          }
       }
-
-      Box(
-         Modifier
-            .fillMaxSize()
-            .then(
-               if (state.isShown) { tapDetectorModifier } else { Modifier }
-            )
-      )
-
-      val density = LocalDensity.current
-
-      PErrorListContent(
-         state,
-         modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(
-               start = 32.dp,
-               top = with (density) {
-                  safeDrawingWindowInsets.getTop(density).toDp() + 8.dp
-               },
-               end = 8.dp,
-            )
-      )
-   }
+   )
 }
 
 @Composable
@@ -100,7 +125,9 @@ private fun PErrorListContent(
    state: PErrorListState,
    modifier: Modifier = Modifier
 ) {
-   if (state.isShown) {
+   if (!state.isShown) {
+      Spacer(Modifier.size(iconRowHeight))
+   } else {
       Column(
          modifier = modifier
             .shadow(3.dp, MaterialTheme.shapes.small)
@@ -111,7 +138,7 @@ private fun PErrorListContent(
          Box(
             modifier = Modifier
                .fillMaxWidth()
-               .height(48.dp)
+               .height(iconRowHeight)
                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
          ) {
             Icon(

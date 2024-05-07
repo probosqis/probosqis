@@ -61,6 +61,7 @@ fun MultiColumnProbosqis(
 
       Column {
          AppBar(
+            errorListState,
             safeDrawingWindowInsets,
             onErrorButtonClick = { errorListState.show() }
          )
@@ -90,13 +91,14 @@ fun MultiColumnProbosqis(
          )
       }
 
-      PErrorList(errorListState, safeDrawingWindowInsets)
+      PErrorList(errorListState)
    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AppBar(
+   errorListState: PErrorListState,
    safeDrawingWindowInsets: WindowInsets,
    onErrorButtonClick: () -> Unit
 ) {
@@ -114,7 +116,10 @@ private fun AppBar(
          )
       },
       actions = {
-         PErrorActionButton(onClick = onErrorButtonClick)
+         PErrorActionButton(
+            errorListState,
+            onClick = onErrorButtonClick
+         )
       },
       colors = TopAppBarDefaults.topAppBarColors(
          containerColor = Color.Transparent

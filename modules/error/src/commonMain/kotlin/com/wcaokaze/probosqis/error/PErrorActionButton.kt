@@ -20,12 +20,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import com.wcaokaze.probosqis.resources.Strings
 import com.wcaokaze.probosqis.resources.icons.Error
 
 @Composable
-fun PErrorActionButton(onClick: () -> Unit) {
-   IconButton(onClick) {
+fun PErrorActionButton(
+   state: PErrorListState,
+   onClick: () -> Unit
+) {
+   IconButton(
+      onClick,
+      modifier = Modifier
+         .onGloballyPositioned { state.buttonBounds = it.boundsInRoot() }
+   ) {
       Icon(
          Icons.Default.Error,
          contentDescription = Strings.PError.pErrorActionButtonContentDescription

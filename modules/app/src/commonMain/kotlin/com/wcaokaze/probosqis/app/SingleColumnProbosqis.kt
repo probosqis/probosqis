@@ -100,6 +100,7 @@ fun SingleColumnProbosqis(
       ) {
          AppBar(
             appBarScrollState,
+            errorListState,
             pageDeckState,
             state.pageComposableSwitcher,
             state.pageStateStore,
@@ -122,7 +123,7 @@ fun SingleColumnProbosqis(
          )
       }
 
-      PErrorList(errorListState, safeDrawingWindowInsets)
+      PErrorList(errorListState)
    }
 }
 
@@ -149,6 +150,7 @@ private fun Modifier.inflateWidth(delta: Dp): Modifier {
 @Composable
 private fun AppBar(
    scrollState: AppBarScrollState,
+   errorListState: PErrorListState,
    deckState: SingleColumnPageDeckState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
@@ -187,7 +189,10 @@ private fun AppBar(
             )
          },
          actions = {
-            PErrorActionButton(onClick = onErrorButtonClick)
+            PErrorActionButton(
+               errorListState,
+               onClick = onErrorButtonClick
+            )
          },
          colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent,
