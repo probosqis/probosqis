@@ -20,7 +20,6 @@ import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateTo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +27,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
@@ -46,7 +44,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
@@ -54,10 +51,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -127,7 +122,7 @@ fun SingleColumnProbosqis(
          )
       }
 
-      ErrorList(errorListState, appBarScrollState, safeDrawingWindowInsets)
+      PErrorList(errorListState, safeDrawingWindowInsets)
    }
 }
 
@@ -207,46 +202,6 @@ private fun AppBar(
          pageSwitcher,
          pageStateStore,
          windowInsets = windowInsets.only(WindowInsetsSides.Horizontal)
-      )
-   }
-}
-
-@Composable
-private fun ErrorList(
-   state: PErrorListState,
-   appBarScrollState: AppBarScrollState,
-   safeDrawingWindowInsets: WindowInsets
-) {
-   Box {
-      val tapDetectorModifier = Modifier.pointerInput(Unit) {
-         awaitPointerEventScope {
-            awaitFirstDown()
-            state.hide()
-         }
-      }
-
-      Box(
-         Modifier
-            .fillMaxSize()
-            .then(
-               if (state.isShown) { tapDetectorModifier } else { Modifier }
-            )
-      )
-
-      val density = LocalDensity.current
-
-      PErrorList(
-         state,
-         modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(
-               start = 32.dp,
-               top = with (density) {
-                  safeDrawingWindowInsets.getTop(density).toDp() +
-                        8.dp + appBarScrollState.scrollOffset.toDp()
-               } .coerceAtLeast(0.dp),
-               end = 8.dp,
-            )
       )
    }
 }

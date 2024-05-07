@@ -16,23 +16,15 @@
 
 package com.wcaokaze.probosqis.error
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.resources.icons.Error
 
@@ -66,6 +59,44 @@ class PErrorListState {
 
 @Composable
 fun PErrorList(
+   state: PErrorListState,
+   safeDrawingWindowInsets: WindowInsets
+) {
+   Box {
+      val tapDetectorModifier = Modifier.pointerInput(Unit) {
+         awaitPointerEventScope {
+            awaitFirstDown()
+            state.hide()
+         }
+      }
+
+      Box(
+         Modifier
+            .fillMaxSize()
+            .then(
+               if (state.isShown) { tapDetectorModifier } else { Modifier }
+            )
+      )
+
+      val density = LocalDensity.current
+
+      PErrorListContent(
+         state,
+         modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(
+               start = 32.dp,
+               top = with (density) {
+                  safeDrawingWindowInsets.getTop(density).toDp() + 8.dp
+               },
+               end = 8.dp,
+            )
+      )
+   }
+}
+
+@Composable
+private fun PErrorListContent(
    state: PErrorListState,
    modifier: Modifier = Modifier
 ) {

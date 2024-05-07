@@ -17,15 +17,12 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,11 +33,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeck
@@ -96,7 +90,7 @@ fun MultiColumnProbosqis(
          )
       }
 
-      ErrorList(errorListState, safeDrawingWindowInsets)
+      PErrorList(errorListState, safeDrawingWindowInsets)
    }
 }
 
@@ -128,44 +122,6 @@ private fun AppBar(
       windowInsets = safeDrawingWindowInsets
          .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
    )
-}
-
-@Composable
-private fun ErrorList(
-   state: PErrorListState,
-   safeDrawingWindowInsets: WindowInsets
-) {
-   Box {
-      val tapDetectorModifier = Modifier.pointerInput(Unit) {
-         awaitPointerEventScope {
-            awaitFirstDown()
-            state.hide()
-         }
-      }
-
-      Box(
-         Modifier
-            .fillMaxSize()
-            .then(
-               if (state.isShown) { tapDetectorModifier } else { Modifier }
-            )
-      )
-
-      val density = LocalDensity.current
-
-      PErrorList(
-         state,
-         modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(
-               start = 32.dp,
-               top = with (density) {
-                  safeDrawingWindowInsets.getTop(density).toDp() + 8.dp
-               },
-               end = 8.dp,
-            )
-      )
-   }
 }
 
 @Composable
