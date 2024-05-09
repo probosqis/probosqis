@@ -81,23 +81,19 @@ class PErrorListState {
 }
 
 @Composable
+internal expect fun DismissHandler(onDismissRequest: () -> Unit)
+
+@Composable
 fun PErrorList(state: PErrorListState) {
    Layout(
       content = {
-         val tapDetectorModifier = Modifier.pointerInput(Unit) {
-            awaitPointerEventScope {
-               awaitFirstDown()
-               state.hide()
-            }
+         if (state.isShown) {
+            DismissHandler(
+               onDismissRequest = { state.hide() }
+            )
+         } else {
+            Spacer(Modifier.fillMaxSize())
          }
-
-         Box(
-            Modifier
-               .fillMaxSize()
-               .then(
-                  if (state.isShown) { tapDetectorModifier } else { Modifier }
-               )
-         )
 
          PErrorListContent(state)
       },
