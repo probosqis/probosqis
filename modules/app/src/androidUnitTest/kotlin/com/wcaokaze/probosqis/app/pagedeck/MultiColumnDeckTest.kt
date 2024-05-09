@@ -81,6 +81,14 @@ class MultiColumnDeckTest {
             ) {
                Text("Add Card ${page.i}")
             }
+
+            Button(
+               onClick = {
+                  pageStackState.removeFromDeck()
+               }
+            ) {
+               Text("Remove Card ${page.i}")
+            }
          }
       },
       header = { _, _, _ -> },
@@ -338,6 +346,73 @@ class MultiColumnDeckTest {
       rule.runOnIdle {
          assertCardNumbers(listOf(0, 100, 200, 1, 101), deckState.deck)
          assertEquals(1, deckState.deckState.firstContentCardIndex)
+      }
+   }
+
+   @Test
+   fun removeCard_viaDeckState() {
+      lateinit var coroutineScope: CoroutineScope
+      lateinit var deckState: MultiColumnPageDeckState
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+
+         val deck = createPageDeck(cardCount = 5)
+         deckState = remember {
+            MultiColumnPageDeckState(
+               pageDeckCache = WritableCache(deck),
+               pageStackRepository = mockk()
+            )
+         }
+
+         @OptIn(ExperimentalMaterial3Api::class)
+         MultiColumnPageDeck(
+            deckState, rememberPageSwitcherState(),
+            rememberPageStateStore(coroutineScope), pageStackCount = 2,
+            activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
+            inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
+            pageStackBackgroundColor = Color.Transparent,
+            pageStackFooterBackgroundColor = Color.Transparent, WindowInsets(0),
+            modifier = Modifier.fillMaxSize()
+         )
+      }
+
+      fun assertCardNumbers(expected: List<Int>, actual: PageDeck) {
+         val contents = actual.sequence()
+            .map { card ->
+               val pageStack = card.content.pageStackCache.value
+               val pageId = pageStack.head.id
+               pageId.value.toInt()
+            }
+            .toList()
+
+         assertContentEquals(expected, contents)
+      }
+
+      rule.runOnIdle {
+         assertCardNumbers(listOf(0, 1, 2, 3, 4), deckState.deck)
+         assertEquals(0, deckState.deckState.firstContentCardIndex)
+      }
+
+      rule.onNodeWithText("Remove Card 0").performClick()
+      rule.runOnIdle {
+         assertCardNumbers(listOf(1, 2, 3, 4), deckState.deck)
+         assertEquals(0, deckState.deckState.firstContentCardIndex)
+      }
+
+      coroutineScope.launch {
+         deckState.deckState.animateScroll(3)
+      }
+
+      rule.onNodeWithText("Remove Card 4").performClick()
+      rule.runOnIdle {
+         assertCardNumbers(listOf(1, 2, 3), deckState.deck)
+         assertEquals(1, deckState.deckState.firstContentCardIndex)
+      }
+
+      rule.onNodeWithText("Remove Card 2").performClick()
+      rule.runOnIdle {
+         assertCardNumbers(listOf(1, 3), deckState.deck)
+         assertEquals(0, deckState.deckState.firstContentCardIndex)
       }
    }
 }

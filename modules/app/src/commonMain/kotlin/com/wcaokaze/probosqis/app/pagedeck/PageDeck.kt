@@ -154,7 +154,7 @@ sealed class PageDeckState(
       return if (coroutineScope == null) {
          lazyPageStackState.isVisible = false
          val index = deck.sequence().indexOfFirst { it.content.id == id }
-         if (index > 0) {
+         if (index >= 0) {
             deck = deck.removed(index)
          }
          Job().apply { complete() }
@@ -164,7 +164,7 @@ sealed class PageDeckState(
             delay(CARD_ANIM_DURATION)
 
             val index = deck.sequence().indexOfFirst { it.content.id == id }
-            if (index > 0) {
+            if (index >= 0) {
                deck = deck.removed(index)
             }
          }
