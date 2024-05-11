@@ -31,16 +31,20 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -84,7 +88,10 @@ class PErrorListState {
 internal expect fun DismissHandler(onDismissRequest: () -> Unit)
 
 @Composable
-fun PErrorList(state: PErrorListState) {
+fun PErrorList(
+   state: PErrorListState,
+   windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
    Layout(
       content = {
          if (state.isShown) {
@@ -95,7 +102,16 @@ fun PErrorList(state: PErrorListState) {
             Spacer(Modifier.fillMaxSize())
          }
 
-         PErrorListContent(state)
+         PErrorListContent(
+            state,
+            modifier = Modifier.windowInsetsPadding(
+               // PErrorListContentはTopEndがPErrorActionButtonと合う位置に
+               // 配置される（measurePolicy内に該当処理がある）のでWindowInsetsの
+               // EndとTopは無視する
+               windowInsets
+                  .only(WindowInsetsSides.Start + WindowInsetsSides.Bottom)
+            )
+         )
       },
       measurePolicy = { measurables, constraints ->
          val backgroundPlaceable = measurables[0].measure(constraints)
@@ -137,7 +153,10 @@ private fun <T> animSpec(easing: Easing = LinearEasing)
       = tween<T>(300, easing = easing)
 
 @Composable
-private fun PErrorListContent(state: PErrorListState) {
+private fun PErrorListContent(
+   state: PErrorListState,
+   modifier: Modifier = Modifier
+) {
    val transition = updateTransition(state.isShown)
 
    val offset by transition.animateDp(
@@ -157,7 +176,7 @@ private fun PErrorListContent(state: PErrorListState) {
             sizeAnimationSpec = { _, _ -> animSpec(FastOutSlowInEasing) }
          )
       },
-      modifier = Modifier
+      modifier = modifier
          .offset(x = offset)
          .shadow(elevation, MaterialTheme.shapes.small)
          .then(
