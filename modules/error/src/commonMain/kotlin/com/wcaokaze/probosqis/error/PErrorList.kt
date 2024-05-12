@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.error
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -45,12 +46,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,10 +71,26 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import com.wcaokaze.probosqis.resources.icons.Error
+import kotlinx.collections.immutable.ImmutableList
 import kotlin.math.roundToInt
+import kotlin.reflect.KClass
+
+inline fun <reified E : PError> PErrorItemComposable(
+   noinline composable: @Composable (E) -> Unit
+) = PErrorItemComposable(E::class, composable)
+
+@Immutable
+class PErrorItemComposable<E : PError>(
+   val errorClass: KClass<E>,
+   val composable: @Composable (E) -> Unit
+)
 
 @Stable
-class PErrorListState {
+class PErrorListState(
+   itemComposables: List<PErrorItemComposable<*>>
+) {
+   private val itemComposables = itemComposables.associateBy { it.errorClass }
+
    internal var buttonBounds by mutableStateOf(Rect.Zero)
 
    var isShown by mutableStateOf(false)
@@ -82,6 +102,12 @@ class PErrorListState {
    fun hide() {
       isShown = false
    }
+
+   @Stable
+   internal fun <E : PError> getComposableFor(error: E): PErrorItemComposable<E>? {
+      @Suppress("UNCHECKED_CAST")
+      return itemComposables[error::class] as PErrorItemComposable<E>?
+   }
 }
 
 @Composable
@@ -90,6 +116,7 @@ internal expect fun DismissHandler(onDismissRequest: () -> Unit)
 @Composable
 fun PErrorList(
    state: PErrorListState,
+   errors: ImmutableList<PError>,
    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    Layout(
@@ -102,8 +129,9 @@ fun PErrorList(
             Spacer(Modifier.fillMaxSize())
          }
 
-         PErrorListContent(
+         PErrorListSheet(
             state,
+            errors,
             modifier = Modifier.windowInsetsPadding(
                // PErrorListContentはTopEndがPErrorActionButtonと合う位置に
                // 配置される（measurePolicy内に該当処理がある）のでWindowInsetsの
@@ -146,15 +174,16 @@ fun PErrorList(
    )
 }
 
-private val iconRowHeight = 48.dp
+private val headerHeight = 48.dp
 private val iconHorizontalPadding = 16.dp
 
 private fun <T> animSpec(easing: Easing = LinearEasing)
       = tween<T>(300, easing = easing)
 
 @Composable
-private fun PErrorListContent(
+private fun PErrorListSheet(
    state: PErrorListState,
+   errors: ImmutableList<PError>,
    modifier: Modifier = Modifier
 ) {
    val transition = updateTransition(state.isShown)
@@ -188,49 +217,62 @@ private fun PErrorListContent(
          )
    ) { isShown ->
       if (!isShown) {
-         Spacer(Modifier.size(iconRowHeight))
+         Spacer(Modifier.size(headerHeight))
       } else {
          Column(
             modifier = Modifier
                .clip(MaterialTheme.shapes.small)
                .pointerInput(Unit) {}
          ) {
-            Box(
-               modifier = Modifier
-                  .fillMaxWidth()
-                  .height(iconRowHeight)
-                  .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            ) {
-               val hiddenIconOffset = with (LocalDensity.current) {
-                  val hiddenIconPadding = (iconRowHeight - Icons.Default.Error.defaultWidth) / 2
-                  (hiddenIconPadding - iconHorizontalPadding).roundToPx()
-               }
+            PErrorListHeader()
 
-               @OptIn(ExperimentalAnimationApi::class)
-               Icon(
-                  Icons.Default.Error,
-                  contentDescription = null,
-                  modifier = Modifier
-                     .align(Alignment.CenterStart)
-                     .padding(horizontal = iconHorizontalPadding)
-                     .animateEnterExit(
-                        enter = slideInHorizontally (animSpec()) { hiddenIconOffset },
-                        exit  = slideOutHorizontally(animSpec()) { hiddenIconOffset }
-                     )
-               )
-            }
+            PErrorListContent(state, errors)
+         }
+      }
+   }
+}
 
-            Text(
-               """
-               Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-               eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-               enim ad minim veniam, quis nostrud exercitation ullamco laboris
-               nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-               reprehenderit in voluptate velit esse cillum dolore eu fugiat
-               nulla pariatur. Excepteur sint occaecat cupidatat non proident,
-               sunt in culpa qui officia deserunt mollit anim id est laborum
-               """.trimIndent()
+@Composable
+private fun AnimatedContentScope.PErrorListHeader() {
+   Box(
+      modifier = Modifier
+         .fillMaxWidth()
+         .height(headerHeight)
+         .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+   ) {
+      val hiddenIconOffset = with (LocalDensity.current) {
+         val hiddenIconPadding = (headerHeight - Icons.Default.Error.defaultWidth) / 2
+         (hiddenIconPadding - iconHorizontalPadding).roundToPx()
+      }
+
+      @OptIn(ExperimentalAnimationApi::class)
+      Icon(
+         Icons.Default.Error,
+         contentDescription = null,
+         modifier = Modifier
+            .align(Alignment.CenterStart)
+            .padding(horizontal = iconHorizontalPadding)
+            .animateEnterExit(
+               enter = slideInHorizontally (animSpec()) { hiddenIconOffset },
+               exit  = slideOutHorizontally(animSpec()) { hiddenIconOffset }
             )
+      )
+   }
+}
+
+@Composable
+private fun PErrorListContent(
+   state: PErrorListState,
+   errors: ImmutableList<PError>,
+   fallback: @Composable (PError) -> Unit = {}
+) {
+   LazyColumn {
+      itemsIndexed(errors) { index, error ->
+         val composable = state.getComposableFor(error)?.composable ?: fallback
+         composable(error)
+
+         if (index < errors.lastIndex) {
+            Divider()
          }
       }
    }

@@ -20,8 +20,10 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +35,8 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -47,9 +51,17 @@ class PErrorListTest {
    @get:Rule
    val rule = createComposeRule()
 
+   private class ErrorImpl(val i: Int) : PError()
+
+   private val errorItemComposableImpl = PErrorItemComposable<ErrorImpl> { error ->
+      Text("Error message ${error.i}")
+   }
+
    @Test
    fun enterExitAnim() {
-      val state = PErrorListState()
+      val state = PErrorListState(
+         itemComposables = listOf(errorItemComposableImpl)
+      )
 
       rule.setContent {
          Box {
@@ -64,7 +76,12 @@ class PErrorListTest {
                )
             }
 
-            PErrorList(state)
+            PErrorList(
+               state,
+               errors = remember {
+                  List(4) { ErrorImpl(it) } .toImmutableList()
+               }
+            )
          }
       }
 
@@ -89,7 +106,9 @@ class PErrorListTest {
 
    @Test
    fun dismissHandler() {
-      val state = PErrorListState()
+      val state = PErrorListState(
+         itemComposables = listOf(errorItemComposableImpl)
+      )
 
       rule.setContent {
          Box {
@@ -104,7 +123,10 @@ class PErrorListTest {
                )
             }
 
-            PErrorList(state)
+            PErrorList(
+               state,
+               persistentListOf(ErrorImpl(0))
+            )
          }
       }
 
@@ -122,7 +144,9 @@ class PErrorListTest {
 
    @Test
    fun dismissHandler_doNotDismissTouchingErrorList() {
-      val state = PErrorListState()
+      val state = PErrorListState(
+         itemComposables = listOf(errorItemComposableImpl)
+      )
 
       rule.setContent {
          Box {
@@ -137,7 +161,10 @@ class PErrorListTest {
                )
             }
 
-            PErrorList(state)
+            PErrorList(
+               state,
+               persistentListOf(ErrorImpl(0))
+            )
          }
       }
 
@@ -155,7 +182,10 @@ class PErrorListTest {
 
    @Test
    fun dismissHandler_consumeTouchEvent() {
-      val state = PErrorListState()
+      val state = PErrorListState(
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
       var isRootTouched by mutableStateOf(false)
 
       rule.setContent {
@@ -182,7 +212,10 @@ class PErrorListTest {
                )
             }
 
-            PErrorList(state)
+            PErrorList(
+               state,
+               persistentListOf(ErrorImpl(0))
+            )
          }
       }
 

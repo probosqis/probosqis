@@ -16,4 +16,4 @@
 
 package com.wcaokaze.probosqis.error
 
-class PError
+abstract class PError

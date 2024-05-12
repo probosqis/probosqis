@@ -39,11 +39,31 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorActionButton
+import com.wcaokaze.probosqis.error.PErrorItemComposable
 import com.wcaokaze.probosqis.error.PErrorList
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
+import kotlinx.collections.immutable.persistentListOf
+
+internal class PErrorImpl(val text: String) : PError()
+
+internal val errorItemComposableImpl = PErrorItemComposable<PErrorImpl> { error ->
+   Text(error.text)
+}
+
+internal val errors = persistentListOf(
+   PErrorImpl("Lorem ipsum dolor sit amet"),
+   PErrorImpl("consectetur adipiscing elit"),
+   PErrorImpl("sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"),
+   PErrorImpl("Ut enim ad minim veniam"),
+   PErrorImpl("quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"),
+   PErrorImpl("Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur"),
+   PErrorImpl("Excepteur sint occaecat cupidatat non proident"),
+   PErrorImpl("sunt in culpa qui officia deserunt mollit anim id est laborum"),
+)
 
 @Composable
 fun MultiColumnProbosqis(
@@ -55,7 +75,11 @@ fun MultiColumnProbosqis(
       Modifier
          .background(colorScheme.background)
    ) {
-      val errorListState = remember { PErrorListState() }
+      val errorListState = remember {
+         PErrorListState(
+            itemComposables = listOf(errorItemComposableImpl)
+         )
+      }
 
       val pageStackCount = (maxWidth / 330.dp).toInt().coerceAtLeast(1)
 
@@ -91,7 +115,7 @@ fun MultiColumnProbosqis(
          )
       }
 
-      PErrorList(errorListState)
+      PErrorList(errorListState, errors)
    }
 }
 

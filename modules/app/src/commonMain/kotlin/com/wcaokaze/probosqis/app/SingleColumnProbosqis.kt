@@ -90,7 +90,11 @@ fun SingleColumnProbosqis(
    }
 
    Box {
-      val errorListState = remember { PErrorListState() }
+      val errorListState = remember {
+         PErrorListState(
+            itemComposables = listOf(errorItemComposableImpl)
+         )
+      }
 
       Column(
          modifier = Modifier
@@ -123,7 +127,7 @@ fun SingleColumnProbosqis(
          )
       }
 
-      PErrorList(errorListState)
+      PErrorList(errorListState, errors)
    }
 }
 
