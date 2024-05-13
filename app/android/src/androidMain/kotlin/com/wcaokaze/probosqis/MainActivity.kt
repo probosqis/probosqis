@@ -44,17 +44,21 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.MultiColumnProbosqis
+import com.wcaokaze.probosqis.app.PErrorImpl
 import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.SingleColumnProbosqis
 import com.wcaokaze.probosqis.app.TestNotePage
 import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.TestTimelinePage
+import com.wcaokaze.probosqis.app.errorItemComposableImpl
 import com.wcaokaze.probosqis.app.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.app.pagedeck.AndroidPageStackRepository
 import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
+import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
+import com.wcaokaze.probosqis.error.errorSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 
@@ -87,8 +91,20 @@ class MainActivity : ComponentActivity() {
                   context, pageStackRepository
                )
 
-               ProbosqisState(allPageComposables, pageDeckRepository,
-                  pageStackRepository, coroutineScope)
+               val allErrorItemComposables = persistentListOf(
+                  errorItemComposableImpl,
+               )
+               val errorListRepository = AndroidPErrorListRepository(
+                  context,
+                  allErrorSerializers = listOf(
+                     errorSerializer<PErrorImpl>(),
+                  )
+               )
+
+               ProbosqisState(
+                  allPageComposables, pageDeckRepository, pageStackRepository,
+                  allErrorItemComposables, errorListRepository, coroutineScope
+               )
             }
 
             BackHandler {

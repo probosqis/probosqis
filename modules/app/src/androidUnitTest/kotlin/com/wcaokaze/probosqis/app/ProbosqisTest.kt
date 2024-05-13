@@ -89,6 +89,10 @@ class ProbosqisTest {
             every { loadPageDeck() } returns WritableCache(pageDeck)
          },
          pageStackRepository = mockk(),
+         allErrorItemComposables = emptyList(),
+         errorListRepository = mockk {
+            every { loadErrorList() } returns WritableCache(emptyList())
+         },
          coroutineScope = mockk()
       )
 

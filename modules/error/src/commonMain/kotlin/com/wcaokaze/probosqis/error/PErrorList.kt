@@ -70,8 +70,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import com.wcaokaze.probosqis.resources.icons.Error
-import kotlinx.collections.immutable.ImmutableList
 import kotlin.math.roundToInt
 import kotlin.reflect.KClass
 
@@ -87,11 +88,14 @@ class PErrorItemComposable<E : PError>(
 
 @Stable
 class PErrorListState(
+   errorListCache: WritableCache<List<PError>>,
    itemComposables: List<PErrorItemComposable<*>>
 ) {
    private val itemComposables = itemComposables.associateBy { it.errorClass }
 
    internal var buttonBounds by mutableStateOf(Rect.Zero)
+
+   var errors: List<PError> by errorListCache.asMutableState()
 
    var isShown by mutableStateOf(false)
 
@@ -116,7 +120,6 @@ internal expect fun DismissHandler(onDismissRequest: () -> Unit)
 @Composable
 fun PErrorList(
    state: PErrorListState,
-   errors: ImmutableList<PError>,
    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    Layout(
@@ -131,7 +134,6 @@ fun PErrorList(
 
          PErrorListSheet(
             state,
-            errors,
             modifier = Modifier.windowInsetsPadding(
                // PErrorListContentはTopEndがPErrorActionButtonと合う位置に
                // 配置される（measurePolicy内に該当処理がある）のでWindowInsetsの
@@ -183,7 +185,6 @@ private fun <T> animSpec(easing: Easing = LinearEasing)
 @Composable
 private fun PErrorListSheet(
    state: PErrorListState,
-   errors: ImmutableList<PError>,
    modifier: Modifier = Modifier
 ) {
    val transition = updateTransition(state.isShown)
@@ -226,7 +227,7 @@ private fun PErrorListSheet(
          ) {
             PErrorListHeader()
 
-            PErrorListContent(state, errors)
+            PErrorListContent(state)
          }
       }
    }
@@ -263,9 +264,10 @@ private fun AnimatedContentScope.PErrorListHeader() {
 @Composable
 private fun PErrorListContent(
    state: PErrorListState,
-   errors: ImmutableList<PError>,
    fallback: @Composable (PError) -> Unit = {}
 ) {
+   val errors = state.errors
+
    LazyColumn {
       itemsIndexed(errors) { index, error ->
          val composable = state.getComposableFor(error)?.composable ?: fallback

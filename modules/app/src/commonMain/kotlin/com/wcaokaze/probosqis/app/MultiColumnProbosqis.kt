@@ -46,24 +46,14 @@ import com.wcaokaze.probosqis.error.PErrorList
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.resources.Strings
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.serialization.Serializable
 
-internal class PErrorImpl(val text: String) : PError()
+@Serializable
+class PErrorImpl(val text: String) : PError()
 
-internal val errorItemComposableImpl = PErrorItemComposable<PErrorImpl> { error ->
+val errorItemComposableImpl = PErrorItemComposable<PErrorImpl> { error ->
    Text(error.text)
 }
-
-internal val errors = persistentListOf(
-   PErrorImpl("Lorem ipsum dolor sit amet"),
-   PErrorImpl("consectetur adipiscing elit"),
-   PErrorImpl("sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"),
-   PErrorImpl("Ut enim ad minim veniam"),
-   PErrorImpl("quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"),
-   PErrorImpl("Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur"),
-   PErrorImpl("Excepteur sint occaecat cupidatat non proident"),
-   PErrorImpl("sunt in culpa qui officia deserunt mollit anim id est laborum"),
-)
 
 @Composable
 fun MultiColumnProbosqis(
@@ -72,14 +62,10 @@ fun MultiColumnProbosqis(
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    BoxWithConstraints(
-      Modifier
+      modifier = Modifier
          .background(colorScheme.background)
    ) {
-      val errorListState = remember {
-         PErrorListState(
-            itemComposables = listOf(errorItemComposableImpl)
-         )
-      }
+      val errorListState = state.errorListState
 
       val pageStackCount = (maxWidth / 330.dp).toInt().coerceAtLeast(1)
 
@@ -115,7 +101,7 @@ fun MultiColumnProbosqis(
          )
       }
 
-      PErrorList(errorListState, errors)
+      PErrorList(errorListState)
    }
 }
 

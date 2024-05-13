@@ -31,6 +31,8 @@ android {
 kotlin {
    sourceSets {
       commonMain.dependencies {
+         implementation project(':panoptiqon')
+         implementation project(':panoptiqon-compose')
          implementation project(':modules:resources')
       }
    }

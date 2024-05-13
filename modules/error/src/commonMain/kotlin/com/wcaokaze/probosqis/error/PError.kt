@@ -16,4 +16,7 @@
 
 package com.wcaokaze.probosqis.error
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 abstract class PError

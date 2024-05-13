@@ -28,6 +28,9 @@ import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.error.PError
+import com.wcaokaze.probosqis.error.PErrorItemComposable
+import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -75,11 +78,22 @@ private fun ProbosqisPreview() {
             = throw NotImplementedError()
    }
 
+   val allErrorItemComposables = persistentListOf<PErrorItemComposable<*>>()
+
+   val errorListRepository = object : PErrorListRepository {
+      override fun saveErrorList(errorList: List<PError>): WritableCache<List<PError>>
+            = throw NotImplementedError()
+      override fun loadErrorList(): WritableCache<List<PError>>
+            = throw NotImplementedError()
+   }
+
    val coroutineScope = rememberCoroutineScope()
 
    val probosqisState = remember {
-      ProbosqisState(allPageComposables, pageDeckRepository,
-         pageStackRepository, coroutineScope)
+      ProbosqisState(
+         allPageComposables, pageDeckRepository, pageStackRepository,
+         allErrorItemComposables, errorListRepository, coroutineScope
+      )
    }
 
    MultiColumnProbosqis(probosqisState)

@@ -55,6 +55,10 @@ class ProbosqisComposeTest {
          allPageComposables = emptyList(),
          pageDeckRepository,
          pageStackRepository = mockk(),
+         allErrorItemComposables = emptyList(),
+         errorListRepository = mockk {
+            every { loadErrorList() } returns WritableCache(emptyList())
+         },
          coroutineScope = mockk()
       )
 
@@ -79,6 +83,10 @@ class ProbosqisComposeTest {
          allPageComposables = emptyList(),
          pageDeckRepository,
          pageStackRepository,
+         allErrorItemComposables = emptyList(),
+         errorListRepository = mockk {
+            every { loadErrorList() } returns WritableCache(emptyList())
+         },
          coroutineScope = mockk()
       )
 
@@ -114,6 +122,10 @@ class ProbosqisComposeTest {
             every { loadPageDeck() } returns WritableCache(pageDeck)
          },
          pageStackRepository = mockk(),
+         allErrorItemComposables = emptyList(),
+         errorListRepository = mockk {
+            every { loadErrorList() } returns WritableCache(emptyList())
+         },
          coroutineScope = mockk()
       )
 
@@ -136,6 +148,10 @@ class ProbosqisComposeTest {
             every { loadPageDeck() } returns WritableCache(pageDeck)
          },
          pageStackRepository = mockk(),
+         allErrorItemComposables = emptyList(),
+         errorListRepository = mockk {
+            every { loadErrorList() } returns WritableCache(emptyList())
+         },
          coroutineScope = mockk()
       )
 
@@ -158,6 +174,10 @@ class ProbosqisComposeTest {
             every { loadPageDeck() } returns WritableCache(pageDeck)
          },
          pageStackRepository = mockk(),
+         allErrorItemComposables = emptyList(),
+         errorListRepository = mockk {
+            every { loadErrorList() } returns WritableCache(emptyList())
+         },
          coroutineScope = mockk()
       )
 
@@ -194,6 +214,10 @@ class ProbosqisComposeTest {
          allPageComposables = emptyList(),
          pageDeckRepository = mockk(),
          pageStackRepository = mockk(),
+         allErrorItemComposables = emptyList(),
+         errorListRepository = mockk {
+            every { loadErrorList() } returns WritableCache(emptyList())
+         },
          coroutineScope = mockk()
       )
 

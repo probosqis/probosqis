@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +34,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import org.junit.Rule
@@ -59,7 +59,9 @@ class PErrorListTest {
 
    @Test
    fun enterExitAnim() {
+      val errorList = List(4) { ErrorImpl(it) } .toImmutableList()
       val state = PErrorListState(
+         WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
       )
 
@@ -76,12 +78,7 @@ class PErrorListTest {
                )
             }
 
-            PErrorList(
-               state,
-               errors = remember {
-                  List(4) { ErrorImpl(it) } .toImmutableList()
-               }
-            )
+            PErrorList(state)
          }
       }
 
@@ -106,7 +103,9 @@ class PErrorListTest {
 
    @Test
    fun dismissHandler() {
+      val errorList = persistentListOf(ErrorImpl(0))
       val state = PErrorListState(
+         WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
       )
 
@@ -123,10 +122,7 @@ class PErrorListTest {
                )
             }
 
-            PErrorList(
-               state,
-               persistentListOf(ErrorImpl(0))
-            )
+            PErrorList(state)
          }
       }
 
@@ -144,7 +140,9 @@ class PErrorListTest {
 
    @Test
    fun dismissHandler_doNotDismissTouchingErrorList() {
+      val errorList = persistentListOf(ErrorImpl(0))
       val state = PErrorListState(
+         WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
       )
 
@@ -161,10 +159,7 @@ class PErrorListTest {
                )
             }
 
-            PErrorList(
-               state,
-               persistentListOf(ErrorImpl(0))
-            )
+            PErrorList(state)
          }
       }
 
@@ -182,7 +177,9 @@ class PErrorListTest {
 
    @Test
    fun dismissHandler_consumeTouchEvent() {
+      val errorList = persistentListOf(ErrorImpl(0))
       val state = PErrorListState(
+         WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
       )
 
@@ -212,10 +209,7 @@ class PErrorListTest {
                )
             }
 
-            PErrorList(
-               state,
-               persistentListOf(ErrorImpl(0))
-            )
+            PErrorList(state)
          }
       }
 
