@@ -57,15 +57,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.app.pagedeck.CombinedPageSwitcherState
-import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeck
-import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckAppBar
-import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.error.PErrorActionButton
 import com.wcaokaze.probosqis.error.PErrorList
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeck
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckAppBar
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.resources.Strings
 
 @Composable

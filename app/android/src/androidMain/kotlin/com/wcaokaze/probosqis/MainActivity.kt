@@ -51,14 +51,14 @@ import com.wcaokaze.probosqis.app.TestNotePage
 import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.TestTimelinePage
 import com.wcaokaze.probosqis.app.errorItemComposableImpl
-import com.wcaokaze.probosqis.app.pagedeck.AndroidPageDeckRepository
-import com.wcaokaze.probosqis.app.pagedeck.AndroidPageStackRepository
-import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
 import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
 import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
+import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
+import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 

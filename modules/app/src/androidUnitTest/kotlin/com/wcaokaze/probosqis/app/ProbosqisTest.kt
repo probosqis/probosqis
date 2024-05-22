@@ -25,9 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.app.pagedeck.CombinedPageComposable
-import com.wcaokaze.probosqis.app.pagedeck.LazyPageStackState
-import com.wcaokaze.probosqis.app.pagedeck.PageDeck
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
@@ -35,6 +32,9 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.pagedeck.PageDeck
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.every
 import io.mockk.mockk

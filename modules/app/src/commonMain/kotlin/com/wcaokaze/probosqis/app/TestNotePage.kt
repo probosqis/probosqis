@@ -38,13 +38,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.app.pagedeck.CombinedPageComposable
-import com.wcaokaze.probosqis.app.pagedeck.PageLayoutIds
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
+import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.PageLayoutIds
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

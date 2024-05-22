@@ -17,13 +17,6 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.runtime.Stable
-import com.wcaokaze.probosqis.app.pagedeck.CombinedPageComposable
-import com.wcaokaze.probosqis.app.pagedeck.CombinedPageSwitcherState
-import com.wcaokaze.probosqis.app.pagedeck.LazyPageStackState
-import com.wcaokaze.probosqis.app.pagedeck.PageDeck
-import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
-import com.wcaokaze.probosqis.app.pagedeck.PageDeckState
-import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
@@ -33,6 +26,13 @@ import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorItemComposable
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
+import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
+import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.pagedeck.PageDeck
+import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.pagedeck.PageDeckState
+import com.wcaokaze.probosqis.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf

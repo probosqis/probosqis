@@ -20,13 +20,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.wcaokaze.probosqis.app.pagedeck.LazyPageStackState
-import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
-import com.wcaokaze.probosqis.app.pagedeck.PageDeck
-import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
-import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
-import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
+import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.PageDeck
+import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.every
 import io.mockk.mockk
@@ -36,7 +36,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import java.io.IOException
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFails
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 @RunWith(JUnit4::class)
 class ProbosqisComposeTest {
@@ -67,6 +71,7 @@ class ProbosqisComposeTest {
       assertSame(pageDeck, loadedCache.value)
    }
 
+   @Suppress("INVISIBLE_MEMBER")
    @Test
    fun loadPageDeck_default() {
       val pageDeckRepository = mockk<PageDeckRepository> {
