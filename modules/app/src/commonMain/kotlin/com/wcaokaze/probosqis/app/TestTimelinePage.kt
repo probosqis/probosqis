@@ -54,10 +54,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.app.pagedeck.CombinedPageComposable
-import com.wcaokaze.probosqis.app.pagedeck.FooterButton
-import com.wcaokaze.probosqis.app.pagedeck.PageLayoutIds
-import com.wcaokaze.probosqis.app.pagedeck.PageStackState
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
@@ -68,6 +64,10 @@ import com.wcaokaze.probosqis.capsiqum.transition.animatePosition
 import com.wcaokaze.probosqis.capsiqum.transition.animateScale
 import com.wcaokaze.probosqis.capsiqum.transition.sharedElement
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
+import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.FooterButton
+import com.wcaokaze.probosqis.pagedeck.PageLayoutIds
+import com.wcaokaze.probosqis.pagedeck.PageStackState
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer

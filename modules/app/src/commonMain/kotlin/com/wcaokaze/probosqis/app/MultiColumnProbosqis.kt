@@ -37,14 +37,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeck
-import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorActionButton
 import com.wcaokaze.probosqis.error.PErrorItemComposable
 import com.wcaokaze.probosqis.error.PErrorList
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeck
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.serialization.Serializable
 
