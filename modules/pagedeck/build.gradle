@@ -31,7 +31,9 @@ android {
 kotlin {
    sourceSets {
       commonMain.dependencies {
-         implementation project(':capsiqum')
+         implementation project(':capsiqum-page')
+         implementation project(':capsiqum-deck')
+         implementation project(':capsiqum-transition')
          implementation project(':panoptiqon')
          implementation project(':panoptiqon-compose')
          implementation project(':modules:resources')

@@ -51,7 +51,9 @@ android {
 kotlin {
    sourceSets {
       androidMain.dependencies {
-         implementation project(':capsiqum')
+         implementation project(':capsiqum-page')
+         implementation project(':capsiqum-deck')
+         implementation project(':capsiqum-transition')
          implementation project(':modules:app')
          implementation project(':modules:error')
          implementation project(':modules:pagedeck')
