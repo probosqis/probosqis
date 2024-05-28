@@ -63,7 +63,7 @@ dependencyResolutionManagement {
          library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.6.2')
 
          library('koin-core', 'io.insert-koin', 'koin-core').versionRef('koin')
-         library('koin-compose', 'io.insert-koin', 'koin-androidx-compose').versionRef('koin')
+         library('koin-compose', 'io.insert-koin', 'koin-compose').version('1.1.5')
 
          library('kotlin-test-junit', 'org.jetbrains.kotlin', 'kotlin-test-junit').versionRef('kotlin')
          library('mockk', 'io.mockk', 'mockk').version('1.13.8')
