@@ -59,6 +59,7 @@ kotlin {
          implementation libs.kotlinx.serialization
          implementation libs.kotlinx.collections.immutable
          implementation libs.androidx.annotation
+         implementation libs.koin.compose
       }
 
       commonTest.dependencies {
