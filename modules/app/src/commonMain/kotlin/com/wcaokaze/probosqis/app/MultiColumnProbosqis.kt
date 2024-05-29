@@ -32,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,6 +46,7 @@ import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeck
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.serialization.Serializable
+import org.koin.compose.koinInject
 
 @Serializable
 class PErrorImpl(val text: String) : PError()
@@ -76,13 +76,8 @@ fun MultiColumnProbosqis(
             onErrorButtonClick = { errorListState.show() }
          )
 
-         val pageDeckState = remember(state) {
-            val pageDeckCache = state.loadPageDeckOrDefault()
-
-            MultiColumnPageDeckState(
-               pageDeckCache, state.pageStackRepository
-            ).also { state.pageDeckState = it }
-         }
+         val pageDeckState = koinInject<MultiColumnPageDeckState>()
+            .also { state.pageDeckState = it }
 
          @OptIn(ExperimentalMaterial3Api::class)
          MultiColumnPageDeck(

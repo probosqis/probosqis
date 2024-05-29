@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis
 
+import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -51,6 +52,7 @@ import com.wcaokaze.probosqis.app.TestNotePage
 import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.TestTimelinePage
 import com.wcaokaze.probosqis.app.errorItemComposableImpl
+import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
@@ -60,6 +62,10 @@ import com.wcaokaze.probosqis.error.errorSerializer
 import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
@@ -73,6 +79,12 @@ private val allPageComposables = persistentListOf(
    testNotePageComposable,
 )
 
+private val allPageSerializers = persistentListOf(
+   pageSerializer<TestPage>(),
+   pageSerializer<TestTimelinePage>(),
+   pageSerializer<TestNotePage>(),
+)
+
 private val koinModule = module {
    single { CombinedPageSwitcherState(allPageComposables) }
 
@@ -81,6 +93,32 @@ private val koinModule = module {
          allPageComposables.map { it.pageStateFactory },
          appCoroutineScope = get()
       )
+   }
+
+   single<PageDeckRepository> {
+      AndroidPageDeckRepository(context = get(), pageStackRepository = get())
+   }
+
+   single<PageStackRepository> {
+      AndroidPageStackRepository(context = get(), allPageSerializers)
+   }
+
+   factory {
+      val pageDeckCache = loadPageDeckOrDefault(
+         pageDeckRepository = get(),
+         pageStackRepository = get()
+      )
+
+      MultiColumnPageDeckState(pageDeckCache, pageStackRepository = get())
+   }
+
+   factory {
+      val pageDeckCache = loadPageDeckOrDefault(
+         pageDeckRepository = get(),
+         pageStackRepository = get()
+      )
+
+      SingleColumnPageDeckState(pageDeckCache, pageStackRepository = get())
    }
 }
 
@@ -94,11 +132,12 @@ class MainActivity : ComponentActivity() {
 
          KoinApplication(
             application = {
-               val coroutineScopeModule = module {
+               val appKoinModule = module {
+                  single<Context> { this@MainActivity }
                   single { appCoroutineScope }
                }
 
-               modules(koinModule, coroutineScopeModule)
+               modules(koinModule, appKoinModule)
             }
          ) {
             ProbosqisTheme {
@@ -108,18 +147,6 @@ class MainActivity : ComponentActivity() {
                val pageStateStore: PageStateStore = koinInject()
 
                val probosqisState = remember(context, pageSwitcherState, pageStateStore) {
-                  val pageStackRepository = AndroidPageStackRepository(
-                     context,
-                     allPageSerializers = listOf(
-                        pageSerializer<TestPage>(),
-                        pageSerializer<TestTimelinePage>(),
-                        pageSerializer<TestNotePage>(),
-                     )
-                  )
-                  val pageDeckRepository = AndroidPageDeckRepository(
-                     context, pageStackRepository
-                  )
-
                   val allErrorItemComposables = persistentListOf(
                      errorItemComposableImpl,
                   )
@@ -131,8 +158,7 @@ class MainActivity : ComponentActivity() {
                   )
 
                   ProbosqisState(
-                     pageSwitcherState, pageStateStore, pageDeckRepository,
-                     pageStackRepository, allErrorItemComposables,
+                     pageSwitcherState, pageStateStore, allErrorItemComposables,
                      errorListRepository
                   )
                }

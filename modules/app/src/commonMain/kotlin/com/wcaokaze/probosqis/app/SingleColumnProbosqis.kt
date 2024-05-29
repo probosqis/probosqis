@@ -67,6 +67,7 @@ import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.resources.Strings
+import org.koin.compose.koinInject
 
 @Composable
 fun SingleColumnProbosqis(
@@ -74,13 +75,8 @@ fun SingleColumnProbosqis(
    colorScheme: SingleColumnProbosqisColorScheme = rememberSingleColumnProbosqisColorScheme(),
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
-   val pageDeckState = remember(state) {
-      val pageDeckCache = state.loadPageDeckOrDefault()
-
-      SingleColumnPageDeckState(
-         pageDeckCache, state.pageStackRepository
-      ).also { state.pageDeckState = it }
-   }
+   val pageDeckState = koinInject<SingleColumnPageDeckState>()
+      .also { state.pageDeckState = it }
 
    // 現状Desktopで動作しないため自前実装する
    // val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()

@@ -28,6 +28,7 @@ import com.wcaokaze.probosqis.app.TestNotePage
 import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.TestTimelinePage
 import com.wcaokaze.probosqis.app.errorItemComposableImpl
+import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
@@ -37,14 +38,16 @@ import com.wcaokaze.probosqis.error.errorSerializer
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.CoroutineScope
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.io.File
 
@@ -53,6 +56,14 @@ private val allPageComposables = persistentListOf(
    testTimelinePageComposable,
    testNotePageComposable,
 )
+
+private val allPageSerializers = persistentListOf(
+   pageSerializer<TestPage>(),
+   pageSerializer<TestTimelinePage>(),
+   pageSerializer<TestNotePage>(),
+)
+
+private val probosqisDataDir = File(System.getProperty("user.home"), ".probosqisData")
 
 private val koinModule = module {
    single { CombinedPageSwitcherState(allPageComposables) }
@@ -63,6 +74,32 @@ private val koinModule = module {
          appCoroutineScope = get()
       )
    }
+
+   single<PageDeckRepository> {
+      DesktopPageDeckRepository(pageStackRepository = get(), probosqisDataDir)
+   }
+
+   single<PageStackRepository> {
+      DesktopPageStackRepository(allPageSerializers, probosqisDataDir)
+   }
+
+   factory {
+      val pageDeckCache = loadPageDeckOrDefault(
+         pageDeckRepository = get(),
+         pageStackRepository = get()
+      )
+
+      MultiColumnPageDeckState(pageDeckCache, pageStackRepository = get())
+   }
+
+   factory {
+      val pageDeckCache = loadPageDeckOrDefault(
+         pageDeckRepository = get(),
+         pageStackRepository = get()
+      )
+
+      SingleColumnPageDeckState(pageDeckCache, pageStackRepository = get())
+   }
 }
 
 fun main() {
@@ -71,11 +108,11 @@ fun main() {
 
       KoinApplication(
          application = {
-            val coroutineScopeModule = module {
+            val appKoinModule = module {
                single { appCoroutineScope }
             }
 
-            modules(koinModule, coroutineScopeModule)
+            modules(koinModule, appKoinModule)
          }
       ) {
          ProbosqisTheme {
@@ -87,22 +124,6 @@ fun main() {
                val pageStateStore: PageStateStore = koinInject()
 
                val probosqisState = remember(pageSwitcherState, pageStateStore) {
-                  val probosqisDataDir
-                        = File(System.getProperty("user.home"), ".probosqisData")
-
-                  val pageStackRepository = DesktopPageStackRepository(
-                     allPageSerializers = listOf(
-                        pageSerializer<TestPage>(),
-                        pageSerializer<TestTimelinePage>(),
-                        pageSerializer<TestNotePage>(),
-                     ),
-                     probosqisDataDir
-                  )
-
-                  val pageDeckRepository = DesktopPageDeckRepository(
-                     pageStackRepository,
-                     probosqisDataDir
-                  )
 
                   val allErrorItemComposables = persistentListOf(
                      errorItemComposableImpl,
@@ -116,8 +137,7 @@ fun main() {
                   )
 
                   ProbosqisState(
-                     pageSwitcherState, pageStateStore, pageDeckRepository,
-                     pageStackRepository, allErrorItemComposables,
+                     pageSwitcherState, pageStateStore, allErrorItemComposables,
                      errorListRepository
                   )
                }

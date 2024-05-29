@@ -36,12 +36,15 @@ import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageDeck
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.runner.RunWith
+import org.koin.compose.KoinApplication
+import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
 
@@ -54,23 +57,6 @@ class ProbosqisTest {
    fun composeTooNarrowMultiColumn() {
       class PageImpl(val i: Int) : Page()
       class PageStateImpl : PageState()
-
-      val pageDeck = PageDeck(
-         children = List(2) { i ->
-            val pageStack = PageStack(
-               PageStack.Id(i.toLong()),
-               SavedPageState(
-                  PageId(i.toLong()),
-                  PageImpl(i)
-               )
-            )
-
-            Deck.Card(
-               LazyPageStackState(pageStack.id, WritableCache(pageStack),
-                  initialVisibility = true)
-            )
-         }
-      )
 
       val allPageComposables = listOf(
          CombinedPageComposable<PageImpl, PageStateImpl>(
@@ -93,10 +79,6 @@ class ProbosqisTest {
             allPageStateFactories = allPageComposables.map { it.pageStateFactory },
             appCoroutineScope = mockk()
          ),
-         pageDeckRepository = mockk {
-            every { loadPageDeck() } returns WritableCache(pageDeck)
-         },
-         pageStackRepository = mockk(),
          allErrorItemComposables = emptyList(),
          errorListRepository = mockk {
             every { loadErrorList() } returns WritableCache(emptyList())
@@ -104,12 +86,46 @@ class ProbosqisTest {
       )
 
       rule.setContent {
-         Box(
-            Modifier
-               .requiredWidth(60.dp)
-               .requiredHeight(800.dp)
+         KoinApplication(
+            application = {
+               modules(
+                  module {
+                     single {
+                        val pageDeck = PageDeck(
+                           children = List(2) { i ->
+                              val pageStack = PageStack(
+                                 PageStack.Id(i.toLong()),
+                                 SavedPageState(
+                                    PageId(i.toLong()),
+                                    PageImpl(i)
+                                 )
+                              )
+
+                              Deck.Card(
+                                 LazyPageStackState(
+                                    pageStack.id, WritableCache(pageStack),
+                                    initialVisibility = true
+                                 )
+                              )
+                           }
+                        )
+
+                        MultiColumnPageDeckState(
+                           WritableCache(pageDeck),
+                           pageStackRepository = mockk()
+                        )
+                     }
+                  }
+               )
+            }
          ) {
-            MultiColumnProbosqis(probosqisState)
+            Box(
+               Modifier
+                  .requiredWidth(60.dp)
+                  .requiredHeight(800.dp)
+            ) {
+               MultiColumnProbosqis(probosqisState)
+            }
          }
       }
 

@@ -35,12 +35,58 @@ import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
-import com.wcaokaze.probosqis.pagedeck.PageDeck
-import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import org.koin.compose.KoinApplication
+import org.koin.dsl.module
+
+private val deckCache = run {
+   val children = List(4) { pageStackId ->
+      val pageStack = PageStack(
+         PageStack.Id(pageStackId.toLong()),
+         SavedPageState(
+            PageId(0L),
+            TestPage(0)
+         )
+      )
+      val lazyPageStackState = LazyPageStackState(
+         pageStack.id,
+         WritableCache(pageStack),
+         initialVisibility = true
+      )
+      Deck.Card(lazyPageStackState)
+   } .toImmutableList()
+
+   val rootRow = Deck.Row(children)
+   val deck = Deck(rootRow)
+   WritableCache(deck)
+}
+
+private val koinModule = module {
+   single<PageStackRepository> {
+      object : PageStackRepository {
+         override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
+               = throw NotImplementedError()
+         override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
+               = throw NotImplementedError()
+         override fun deleteAllPageStacks()
+               = throw NotImplementedError()
+      }
+   }
+
+   factory {
+      MultiColumnPageDeckState(deckCache, pageStackRepository = get())
+   }
+
+   factory {
+      SingleColumnPageDeckState(deckCache, pageStackRepository = get())
+   }
+}
 
 @Composable
 private fun rememberPreviewProbosqisState(): ProbosqisState {
@@ -48,49 +94,13 @@ private fun rememberPreviewProbosqisState(): ProbosqisState {
       testPageComposable,
    )
 
-   val pageDeckRepository = object : PageDeckRepository {
-      override fun savePageDeck(pageDeck: PageDeck): WritableCache<PageDeck>
-            = throw NotImplementedError()
-
-      override fun loadPageDeck(): WritableCache<PageDeck> {
-         val children = List(4) { pageStackId ->
-            val pageStack = PageStack(
-               PageStack.Id(pageStackId.toLong()),
-               SavedPageState(
-                  PageId(0L),
-                  TestPage(0)
-               )
-            )
-            val lazyPageStackState = LazyPageStackState(
-               pageStack.id,
-               WritableCache(pageStack),
-               initialVisibility = true
-            )
-            Deck.Card(lazyPageStackState)
-         } .toImmutableList()
-
-         val rootRow = Deck.Row(children)
-         val deck = Deck(rootRow)
-         return WritableCache(deck)
-      }
-   }
-
-   val pageStackRepository = object : PageStackRepository {
-      override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
-            = throw NotImplementedError()
-      override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
-            = throw NotImplementedError()
-      override fun deleteAllPageStacks()
-            = throw NotImplementedError()
-   }
-
    val allErrorItemComposables = persistentListOf<PErrorItemComposable<*>>()
 
    val errorListRepository = object : PErrorListRepository {
       override fun saveErrorList(errorList: List<PError>): WritableCache<List<PError>>
             = throw NotImplementedError()
       override fun loadErrorList(): WritableCache<List<PError>>
-            = throw NotImplementedError()
+            = WritableCache(emptyList())
    }
 
    val coroutineScope = rememberCoroutineScope()
@@ -99,8 +109,7 @@ private fun rememberPreviewProbosqisState(): ProbosqisState {
       ProbosqisState(
          CombinedPageSwitcherState(allPageComposables),
          PageStateStore(allPageComposables.map { it.pageStateFactory }, coroutineScope),
-         pageDeckRepository, pageStackRepository, allErrorItemComposables,
-         errorListRepository
+         allErrorItemComposables, errorListRepository
       )
    }
 }
@@ -111,10 +120,14 @@ private fun SingleColumnProbosqisPreview(
    @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
    safeDrawingWindowInsets: WindowInsets
 ) {
-   SingleColumnProbosqis(
-      rememberPreviewProbosqisState(),
-      safeDrawingWindowInsets = safeDrawingWindowInsets
-   )
+   KoinApplication(application = { modules(koinModule) }) {
+      ProbosqisTheme {
+         SingleColumnProbosqis(
+            rememberPreviewProbosqisState(),
+            safeDrawingWindowInsets = safeDrawingWindowInsets
+         )
+      }
+   }
 }
 
 @MultiDevicePreview
@@ -123,20 +136,32 @@ private fun MultiColumnProbosqisPreview(
    @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
    safeDrawingWindowInsets: WindowInsets
 ) {
-   MultiColumnProbosqis(
-      rememberPreviewProbosqisState(),
-      safeDrawingWindowInsets = safeDrawingWindowInsets
-   )
+   KoinApplication(application = { modules(koinModule) }) {
+      ProbosqisTheme {
+         MultiColumnProbosqis(
+            rememberPreviewProbosqisState(),
+            safeDrawingWindowInsets = safeDrawingWindowInsets
+         )
+      }
+   }
 }
 
 @MultiFontScalePreview
 @Composable
 private fun ProbosqisFontScalePreview() {
-   MultiColumnProbosqis(rememberPreviewProbosqisState())
+   KoinApplication(application = { modules(koinModule) }) {
+      ProbosqisTheme {
+         MultiColumnProbosqis(rememberPreviewProbosqisState())
+      }
+   }
 }
 
 @MultiLanguagePreview
 @Composable
 private fun ProbosqisLanguagePreview() {
-   MultiColumnProbosqis(rememberPreviewProbosqisState())
+   KoinApplication(application = { modules(koinModule) }) {
+      ProbosqisTheme {
+         MultiColumnProbosqis(rememberPreviewProbosqisState())
+      }
+   }
 }
