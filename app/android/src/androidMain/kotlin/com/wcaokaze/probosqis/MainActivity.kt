@@ -54,23 +54,33 @@ import com.wcaokaze.probosqis.app.errorItemComposableImpl
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
 import com.wcaokaze.probosqis.error.errorSerializer
 import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
-import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
-import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module
 
+private val allPageComposables = persistentListOf(
+   testPageComposable,
+   testTimelinePageComposable,
+   testNotePageComposable,
+)
+
 private val koinModule = module {
-   factory { (allPageComposables: List<CombinedPageComposable<*, *>>) ->
-      CombinedPageSwitcherState(allPageComposables)
+   single { CombinedPageSwitcherState(allPageComposables) }
+
+   single {
+      PageStateStore(
+         allPageComposables.map { it.pageStateFactory },
+         appCoroutineScope = get()
+      )
    }
 }
 
@@ -80,29 +90,24 @@ class MainActivity : ComponentActivity() {
       super.onCreate(savedInstanceState)
 
       setContent {
+         val appCoroutineScope = rememberCoroutineScope()
+
          KoinApplication(
             application = {
-               modules(koinModule)
+               val coroutineScopeModule = module {
+                  single { appCoroutineScope }
+               }
+
+               modules(koinModule, coroutineScopeModule)
             }
          ) {
             ProbosqisTheme {
                val context = LocalContext.current
 
-               val coroutineScope = rememberCoroutineScope()
+               val pageSwitcherState: CombinedPageSwitcherState = koinInject()
+               val pageStateStore: PageStateStore = koinInject()
 
-               val allPageComposables = remember {
-                  persistentListOf(
-                     testPageComposable,
-                     testTimelinePageComposable,
-                     testNotePageComposable,
-                  )
-               }
-
-               val pageSwitcherState: CombinedPageSwitcherState = koinInject {
-                  parametersOf(allPageComposables)
-               }
-
-               val probosqisState = remember(context, pageSwitcherState) {
+               val probosqisState = remember(context, pageSwitcherState, pageStateStore) {
                   val pageStackRepository = AndroidPageStackRepository(
                      context,
                      allPageSerializers = listOf(
@@ -126,9 +131,9 @@ class MainActivity : ComponentActivity() {
                   )
 
                   ProbosqisState(
-                     allPageComposables, pageSwitcherState, pageDeckRepository,
+                     pageSwitcherState, pageStateStore, pageDeckRepository,
                      pageStackRepository, allErrorItemComposables,
-                     errorListRepository, coroutineScope
+                     errorListRepository
                   )
                }
 

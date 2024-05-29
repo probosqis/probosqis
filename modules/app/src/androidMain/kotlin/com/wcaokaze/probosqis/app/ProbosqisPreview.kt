@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorItemComposable
@@ -96,9 +97,10 @@ private fun rememberPreviewProbosqisState(): ProbosqisState {
 
    return remember {
       ProbosqisState(
-         allPageComposables, CombinedPageSwitcherState(allPageComposables),
+         CombinedPageSwitcherState(allPageComposables),
+         PageStateStore(allPageComposables.map { it.pageStateFactory }, coroutineScope),
          pageDeckRepository, pageStackRepository, allErrorItemComposables,
-         errorListRepository, coroutineScope
+         errorListRepository
       )
    }
 }

@@ -26,7 +26,6 @@ import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorItemComposable
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.PageDeck
@@ -37,23 +36,16 @@ import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CoroutineScope
 
 @Stable
 class ProbosqisState(
-   allPageComposables: List<CombinedPageComposable<*, *>>,
    val pageComposableSwitcher: CombinedPageSwitcherState,
+   val pageStateStore: PageStateStore,
    val pageDeckRepository: PageDeckRepository,
    val pageStackRepository: PageStackRepository,
    val allErrorItemComposables: List<PErrorItemComposable<*>>,
    val errorListRepository: PErrorListRepository,
-   coroutineScope: CoroutineScope
 ) {
-   val pageStateStore = PageStateStore(
-      allPageComposables.map { it.pageStateFactory },
-      coroutineScope
-   )
-
    private var _pageDeckState: PageDeckState? = null
    var pageDeckState: PageDeckState
       get() {

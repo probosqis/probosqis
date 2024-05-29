@@ -31,6 +31,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
@@ -87,8 +88,11 @@ class ProbosqisTest {
       )
 
       val probosqisState = ProbosqisState(
-         allPageComposables,
          CombinedPageSwitcherState(allPageComposables),
+         PageStateStore(
+            allPageStateFactories = allPageComposables.map { it.pageStateFactory },
+            appCoroutineScope = mockk()
+         ),
          pageDeckRepository = mockk {
             every { loadPageDeck() } returns WritableCache(pageDeck)
          },
@@ -96,8 +100,7 @@ class ProbosqisTest {
          allErrorItemComposables = emptyList(),
          errorListRepository = mockk {
             every { loadErrorList() } returns WritableCache(emptyList())
-         },
-         coroutineScope = mockk()
+         }
       )
 
       rule.setContent {

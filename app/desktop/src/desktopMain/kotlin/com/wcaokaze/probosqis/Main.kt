@@ -31,9 +31,9 @@ import com.wcaokaze.probosqis.app.errorItemComposableImpl
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
 import com.wcaokaze.probosqis.error.errorSerializer
-import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
@@ -41,23 +41,41 @@ import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.CoroutineScope
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
-import org.koin.core.parameter.parametersOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.io.File
 
+private val allPageComposables = persistentListOf(
+   testPageComposable,
+   testTimelinePageComposable,
+   testNotePageComposable,
+)
+
 private val koinModule = module {
-   factory { (allPageComposables: List<CombinedPageComposable<*, *>>) ->
-      CombinedPageSwitcherState(allPageComposables)
+   single { CombinedPageSwitcherState(allPageComposables) }
+
+   single {
+      PageStateStore(
+         allPageComposables.map { it.pageStateFactory },
+         appCoroutineScope = get()
+      )
    }
 }
 
 fun main() {
    application {
+      val appCoroutineScope = rememberCoroutineScope()
+
       KoinApplication(
          application = {
-            modules(koinModule)
+            val coroutineScopeModule = module {
+               single { appCoroutineScope }
+            }
+
+            modules(koinModule, coroutineScopeModule)
          }
       ) {
          ProbosqisTheme {
@@ -65,21 +83,10 @@ fun main() {
                title = Strings.App.topAppBar,
                onCloseRequest = { exitApplication() }
             ) {
-               val coroutineScope = rememberCoroutineScope()
+               val pageSwitcherState: CombinedPageSwitcherState = koinInject()
+               val pageStateStore: PageStateStore = koinInject()
 
-               val allPageComposables = remember {
-                  persistentListOf(
-                     testPageComposable,
-                     testTimelinePageComposable,
-                     testNotePageComposable,
-                  )
-               }
-
-               val pageSwitcherState: CombinedPageSwitcherState = koinInject {
-                  parametersOf(allPageComposables)
-               }
-
-               val probosqisState = remember(pageSwitcherState) {
+               val probosqisState = remember(pageSwitcherState, pageStateStore) {
                   val probosqisDataDir
                         = File(System.getProperty("user.home"), ".probosqisData")
 
@@ -109,9 +116,9 @@ fun main() {
                   )
 
                   ProbosqisState(
-                     allPageComposables, pageSwitcherState, pageDeckRepository,
+                     pageSwitcherState, pageStateStore, pageDeckRepository,
                      pageStackRepository, allErrorItemComposables,
-                     errorListRepository, coroutineScope
+                     errorListRepository
                   )
                }
 
