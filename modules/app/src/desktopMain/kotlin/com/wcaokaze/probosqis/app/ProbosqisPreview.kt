@@ -27,6 +27,7 @@ import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorItemComposable
 import com.wcaokaze.probosqis.error.PErrorListRepository
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.PageDeck
 import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
@@ -91,8 +92,9 @@ private fun ProbosqisPreview() {
 
    val probosqisState = remember {
       ProbosqisState(
-         allPageComposables, pageDeckRepository, pageStackRepository,
-         allErrorItemComposables, errorListRepository, coroutineScope
+         allPageComposables, CombinedPageSwitcherState(allPageComposables),
+         pageDeckRepository, pageStackRepository, allErrorItemComposables,
+         errorListRepository, coroutineScope
       )
    }
 

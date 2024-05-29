@@ -58,9 +58,21 @@ import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
 import com.wcaokaze.probosqis.error.errorSerializer
 import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
+import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
+import org.koin.compose.KoinApplication
+import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
+import org.koin.dsl.module
+
+private val koinModule = module {
+   factory { (allPageComposables: List<CombinedPageComposable<*, *>>) ->
+      CombinedPageSwitcherState(allPageComposables)
+   }
+}
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,58 +80,72 @@ class MainActivity : ComponentActivity() {
       super.onCreate(savedInstanceState)
 
       setContent {
-         ProbosqisTheme {
-            val context = LocalContext.current
-
-            val coroutineScope = rememberCoroutineScope()
-
-            val probosqisState = remember(context) {
-               val allPageComposables = persistentListOf(
-                  testPageComposable,
-                  testTimelinePageComposable,
-                  testNotePageComposable,
-               )
-               val pageStackRepository = AndroidPageStackRepository(
-                  context,
-                  allPageSerializers = listOf(
-                     pageSerializer<TestPage>(),
-                     pageSerializer<TestTimelinePage>(),
-                     pageSerializer<TestNotePage>(),
-                  )
-               )
-               val pageDeckRepository = AndroidPageDeckRepository(
-                  context, pageStackRepository
-               )
-
-               val allErrorItemComposables = persistentListOf(
-                  errorItemComposableImpl,
-               )
-               val errorListRepository = AndroidPErrorListRepository(
-                  context,
-                  allErrorSerializers = listOf(
-                     errorSerializer<PErrorImpl>(),
-                  )
-               )
-
-               ProbosqisState(
-                  allPageComposables, pageDeckRepository, pageStackRepository,
-                  allErrorItemComposables, errorListRepository, coroutineScope
-               )
+         KoinApplication(
+            application = {
+               modules(koinModule)
             }
+         ) {
+            ProbosqisTheme {
+               val context = LocalContext.current
 
-            BackHandler {
-               probosqisState.pageDeckState.activePageStackState.finishPage()
-            }
+               val coroutineScope = rememberCoroutineScope()
 
-            NavigationBarController()
+               val allPageComposables = remember {
+                  persistentListOf(
+                     testPageComposable,
+                     testTimelinePageComposable,
+                     testNotePageComposable,
+                  )
+               }
 
-            @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-            val windowSizeClass = calculateWindowSizeClass(activity = this)
+               val pageSwitcherState: CombinedPageSwitcherState = koinInject {
+                  parametersOf(allPageComposables)
+               }
 
-            if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
-               MultiColumnProbosqis(probosqisState)
-            } else {
-               SingleColumnProbosqis(probosqisState)
+               val probosqisState = remember(context, pageSwitcherState) {
+                  val pageStackRepository = AndroidPageStackRepository(
+                     context,
+                     allPageSerializers = listOf(
+                        pageSerializer<TestPage>(),
+                        pageSerializer<TestTimelinePage>(),
+                        pageSerializer<TestNotePage>(),
+                     )
+                  )
+                  val pageDeckRepository = AndroidPageDeckRepository(
+                     context, pageStackRepository
+                  )
+
+                  val allErrorItemComposables = persistentListOf(
+                     errorItemComposableImpl,
+                  )
+                  val errorListRepository = AndroidPErrorListRepository(
+                     context,
+                     allErrorSerializers = listOf(
+                        errorSerializer<PErrorImpl>(),
+                     )
+                  )
+
+                  ProbosqisState(
+                     allPageComposables, pageSwitcherState, pageDeckRepository,
+                     pageStackRepository, allErrorItemComposables,
+                     errorListRepository, coroutineScope
+                  )
+               }
+
+               BackHandler {
+                  probosqisState.pageDeckState.activePageStackState.finishPage()
+               }
+
+               NavigationBarController()
+
+               @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+               val windowSizeClass = calculateWindowSizeClass(activity = this)
+
+               if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
+                  MultiColumnProbosqis(probosqisState)
+               } else {
+                  SingleColumnProbosqis(probosqisState)
+               }
             }
          }
       }

@@ -32,6 +32,7 @@ import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.PageDeck
 import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
@@ -95,8 +96,9 @@ private fun rememberPreviewProbosqisState(): ProbosqisState {
 
    return remember {
       ProbosqisState(
-         allPageComposables, pageDeckRepository, pageStackRepository,
-         allErrorItemComposables, errorListRepository, coroutineScope
+         allPageComposables, CombinedPageSwitcherState(allPageComposables),
+         pageDeckRepository, pageStackRepository, allErrorItemComposables,
+         errorListRepository, coroutineScope
       )
    }
 }

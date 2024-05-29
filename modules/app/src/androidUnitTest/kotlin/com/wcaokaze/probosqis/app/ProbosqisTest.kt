@@ -33,6 +33,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.PageDeck
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
@@ -70,21 +71,24 @@ class ProbosqisTest {
          }
       )
 
+      val allPageComposables = listOf(
+         CombinedPageComposable<PageImpl, PageStateImpl>(
+            PageStateFactory { _, _ -> PageStateImpl() },
+            content = { page, _, _, _ ->
+               Text(
+                  "content${page.i}",
+                  modifier = Modifier.fillMaxWidth()
+               )
+            },
+            header = { _, _, _ -> },
+            footer = { _, _, _ -> },
+            pageTransitions = {}
+         )
+      )
+
       val probosqisState = ProbosqisState(
-         allPageComposables = listOf(
-            CombinedPageComposable<PageImpl, PageStateImpl>(
-               PageStateFactory { _, _ -> PageStateImpl() },
-               content = { page, _, _, _ ->
-                  Text(
-                     "content${page.i}",
-                     modifier = Modifier.fillMaxWidth()
-                  )
-               },
-               header = { _, _, _ -> },
-               footer = { _, _, _ -> },
-               pageTransitions = {}
-            )
-         ),
+         allPageComposables,
+         CombinedPageSwitcherState(allPageComposables),
          pageDeckRepository = mockk {
             every { loadPageDeck() } returns WritableCache(pageDeck)
          },

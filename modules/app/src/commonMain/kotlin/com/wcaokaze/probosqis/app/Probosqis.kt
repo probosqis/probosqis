@@ -42,13 +42,13 @@ import kotlinx.coroutines.CoroutineScope
 @Stable
 class ProbosqisState(
    allPageComposables: List<CombinedPageComposable<*, *>>,
+   val pageComposableSwitcher: CombinedPageSwitcherState,
    val pageDeckRepository: PageDeckRepository,
    val pageStackRepository: PageStackRepository,
    val allErrorItemComposables: List<PErrorItemComposable<*>>,
    val errorListRepository: PErrorListRepository,
    coroutineScope: CoroutineScope
 ) {
-   val pageComposableSwitcher = CombinedPageSwitcherState(allPageComposables)
    val pageStateStore = PageStateStore(
       allPageComposables.map { it.pageStateFactory },
       coroutineScope

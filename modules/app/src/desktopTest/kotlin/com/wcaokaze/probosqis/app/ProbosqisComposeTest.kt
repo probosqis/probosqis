@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageDeck
@@ -57,6 +58,7 @@ class ProbosqisComposeTest {
 
       val probosqisState = ProbosqisState(
          allPageComposables = emptyList(),
+         CombinedPageSwitcherState(allPageComposables = emptyList()),
          pageDeckRepository,
          pageStackRepository = mockk(),
          allErrorItemComposables = emptyList(),
@@ -86,6 +88,7 @@ class ProbosqisComposeTest {
 
       val probosqisState = ProbosqisState(
          allPageComposables = emptyList(),
+         CombinedPageSwitcherState(allPageComposables = emptyList()),
          pageDeckRepository,
          pageStackRepository,
          allErrorItemComposables = emptyList(),
@@ -123,6 +126,7 @@ class ProbosqisComposeTest {
 
       val probosqisState = ProbosqisState(
          allPageComposables = emptyList(),
+         CombinedPageSwitcherState(allPageComposables = emptyList()),
          pageDeckRepository = mockk {
             every { loadPageDeck() } returns WritableCache(pageDeck)
          },
@@ -149,6 +153,7 @@ class ProbosqisComposeTest {
 
       val probosqisState = ProbosqisState(
          allPageComposables = emptyList(),
+         CombinedPageSwitcherState(allPageComposables = emptyList()),
          pageDeckRepository = mockk {
             every { loadPageDeck() } returns WritableCache(pageDeck)
          },
@@ -175,6 +180,7 @@ class ProbosqisComposeTest {
 
       val probosqisState = ProbosqisState(
          allPageComposables = emptyList(),
+         CombinedPageSwitcherState(allPageComposables = emptyList()),
          pageDeckRepository = mockk {
             every { loadPageDeck() } returns WritableCache(pageDeck)
          },
@@ -217,6 +223,7 @@ class ProbosqisComposeTest {
    fun getDeckState_beforeComposition() {
       val probosqisState = ProbosqisState(
          allPageComposables = emptyList(),
+         CombinedPageSwitcherState(allPageComposables = emptyList()),
          pageDeckRepository = mockk(),
          pageStackRepository = mockk(),
          allErrorItemComposables = emptyList(),

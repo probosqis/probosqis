@@ -33,66 +33,90 @@ import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
 import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
 import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
 import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.collections.immutable.persistentListOf
+import org.koin.compose.KoinApplication
+import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
+import org.koin.dsl.module
 import java.io.File
+
+private val koinModule = module {
+   factory { (allPageComposables: List<CombinedPageComposable<*, *>>) ->
+      CombinedPageSwitcherState(allPageComposables)
+   }
+}
 
 fun main() {
    application {
-      ProbosqisTheme {
-         Window(
-            title = Strings.App.topAppBar,
-            onCloseRequest = { exitApplication() }
-         ) {
-            val coroutineScope = rememberCoroutineScope()
+      KoinApplication(
+         application = {
+            modules(koinModule)
+         }
+      ) {
+         ProbosqisTheme {
+            Window(
+               title = Strings.App.topAppBar,
+               onCloseRequest = { exitApplication() }
+            ) {
+               val coroutineScope = rememberCoroutineScope()
 
-            val probosqisState = remember {
-               val probosqisDataDir
-                     = File(System.getProperty("user.home"), ".probosqisData")
+               val allPageComposables = remember {
+                  persistentListOf(
+                     testPageComposable,
+                     testTimelinePageComposable,
+                     testNotePageComposable,
+                  )
+               }
 
-               val allPageComposables = persistentListOf(
-                  testPageComposable,
-                  testTimelinePageComposable,
-                  testNotePageComposable,
-               )
+               val pageSwitcherState: CombinedPageSwitcherState = koinInject {
+                  parametersOf(allPageComposables)
+               }
 
-               val pageStackRepository = DesktopPageStackRepository(
-                  allPageSerializers = listOf(
-                     pageSerializer<TestPage>(),
-                     pageSerializer<TestTimelinePage>(),
-                     pageSerializer<TestNotePage>(),
-                  ),
-                  probosqisDataDir
-               )
+               val probosqisState = remember(pageSwitcherState) {
+                  val probosqisDataDir
+                        = File(System.getProperty("user.home"), ".probosqisData")
 
-               val pageDeckRepository = DesktopPageDeckRepository(
-                  pageStackRepository,
-                  probosqisDataDir
-               )
+                  val pageStackRepository = DesktopPageStackRepository(
+                     allPageSerializers = listOf(
+                        pageSerializer<TestPage>(),
+                        pageSerializer<TestTimelinePage>(),
+                        pageSerializer<TestNotePage>(),
+                     ),
+                     probosqisDataDir
+                  )
 
-               val allErrorItemComposables = persistentListOf(
-                  errorItemComposableImpl,
-               )
+                  val pageDeckRepository = DesktopPageDeckRepository(
+                     pageStackRepository,
+                     probosqisDataDir
+                  )
 
-               val errorListRepository = DesktopPErrorListRepository(
-                  allErrorSerializers = listOf(
-                     errorSerializer<PErrorImpl>(),
-                  ),
-                  probosqisDataDir
-               )
+                  val allErrorItemComposables = persistentListOf(
+                     errorItemComposableImpl,
+                  )
 
-               ProbosqisState(
-                  allPageComposables, pageDeckRepository, pageStackRepository,
-                  allErrorItemComposables, errorListRepository,
-                  coroutineScope
-               )
+                  val errorListRepository = DesktopPErrorListRepository(
+                     allErrorSerializers = listOf(
+                        errorSerializer<PErrorImpl>(),
+                     ),
+                     probosqisDataDir
+                  )
+
+                  ProbosqisState(
+                     allPageComposables, pageSwitcherState, pageDeckRepository,
+                     pageStackRepository, allErrorItemComposables,
+                     errorListRepository, coroutineScope
+                  )
+               }
+
+               MultiColumnProbosqis(probosqisState)
             }
-
-            MultiColumnProbosqis(probosqisState)
          }
       }
    }
