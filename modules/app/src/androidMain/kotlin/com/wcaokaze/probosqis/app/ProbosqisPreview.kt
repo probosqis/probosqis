@@ -42,7 +42,8 @@ import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import org.koin.compose.KoinApplication
+import org.koin.compose.KoinIsolatedContext
+import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
 private val deckCache = run {
@@ -120,7 +121,7 @@ private fun SingleColumnProbosqisPreview(
    @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
    safeDrawingWindowInsets: WindowInsets
 ) {
-   KoinApplication(application = { modules(koinModule) }) {
+   KoinIsolatedContext(koinApplication { modules(koinModule) }) {
       ProbosqisTheme {
          SingleColumnProbosqis(
             rememberPreviewProbosqisState(),
@@ -136,7 +137,7 @@ private fun MultiColumnProbosqisPreview(
    @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
    safeDrawingWindowInsets: WindowInsets
 ) {
-   KoinApplication(application = { modules(koinModule) }) {
+   KoinIsolatedContext(koinApplication { modules(koinModule) }) {
       ProbosqisTheme {
          MultiColumnProbosqis(
             rememberPreviewProbosqisState(),
@@ -149,7 +150,7 @@ private fun MultiColumnProbosqisPreview(
 @MultiFontScalePreview
 @Composable
 private fun ProbosqisFontScalePreview() {
-   KoinApplication(application = { modules(koinModule) }) {
+   KoinIsolatedContext(koinApplication { modules(koinModule) }) {
       ProbosqisTheme {
          MultiColumnProbosqis(rememberPreviewProbosqisState())
       }
@@ -159,7 +160,7 @@ private fun ProbosqisFontScalePreview() {
 @MultiLanguagePreview
 @Composable
 private fun ProbosqisLanguagePreview() {
-   KoinApplication(application = { modules(koinModule) }) {
+   KoinIsolatedContext(koinApplication { modules(koinModule) }) {
       ProbosqisTheme {
          MultiColumnProbosqis(rememberPreviewProbosqisState())
       }

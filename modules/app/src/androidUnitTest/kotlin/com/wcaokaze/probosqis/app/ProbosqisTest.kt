@@ -43,7 +43,8 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.runner.RunWith
-import org.koin.compose.KoinApplication
+import org.koin.compose.KoinIsolatedContext
+import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
@@ -86,8 +87,8 @@ class ProbosqisTest {
       )
 
       rule.setContent {
-         KoinApplication(
-            application = {
+         KoinIsolatedContext(
+            koinApplication {
                modules(
                   module {
                      single {

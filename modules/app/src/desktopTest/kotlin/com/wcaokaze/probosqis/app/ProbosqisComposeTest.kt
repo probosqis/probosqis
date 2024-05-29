@@ -37,7 +37,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.koin.compose.KoinApplication
+import org.koin.compose.KoinIsolatedContext
+import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import java.io.IOException
 import kotlin.test.assertEquals
@@ -113,8 +114,8 @@ class ProbosqisComposeTest {
       )
 
       rule.setContent {
-         KoinApplication(
-            application = {
+         KoinIsolatedContext(
+            koinApplication {
                modules(
                   module {
                      single {
@@ -148,8 +149,8 @@ class ProbosqisComposeTest {
       )
 
       rule.setContent {
-         KoinApplication(
-            application = {
+         KoinIsolatedContext(
+            koinApplication {
                modules(
                   module {
                      single {
@@ -185,8 +186,8 @@ class ProbosqisComposeTest {
       var isMultiColumn by mutableStateOf(false)
 
       rule.setContent {
-         KoinApplication(
-            application = {
+         KoinIsolatedContext(
+            koinApplication {
                modules(
                   module {
                      single {

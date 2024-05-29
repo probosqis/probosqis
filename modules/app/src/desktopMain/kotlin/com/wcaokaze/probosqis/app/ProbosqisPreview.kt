@@ -36,7 +36,8 @@ import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import org.koin.compose.KoinApplication
+import org.koin.compose.KoinIsolatedContext
+import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
 private val koinModule = module {
@@ -100,7 +101,7 @@ private fun ProbosqisPreview() {
       )
    }
 
-   KoinApplication(application = { modules(koinModule) }) {
+   KoinIsolatedContext(koinApplication { modules(koinModule) }) {
       ProbosqisTheme {
          MultiColumnProbosqis(probosqisState)
       }
