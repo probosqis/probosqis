@@ -19,7 +19,6 @@ package com.wcaokaze.probosqis.app
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.PageId
@@ -42,9 +41,15 @@ import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
 import org.koin.compose.KoinIsolatedContext
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
+import kotlin.coroutines.EmptyCoroutineContext
+
+private val allPageComposables = persistentListOf(
+   testPageComposable,
+)
 
 private val deckCache = run {
    val children = List(4) { pageStackId ->
@@ -69,6 +74,15 @@ private val deckCache = run {
 }
 
 private val koinModule = module {
+   single { CombinedPageSwitcherState(allPageComposables) }
+
+   single {
+      PageStateStore(
+         allPageStateFactories = allPageComposables.map { it.pageStateFactory },
+         appCoroutineScope = CoroutineScope(EmptyCoroutineContext)
+      )
+   }
+
    single<PageStackRepository> {
       object : PageStackRepository {
          override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
@@ -91,10 +105,6 @@ private val koinModule = module {
 
 @Composable
 private fun rememberPreviewProbosqisState(): ProbosqisState {
-   val allPageComposables = persistentListOf(
-      testPageComposable,
-   )
-
    val allErrorItemComposables = persistentListOf<PErrorItemComposable<*>>()
 
    val errorListRepository = object : PErrorListRepository {
@@ -104,12 +114,8 @@ private fun rememberPreviewProbosqisState(): ProbosqisState {
             = WritableCache(emptyList())
    }
 
-   val coroutineScope = rememberCoroutineScope()
-
    return remember {
       ProbosqisState(
-         CombinedPageSwitcherState(allPageComposables),
-         PageStateStore(allPageComposables.map { it.pageStateFactory }, coroutineScope),
          allErrorItemComposables, errorListRepository
       )
    }

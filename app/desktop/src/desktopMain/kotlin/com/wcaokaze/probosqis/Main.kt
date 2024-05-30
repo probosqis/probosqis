@@ -137,8 +137,7 @@ fun main() {
                   )
 
                   ProbosqisState(
-                     pageSwitcherState, pageStateStore, allErrorItemComposables,
-                     errorListRepository
+                     allErrorItemComposables, errorListRepository
                   )
                }
 

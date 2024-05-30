@@ -82,8 +82,8 @@ fun MultiColumnProbosqis(
          @OptIn(ExperimentalMaterial3Api::class)
          MultiColumnPageDeck(
             pageDeckState,
-            state.pageComposableSwitcher,
-            state.pageStateStore,
+            pageSwitcherState = koinInject(),
+            pageStateStore = koinInject(),
             pageStackCount,
             colorScheme.activePageStackAppBar,
             colorScheme.inactivePageStackAppBar,

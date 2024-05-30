@@ -75,11 +75,6 @@ class ProbosqisTest {
       )
 
       val probosqisState = ProbosqisState(
-         CombinedPageSwitcherState(allPageComposables),
-         PageStateStore(
-            allPageStateFactories = allPageComposables.map { it.pageStateFactory },
-            appCoroutineScope = mockk()
-         ),
          allErrorItemComposables = emptyList(),
          errorListRepository = mockk {
             every { loadErrorList() } returns WritableCache(emptyList())
@@ -91,6 +86,15 @@ class ProbosqisTest {
             koinApplication {
                modules(
                   module {
+                     single { CombinedPageSwitcherState(allPageComposables) }
+
+                     single {
+                        PageStateStore(
+                           allPageStateFactories = allPageComposables.map { it.pageStateFactory },
+                           appCoroutineScope = mockk()
+                        )
+                     }
+
                      single {
                         val pageDeck = PageDeck(
                            children = List(2) { i ->

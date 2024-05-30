@@ -87,6 +87,8 @@ fun SingleColumnProbosqis(
 
    Box {
       val errorListState = state.errorListState
+      val pageSwitcherState: CombinedPageSwitcherState = koinInject()
+      val pageStateStore: PageStateStore = koinInject()
 
       Column(
          modifier = Modifier
@@ -98,8 +100,8 @@ fun SingleColumnProbosqis(
             appBarScrollState,
             errorListState,
             pageDeckState,
-            state.pageComposableSwitcher,
-            state.pageStateStore,
+            pageSwitcherState,
+            pageStateStore,
             backgroundColor = colorScheme.appBar,
             windowInsets = safeDrawingWindowInsets
                .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
@@ -108,8 +110,8 @@ fun SingleColumnProbosqis(
 
          SingleColumnPageDeck(
             pageDeckState,
-            state.pageComposableSwitcher,
-            state.pageStateStore,
+            pageSwitcherState,
+            pageStateStore,
             colorScheme.pageStackBackground,
             colorScheme.pageStackFooter,
             windowInsets = safeDrawingWindowInsets
@@ -148,7 +150,7 @@ private fun AppBar(
    scrollState: AppBarScrollState,
    errorListState: PErrorListState,
    deckState: SingleColumnPageDeckState,
-   pageSwitcher: CombinedPageSwitcherState,
+   pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    backgroundColor: Color,
    windowInsets: WindowInsets,
@@ -200,7 +202,7 @@ private fun AppBar(
 
       SingleColumnPageDeckAppBar(
          deckState,
-         pageSwitcher,
+         pageSwitcherState,
          pageStateStore,
          windowInsets = windowInsets.only(WindowInsetsSides.Horizontal)
       )

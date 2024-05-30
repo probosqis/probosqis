@@ -17,20 +17,16 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.runtime.Stable
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorItemComposable
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.PageDeckState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.collections.immutable.persistentListOf
 
 @Stable
 class ProbosqisState(
-   val pageComposableSwitcher: CombinedPageSwitcherState,
-   val pageStateStore: PageStateStore,
    val allErrorItemComposables: List<PErrorItemComposable<*>>,
    val errorListRepository: PErrorListRepository,
 ) {

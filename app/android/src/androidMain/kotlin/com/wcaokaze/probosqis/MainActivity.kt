@@ -158,8 +158,7 @@ class MainActivity : ComponentActivity() {
                   )
 
                   ProbosqisState(
-                     pageSwitcherState, pageStateStore, allErrorItemComposables,
-                     errorListRepository
+                     allErrorItemComposables, errorListRepository
                   )
                }
 
