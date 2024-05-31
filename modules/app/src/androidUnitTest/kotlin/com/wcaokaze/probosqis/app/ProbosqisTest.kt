@@ -31,15 +31,21 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageDeck
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import io.mockk.every
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.runner.RunWith
+import org.koin.compose.KoinIsolatedContext
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
 
@@ -53,56 +59,80 @@ class ProbosqisTest {
       class PageImpl(val i: Int) : Page()
       class PageStateImpl : PageState()
 
-      val pageDeck = PageDeck(
-         children = List(2) { i ->
-            val pageStack = PageStack(
-               PageStack.Id(i.toLong()),
-               SavedPageState(
-                  PageId(i.toLong()),
-                  PageImpl(i)
+      val allPageComposables = listOf(
+         CombinedPageComposable<PageImpl, PageStateImpl>(
+            PageStateFactory { _, _ -> PageStateImpl() },
+            content = { page, _, _, _ ->
+               Text(
+                  "content${page.i}",
+                  modifier = Modifier.fillMaxWidth()
                )
-            )
-
-            Deck.Card(
-               LazyPageStackState(pageStack.id, WritableCache(pageStack),
-                  initialVisibility = true)
-            )
-         }
+            },
+            header = { _, _, _ -> },
+            footer = { _, _, _ -> },
+            pageTransitions = {}
+         )
       )
 
-      val probosqisState = ProbosqisState(
-         allPageComposables = listOf(
-            CombinedPageComposable<PageImpl, PageStateImpl>(
-               PageStateFactory { _, _ -> PageStateImpl() },
-               content = { page, _, _, _ ->
-                  Text(
-                     "content${page.i}",
-                     modifier = Modifier.fillMaxWidth()
-                  )
-               },
-               header = { _, _, _ -> },
-               footer = { _, _, _ -> },
-               pageTransitions = {}
-            )
-         ),
-         pageDeckRepository = mockk {
-            every { loadPageDeck() } returns WritableCache(pageDeck)
-         },
-         pageStackRepository = mockk(),
-         allErrorItemComposables = emptyList(),
-         errorListRepository = mockk {
-            every { loadErrorList() } returns WritableCache(emptyList())
-         },
-         coroutineScope = mockk()
-      )
+      val probosqisState = ProbosqisState()
 
       rule.setContent {
-         Box(
-            Modifier
-               .requiredWidth(60.dp)
-               .requiredHeight(800.dp)
+         KoinIsolatedContext(
+            koinApplication {
+               modules(
+                  module {
+                     single { CombinedPageSwitcherState(allPageComposables) }
+
+                     single {
+                        PageStateStore(
+                           allPageStateFactories = allPageComposables.map { it.pageStateFactory },
+                           appCoroutineScope = mockk()
+                        )
+                     }
+
+                     single {
+                        val pageDeck = PageDeck(
+                           children = List(2) { i ->
+                              val pageStack = PageStack(
+                                 PageStack.Id(i.toLong()),
+                                 SavedPageState(
+                                    PageId(i.toLong()),
+                                    PageImpl(i)
+                                 )
+                              )
+
+                              Deck.Card(
+                                 LazyPageStackState(
+                                    pageStack.id, WritableCache(pageStack),
+                                    initialVisibility = true
+                                 )
+                              )
+                           }
+                        )
+
+                        MultiColumnPageDeckState(
+                           WritableCache(pageDeck),
+                           pageStackRepository = mockk()
+                        )
+                     }
+
+                     single {
+                        PErrorListState(
+                           errorListCache = WritableCache(emptyList()),
+                           itemComposables = emptyList()
+                        )
+                     }
+                  }
+               )
+            }
          ) {
-            MultiColumnProbosqis(probosqisState)
+            Box(
+               Modifier
+                  .requiredWidth(60.dp)
+                  .requiredHeight(800.dp)
+            ) {
+               MultiColumnProbosqis(probosqisState)
+            }
          }
       }
 

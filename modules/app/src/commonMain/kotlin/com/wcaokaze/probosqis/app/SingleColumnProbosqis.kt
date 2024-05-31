@@ -67,6 +67,7 @@ import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.resources.Strings
+import org.koin.compose.koinInject
 
 @Composable
 fun SingleColumnProbosqis(
@@ -74,13 +75,8 @@ fun SingleColumnProbosqis(
    colorScheme: SingleColumnProbosqisColorScheme = rememberSingleColumnProbosqisColorScheme(),
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
-   val pageDeckState = remember(state) {
-      val pageDeckCache = state.loadPageDeckOrDefault()
-
-      SingleColumnPageDeckState(
-         pageDeckCache, state.pageStackRepository
-      ).also { state.pageDeckState = it }
-   }
+   val pageDeckState = koinInject<SingleColumnPageDeckState>()
+      .also { state.pageDeckState = it }
 
    // 現状Desktopで動作しないため自前実装する
    // val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -90,7 +86,9 @@ fun SingleColumnProbosqis(
    }
 
    Box {
-      val errorListState = state.errorListState
+      val errorListState: PErrorListState = koinInject()
+      val pageSwitcherState: CombinedPageSwitcherState = koinInject()
+      val pageStateStore: PageStateStore = koinInject()
 
       Column(
          modifier = Modifier
@@ -102,8 +100,8 @@ fun SingleColumnProbosqis(
             appBarScrollState,
             errorListState,
             pageDeckState,
-            state.pageComposableSwitcher,
-            state.pageStateStore,
+            pageSwitcherState,
+            pageStateStore,
             backgroundColor = colorScheme.appBar,
             windowInsets = safeDrawingWindowInsets
                .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
@@ -112,8 +110,8 @@ fun SingleColumnProbosqis(
 
          SingleColumnPageDeck(
             pageDeckState,
-            state.pageComposableSwitcher,
-            state.pageStateStore,
+            pageSwitcherState,
+            pageStateStore,
             colorScheme.pageStackBackground,
             colorScheme.pageStackFooter,
             windowInsets = safeDrawingWindowInsets
@@ -152,7 +150,7 @@ private fun AppBar(
    scrollState: AppBarScrollState,
    errorListState: PErrorListState,
    deckState: SingleColumnPageDeckState,
-   pageSwitcher: CombinedPageSwitcherState,
+   pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    backgroundColor: Color,
    windowInsets: WindowInsets,
@@ -204,7 +202,7 @@ private fun AppBar(
 
       SingleColumnPageDeckAppBar(
          deckState,
-         pageSwitcher,
+         pageSwitcherState,
          pageStateStore,
          windowInsets = windowInsets.only(WindowInsetsSides.Horizontal)
       )

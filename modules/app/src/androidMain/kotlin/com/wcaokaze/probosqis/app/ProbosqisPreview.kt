@@ -19,84 +19,91 @@ package com.wcaokaze.probosqis.app
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
-import com.wcaokaze.probosqis.error.PError
-import com.wcaokaze.probosqis.error.PErrorItemComposable
-import com.wcaokaze.probosqis.error.PErrorListRepository
+import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
-import com.wcaokaze.probosqis.pagedeck.PageDeck
-import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
+import org.koin.compose.KoinIsolatedContext
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
+import kotlin.coroutines.EmptyCoroutineContext
 
-@Composable
-private fun rememberPreviewProbosqisState(): ProbosqisState {
-   val allPageComposables = persistentListOf(
-      testPageComposable,
-   )
+private val allPageComposables = persistentListOf(
+   testPageComposable,
+)
 
-   val pageDeckRepository = object : PageDeckRepository {
-      override fun savePageDeck(pageDeck: PageDeck): WritableCache<PageDeck>
-            = throw NotImplementedError()
+private val deckCache = run {
+   val children = List(4) { pageStackId ->
+      val pageStack = PageStack(
+         PageStack.Id(pageStackId.toLong()),
+         SavedPageState(
+            PageId(0L),
+            TestPage(0)
+         )
+      )
+      val lazyPageStackState = LazyPageStackState(
+         pageStack.id,
+         WritableCache(pageStack),
+         initialVisibility = true
+      )
+      Deck.Card(lazyPageStackState)
+   } .toImmutableList()
 
-      override fun loadPageDeck(): WritableCache<PageDeck> {
-         val children = List(4) { pageStackId ->
-            val pageStack = PageStack(
-               PageStack.Id(pageStackId.toLong()),
-               SavedPageState(
-                  PageId(0L),
-                  TestPage(0)
-               )
-            )
-            val lazyPageStackState = LazyPageStackState(
-               pageStack.id,
-               WritableCache(pageStack),
-               initialVisibility = true
-            )
-            Deck.Card(lazyPageStackState)
-         } .toImmutableList()
+   val rootRow = Deck.Row(children)
+   val deck = Deck(rootRow)
+   WritableCache(deck)
+}
 
-         val rootRow = Deck.Row(children)
-         val deck = Deck(rootRow)
-         return WritableCache(deck)
+private val koinModule = module {
+   single { CombinedPageSwitcherState(allPageComposables) }
+
+   single {
+      PageStateStore(
+         allPageStateFactories = allPageComposables.map { it.pageStateFactory },
+         appCoroutineScope = CoroutineScope(EmptyCoroutineContext)
+      )
+   }
+
+   single<PageStackRepository> {
+      object : PageStackRepository {
+         override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
+               = throw NotImplementedError()
+         override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
+               = throw NotImplementedError()
+         override fun deleteAllPageStacks()
+               = throw NotImplementedError()
       }
    }
 
-   val pageStackRepository = object : PageStackRepository {
-      override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
-            = throw NotImplementedError()
-      override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
-            = throw NotImplementedError()
-      override fun deleteAllPageStacks()
-            = throw NotImplementedError()
+   factory {
+      MultiColumnPageDeckState(deckCache, pageStackRepository = get())
    }
 
-   val allErrorItemComposables = persistentListOf<PErrorItemComposable<*>>()
-
-   val errorListRepository = object : PErrorListRepository {
-      override fun saveErrorList(errorList: List<PError>): WritableCache<List<PError>>
-            = throw NotImplementedError()
-      override fun loadErrorList(): WritableCache<List<PError>>
-            = throw NotImplementedError()
+   factory {
+      SingleColumnPageDeckState(deckCache, pageStackRepository = get())
    }
 
-   val coroutineScope = rememberCoroutineScope()
-
-   return remember {
-      ProbosqisState(
-         allPageComposables, pageDeckRepository, pageStackRepository,
-         allErrorItemComposables, errorListRepository, coroutineScope
+   single {
+      PErrorListState(
+         errorListCache = WritableCache(emptyList()),
+         itemComposables = emptyList()
       )
    }
 }
@@ -107,10 +114,14 @@ private fun SingleColumnProbosqisPreview(
    @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
    safeDrawingWindowInsets: WindowInsets
 ) {
-   SingleColumnProbosqis(
-      rememberPreviewProbosqisState(),
-      safeDrawingWindowInsets = safeDrawingWindowInsets
-   )
+   KoinIsolatedContext(koinApplication { modules(koinModule) }) {
+      ProbosqisTheme {
+         SingleColumnProbosqis(
+            remember { ProbosqisState() },
+            safeDrawingWindowInsets = safeDrawingWindowInsets
+         )
+      }
+   }
 }
 
 @MultiDevicePreview
@@ -119,20 +130,36 @@ private fun MultiColumnProbosqisPreview(
    @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
    safeDrawingWindowInsets: WindowInsets
 ) {
-   MultiColumnProbosqis(
-      rememberPreviewProbosqisState(),
-      safeDrawingWindowInsets = safeDrawingWindowInsets
-   )
+   KoinIsolatedContext(koinApplication { modules(koinModule) }) {
+      ProbosqisTheme {
+         MultiColumnProbosqis(
+            remember { ProbosqisState() },
+            safeDrawingWindowInsets = safeDrawingWindowInsets
+         )
+      }
+   }
 }
 
 @MultiFontScalePreview
 @Composable
 private fun ProbosqisFontScalePreview() {
-   MultiColumnProbosqis(rememberPreviewProbosqisState())
+   KoinIsolatedContext(koinApplication { modules(koinModule) }) {
+      ProbosqisTheme {
+         MultiColumnProbosqis(
+            remember { ProbosqisState() }
+         )
+      }
+   }
 }
 
 @MultiLanguagePreview
 @Composable
 private fun ProbosqisLanguagePreview() {
-   MultiColumnProbosqis(rememberPreviewProbosqisState())
+   KoinIsolatedContext(koinApplication { modules(koinModule) }) {
+      ProbosqisTheme {
+         MultiColumnProbosqis(
+            remember { ProbosqisState() }
+         )
+      }
+   }
 }
