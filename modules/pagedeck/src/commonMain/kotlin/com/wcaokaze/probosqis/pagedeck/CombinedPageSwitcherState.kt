@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.pagedeck
 
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.page.CombinedPageComposable
 
 @Stable
 class CombinedPageSwitcherState(
