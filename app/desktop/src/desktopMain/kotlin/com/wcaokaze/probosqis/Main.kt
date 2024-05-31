@@ -81,14 +81,6 @@ private val koinModule = module {
       )
    }
 
-   single<PageDeckRepository> {
-      DesktopPageDeckRepository(pageStackRepository = get(), probosqisDataDir)
-   }
-
-   single<PageStackRepository> {
-      DesktopPageStackRepository(allPageSerializers, probosqisDataDir)
-   }
-
    factory {
       val pageDeckCache = loadPageDeckOrDefault(
          pageDeckRepository = get(),
@@ -113,6 +105,16 @@ private val koinModule = module {
          allErrorItemComposables
       )
    }
+}
+
+private val repositoriesKoinModule = module {
+   single<PageDeckRepository> {
+      DesktopPageDeckRepository(pageStackRepository = get(), probosqisDataDir)
+   }
+
+   single<PageStackRepository> {
+      DesktopPageStackRepository(allPageSerializers, probosqisDataDir)
+   }
 
    single<PErrorListRepository> {
       DesktopPErrorListRepository(
@@ -134,7 +136,7 @@ fun main() {
                single { appCoroutineScope }
             }
 
-            modules(koinModule, appKoinModule)
+            modules(koinModule, repositoriesKoinModule, appKoinModule)
          }
       ) {
          ProbosqisTheme {

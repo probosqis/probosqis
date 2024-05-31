@@ -100,14 +100,6 @@ private val koinModule = module {
       )
    }
 
-   single<PageDeckRepository> {
-      AndroidPageDeckRepository(context = get(), pageStackRepository = get())
-   }
-
-   single<PageStackRepository> {
-      AndroidPageStackRepository(context = get(), allPageSerializers)
-   }
-
    factory {
       val pageDeckCache = loadPageDeckOrDefault(
          pageDeckRepository = get(),
@@ -131,6 +123,16 @@ private val koinModule = module {
          loadErrorListOrDefault(errorListRepository = get()),
          allErrorItemComposables
       )
+   }
+}
+
+private val repositoriesKoinModule = module {
+   single<PageDeckRepository> {
+      AndroidPageDeckRepository(context = get(), pageStackRepository = get())
+   }
+
+   single<PageStackRepository> {
+      AndroidPageStackRepository(context = get(), allPageSerializers)
    }
 
    single<PErrorListRepository> {
@@ -158,7 +160,7 @@ class MainActivity : ComponentActivity() {
                   single { appCoroutineScope }
                }
 
-               modules(koinModule, appKoinModule)
+               modules(koinModule, repositoriesKoinModule, appKoinModule)
             }
          ) {
             ProbosqisTheme {
