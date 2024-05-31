@@ -65,7 +65,7 @@ fun MultiColumnProbosqis(
       modifier = Modifier
          .background(colorScheme.background)
    ) {
-      val errorListState = state.errorListState
+      val errorListState: PErrorListState = koinInject()
 
       val pageStackCount = (maxWidth / 330.dp).toInt().coerceAtLeast(1)
 

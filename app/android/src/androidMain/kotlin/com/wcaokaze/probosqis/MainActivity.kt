@@ -38,7 +38,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
@@ -52,12 +51,15 @@ import com.wcaokaze.probosqis.app.TestNotePage
 import com.wcaokaze.probosqis.app.TestPage
 import com.wcaokaze.probosqis.app.TestTimelinePage
 import com.wcaokaze.probosqis.app.errorItemComposableImpl
+import com.wcaokaze.probosqis.app.loadErrorListOrDefault
 import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
 import com.wcaokaze.probosqis.app.testNotePageComposable
 import com.wcaokaze.probosqis.app.testPageComposable
 import com.wcaokaze.probosqis.app.testTimelinePageComposable
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
+import com.wcaokaze.probosqis.error.PErrorListRepository
+import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
 import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
@@ -70,7 +72,6 @@ import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import kotlinx.collections.immutable.persistentListOf
 import org.koin.compose.KoinApplication
-import org.koin.compose.koinInject
 import org.koin.dsl.module
 
 private val allPageComposables = persistentListOf(
@@ -83,6 +84,10 @@ private val allPageSerializers = persistentListOf(
    pageSerializer<TestPage>(),
    pageSerializer<TestTimelinePage>(),
    pageSerializer<TestNotePage>(),
+)
+
+private val allErrorItemComposables = persistentListOf(
+   errorItemComposableImpl,
 )
 
 private val koinModule = module {
@@ -120,6 +125,22 @@ private val koinModule = module {
 
       SingleColumnPageDeckState(pageDeckCache, pageStackRepository = get())
    }
+
+   single {
+      PErrorListState(
+         loadErrorListOrDefault(errorListRepository = get()),
+         allErrorItemComposables
+      )
+   }
+
+   single<PErrorListRepository> {
+      AndroidPErrorListRepository(
+         context = get(),
+         allErrorSerializers = listOf(
+            errorSerializer<PErrorImpl>(),
+         )
+      )
+   }
 }
 
 class MainActivity : ComponentActivity() {
@@ -141,26 +162,7 @@ class MainActivity : ComponentActivity() {
             }
          ) {
             ProbosqisTheme {
-               val context = LocalContext.current
-
-               val pageSwitcherState: CombinedPageSwitcherState = koinInject()
-               val pageStateStore: PageStateStore = koinInject()
-
-               val probosqisState = remember(context, pageSwitcherState, pageStateStore) {
-                  val allErrorItemComposables = persistentListOf(
-                     errorItemComposableImpl,
-                  )
-                  val errorListRepository = AndroidPErrorListRepository(
-                     context,
-                     allErrorSerializers = listOf(
-                        errorSerializer<PErrorImpl>(),
-                     )
-                  )
-
-                  ProbosqisState(
-                     allErrorItemComposables, errorListRepository
-                  )
-               }
+               val probosqisState = remember { ProbosqisState() }
 
                BackHandler {
                   probosqisState.pageDeckState.activePageStackState.finishPage()

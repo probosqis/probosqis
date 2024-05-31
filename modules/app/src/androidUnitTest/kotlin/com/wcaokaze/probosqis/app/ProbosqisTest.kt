@@ -33,13 +33,13 @@ import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageDeck
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import io.mockk.every
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.runner.RunWith
@@ -74,12 +74,7 @@ class ProbosqisTest {
          )
       )
 
-      val probosqisState = ProbosqisState(
-         allErrorItemComposables = emptyList(),
-         errorListRepository = mockk {
-            every { loadErrorList() } returns WritableCache(emptyList())
-         }
-      )
+      val probosqisState = ProbosqisState()
 
       rule.setContent {
          KoinIsolatedContext(
@@ -118,6 +113,13 @@ class ProbosqisTest {
                         MultiColumnPageDeckState(
                            WritableCache(pageDeck),
                            pageStackRepository = mockk()
+                        )
+                     }
+
+                     single {
+                        PErrorListState(
+                           errorListCache = WritableCache(emptyList()),
+                           itemComposables = emptyList()
                         )
                      }
                   }

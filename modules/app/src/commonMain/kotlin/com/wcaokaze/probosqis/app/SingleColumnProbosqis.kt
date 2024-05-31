@@ -86,7 +86,7 @@ fun SingleColumnProbosqis(
    }
 
    Box {
-      val errorListState = state.errorListState
+      val errorListState: PErrorListState = koinInject()
       val pageSwitcherState: CombinedPageSwitcherState = koinInject()
       val pageStateStore: PageStateStore = koinInject()
 

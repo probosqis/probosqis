@@ -25,9 +25,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
-import com.wcaokaze.probosqis.error.PError
-import com.wcaokaze.probosqis.error.PErrorItemComposable
-import com.wcaokaze.probosqis.error.PErrorListRepository
+import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
@@ -101,22 +99,11 @@ private val koinModule = module {
    factory {
       SingleColumnPageDeckState(deckCache, pageStackRepository = get())
    }
-}
 
-@Composable
-private fun rememberPreviewProbosqisState(): ProbosqisState {
-   val allErrorItemComposables = persistentListOf<PErrorItemComposable<*>>()
-
-   val errorListRepository = object : PErrorListRepository {
-      override fun saveErrorList(errorList: List<PError>): WritableCache<List<PError>>
-            = throw NotImplementedError()
-      override fun loadErrorList(): WritableCache<List<PError>>
-            = WritableCache(emptyList())
-   }
-
-   return remember {
-      ProbosqisState(
-         allErrorItemComposables, errorListRepository
+   single {
+      PErrorListState(
+         errorListCache = WritableCache(emptyList()),
+         itemComposables = emptyList()
       )
    }
 }
@@ -130,7 +117,7 @@ private fun SingleColumnProbosqisPreview(
    KoinIsolatedContext(koinApplication { modules(koinModule) }) {
       ProbosqisTheme {
          SingleColumnProbosqis(
-            rememberPreviewProbosqisState(),
+            remember { ProbosqisState() },
             safeDrawingWindowInsets = safeDrawingWindowInsets
          )
       }
@@ -146,7 +133,7 @@ private fun MultiColumnProbosqisPreview(
    KoinIsolatedContext(koinApplication { modules(koinModule) }) {
       ProbosqisTheme {
          MultiColumnProbosqis(
-            rememberPreviewProbosqisState(),
+            remember { ProbosqisState() },
             safeDrawingWindowInsets = safeDrawingWindowInsets
          )
       }
@@ -158,7 +145,9 @@ private fun MultiColumnProbosqisPreview(
 private fun ProbosqisFontScalePreview() {
    KoinIsolatedContext(koinApplication { modules(koinModule) }) {
       ProbosqisTheme {
-         MultiColumnProbosqis(rememberPreviewProbosqisState())
+         MultiColumnProbosqis(
+            remember { ProbosqisState() }
+         )
       }
    }
 }
@@ -168,7 +157,9 @@ private fun ProbosqisFontScalePreview() {
 private fun ProbosqisLanguagePreview() {
    KoinIsolatedContext(koinApplication { modules(koinModule) }) {
       ProbosqisTheme {
-         MultiColumnProbosqis(rememberPreviewProbosqisState())
+         MultiColumnProbosqis(
+            remember { ProbosqisState() }
+         )
       }
    }
 }

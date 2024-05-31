@@ -24,9 +24,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
-import com.wcaokaze.probosqis.error.PError
-import com.wcaokaze.probosqis.error.PErrorItemComposable
-import com.wcaokaze.probosqis.error.PErrorListRepository
+import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
@@ -87,29 +85,23 @@ private val koinModule = module {
          }
       )
    }
+
+   single {
+      PErrorListState(
+         errorListCache = WritableCache(emptyList()),
+         itemComposables = emptyList()
+      )
+   }
 }
 
 @Preview
 @Composable
 private fun ProbosqisPreview() {
-   val allErrorItemComposables = persistentListOf<PErrorItemComposable<*>>()
-
-   val errorListRepository = object : PErrorListRepository {
-      override fun saveErrorList(errorList: List<PError>): WritableCache<List<PError>>
-            = throw NotImplementedError()
-      override fun loadErrorList(): WritableCache<List<PError>>
-            = WritableCache(emptyList())
-   }
-
-   val probosqisState = remember {
-      ProbosqisState(
-         allErrorItemComposables, errorListRepository
-      )
-   }
-
    KoinIsolatedContext(koinApplication { modules(koinModule) }) {
       ProbosqisTheme {
-         MultiColumnProbosqis(probosqisState)
+         MultiColumnProbosqis(
+            remember { ProbosqisState() }
+         )
       }
    }
 }
