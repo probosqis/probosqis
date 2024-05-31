@@ -16,8 +16,19 @@
 
 package com.wcaokaze.probosqis.page
 
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 
-abstract class PPageState(val context: PageStateContext) : PageState()
+abstract class PPageState(
+   context: PageStateContext
+) : PageState(), PageStateContext by context
 
-class PageStateContext
+interface PageStateContext {
+   fun startPage(page: Page)
+   fun finishPage()
+
+   fun addColumn(page: Page)
+   fun addColumn(pageStack: PageStack)
+   fun removeFromDeck()
+}
