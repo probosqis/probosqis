@@ -16,9 +16,12 @@
 
 package com.wcaokaze.probosqis.page
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.saveable.Saver
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
+import kotlinx.serialization.KSerializer
 
 abstract class PPageState(
    context: PageStateContext
@@ -31,4 +34,16 @@ interface PageStateContext {
    fun addColumn(page: Page)
    fun addColumn(pageStack: PageStack)
    fun removeFromDeck()
+
+   fun <T> save(
+      key: String,
+      serializer: KSerializer<T>,
+      init: () -> T
+   ): MutableState<T>
+
+   fun <T> save(
+      key: String,
+      saver: Saver<T, *>,
+      init: () -> T
+   ): MutableState<T>
 }
