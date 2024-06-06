@@ -17,10 +17,12 @@
 package com.wcaokaze.probosqis.pagedeck
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
@@ -53,7 +55,6 @@ import com.wcaokaze.probosqis.capsiqum.page.PageSwitcher
 import com.wcaokaze.probosqis.capsiqum.page.PageSwitcherState
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
-import com.wcaokaze.probosqis.page.CombinedPageComposable
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asState
 import com.wcaokaze.probosqis.panoptiqon.update
@@ -306,5 +307,21 @@ internal fun <P : Page, S : PageState> PageFooter(
       ) {
          footerComposable(page, pageState, pageStackState)
       }
+   }
+}
+
+@Composable
+inline fun FooterButton(
+   noinline onClick: () -> Unit,
+   modifier: Modifier = Modifier,
+   content: @Composable () -> Unit
+) {
+   Box(
+      contentAlignment = Alignment.Center,
+      modifier = modifier
+         .fillMaxHeight()
+         .clickable(onClick = onClick)
+   ) {
+      content()
    }
 }

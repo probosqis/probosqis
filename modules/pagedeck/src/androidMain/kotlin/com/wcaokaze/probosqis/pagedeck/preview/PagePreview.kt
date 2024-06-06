@@ -33,12 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.Page
-import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.preview.rememberPreviewStateSaver
-import com.wcaokaze.probosqis.page.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageContent
@@ -127,7 +127,7 @@ fun <P : Page, S : PageState> PagePreview(
          if (footerComposable != null) {
             Box(Modifier.align(Alignment.BottomCenter)) {
                PageFooter(
-                  footerComposable,
+                  pageComposable.footerComposable,
                   page,
                   pageState,
                   pageStackState,

@@ -40,7 +40,6 @@ import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.PageSwitcher
 import com.wcaokaze.probosqis.capsiqum.page.PageSwitcherState
-import com.wcaokaze.probosqis.page.CombinedPageComposable
 import com.wcaokaze.probosqis.resources.Strings
 
 @ExperimentalMaterial3Api

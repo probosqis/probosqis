@@ -43,7 +43,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
-import com.wcaokaze.probosqis.page.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.PageLayoutIds
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

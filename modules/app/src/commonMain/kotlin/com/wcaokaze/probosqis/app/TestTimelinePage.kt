@@ -64,8 +64,8 @@ import com.wcaokaze.probosqis.capsiqum.transition.animatePosition
 import com.wcaokaze.probosqis.capsiqum.transition.animateScale
 import com.wcaokaze.probosqis.capsiqum.transition.sharedElement
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
-import com.wcaokaze.probosqis.page.CombinedPageComposable
-import com.wcaokaze.probosqis.page.PageFooterButton
+import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.FooterButton
 import com.wcaokaze.probosqis.pagedeck.PageLayoutIds
 import com.wcaokaze.probosqis.pagedeck.PageStackState
 import kotlinx.serialization.SerialName
@@ -112,7 +112,7 @@ val testTimelinePageComposable = CombinedPageComposable<TestTimelinePage, TestTi
    },
    footer = { _, _, _ ->
       Row {
-         PageFooterButton(
+         FooterButton(
             onClick = {},
             modifier = Modifier.weight(1.0f)
          ) {
@@ -121,14 +121,14 @@ val testTimelinePageComposable = CombinedPageComposable<TestTimelinePage, TestTi
 
          Spacer(Modifier.weight(1.0f))
 
-         PageFooterButton(
+         FooterButton(
             onClick = {},
             modifier = Modifier.weight(1.0f)
          ) {
             Icon(Icons.Default.Share, contentDescription = "Share")
          }
 
-         PageFooterButton(
+         FooterButton(
             onClick = {},
             modifier = Modifier.weight(1.0f)
          ) {

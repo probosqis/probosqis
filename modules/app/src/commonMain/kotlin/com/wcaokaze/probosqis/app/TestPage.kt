@@ -30,7 +30,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
-import com.wcaokaze.probosqis.page.CombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
