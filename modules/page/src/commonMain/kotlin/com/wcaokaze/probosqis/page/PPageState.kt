@@ -16,6 +16,41 @@
 
 package com.wcaokaze.probosqis.page
 
+import androidx.annotation.VisibleForTesting
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 
-abstract class PPageState : PageState()
+@Stable
+abstract class PPageState : PageState() {
+   @VisibleForTesting
+   @Stable
+   internal class RC<T> {
+      private var referenceCount by mutableIntStateOf(0)
+      private var ref: T? by mutableStateOf(null)
+
+      fun get(): T {
+         if (referenceCount <= 0) { throw IllegalStateException() }
+
+         @Suppress("UNCHECKED_CAST")
+         return ref as T
+      }
+
+      fun set(value: T) {
+         if (referenceCount <= 0) {
+            referenceCount = 1
+            ref = value
+         } else {
+            check(value == ref)
+            referenceCount++
+         }
+      }
+
+      fun release() {
+         referenceCount--
+      }
+   }
+}
