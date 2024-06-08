@@ -22,37 +22,37 @@ import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 fun PPageSwitcherState(
    allPageComposables: List<PPageComposable<*, *>>
 ) = CombinedPageSwitcherState(
-   allPageComposables.map { map(it) }
+   allPageComposables.map { it.asCombinedPageComposable() }
 )
 
-private fun <P : PPage, S : PPageState>
-      map(pPageComposable: PPageComposable<P, S>): CombinedPageComposable<*, *>
+internal fun <P : PPage, S : PPageState>
+      PPageComposable<P, S>.asCombinedPageComposable(): CombinedPageComposable<P, S>
 {
    return CombinedPageComposable(
-      pPageComposable.pageClass,
-      pPageComposable.pageStateClass,
-      pPageComposable.pageStateFactory,
+      pageClass,
+      pageStateClass,
+      pageStateFactory,
       contentComposable = { page, pageState, pageStackState, windowInsets ->
          pageState.inject(pageStackState)
-         pPageComposable.contentComposable(page, pageState, windowInsets)
+         contentComposable(page, pageState, windowInsets)
       },
       headerComposable = { page, pageState, pageStackState ->
          pageState.inject(pageStackState)
-         pPageComposable.headerComposable(page, pageState)
+         headerComposable(page, pageState)
       },
-      headerActionsComposable = pPageComposable.headerActionsComposable?.let { pHeaderActionsComposable ->
+      headerActionsComposable = headerActionsComposable?.let { pHeaderActionsComposable ->
          { page, pageState, pageStackState ->
             pageState.inject(pageStackState)
             pHeaderActionsComposable(page, pageState)
          }
       },
-      footerComposable = pPageComposable.footerComposable?.let { pFooterComposable ->
+      footerComposable = footerComposable?.let { pFooterComposable ->
          { page, pageState, pageStackState ->
             pageState.inject(pageStackState)
             pFooterComposable(page, pageState)
          }
       },
-      outgoingTransitions = pPageComposable.pageTransitionSet.outgoingTransitions,
-      incomingTransitions = pPageComposable.pageTransitionSet.incomingTransitions
+      outgoingTransitions = pageTransitionSet.outgoingTransitions,
+      incomingTransitions = pageTransitionSet.incomingTransitions
    )
 }
