@@ -54,8 +54,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.capsiqum.page.Page
-import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
 import com.wcaokaze.probosqis.capsiqum.transition.SharedElementAnimations
@@ -64,10 +62,11 @@ import com.wcaokaze.probosqis.capsiqum.transition.animatePosition
 import com.wcaokaze.probosqis.capsiqum.transition.animateScale
 import com.wcaokaze.probosqis.capsiqum.transition.sharedElement
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
-import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.page.PPage
+import com.wcaokaze.probosqis.page.PPageComposable
+import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.pagedeck.FooterButton
 import com.wcaokaze.probosqis.pagedeck.PageLayoutIds
-import com.wcaokaze.probosqis.pagedeck.PageStackState
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -77,10 +76,10 @@ import kotlin.math.pow
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.app.TestTimelinePage")
-class TestTimelinePage : Page()
+class TestTimelinePage : PPage()
 
 @Stable
-class TestTimelinePageState(stateSaver: StateSaver) : PageState() {
+class TestTimelinePageState(stateSaver: StateSaver) : PPageState() {
    val lazyListState by stateSaver
       .save("lazyListState", LazyListState.Saver) { LazyListState() }
 
@@ -91,26 +90,26 @@ class TestTimelinePageState(stateSaver: StateSaver) : PageState() {
       .save("clickedNoteIndex", Int.serializer().nullable) { null }
 }
 
-val testTimelinePageComposable = CombinedPageComposable<TestTimelinePage, TestTimelinePageState>(
+val testTimelinePageComposable = PPageComposable<TestTimelinePage, TestTimelinePageState>(
    PageStateFactory { _, stateSaver -> TestTimelinePageState(stateSaver) },
-   content = { _, pageState, pageStackState, windowInsets ->
-      TestTimeline(pageState, pageStackState, windowInsets)
+   content = { _, pageState, windowInsets ->
+      TestTimeline(pageState, windowInsets)
    },
-   header = { _, _, _ ->
+   header = { _, _ ->
       Text(
          "HomeTimeline",
          maxLines = 1,
          overflow = TextOverflow.Ellipsis
       )
    },
-   headerActions = { _, _, _ ->
+   headerActions = { _, _ ->
       IconButton(
          onClick = {}
       ) {
          Icon(Icons.Default.AccountBox, contentDescription = "Account")
       }
    },
-   footer = { _, _, _ ->
+   footer = { _, _ ->
       Row {
          FooterButton(
             onClick = {},
@@ -246,7 +245,6 @@ object TestTimelinePageLayoutIds : PageLayoutIds() {
 @Composable
 private fun TestTimeline(
    pageState: TestTimelinePageState,
-   pageStackState: PageStackState,
    windowInsets: WindowInsets
 ) {
    LazyColumn(
@@ -267,7 +265,7 @@ private fun TestTimeline(
                      pageState.clickedNoteIndex = i
 
                      val notePage = TestNotePage(i)
-                     pageStackState.startPage(notePage)
+                     pageState.startPage(notePage)
                   }
                )
                .transitionElement(

@@ -39,6 +39,7 @@ kotlin {
          implementation project(':capsiqum-transition')
          implementation project(':modules:app')
          implementation project(':modules:error')
+         implementation project(':modules:page')
          implementation project(':modules:pagedeck')
          implementation project(':modules:resources')
       }

@@ -25,7 +25,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
+import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageStackRepository
@@ -44,7 +44,7 @@ private val allPageComposables = persistentListOf(
 )
 
 private val koinModule = module {
-   single { CombinedPageSwitcherState(allPageComposables) }
+   single { PPageSwitcherState(allPageComposables) }
 
    single {
       PageStateStore(

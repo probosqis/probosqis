@@ -61,9 +61,9 @@ import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
-import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.PageStackRepository
@@ -91,7 +91,7 @@ private val allErrorItemComposables = persistentListOf(
 )
 
 private val koinModule = module {
-   single { CombinedPageSwitcherState(allPageComposables) }
+   single { PPageSwitcherState(allPageComposables) }
 
    single {
       PageStateStore(

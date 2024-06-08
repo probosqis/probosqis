@@ -38,7 +38,7 @@ import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
-import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
+import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
@@ -72,7 +72,7 @@ private val allErrorItemComposables = persistentListOf(
 private val probosqisDataDir = File(System.getProperty("user.home"), ".probosqisData")
 
 private val koinModule = module {
-   single { CombinedPageSwitcherState(allPageComposables) }
+   single { PPageSwitcherState(allPageComposables) }
 
    single {
       PageStateStore(

@@ -38,36 +38,36 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.capsiqum.page.Page
-import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
-import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.page.PPage
+import com.wcaokaze.probosqis.page.PPageComposable
+import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.pagedeck.PageLayoutIds
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.app.TestNotePage")
-class TestNotePage(val i: Int) : Page()
+class TestNotePage(val i: Int) : PPage()
 
 @Stable
-class TestNotePageState : PageState()
+class TestNotePageState : PPageState()
 
-val testNotePageComposable = CombinedPageComposable<TestNotePage, TestNotePageState>(
+val testNotePageComposable = PPageComposable<TestNotePage, TestNotePageState>(
    PageStateFactory { _, _ -> TestNotePageState() },
-   content = { page, _, _, windowInsets ->
+   content = { page, _, windowInsets ->
       Note(page.i, windowInsets, Modifier.fillMaxSize())
    },
-   header = { _, _, _ ->
+   header = { _, _, ->
       Text(
          "Note",
          maxLines = 1,
          overflow = TextOverflow.Ellipsis
       )
    },
-   footer = { _, _, _ -> },
+   footer = { _, _, -> },
    pageTransitions = {}
 )
 

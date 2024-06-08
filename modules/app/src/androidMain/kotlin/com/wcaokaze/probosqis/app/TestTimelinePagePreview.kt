@@ -21,8 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
-import com.wcaokaze.probosqis.pagedeck.preview.PagePreview
-import com.wcaokaze.probosqis.pagedeck.preview.PageTransitionPreview
+import com.wcaokaze.probosqis.page.preview.PPagePreview
+import com.wcaokaze.probosqis.page.preview.PPageTransitionPreview
 
 @Preview
 @Composable
@@ -30,7 +30,7 @@ private fun TestTimelinePagePreview(
    @PreviewParameter(SafeDrawingWindowInsetsProvider::class)
    safeDrawingWindowInsets: WindowInsets
 ) {
-   PagePreview(
+   PPagePreview(
       page = TestTimelinePage(),
       pageComposable = testTimelinePageComposable,
       safeDrawingWindowInsets
@@ -40,7 +40,7 @@ private fun TestTimelinePagePreview(
 @Preview
 @Composable
 private fun TestTimelinePageToTestNotePageTransitionPreview() {
-   PageTransitionPreview(
+   PPageTransitionPreview(
       parentPage = TestTimelinePage(),
       childPage = TestNotePage(2),
       parentPageStateModification = {
