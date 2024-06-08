@@ -17,12 +17,10 @@
 package com.wcaokaze.probosqis.pagedeck
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
@@ -205,10 +203,10 @@ private fun <P : Page, S : PageState> PageContentFooter(
    footerStartPaddingType: FooterPaddingType,
    footerEndPaddingType:   FooterPaddingType
 ) {
-   Box(Modifier.transitionElement(PageLayoutIds.root)) {
+   Box(Modifier.transitionElement(GlobalLayoutIds.root)) {
       Box(
          Modifier
-            .transitionElement(PageLayoutIds.background)
+            .transitionElement(GlobalLayoutIds.background)
             .fillMaxSize()
             .background(contentBackgroundColor)
       )
@@ -221,7 +219,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
          isFooterShown = footerComposable != null,
          windowInsets,
          horizontalContentPadding = horizontalContentPadding,
-         modifier = Modifier.transitionElement(PageLayoutIds.content)
+         modifier = Modifier.transitionElement(GlobalLayoutIds.content)
       )
 
       if (footerComposable != null) {
@@ -247,7 +245,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
                      FooterPaddingType.Content -> 0.dp
                   }
                )
-               .transitionElement(PageLayoutIds.footer)
+               .transitionElement(GlobalLayoutIds.footer)
                .align(Alignment.BottomCenter)
          )
       }
@@ -307,21 +305,5 @@ internal fun <P : Page, S : PageState> PageFooter(
       ) {
          footerComposable(page, pageState, pageStackState)
       }
-   }
-}
-
-@Composable
-inline fun FooterButton(
-   noinline onClick: () -> Unit,
-   modifier: Modifier = Modifier,
-   content: @Composable () -> Unit
-) {
-   Box(
-      contentAlignment = Alignment.Center,
-      modifier = modifier
-         .fillMaxHeight()
-         .clickable(onClick = onClick)
-   ) {
-      content()
    }
 }

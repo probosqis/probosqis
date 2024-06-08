@@ -25,6 +25,7 @@ import com.wcaokaze.probosqis.pagedeck.PageDeck
 import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import com.wcaokaze.probosqis.testpages.TestPage
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 

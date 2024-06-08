@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.pagedeck
+package com.wcaokaze.probosqis.page
 
 import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
+import com.wcaokaze.probosqis.pagedeck.GlobalLayoutIds
 
 /**
  * [LayoutId][PageLayoutInfo.LayoutId]をまとめたもの。
  *
- * [CombinedPageComposable]ひとつに対してこのclassを継承したobjectをひとつ用意する。
+ * [PPageComposable]ひとつに対してこのclassを継承したobjectをひとつ用意する。
  *
  * ```kotlin
  * object AccountPageLayoutIds : PageLayoutIds() {
@@ -48,36 +49,29 @@ import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
  * ```
  */
 open class PageLayoutIds {
-   private object GlobalIds {
-      val root       = PageLayoutInfo.LayoutId()
-      val background = PageLayoutInfo.LayoutId()
-      val content    = PageLayoutInfo.LayoutId()
-      val footer     = PageLayoutInfo.LayoutId()
-   }
-
    /**
     * Page内の最も親のComposable。
     * [background]と[content]を子に持つ。
     */
-   val root = GlobalIds.root
+   val root = GlobalLayoutIds.root
 
    /**
     * Pageの背景。遷移前のPageより手前、[content]よりは奥にある。
     * 遷移アニメーション中でなければPage全体に広がっている。
     */
-   val background = GlobalIds.background
+   val background = GlobalLayoutIds.background
 
    /**
-    * Page本体。[CombinedPageComposable.contentComposable]の親。
+    * Page本体。[PPageComposable.contentComposable]の親。
     */
-   val content = GlobalIds.content
+   val content = GlobalLayoutIds.content
 
    /**
-    * フッター。[CombinedPageComposable.footerComposable]の親。
+    * フッター。[PPageComposable.footerComposable]の親。
     * ヘッダーと異なり、フッターは各Pageごとに別々にコンポーズされ、[content]等と
     * 同様に遷移アニメーションを付与することが可能。
     */
-   val footer = GlobalIds.footer
+   val footer = GlobalLayoutIds.footer
 
    companion object : PageLayoutIds()
 }

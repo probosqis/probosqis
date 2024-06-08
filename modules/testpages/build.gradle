@@ -14,21 +14,24 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.pagedeck
+plugins {
+   alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.android.library
+   alias libs.plugins.compose.jb
+   alias libs.plugins.roborazzi
+}
 
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import kotlin.test.Test
-import kotlin.test.assertEquals
+apply from: rootProject.file('gradle/setupModule.gradle')
 
-@RunWith(RobolectricTestRunner::class)
-class PageLayoutInfoTest {
-   @Test
-   fun globalIds_companionObjectEqualsSubclasses() {
-      val someLayoutIds = object : PageLayoutIds() {}
+android {
+   namespace 'com.wcaokaze.probosqis.testpages'
+}
 
-      assertEquals(someLayoutIds.root,       PageLayoutIds.root)
-      assertEquals(someLayoutIds.background, PageLayoutIds.background)
-      assertEquals(someLayoutIds.content,    PageLayoutIds.content)
+kotlin {
+   sourceSets {
+      commonMain.dependencies {
+         implementation project(':modules:page')
+      }
    }
 }

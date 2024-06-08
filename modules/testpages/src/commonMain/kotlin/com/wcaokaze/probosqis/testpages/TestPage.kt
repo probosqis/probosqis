@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.testpages
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,26 +24,26 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
-import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
-import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.page.PPage
+import com.wcaokaze.probosqis.page.PPageComposable
+import com.wcaokaze.probosqis.page.PPageState
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-@SerialName("com.wcaokaze.probosqis.app.TestPage")
-class TestPage(val i: Int) : Page()
+@SerialName("com.wcaokaze.probosqis.testpages.TestPage")
+class TestPage(val i: Int) : PPage()
 
 @Stable
-class TestPageState : PageState()
+class TestPageState : PPageState()
 
-val testPageComposable = CombinedPageComposable<TestPage, TestPageState>(
+val testPageComposable = PPageComposable<TestPage, TestPageState>(
    PageStateFactory { _, _ -> TestPageState() },
-   content = { page, _, pageStackState, windowInsets ->
+   content = { page, pageState, windowInsets ->
       Column(
          Modifier
             .fillMaxSize()
@@ -62,7 +62,7 @@ val testPageComposable = CombinedPageComposable<TestPage, TestPageState>(
                      TestPage(page.i + 1)
                   )
                )
-               pageStackState.addColumn(newPageStack)
+               pageState.addColumn(newPageStack)
             }
          ) {
             Text("Add Column")
@@ -70,7 +70,7 @@ val testPageComposable = CombinedPageComposable<TestPage, TestPageState>(
 
          Button(
             onClick = {
-               pageStackState.startPage(
+               pageState.startPage(
                   TestTimelinePage()
                )
             }
@@ -79,7 +79,7 @@ val testPageComposable = CombinedPageComposable<TestPage, TestPageState>(
          }
       }
    },
-   header = { _, _, _ -> },
+   header = { _, _ -> },
    footer = null,
    pageTransitions = {}
 )

@@ -47,29 +47,29 @@ import com.wcaokaze.probosqis.app.MultiColumnProbosqis
 import com.wcaokaze.probosqis.app.PErrorImpl
 import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.SingleColumnProbosqis
-import com.wcaokaze.probosqis.app.TestNotePage
-import com.wcaokaze.probosqis.app.TestPage
-import com.wcaokaze.probosqis.app.TestTimelinePage
 import com.wcaokaze.probosqis.app.errorItemComposableImpl
 import com.wcaokaze.probosqis.app.loadErrorListOrDefault
 import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
-import com.wcaokaze.probosqis.app.testNotePageComposable
-import com.wcaokaze.probosqis.app.testPageComposable
-import com.wcaokaze.probosqis.app.testTimelinePageComposable
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
-import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
+import com.wcaokaze.probosqis.testpages.TestNotePage
+import com.wcaokaze.probosqis.testpages.TestPage
+import com.wcaokaze.probosqis.testpages.TestTimelinePage
+import com.wcaokaze.probosqis.testpages.testNotePageComposable
+import com.wcaokaze.probosqis.testpages.testPageComposable
+import com.wcaokaze.probosqis.testpages.testTimelinePageComposable
 import kotlinx.collections.immutable.persistentListOf
 import org.koin.compose.KoinApplication
 import org.koin.dsl.module
@@ -91,7 +91,7 @@ private val allErrorItemComposables = persistentListOf(
 )
 
 private val koinModule = module {
-   single { CombinedPageSwitcherState(allPageComposables) }
+   single { PPageSwitcherState(allPageComposables) }
 
    single {
       PageStateStore(

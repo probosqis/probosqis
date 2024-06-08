@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.testpages
 
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
@@ -54,8 +54,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wcaokaze.probosqis.capsiqum.page.Page
-import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
 import com.wcaokaze.probosqis.capsiqum.transition.SharedElementAnimations
@@ -64,10 +62,11 @@ import com.wcaokaze.probosqis.capsiqum.transition.animatePosition
 import com.wcaokaze.probosqis.capsiqum.transition.animateScale
 import com.wcaokaze.probosqis.capsiqum.transition.sharedElement
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
-import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
-import com.wcaokaze.probosqis.pagedeck.FooterButton
-import com.wcaokaze.probosqis.pagedeck.PageLayoutIds
-import com.wcaokaze.probosqis.pagedeck.PageStackState
+import com.wcaokaze.probosqis.page.FooterButton
+import com.wcaokaze.probosqis.page.PPage
+import com.wcaokaze.probosqis.page.PPageComposable
+import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.page.PageLayoutIds
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -76,11 +75,11 @@ import kotlinx.serialization.builtins.serializer
 import kotlin.math.pow
 
 @Serializable
-@SerialName("com.wcaokaze.probosqis.app.TestTimelinePage")
-class TestTimelinePage : Page()
+@SerialName("com.wcaokaze.probosqis.testpages.TestTimelinePage")
+class TestTimelinePage : PPage()
 
 @Stable
-class TestTimelinePageState(stateSaver: StateSaver) : PageState() {
+class TestTimelinePageState(stateSaver: StateSaver) : PPageState() {
    val lazyListState by stateSaver
       .save("lazyListState", LazyListState.Saver) { LazyListState() }
 
@@ -91,26 +90,26 @@ class TestTimelinePageState(stateSaver: StateSaver) : PageState() {
       .save("clickedNoteIndex", Int.serializer().nullable) { null }
 }
 
-val testTimelinePageComposable = CombinedPageComposable<TestTimelinePage, TestTimelinePageState>(
+val testTimelinePageComposable = PPageComposable<TestTimelinePage, TestTimelinePageState>(
    PageStateFactory { _, stateSaver -> TestTimelinePageState(stateSaver) },
-   content = { _, pageState, pageStackState, windowInsets ->
-      TestTimeline(pageState, pageStackState, windowInsets)
+   content = { _, pageState, windowInsets ->
+      TestTimeline(pageState, windowInsets)
    },
-   header = { _, _, _ ->
+   header = { _, _ ->
       Text(
          "HomeTimeline",
          maxLines = 1,
          overflow = TextOverflow.Ellipsis
       )
    },
-   headerActions = { _, _, _ ->
+   headerActions = { _, _ ->
       IconButton(
          onClick = {}
       ) {
          Icon(Icons.Default.AccountBox, contentDescription = "Account")
       }
    },
-   footer = { _, _, _ ->
+   footer = { _, _ ->
       Row {
          FooterButton(
             onClick = {},
@@ -152,9 +151,9 @@ val testTimelinePageComposable = CombinedPageComposable<TestTimelinePage, TestTi
                   if (it.isTargetPage) { 1.0f } else { 0.0f }
                }
                val p by animatePosition(
-                  currentIds.clickedNote, targetIds.background, label = "background-Offset")
+                  TestTimelinePageLayoutIds.clickedNote, targetIds.background, label = "background-Offset")
                val s by animateScale(
-                  currentIds.clickedNote, targetIds.background, label = "background-Scale")
+                  TestTimelinePageLayoutIds.clickedNote, targetIds.background, label = "background-Scale")
 
                Modifier.graphicsLayer {
                   transformOrigin = TransformOrigin(0.0f, 0.0f)
@@ -165,22 +164,22 @@ val testTimelinePageComposable = CombinedPageComposable<TestTimelinePage, TestTi
             }
 
             sharedElement(
-               currentIds.clickedNoteAccountIcon,
-               targetIds.accountIcon,
+               TestTimelinePageLayoutIds.clickedNoteAccountIcon,
+               TestNotePageLayoutIds.accountIcon,
                label = "accountIcon",
                SharedElementAnimatorElement.Target,
                SharedElementAnimations.Offset
             )
 
             sharedElement(
-               currentIds.clickedNoteAccountNameRow,
-               targetIds.accountNameColumn,
+               TestTimelinePageLayoutIds.clickedNoteAccountNameRow,
+               TestNotePageLayoutIds.accountNameColumn,
                label = "accountName"
             )
 
             sharedElement(
-               currentIds.clickedNoteContentText,
-               targetIds.contentText,
+               TestTimelinePageLayoutIds.clickedNoteContentText,
+               TestNotePageLayoutIds.contentText,
                label = "content"
             )
          },
@@ -198,9 +197,9 @@ val testTimelinePageComposable = CombinedPageComposable<TestTimelinePage, TestTi
                   if (it.isCurrentPage) { 1.0f } else { 0.0f }
                }
                val p by animatePosition(
-                  currentIds.background, targetIds.clickedNote, label = "background-Offset")
+                  currentIds.background, TestTimelinePageLayoutIds.clickedNote, label = "background-Offset")
                val s by animateScale(
-                  currentIds.background, targetIds.clickedNote, label = "background-Scale")
+                  currentIds.background, TestTimelinePageLayoutIds.clickedNote, label = "background-Scale")
 
                Modifier.graphicsLayer {
                   transformOrigin = TransformOrigin(0.0f, 0.0f)
@@ -211,22 +210,22 @@ val testTimelinePageComposable = CombinedPageComposable<TestTimelinePage, TestTi
             }
 
             sharedElement(
-               currentIds.accountIcon,
-               targetIds.clickedNoteAccountIcon,
+               TestNotePageLayoutIds.accountIcon,
+               TestTimelinePageLayoutIds.clickedNoteAccountIcon,
                label = "accountIcon",
                SharedElementAnimatorElement.Current,
                SharedElementAnimations.Offset
             )
 
             sharedElement(
-               currentIds.accountNameColumn,
-               targetIds.clickedNoteAccountNameRow,
+               TestNotePageLayoutIds.accountNameColumn,
+               TestTimelinePageLayoutIds.clickedNoteAccountNameRow,
                label = "accountName"
             )
 
             sharedElement(
-               currentIds.contentText,
-               targetIds.clickedNoteContentText,
+               TestNotePageLayoutIds.contentText,
+               TestTimelinePageLayoutIds.clickedNoteContentText,
                label = "content"
             )
          }
@@ -246,7 +245,6 @@ object TestTimelinePageLayoutIds : PageLayoutIds() {
 @Composable
 private fun TestTimeline(
    pageState: TestTimelinePageState,
-   pageStackState: PageStackState,
    windowInsets: WindowInsets
 ) {
    LazyColumn(
@@ -267,7 +265,7 @@ private fun TestTimeline(
                      pageState.clickedNoteIndex = i
 
                      val notePage = TestNotePage(i)
-                     pageStackState.startPage(notePage)
+                     pageState.startPage(notePage)
                   }
                )
                .transitionElement(
