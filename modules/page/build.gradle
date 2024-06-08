@@ -31,12 +31,12 @@ android {
 kotlin {
    sourceSets {
       commonMain.dependencies {
-         implementation project(':panoptiqon')
-         implementation project(':panoptiqon-compose')
-         implementation project(':capsiqum-page')
-         implementation project(':capsiqum-transition')
+         api project(':panoptiqon')
+         api project(':panoptiqon-compose')
+         api project(':capsiqum-page')
+         api project(':capsiqum-transition')
+         api project(':modules:resources')
          implementation project(':modules:pagedeck')
-         implementation project(':modules:resources')
       }
    }
 }
