@@ -31,7 +31,7 @@ import com.wcaokaze.probosqis.capsiqum.transition.pageTransitionSpec
 
 internal val defaultPageTransitionSpec = pageTransitionSpec(
    enter = {
-      targetPageElement(PageLayoutIds.background) {
+      targetPageElement(GlobalLayoutIds.background) {
          val alpha by transition.animateFloat(
             transitionSpec = { tween() }
          ) {
@@ -54,7 +54,7 @@ internal val defaultPageTransitionSpec = pageTransitionSpec(
          }
       }
 
-      targetPageElement(PageLayoutIds.content) {
+      targetPageElement(GlobalLayoutIds.content) {
          val alpha by transition.animateFloat(
             transitionSpec = { tween() }
          ) {
@@ -77,7 +77,7 @@ internal val defaultPageTransitionSpec = pageTransitionSpec(
          }
       }
 
-      targetPageElement(PageLayoutIds.footer) {
+      targetPageElement(GlobalLayoutIds.footer) {
          val alpha by transition.animateFloat(
             transitionSpec = { tween() }
          ) {
@@ -90,7 +90,7 @@ internal val defaultPageTransitionSpec = pageTransitionSpec(
       }
    },
    exit = {
-      currentPageElement(PageLayoutIds.background) {
+      currentPageElement(GlobalLayoutIds.background) {
          val alpha by transition.animateFloat(
             transitionSpec = { tween() }
          ) {
@@ -113,7 +113,7 @@ internal val defaultPageTransitionSpec = pageTransitionSpec(
          }
       }
 
-      currentPageElement(PageLayoutIds.content) {
+      currentPageElement(GlobalLayoutIds.content) {
          val alpha by transition.animateFloat(
             transitionSpec = { tween() }
          ) {
@@ -136,7 +136,7 @@ internal val defaultPageTransitionSpec = pageTransitionSpec(
          }
       }
 
-      currentPageElement(PageLayoutIds.footer) {
+      currentPageElement(GlobalLayoutIds.footer) {
          val alpha by transition.animateFloat(
             transitionSpec = { tween() }
          ) {

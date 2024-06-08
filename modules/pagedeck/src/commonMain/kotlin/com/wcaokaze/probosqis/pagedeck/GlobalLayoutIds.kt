@@ -16,19 +16,11 @@
 
 package com.wcaokaze.probosqis.pagedeck
 
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
 
-@RunWith(RobolectricTestRunner::class)
-class PageLayoutInfoTest {
-   @Test
-   fun globalIds_companionObjectEqualsSubclasses() {
-      val someLayoutIds = object : PageLayoutIds() {}
-
-      assertEquals(someLayoutIds.root,       PageLayoutIds.root)
-      assertEquals(someLayoutIds.background, PageLayoutIds.background)
-      assertEquals(someLayoutIds.content,    PageLayoutIds.content)
-   }
+object GlobalLayoutIds {
+   val root       = PageLayoutInfo.LayoutId()
+   val background = PageLayoutInfo.LayoutId()
+   val content    = PageLayoutInfo.LayoutId()
+   val footer     = PageLayoutInfo.LayoutId()
 }

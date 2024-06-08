@@ -205,10 +205,10 @@ private fun <P : Page, S : PageState> PageContentFooter(
    footerStartPaddingType: FooterPaddingType,
    footerEndPaddingType:   FooterPaddingType
 ) {
-   Box(Modifier.transitionElement(PageLayoutIds.root)) {
+   Box(Modifier.transitionElement(GlobalLayoutIds.root)) {
       Box(
          Modifier
-            .transitionElement(PageLayoutIds.background)
+            .transitionElement(GlobalLayoutIds.background)
             .fillMaxSize()
             .background(contentBackgroundColor)
       )
@@ -221,7 +221,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
          isFooterShown = footerComposable != null,
          windowInsets,
          horizontalContentPadding = horizontalContentPadding,
-         modifier = Modifier.transitionElement(PageLayoutIds.content)
+         modifier = Modifier.transitionElement(GlobalLayoutIds.content)
       )
 
       if (footerComposable != null) {
@@ -247,7 +247,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
                      FooterPaddingType.Content -> 0.dp
                   }
                )
-               .transitionElement(PageLayoutIds.footer)
+               .transitionElement(GlobalLayoutIds.footer)
                .align(Alignment.BottomCenter)
          )
       }

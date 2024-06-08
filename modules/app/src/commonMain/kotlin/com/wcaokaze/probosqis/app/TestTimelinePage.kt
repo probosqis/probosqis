@@ -65,8 +65,8 @@ import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.page.PageLayoutIds
 import com.wcaokaze.probosqis.pagedeck.FooterButton
-import com.wcaokaze.probosqis.pagedeck.PageLayoutIds
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
