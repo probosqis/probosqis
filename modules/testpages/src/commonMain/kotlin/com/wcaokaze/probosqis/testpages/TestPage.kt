@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.testpages
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,7 +35,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-@SerialName("com.wcaokaze.probosqis.app.TestPage")
+@SerialName("com.wcaokaze.probosqis.testpages.TestPage")
 class TestPage(val i: Int) : PPage()
 
 @Stable

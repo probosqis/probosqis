@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.testpages
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -49,7 +49,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-@SerialName("com.wcaokaze.probosqis.app.TestNotePage")
+@SerialName("com.wcaokaze.probosqis.testpages.TestNotePage")
 class TestNotePage(val i: Int) : PPage()
 
 @Stable

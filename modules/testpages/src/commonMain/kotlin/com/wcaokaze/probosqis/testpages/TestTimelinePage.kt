@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.testpages
 
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
@@ -75,7 +75,7 @@ import kotlinx.serialization.builtins.serializer
 import kotlin.math.pow
 
 @Serializable
-@SerialName("com.wcaokaze.probosqis.app.TestTimelinePage")
+@SerialName("com.wcaokaze.probosqis.testpages.TestTimelinePage")
 class TestTimelinePage : PPage()
 
 @Stable
@@ -151,9 +151,9 @@ val testTimelinePageComposable = PPageComposable<TestTimelinePage, TestTimelineP
                   if (it.isTargetPage) { 1.0f } else { 0.0f }
                }
                val p by animatePosition(
-                  currentIds.clickedNote, targetIds.background, label = "background-Offset")
+                  TestTimelinePageLayoutIds.clickedNote, targetIds.background, label = "background-Offset")
                val s by animateScale(
-                  currentIds.clickedNote, targetIds.background, label = "background-Scale")
+                  TestTimelinePageLayoutIds.clickedNote, targetIds.background, label = "background-Scale")
 
                Modifier.graphicsLayer {
                   transformOrigin = TransformOrigin(0.0f, 0.0f)
@@ -164,22 +164,22 @@ val testTimelinePageComposable = PPageComposable<TestTimelinePage, TestTimelineP
             }
 
             sharedElement(
-               currentIds.clickedNoteAccountIcon,
-               targetIds.accountIcon,
+               TestTimelinePageLayoutIds.clickedNoteAccountIcon,
+               TestNotePageLayoutIds.accountIcon,
                label = "accountIcon",
                SharedElementAnimatorElement.Target,
                SharedElementAnimations.Offset
             )
 
             sharedElement(
-               currentIds.clickedNoteAccountNameRow,
-               targetIds.accountNameColumn,
+               TestTimelinePageLayoutIds.clickedNoteAccountNameRow,
+               TestNotePageLayoutIds.accountNameColumn,
                label = "accountName"
             )
 
             sharedElement(
-               currentIds.clickedNoteContentText,
-               targetIds.contentText,
+               TestTimelinePageLayoutIds.clickedNoteContentText,
+               TestNotePageLayoutIds.contentText,
                label = "content"
             )
          },
@@ -197,9 +197,9 @@ val testTimelinePageComposable = PPageComposable<TestTimelinePage, TestTimelineP
                   if (it.isCurrentPage) { 1.0f } else { 0.0f }
                }
                val p by animatePosition(
-                  currentIds.background, targetIds.clickedNote, label = "background-Offset")
+                  currentIds.background, TestTimelinePageLayoutIds.clickedNote, label = "background-Offset")
                val s by animateScale(
-                  currentIds.background, targetIds.clickedNote, label = "background-Scale")
+                  currentIds.background, TestTimelinePageLayoutIds.clickedNote, label = "background-Scale")
 
                Modifier.graphicsLayer {
                   transformOrigin = TransformOrigin(0.0f, 0.0f)
@@ -210,22 +210,22 @@ val testTimelinePageComposable = PPageComposable<TestTimelinePage, TestTimelineP
             }
 
             sharedElement(
-               currentIds.accountIcon,
-               targetIds.clickedNoteAccountIcon,
+               TestNotePageLayoutIds.accountIcon,
+               TestTimelinePageLayoutIds.clickedNoteAccountIcon,
                label = "accountIcon",
                SharedElementAnimatorElement.Current,
                SharedElementAnimations.Offset
             )
 
             sharedElement(
-               currentIds.accountNameColumn,
-               targetIds.clickedNoteAccountNameRow,
+               TestNotePageLayoutIds.accountNameColumn,
+               TestTimelinePageLayoutIds.clickedNoteAccountNameRow,
                label = "accountName"
             )
 
             sharedElement(
-               currentIds.contentText,
-               targetIds.clickedNoteContentText,
+               TestNotePageLayoutIds.contentText,
+               TestTimelinePageLayoutIds.clickedNoteContentText,
                label = "content"
             )
          }

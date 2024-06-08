@@ -41,6 +41,7 @@ kotlin {
          implementation project(':modules:error')
          implementation project(':modules:page')
          implementation project(':modules:pagedeck')
+         implementation project(':modules:testpages')
          implementation project(':modules:resources')
       }
    }
