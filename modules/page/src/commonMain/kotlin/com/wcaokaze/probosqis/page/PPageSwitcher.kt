@@ -33,18 +33,22 @@ private fun <P : PPage, S : PPageState>
       pPageComposable.pageStateClass,
       pPageComposable.pageStateFactory,
       contentComposable = { page, pageState, pageStackState, windowInsets ->
+         pageState.inject(pageStackState)
          pPageComposable.contentComposable(page, pageState, windowInsets)
       },
       headerComposable = { page, pageState, pageStackState ->
+         pageState.inject(pageStackState)
          pPageComposable.headerComposable(page, pageState)
       },
       headerActionsComposable = pPageComposable.headerActionsComposable?.let { pHeaderActionsComposable ->
          { page, pageState, pageStackState ->
+            pageState.inject(pageStackState)
             pHeaderActionsComposable(page, pageState)
          }
       },
       footerComposable = pPageComposable.footerComposable?.let { pFooterComposable ->
          { page, pageState, pageStackState ->
+            pageState.inject(pageStackState)
             pFooterComposable(page, pageState)
          }
       },

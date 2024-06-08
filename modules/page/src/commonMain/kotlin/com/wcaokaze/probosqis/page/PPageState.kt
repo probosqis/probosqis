@@ -17,15 +17,52 @@
 package com.wcaokaze.probosqis.page
 
 import androidx.annotation.VisibleForTesting
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.pagedeck.PageStackState
 
 @Stable
 abstract class PPageState : PageState() {
+   private var pageStackStateRc = RC<PageStackState>()
+
+   fun startPage(page: PPage) {
+      pageStackStateRc.get().startPage(page)
+   }
+
+   fun finishPage() {
+      pageStackStateRc.get().finishPage()
+   }
+
+   fun addColumn(page: PPage) {
+      pageStackStateRc.get().addColumn(page)
+   }
+
+   fun addColumn(pageStack: PageStack) {
+      pageStackStateRc.get().addColumn(pageStack)
+   }
+
+   fun removeFromDeck() {
+      pageStackStateRc.get().removeFromDeck()
+   }
+
+   @Composable
+   internal fun inject(pageStackState: PageStackState) {
+      DisposableEffect(pageStackState) {
+         pageStackStateRc.set(pageStackState)
+
+         onDispose {
+            pageStackStateRc.release()
+         }
+      }
+   }
+
    @VisibleForTesting
    @Stable
    internal class RC<T> {
@@ -33,7 +70,13 @@ abstract class PPageState : PageState() {
       private var ref: T? by mutableStateOf(null)
 
       fun get(): T {
-         if (referenceCount <= 0) { throw IllegalStateException() }
+         if (referenceCount <= 0) {
+            throw IllegalStateException(
+               "This PPageState has not been initialized. " +
+               "Probably a constructor of some PPageState attempt to invoke " +
+               "a PPageState API."
+            )
+         }
 
          @Suppress("UNCHECKED_CAST")
          return ref as T
