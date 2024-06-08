@@ -170,8 +170,8 @@ class PageTransitionStateImpl(
       val frontPageComposable = pageSwitcher[frontPage] ?: TODO()
       val backPageComposable  = pageSwitcher[backPage ] ?: TODO()
 
-      return backPageComposable .pageTransitionSet.getTransitionTo  (frontPage::class)
-         ?:  frontPageComposable.pageTransitionSet.getTransitionFrom(backPage ::class)
+      return backPageComposable .outgoingTransitions[frontPage::class]
+         ?:  frontPageComposable.incomingTransitions[backPage ::class]
          ?:  defaultPageTransitionSpec
    }
 }

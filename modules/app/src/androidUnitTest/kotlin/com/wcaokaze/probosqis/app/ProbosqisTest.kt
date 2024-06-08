@@ -41,6 +41,7 @@ import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageDeck
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.mockk
+import kotlinx.collections.immutable.persistentMapOf
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.koin.compose.KoinIsolatedContext
@@ -70,7 +71,8 @@ class ProbosqisTest {
             },
             header = { _, _, _ -> },
             footer = { _, _, _ -> },
-            pageTransitions = {}
+            outgoingTransitions = persistentMapOf(),
+            incomingTransitions = persistentMapOf()
          )
       )
 

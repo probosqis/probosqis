@@ -19,8 +19,13 @@ package com.wcaokaze.probosqis.page
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
-import com.wcaokaze.probosqis.pagedeck.PageTransitionSet
+import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionSpec
+import com.wcaokaze.probosqis.capsiqum.transition.pageTransitionSpec
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.toImmutableMap
 import kotlin.reflect.KClass
 
 inline fun <reified P : PPage, reified S : PPageState> PPageComposable(
@@ -53,3 +58,53 @@ data class PPageComposable<P : PPage, S : PPageState>(
    val footerComposable: (@Composable (P, S) -> Unit)?,
    val pageTransitionSet: PageTransitionSet
 )
+
+@Immutable
+data class PageTransitionSet(
+   val outgoingTransitions: ImmutableMap<KClass<out Page>, PageTransitionSpec>,
+   val incomingTransitions: ImmutableMap<KClass<out Page>, PageTransitionSpec>
+) {
+   class Builder {
+      private var outgoingTransitions = mutableMapOf<KClass<out Page>, PageTransitionSpec>()
+      private var incomingTransitions = mutableMapOf<KClass<out Page>, PageTransitionSpec>()
+
+      fun transitionTo(
+         pageClass: KClass<out Page>,
+         transitionSpec: PageTransitionSpec
+      ) {
+         outgoingTransitions[pageClass] = transitionSpec
+      }
+
+      inline fun <reified P : Page> transitionTo(
+         enter: PageTransitionSpec.Builder.() -> Unit,
+         exit:  PageTransitionSpec.Builder.() -> Unit
+      ) {
+         transitionTo(
+            P::class,
+            pageTransitionSpec(enter, exit)
+         )
+      }
+
+      fun transitionFrom(
+         pageClass: KClass<out Page>,
+         transitionSpec: PageTransitionSpec
+      ) {
+         incomingTransitions[pageClass] = transitionSpec
+      }
+
+      inline fun <reified P : Page> transitionFrom(
+         enter: PageTransitionSpec.Builder.() -> Unit,
+         exit:  PageTransitionSpec.Builder.() -> Unit
+      ) {
+         transitionFrom(
+            P::class,
+            pageTransitionSpec(enter, exit)
+         )
+      }
+
+      fun build() = PageTransitionSet(
+         outgoingTransitions.toImmutableMap(),
+         incomingTransitions.toImmutableMap()
+      )
+   }
+}

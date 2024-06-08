@@ -45,6 +45,7 @@ import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.junit.Rule
@@ -85,7 +86,8 @@ class MultiColumnDeckTest {
       },
       header = { _, _, _ -> },
       footer = null,
-      pageTransitions = {}
+      outgoingTransitions = persistentMapOf(),
+      incomingTransitions = persistentMapOf()
    )
 
    @Composable

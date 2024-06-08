@@ -52,6 +52,7 @@ private fun <P : PPage, S : PPageState>
             pFooterComposable(page, pageState)
          }
       },
-      pageTransitionSet = pPageComposable.pageTransitionSet
+      outgoingTransitions = pPageComposable.pageTransitionSet.outgoingTransitions,
+      incomingTransitions = pPageComposable.pageTransitionSet.incomingTransitions
    )
 }

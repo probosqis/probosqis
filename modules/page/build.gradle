@@ -34,6 +34,7 @@ kotlin {
          implementation project(':panoptiqon')
          implementation project(':panoptiqon-compose')
          implementation project(':capsiqum-page')
+         implementation project(':capsiqum-transition')
          implementation project(':modules:pagedeck')
          implementation project(':modules:resources')
       }

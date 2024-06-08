@@ -19,15 +19,12 @@ package com.wcaokaze.probosqis.pagedeck
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionSpec
-import com.wcaokaze.probosqis.capsiqum.transition.pageTransitionSpec
 import kotlinx.collections.immutable.ImmutableMap
-import kotlinx.collections.immutable.toImmutableMap
 import kotlin.reflect.KClass
 
 inline fun <reified P : Page, reified S : PageState> CombinedPageComposable(
@@ -38,7 +35,8 @@ inline fun <reified P : Page, reified S : PageState> CombinedPageComposable(
    // headerActionsが空の状態をnullでも表せるようにする
    noinline headerActions: (@Composable RowScope.(P, S, PageStackState) -> Unit)? = null,
    noinline footer: (@Composable (P, S, PageStackState) -> Unit)?,
-   pageTransitions: PageTransitionSet.Builder.() -> Unit
+   outgoingTransitions: ImmutableMap<KClass<out Page>, PageTransitionSpec>,
+   incomingTransitions: ImmutableMap<KClass<out Page>, PageTransitionSpec>
 ) = CombinedPageComposable(
    P::class,
    S::class,
@@ -47,7 +45,8 @@ inline fun <reified P : Page, reified S : PageState> CombinedPageComposable(
    header,
    headerActions,
    footer,
-   pageTransitionSet = PageTransitionSet.Builder().apply(pageTransitions).build()
+   outgoingTransitions,
+   incomingTransitions
 )
 
 @Stable
@@ -59,61 +58,6 @@ data class CombinedPageComposable<P : Page, S : PageState>(
    val headerComposable: @Composable (P, S, PageStackState) -> Unit,
    val headerActionsComposable: (@Composable RowScope.(P, S, PageStackState) -> Unit)?,
    val footerComposable: (@Composable (P, S, PageStackState) -> Unit)?,
-   val pageTransitionSet: PageTransitionSet
-)
-
-@Immutable
-data class PageTransitionSet(
    val outgoingTransitions: ImmutableMap<KClass<out Page>, PageTransitionSpec>,
    val incomingTransitions: ImmutableMap<KClass<out Page>, PageTransitionSpec>
-) {
-   fun getTransitionTo(pageClass: KClass<out Page>): PageTransitionSpec?
-         = outgoingTransitions[pageClass]
-
-   fun getTransitionFrom(pageClass: KClass<out Page>): PageTransitionSpec?
-         = incomingTransitions[pageClass]
-
-   class Builder {
-      private var outgoingTransitions = mutableMapOf<KClass<out Page>, PageTransitionSpec>()
-      private var incomingTransitions = mutableMapOf<KClass<out Page>, PageTransitionSpec>()
-
-      fun transitionTo(
-         pageClass: KClass<out Page>,
-         transitionSpec: PageTransitionSpec
-      ) {
-         outgoingTransitions[pageClass] = transitionSpec
-      }
-
-      inline fun <reified P : Page> transitionTo(
-         enter: PageTransitionSpec.Builder.() -> Unit,
-         exit:  PageTransitionSpec.Builder.() -> Unit
-      ) {
-         transitionTo(
-            P::class,
-            pageTransitionSpec(enter, exit)
-         )
-      }
-
-      fun transitionFrom(
-         pageClass: KClass<out Page>,
-         transitionSpec: PageTransitionSpec
-      ) {
-         incomingTransitions[pageClass] = transitionSpec
-      }
-
-      inline fun <reified P : Page> transitionFrom(
-         enter: PageTransitionSpec.Builder.() -> Unit,
-         exit:  PageTransitionSpec.Builder.() -> Unit
-      ) {
-         transitionFrom(
-            P::class,
-            pageTransitionSpec(enter, exit)
-         )
-      }
-
-      fun build() = PageTransitionSet(
-         outgoingTransitions.toImmutableMap(),
-         incomingTransitions.toImmutableMap()
-      )
-   }
-}
+)

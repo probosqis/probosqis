@@ -35,6 +35,7 @@ import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.mockk
+import kotlinx.collections.immutable.persistentMapOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -99,7 +100,8 @@ class CombinedPageComposableTest {
                }
             }
          },
-         pageTransitions = {}
+         outgoingTransitions = persistentMapOf(),
+         incomingTransitions = persistentMapOf()
       )
 
       val pageBComposable = CombinedPageComposable<PageB, PageBState>(
@@ -136,7 +138,8 @@ class CombinedPageComposableTest {
                }
             }
          },
-         pageTransitions = {}
+         outgoingTransitions = persistentMapOf(),
+         incomingTransitions = persistentMapOf()
       )
 
       val savedPageState = SavedPageState(PageId(0L), PageA())
@@ -268,7 +271,8 @@ class CombinedPageComposableTest {
             footerArgumentPageState = pageState
             footerArgumentPageStackState = pageStackState
          },
-         pageTransitions = {}
+         outgoingTransitions = persistentMapOf(),
+         incomingTransitions = persistentMapOf()
       )
 
       val page = PageA()
