@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.page
 
-import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 
@@ -26,7 +25,7 @@ fun PPageSwitcherState(
    allPageComposables.map { map(it) }
 )
 
-private fun <P : Page, S : PPageState>
+private fun <P : PPage, S : PPageState>
       map(pPageComposable: PPageComposable<P, S>): CombinedPageComposable<*, *>
 {
    return CombinedPageComposable(

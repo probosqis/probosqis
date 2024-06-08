@@ -19,12 +19,11 @@ package com.wcaokaze.probosqis.page
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
-import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.pagedeck.PageTransitionSet
 import kotlin.reflect.KClass
 
-inline fun <reified P : Page, reified S : PPageState> PPageComposable(
+inline fun <reified P : PPage, reified S : PPageState> PPageComposable(
    pageStateFactory: PageStateFactory<P, S>,
    noinline content: @Composable (P, S, WindowInsets) -> Unit,
    noinline header: @Composable (P, S) -> Unit,
@@ -44,7 +43,7 @@ inline fun <reified P : Page, reified S : PPageState> PPageComposable(
    pageTransitionSet = PageTransitionSet.Builder().apply(pageTransitions).build()
 )
 
-data class PPageComposable<P : Page, S : PPageState>(
+data class PPageComposable<P : PPage, S : PPageState>(
    val pageClass: KClass<P>,
    val pageStateClass: KClass<S>,
    val pageStateFactory: PageStateFactory<P, S>,
