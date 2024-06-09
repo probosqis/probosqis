@@ -26,10 +26,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.error.PError
+import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.pagedeck.PageStackState
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 @Stable
-abstract class PPageState : PageState() {
+abstract class PPageState : PageState(), KoinComponent {
+   private val errorListState: PErrorListState by inject()
    private var pageStackStateRc = RC<PageStackState>()
 
    fun startPage(page: PPage) {
@@ -50,6 +55,10 @@ abstract class PPageState : PageState() {
 
    fun removeFromDeck() {
       pageStackStateRc.get().removeFromDeck()
+   }
+
+   fun raiseError(error: PError) {
+      errorListState.raise(error)
    }
 
    @Composable

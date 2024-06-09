@@ -31,6 +31,7 @@ import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
+import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -76,6 +77,15 @@ val testPageComposable = PPageComposable<TestPage, TestPageState>(
             }
          ) {
             Text("Start Timeline")
+         }
+
+         Button(
+            onClick = {
+               val error = TestError(Clock.System.now())
+               pageState.raiseError(error)
+            }
+         ) {
+            Text("Raise an error")
          }
       }
    },

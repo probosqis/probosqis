@@ -64,9 +64,11 @@ import com.wcaokaze.probosqis.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
+import com.wcaokaze.probosqis.testpages.TestError
 import com.wcaokaze.probosqis.testpages.TestNotePage
 import com.wcaokaze.probosqis.testpages.TestPage
 import com.wcaokaze.probosqis.testpages.TestTimelinePage
+import com.wcaokaze.probosqis.testpages.testErrorComposable
 import com.wcaokaze.probosqis.testpages.testNotePageComposable
 import com.wcaokaze.probosqis.testpages.testPageComposable
 import com.wcaokaze.probosqis.testpages.testTimelinePageComposable
@@ -88,6 +90,7 @@ private val allPageSerializers = persistentListOf(
 
 private val allErrorItemComposables = persistentListOf(
    errorItemComposableImpl,
+   testErrorComposable,
 )
 
 private val koinModule = module {
@@ -140,6 +143,7 @@ private val repositoriesKoinModule = module {
          context = get(),
          allErrorSerializers = listOf(
             errorSerializer<PErrorImpl>(),
+            errorSerializer<TestError>(),
          )
       )
    }
