@@ -107,6 +107,10 @@ class PErrorListState(
       isShown = false
    }
 
+   fun raise(error: PError) {
+      errors += error
+   }
+
    @Stable
    internal fun <E : PError> getComposableFor(error: E): PErrorItemComposable<E>? {
       @Suppress("UNCHECKED_CAST")

@@ -42,6 +42,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.GraphicsMode
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -51,7 +52,7 @@ class PErrorListTest {
    @get:Rule
    val rule = createComposeRule()
 
-   private class ErrorImpl(val i: Int) : PError()
+   private data class ErrorImpl(val i: Int) : PError()
 
    private val errorItemComposableImpl = PErrorItemComposable<ErrorImpl> { error ->
       Text("Error message ${error.i}")
@@ -231,5 +232,20 @@ class PErrorListTest {
       rule.runOnIdle {
          assertTrue(isRootTouched)
       }
+   }
+
+   @Test
+   fun pErrorListState_raise() {
+      val errorList = persistentListOf(ErrorImpl(0))
+      val cache = WritableCache<List<PError>>(errorList)
+
+      val state = PErrorListState(
+         cache,
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      assertContentEquals(listOf(ErrorImpl(0)), cache.value)
+      state.raise(ErrorImpl(1))
+      assertContentEquals(listOf(ErrorImpl(0), ErrorImpl(1)), cache.value)
    }
 }
