@@ -248,4 +248,40 @@ class PErrorListTest {
       state.raise(ErrorImpl(1))
       assertContentEquals(listOf(ErrorImpl(0), ErrorImpl(1)), cache.value)
    }
+
+   @Test
+   fun pErrorActionButton_bounceOnRaising() {
+      val errorList = persistentListOf(ErrorImpl(0))
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            Box(
+               modifier = Modifier
+                  .align(Alignment.TopEnd)
+                  .padding(8.dp)
+            ) {
+               PErrorActionButton(
+                  state,
+                  onClick = {}
+               )
+            }
+
+            PErrorList(state)
+         }
+      }
+
+      rule.mainClock.autoAdvance = false
+
+      state.raise(ErrorImpl(1))
+      rule.waitForIdle()
+
+      repeat (20) { i ->
+         rule.onRoot().captureRoboImage("test/pErrorActionButton_bounceOnRaising/$i.png")
+         rule.mainClock.advanceTimeBy(16L)
+      }
+   }
 }

@@ -73,6 +73,8 @@ import androidx.compose.ui.unit.offset
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import com.wcaokaze.probosqis.resources.icons.Error
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlin.math.roundToInt
 import kotlin.reflect.KClass
 
@@ -93,6 +95,7 @@ class PErrorListState(
 ) {
    private val itemComposables = itemComposables.associateBy { it.errorClass }
 
+   internal var raisedTime: Instant? by mutableStateOf(null)
    internal var buttonBounds by mutableStateOf(Rect.Zero)
 
    var errors: List<PError> by errorListCache.asMutableState()
@@ -109,6 +112,7 @@ class PErrorListState(
 
    fun raise(error: PError) {
       errors += error
+      raisedTime = Clock.System.now()
    }
 
    @Stable
