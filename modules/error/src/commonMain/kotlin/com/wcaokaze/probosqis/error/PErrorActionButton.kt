@@ -16,47 +16,26 @@
 
 package com.wcaokaze.probosqis.error
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.resources.Strings
 import com.wcaokaze.probosqis.resources.icons.Error
 
 @Composable
 fun PErrorActionButton(
    state: PErrorListState,
-   onClick: () -> Unit
+   onClick: () -> Unit,
+   modifier: Modifier = Modifier
 ) {
-   val anim = remember { Animatable(0.dp, Dp.VectorConverter) }
-
-   LaunchedEffect(state.raisedTime) {
-      if (state.raisedTime == null) { return@LaunchedEffect }
-
-      anim.animateTo(-12.dp, animationSpec = tween(32, easing = LinearEasing))
-      anim.animateTo(  0.dp, animationSpec = spring(Spring.DampingRatioHighBouncy))
-   }
-
    IconButton(
       onClick,
-      modifier = Modifier
+      modifier = modifier
          .onGloballyPositioned { state.buttonBounds = it.boundsInRoot() }
-         .offset { IntOffset(anim.value.roundToPx(), 0) }
    ) {
       Icon(
          Icons.Default.Error,

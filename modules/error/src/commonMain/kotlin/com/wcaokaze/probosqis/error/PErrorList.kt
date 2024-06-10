@@ -95,7 +95,9 @@ class PErrorListState(
 ) {
    private val itemComposables = itemComposables.associateBy { it.errorClass }
 
-   internal var raisedTime: Instant? by mutableStateOf(null)
+   var raisedTime: Instant? by mutableStateOf(null)
+      private set
+
    internal var buttonBounds by mutableStateOf(Rect.Zero)
 
    var errors: List<PError> by errorListCache.asMutableState()
