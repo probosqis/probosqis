@@ -18,12 +18,9 @@ package com.wcaokaze.probosqis.app
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationState
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateTo
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.MutatorMutex
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -76,7 +73,10 @@ import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.resources.Strings
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun SingleColumnProbosqis(
@@ -169,7 +169,18 @@ private fun AppBar(
 
    LaunchedEffect(errorListState.raisedTime) {
       if (errorListState.raisedTime == null) { return@LaunchedEffect }
-      anim.animateErrorNotifier()
+
+      if (scrollState.isShown) {
+         anim.animateErrorNotifier()
+      } else {
+         launch {
+            scrollState.show()
+         }
+         launch {
+            delay(100.milliseconds)
+            anim.animateErrorNotifier()
+         }
+      }
    }
 
    Column(
@@ -241,10 +252,14 @@ private fun MenuButton(
 
 @Stable
 private class AppBarScrollState {
+   private val scrollMutex = MutatorMutex()
+
    var scrollOffset by mutableFloatStateOf(0.0f)
       private set
 
    var appBarHeight by mutableIntStateOf(0)
+
+   val isShown: Boolean get() = scrollOffset / appBarHeight > -0.5f
 
    fun scroll(offset: Float): Float {
       val oldScrollOffset = scrollOffset
@@ -260,17 +275,21 @@ private class AppBarScrollState {
       scrollOffset = scrollOffset.coerceIn(-appBarHeight.toFloat(), 0.0f)
    }
 
+   suspend fun show() {
+      scrollMutex.mutate {
+         AnimationState(scrollOffset).animateTo(0.0f) { scrollOffset = value }
+      }
+   }
+
    @Suppress("UNUSED")
    suspend fun settle() {
       if (appBarHeight == 0) { return }
 
-      val targetOffset = if (scrollOffset / appBarHeight < -0.5f) {
-         -appBarHeight.toFloat()
-      } else {
-         0.0f
-      }
+      scrollMutex.mutate {
+         val targetOffset = if (isShown) { 0.0f } else { -appBarHeight.toFloat() }
 
-      AnimationState(scrollOffset).animateTo(targetOffset) { scrollOffset = value }
+         AnimationState(scrollOffset).animateTo(targetOffset) { scrollOffset = value }
+      }
    }
 }
 
