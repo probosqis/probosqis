@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -280,8 +281,15 @@ private fun PErrorListContent(
 
    LazyColumn {
       itemsIndexed(errors) { index, error ->
-         val composable = state.getComposableFor(error)?.composable ?: fallback
-         composable(error)
+         Box(
+            contentAlignment = Alignment.CenterStart,
+            modifier = Modifier
+               .fillMaxWidth()
+               .heightIn(min = 48.dp)
+         ) {
+            val composable = state.getComposableFor(error)?.composable ?: fallback
+            composable(error)
+         }
 
          if (index < errors.lastIndex) {
             Divider()
