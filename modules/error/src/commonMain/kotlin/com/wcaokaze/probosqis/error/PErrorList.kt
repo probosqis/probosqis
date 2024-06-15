@@ -32,6 +32,8 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.ScrollableDefaults
+import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.gestures.awaitDragOrCancellation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -64,6 +66,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,6 +81,8 @@ import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
@@ -87,6 +92,7 @@ import androidx.compose.ui.unit.offset
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import com.wcaokaze.probosqis.resources.icons.Error
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.math.abs
@@ -296,23 +302,12 @@ private fun PErrorListContent(
 
    LazyColumn {
       itemsIndexed(errors) { index, error ->
-         var offset by remember { mutableFloatStateOf(0.0f) }
-
          Box(
             contentAlignment = Alignment.CenterStart,
             modifier = Modifier
                .fillMaxWidth()
                .heightIn(min = 48.dp)
-               .pointerInput(Unit) {
-                  detectHorizontalDragGesture(
-                     onDrag = { dragAmount ->
-                        offset += dragAmount
-                     },
-                     onDragEnd = {
-                     }
-                  )
-               }
-               .offset { IntOffset(offset.roundToInt(), 0) }
+               .swipeDismiss()
          ) {
             val composable = state.getComposableFor(error)?.composable ?: fallback
             composable(error)
@@ -325,21 +320,59 @@ private fun PErrorListContent(
    }
 }
 
+@Composable
+private fun Modifier.swipeDismiss(): Modifier {
+   var offset by remember { mutableFloatStateOf(0.0f) }
+   val scrollState = remember {
+      ScrollableState {
+         offset += it
+         it
+      }
+   }
+
+   val flingBehavior = ScrollableDefaults.flingBehavior()
+   val coroutineScope = rememberCoroutineScope()
+
+   return pointerInput(Unit) {
+         detectHorizontalDragGesture(
+            onDrag = { dragAmount ->
+               scrollState.dispatchRawDelta(dragAmount)
+            },
+            onDragEnd = { velocity ->
+               coroutineScope.launch {
+                  scrollState.scroll {
+                     with (flingBehavior) {
+                        performFling(velocity)
+                     }
+                  }
+               }
+            }
+         )
+      }
+      .offset { IntOffset(offset.roundToInt(), 0) }
+}
+
 private suspend fun PointerInputScope.detectHorizontalDragGesture(
-   onDrag: (Float) -> Unit,
-   onDragEnd: () -> Unit
+   onDrag: (dragAmount: Float) -> Unit,
+   onDragEnd: (velocity: Float) -> Unit
 ) {
+   val velocityTracker = VelocityTracker()
+
    awaitEachGesture {
       val down = awaitFirstDown(requireUnconsumed = false)
       if (down.type == PointerType.Mouse) { return@awaitEachGesture }
+      velocityTracker.addPointerInputChange(down)
 
-      val pointerId = awaitPointerSlop(down, onDrag) ?: return@awaitEachGesture
-      detectDrag(pointerId, onDrag, onDragEnd)
+      val pointerId = awaitPointerSlop(down, velocityTracker, onDrag)
+            ?: return@awaitEachGesture
+
+      detectDrag(pointerId, velocityTracker, onDrag, onDragEnd)
    }
 }
 
 private suspend fun AwaitPointerEventScope.awaitPointerSlop(
    firstDown: PointerInputChange,
+   velocityTracker: VelocityTracker,
    onDrag: (Float) -> Unit
 ): PointerId? {
    var down = firstDown
@@ -348,13 +381,24 @@ private suspend fun AwaitPointerEventScope.awaitPointerSlop(
    while (true) {
       val event = awaitPointerEvent()
       val dragEvent = event.changes.firstOrNull { it.id == down.id }
-            ?: return null
-      if (dragEvent.isConsumed) { return null }
+      if (dragEvent == null || dragEvent.isConsumed) {
+         velocityTracker.resetTracking()
+         return null
+      }
+
+      velocityTracker.addPointerInputChange(dragEvent)
 
       if (dragEvent.changedToUpIgnoreConsumed()) {
-         down = event.changes
+         val alternativeDown = event.changes
             .firstOrNull { it.pressed && it.type != PointerType.Mouse }
-            ?: return null
+         if (alternativeDown == null) {
+            velocityTracker.resetTracking()
+            return null
+         }
+
+         down = alternativeDown
+         velocityTracker.resetTracking()
+         velocityTracker.addPointerInputChange(alternativeDown)
 
          continue
       }
@@ -376,15 +420,27 @@ private suspend fun AwaitPointerEventScope.awaitPointerSlop(
 
 private suspend fun AwaitPointerEventScope.detectDrag(
    sloppedPointerId: PointerId,
+   velocityTracker: VelocityTracker,
    onDrag: (Float) -> Unit,
-   onDragEnd: () -> Unit
+   onDragEnd: (Float) -> Unit
 ) {
    var pointerId = sloppedPointerId
 
    while (true) {
       val change = awaitDragOrCancellation(pointerId)
-      if (change == null || change.changedToUpIgnoreConsumed()) {
-         onDragEnd()
+      if (change == null) {
+         val velocity = velocityTracker.calculateVelocity()
+         velocityTracker.resetTracking()
+         onDragEnd(velocity.x)
+         return
+      }
+
+      velocityTracker.addPointerInputChange(change)
+
+      if (change.changedToUpIgnoreConsumed()) {
+         val velocity = velocityTracker.calculateVelocity()
+         velocityTracker.resetTracking()
+         onDragEnd(velocity.x)
          return
       }
 

@@ -37,6 +37,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
@@ -341,5 +343,67 @@ class PErrorListTest {
 
       rule.onNodeWithText("Error message 1")
          .assertLeftPositionInRootIsEqualTo(96.dp)
+   }
+
+   @Test
+   fun pErrorList_horizontalFling() {
+      val errorList = List(50) { ErrorImpl(it) }
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state)
+         }
+      }
+
+      state.show()
+
+      rule.onNodeWithText("Error message 0")
+         .assertLeftPositionInRootIsEqualTo(32.dp)
+
+      rule.onNodeWithText("Error message 0").performTouchInput {
+         swipeLeft(
+            centerX,
+            centerX - viewConfiguration.touchSlop - 32.dp.toPx(),
+            durationMillis = 50
+         )
+      }
+
+      rule.onNodeWithText("Error message 0")
+         .fetchSemanticsNode()
+         .let {
+            with (it.layoutInfo.density) {
+               // スワイプが終わる位置はx = 0だがFlingによってさらに16dpくらいは動く
+               assertTrue(it.positionInRoot.x < (0 - 16).dp.toPx())
+            }
+         }
+
+      rule.onNodeWithText("Error message 1")
+         .assertLeftPositionInRootIsEqualTo(32.dp)
+
+      rule.onNodeWithText("Error message 1").performTouchInput {
+         swipeRight(
+            centerX,
+            centerX + viewConfiguration.touchSlop + 32.dp.toPx(),
+            durationMillis = 50
+         )
+      }
+
+      rule.onNodeWithText("Error message 1")
+         .fetchSemanticsNode()
+         .let {
+            with (it.layoutInfo.density) {
+               assertTrue(it.positionInRoot.x > (96 + 16).dp.toPx())
+            }
+         }
    }
 }
