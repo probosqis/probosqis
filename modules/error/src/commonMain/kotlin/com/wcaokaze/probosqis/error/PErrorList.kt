@@ -37,6 +37,7 @@ import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.gestures.awaitDragOrCancellation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -335,8 +336,11 @@ private fun Modifier.swipeDismiss(): Modifier {
 
    return pointerInput(Unit) {
          detectHorizontalDragGesture(
+            shouldStartDragImmediately = { scrollState.isScrollInProgress },
             onDrag = { dragAmount ->
-               scrollState.dispatchRawDelta(dragAmount)
+               coroutineScope.launch {
+                  scrollState.scrollBy(dragAmount)
+               }
             },
             onDragEnd = { velocity ->
                coroutineScope.launch {
@@ -353,6 +357,7 @@ private fun Modifier.swipeDismiss(): Modifier {
 }
 
 private suspend fun PointerInputScope.detectHorizontalDragGesture(
+   shouldStartDragImmediately: () -> Boolean,
    onDrag: (dragAmount: Float) -> Unit,
    onDragEnd: (velocity: Float) -> Unit
 ) {
@@ -363,8 +368,13 @@ private suspend fun PointerInputScope.detectHorizontalDragGesture(
       if (down.type == PointerType.Mouse) { return@awaitEachGesture }
       velocityTracker.addPointerInputChange(down)
 
-      val pointerId = awaitPointerSlop(down, velocityTracker, onDrag)
-            ?: return@awaitEachGesture
+      val pointerId = if (shouldStartDragImmediately()) {
+         onDrag(0.0f)
+         down.id
+      } else {
+         awaitPointerSlop(down, velocityTracker, onDrag)
+               ?: return@awaitEachGesture
+      }
 
       detectDrag(pointerId, velocityTracker, onDrag, onDragEnd)
    }

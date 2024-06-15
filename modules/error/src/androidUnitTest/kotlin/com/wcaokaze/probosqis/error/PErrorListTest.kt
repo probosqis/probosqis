@@ -406,4 +406,42 @@ class PErrorListTest {
             }
          }
    }
+
+   @Test
+   fun pErrorList_stopFlinging() {
+      val errorList = List(50) { ErrorImpl(it) }
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state)
+         }
+      }
+
+      state.show()
+
+      rule.onNodeWithText("Error message 0")
+         .assertLeftPositionInRootIsEqualTo(32.dp)
+
+      rule.onNodeWithText("Error message 0").performTouchInput {
+         swipeLeft(
+            centerX,
+            centerX - viewConfiguration.touchSlop - 32.dp.toPx(),
+            durationMillis = 50
+         )
+         down(center)
+      }
+
+      rule.onNodeWithText("Error message 0")
+         .assertLeftPositionInRootIsEqualTo(0.dp)
+   }
 }
