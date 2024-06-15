@@ -18,6 +18,8 @@ package com.wcaokaze.probosqis.error
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
@@ -28,8 +30,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
+import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
@@ -55,7 +60,10 @@ class PErrorListTest {
    private data class ErrorImpl(val i: Int) : PError()
 
    private val errorItemComposableImpl = PErrorItemComposable<ErrorImpl> { error ->
-      Text("Error message ${error.i}")
+      Text(
+         "Error message ${error.i}",
+         modifier = Modifier.fillMaxWidth().height(48.dp)
+      )
    }
 
    @Test
@@ -247,5 +255,91 @@ class PErrorListTest {
       assertContentEquals(listOf(ErrorImpl(0)), cache.value)
       state.raise(ErrorImpl(1))
       assertContentEquals(listOf(ErrorImpl(0), ErrorImpl(1)), cache.value)
+   }
+
+   @Test
+   fun pErrorList_verticalScroll() {
+      val errorList = List(50) { ErrorImpl(it) }
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state)
+         }
+      }
+
+      state.show()
+
+      rule.onNodeWithText("Error message 0")
+         .assertTopPositionInRootIsEqualTo(48.dp)
+
+      rule.onNodeWithText("Error message 0").performTouchInput {
+         down(center)
+         moveBy(Offset(0.0f, -viewConfiguration.touchSlop))
+         moveBy(Offset(0.0f, -32.dp.toPx()))
+      }
+
+      rule.onNodeWithText("Error message 0")
+         .assertTopPositionInRootIsEqualTo(16.dp)
+   }
+
+   @Test
+   fun pErrorList_horizontalDrag() {
+      val errorList = List(50) { ErrorImpl(it) }
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state)
+         }
+      }
+
+      state.show()
+
+      rule.onNodeWithText("Error message 0")
+         .assertLeftPositionInRootIsEqualTo(32.dp)
+
+      rule.onNodeWithText("Error message 0").performTouchInput {
+         down(center)
+         moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
+         moveBy(Offset(-32.dp.toPx(), 0.0f))
+      }
+
+      rule.onNodeWithText("Error message 0")
+         .assertLeftPositionInRootIsEqualTo(0.dp)
+
+      rule.onNodeWithText("Error message 1")
+         .assertLeftPositionInRootIsEqualTo(32.dp)
+
+      rule.onNodeWithText("Error message 0").performTouchInput {
+         up()
+      }
+
+      rule.onNodeWithText("Error message 1").performTouchInput {
+         down(center)
+         moveBy(Offset(viewConfiguration.touchSlop, 0.0f))
+         moveBy(Offset(64.dp.toPx(), 0.0f))
+      }
+
+      rule.onNodeWithText("Error message 1")
+         .assertLeftPositionInRootIsEqualTo(96.dp)
    }
 }
