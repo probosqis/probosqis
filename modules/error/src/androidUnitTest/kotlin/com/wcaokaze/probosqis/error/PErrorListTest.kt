@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,12 +32,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
@@ -50,6 +55,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.GraphicsMode
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -443,5 +449,76 @@ class PErrorListTest {
 
       rule.onNodeWithText("Error message 0")
          .assertLeftPositionInRootIsEqualTo(0.dp)
+   }
+
+   @Test
+   fun errorItemComposable_touchChildren() {
+      val buttonTag = "button"
+      var isButtonClicked by mutableStateOf(false)
+      class ButtonError : PError()
+      val buttonErrorComposable = PErrorItemComposable<ButtonError> {
+         Button(
+            onClick = { isButtonClicked = true },
+            modifier = Modifier.testTag(buttonTag)
+         ) {
+            Text("")
+         }
+      }
+
+      val sliderTag = "slider"
+      var sliderValue by mutableStateOf(0.0f)
+      class SliderError : PError()
+      val sliderErrorComposable = PErrorItemComposable<SliderError> {
+         Slider(
+            value = sliderValue,
+            onValueChange = { sliderValue = it },
+            steps = 10,
+            modifier = Modifier.testTag(sliderTag)
+         )
+      }
+
+      val errorList = listOf(
+         ButtonError(),
+         SliderError(),
+      )
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(
+            buttonErrorComposable,
+            sliderErrorComposable,
+         )
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state)
+         }
+      }
+
+      state.show()
+
+      rule.runOnIdle {
+         assertFalse(isButtonClicked)
+      }
+      rule.onNodeWithTag(buttonTag).performClick()
+      rule.runOnIdle {
+         assertTrue(isButtonClicked)
+      }
+
+      rule.runOnIdle {
+         assertEquals(0.0f, sliderValue)
+      }
+      rule.onNodeWithTag(sliderTag).performTouchInput {
+         swipeRight()
+      }
+      rule.runOnIdle {
+         assertEquals(1.0f, sliderValue)
+      }
    }
 }
