@@ -59,7 +59,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
@@ -74,6 +73,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
@@ -153,6 +153,9 @@ internal expect fun DismissHandler(onDismissRequest: () -> Unit)
 @Composable
 fun PErrorList(
    state: PErrorListState,
+   listBackgroundColor: Color,
+   headerBackgroundColor: Color,
+   itemBackgroundColor: Color,
    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    Layout(
@@ -167,6 +170,7 @@ fun PErrorList(
 
          PErrorListSheet(
             state,
+            listBackgroundColor, headerBackgroundColor, itemBackgroundColor,
             modifier = Modifier.windowInsetsPadding(
                // PErrorListContentはTopEndがPErrorActionButtonと合う位置に
                // 配置される（measurePolicy内に該当処理がある）のでWindowInsetsの
@@ -218,6 +222,9 @@ private fun <T> animSpec(easing: Easing = LinearEasing)
 @Composable
 private fun PErrorListSheet(
    state: PErrorListState,
+   listBackgroundColor: Color,
+   headerBackgroundColor: Color,
+   itemBackgroundColor: Color,
    modifier: Modifier = Modifier
 ) {
    val transition = updateTransition(state.isShown)
@@ -244,7 +251,7 @@ private fun PErrorListSheet(
          .shadow(elevation, MaterialTheme.shapes.small)
          .then(
             if (elevation > 0.dp) {
-               Modifier.background(MaterialTheme.colorScheme.surface)
+               Modifier.background(listBackgroundColor)
             } else {
                Modifier
             }
@@ -258,21 +265,21 @@ private fun PErrorListSheet(
                .clip(MaterialTheme.shapes.small)
                .pointerInput(Unit) {}
          ) {
-            PErrorListHeader()
+            PErrorListHeader(headerBackgroundColor)
 
-            PErrorListContent(state)
+            PErrorListContent(state, itemBackgroundColor)
          }
       }
    }
 }
 
 @Composable
-private fun AnimatedContentScope.PErrorListHeader() {
+private fun AnimatedContentScope.PErrorListHeader(backgroundColor: Color) {
    Box(
       modifier = Modifier
          .fillMaxWidth()
          .height(headerHeight)
-         .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+         .background(backgroundColor)
    ) {
       val hiddenIconOffset = with (LocalDensity.current) {
          val hiddenIconPadding = (headerHeight - Icons.Default.Error.defaultWidth) / 2
@@ -297,6 +304,7 @@ private fun AnimatedContentScope.PErrorListHeader() {
 @Composable
 private fun PErrorListContent(
    state: PErrorListState,
+   itemBackgroundColor: Color,
    fallback: @Composable (PError) -> Unit = {}
 ) {
    val errors = state.errors
@@ -309,6 +317,7 @@ private fun PErrorListContent(
                .fillMaxWidth()
                .heightIn(min = 48.dp)
                .swipeDismiss()
+               .background(itemBackgroundColor)
          ) {
             val composable = state.getComposableFor(error)?.composable ?: fallback
             composable(error)

@@ -103,7 +103,12 @@ fun MultiColumnProbosqis(
          )
       }
 
-      PErrorList(errorListState)
+      PErrorList(
+         errorListState,
+         colorScheme.errorListBackgroundColor,
+         colorScheme.errorListHeaderBackgroundColor,
+         colorScheme.errorListItemBackgroundColor
+      )
    }
 }
 

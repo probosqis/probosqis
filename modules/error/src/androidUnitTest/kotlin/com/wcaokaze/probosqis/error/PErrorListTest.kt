@@ -25,12 +25,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
@@ -71,6 +73,16 @@ class PErrorListTest {
       Text(
          "Error message ${error.i}",
          modifier = Modifier.fillMaxWidth().height(48.dp)
+      )
+   }
+
+   @Composable
+   private fun PErrorList(state: PErrorListState) {
+      PErrorList(
+         state,
+         listBackgroundColor = Color.LightGray,
+         headerBackgroundColor = Color.DarkGray,
+         itemBackgroundColor = Color.White
       )
    }
 
