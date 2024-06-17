@@ -188,8 +188,12 @@ class CombinedPageComposableTest {
                PageContentFooter(
                   savedPageState = it.head, pageStackState,
                   pageSwitcherState, pageStateStore,
-                  contentBackgroundColor = Color.Transparent,
-                  footerBackgroundColor = Color.Transparent,
+                  PageStackColors(
+                     background = Color.Transparent,
+                     content = Color.Black,
+                     footer = Color.Transparent,
+                     footerContent = Color.Black,
+                  ),
                   WindowInsets(0)
                )
             }
@@ -319,8 +323,12 @@ class CombinedPageComposableTest {
                PageContentFooter(
                   savedPageState = it.head, pageStackState,
                   pageSwitcherState, pageStateStore,
-                  contentBackgroundColor = Color.Transparent,
-                  footerBackgroundColor = Color.Transparent,
+                  PageStackColors(
+                     background = Color.Transparent,
+                     content = Color.Black,
+                     footer = Color.Transparent,
+                     footerContent = Color.Black,
+                  ),
                   WindowInsets(0)
                )
             }

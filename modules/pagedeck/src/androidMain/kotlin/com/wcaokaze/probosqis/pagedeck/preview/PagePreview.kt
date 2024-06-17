@@ -33,8 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.Page
-import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageId
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.preview.rememberPreviewStateSaver
@@ -120,6 +120,7 @@ fun <P : Page, S : PageState> PagePreview(
                pageState,
                pageStackState,
                isFooterShown = footerComposable != null,
+               contentColor = MaterialTheme.colorScheme.onSurface,
                windowInsets.only(WindowInsetsSides.Horizontal)
             )
          }
@@ -132,6 +133,7 @@ fun <P : Page, S : PageState> PagePreview(
                   pageState,
                   pageStackState,
                   backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                  contentColor = MaterialTheme.colorScheme.onSurface,
                   windowInsets
                      .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
                )

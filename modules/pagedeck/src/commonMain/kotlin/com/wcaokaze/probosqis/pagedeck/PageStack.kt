@@ -28,9 +28,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
@@ -58,6 +58,14 @@ import com.wcaokaze.probosqis.panoptiqon.compose.asState
 import com.wcaokaze.probosqis.panoptiqon.update
 
 private val pageFooterHeight = 48.dp
+
+@Immutable
+data class PageStackColors(
+   val background: Color,
+   val content: Color,
+   val footer: Color,
+   val footerContent: Color,
+)
 
 @Stable
 class PageStackState internal constructor(
@@ -131,8 +139,7 @@ internal enum class FooterPaddingType {
 private fun <P : Page, S : PageState> extractPageComposable(
    combined: CombinedPageComposable<P, S>,
    pageStackState: State<PageStackState>,
-   contentBackgroundColor: State<Color>,
-   footerBackgroundColor: State<Color>,
+   colors: State<PageStackColors>,
    windowInsets: State<WindowInsets>,
    horizontalContentPadding: State<Dp>,
    footerStartPaddingType: State<FooterPaddingType>,
@@ -144,8 +151,7 @@ private fun <P : Page, S : PageState> extractPageComposable(
       composable = { page, pageState ->
          PageContentFooter(
             combined, page, pageState, pageStackState.value,
-            contentBackgroundColor.value, footerBackgroundColor.value,
-            windowInsets.value, horizontalContentPadding.value,
+            colors.value, windowInsets.value, horizontalContentPadding.value,
             footerStartPaddingType.value, footerEndPaddingType.value
          )
       }
@@ -158,16 +164,14 @@ internal fun PageContentFooter(
    pageStackState: PageStackState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
-   contentBackgroundColor: Color,
-   footerBackgroundColor: Color,
+   colors: PageStackColors,
    windowInsets: WindowInsets,
    horizontalContentPadding: Dp = 0.dp,
    footerStartPaddingType: FooterPaddingType = FooterPaddingType.Content,
    footerEndPaddingType:   FooterPaddingType = FooterPaddingType.Content
 ) {
    val updatedPageStackState           = rememberUpdatedState(pageStackState)
-   val updatedContentBackgroundColor   = rememberUpdatedState(contentBackgroundColor)
-   val updatedFooterBackgroundColor    = rememberUpdatedState(footerBackgroundColor)
+   val updatedColors                   = rememberUpdatedState(colors)
    val updatedWindowInsets             = rememberUpdatedState(windowInsets)
    val updatedHorizontalContentPadding = rememberUpdatedState(horizontalContentPadding)
    val updatedFooterStartPaddingType   = rememberUpdatedState(footerStartPaddingType)
@@ -178,8 +182,7 @@ internal fun PageContentFooter(
          pageSwitcher.allPageComposables.map {
             extractPageComposable(
                it, updatedPageStackState,
-               updatedContentBackgroundColor, updatedFooterBackgroundColor,
-               updatedWindowInsets, updatedHorizontalContentPadding,
+               updatedColors, updatedWindowInsets, updatedHorizontalContentPadding,
                updatedFooterStartPaddingType, updatedFooterEndPaddingType
             )
          },
@@ -196,8 +199,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
    page: P,
    pageState: S,
    pageStackState: PageStackState,
-   contentBackgroundColor: Color,
-   footerBackgroundColor: Color,
+   colors: PageStackColors,
    windowInsets: WindowInsets,
    horizontalContentPadding: Dp,
    footerStartPaddingType: FooterPaddingType,
@@ -208,7 +210,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
          Modifier
             .transitionElement(GlobalLayoutIds.background)
             .fillMaxSize()
-            .background(contentBackgroundColor)
+            .background(colors.background)
       )
 
       val footerComposable = combined.footerComposable
@@ -217,6 +219,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
          combined.contentComposable, page, pageState,
          pageStackState,
          isFooterShown = footerComposable != null,
+         colors.content,
          windowInsets,
          horizontalContentPadding = horizontalContentPadding,
          modifier = Modifier.transitionElement(GlobalLayoutIds.content)
@@ -224,8 +227,8 @@ private fun <P : Page, S : PageState> PageContentFooter(
 
       if (footerComposable != null) {
          PageFooter(
-            footerComposable, page, pageState,
-            pageStackState, footerBackgroundColor, windowInsets,
+            footerComposable, page, pageState, pageStackState,
+            colors.footer, colors.footerContent, windowInsets,
             startContentPadding = when (footerStartPaddingType) {
                FooterPaddingType.Entire  -> 0.dp
                FooterPaddingType.Content -> horizontalContentPadding
@@ -259,6 +262,7 @@ internal fun <P : Page, S : PageState> PageContent(
    pageState: S,
    pageStackState: PageStackState,
    isFooterShown: Boolean,
+   contentColor: Color,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
    horizontalContentPadding: Dp = 0.dp
@@ -266,13 +270,17 @@ internal fun <P : Page, S : PageState> PageContent(
    Box(
       modifier.padding(horizontal = horizontalContentPadding)
    ) {
-      val contentWindowInsets = if (isFooterShown) {
-         windowInsets.add(WindowInsets(bottom = pageFooterHeight))
-      } else {
-         windowInsets
-      }
+      CompositionLocalProvider(
+         LocalContentColor provides contentColor,
+      ) {
+         val contentWindowInsets = if (isFooterShown) {
+            windowInsets.add(WindowInsets(bottom = pageFooterHeight))
+         } else {
+            windowInsets
+         }
 
-      contentComposable(page, pageState, pageStackState, contentWindowInsets)
+         contentComposable(page, pageState, pageStackState, contentWindowInsets)
+      }
    }
 }
 
@@ -283,6 +291,7 @@ internal fun <P : Page, S : PageState> PageFooter(
    pageState: S,
    pageStackState: PageStackState,
    backgroundColor: Color,
+   contentColor: Color,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
    startContentPadding: Dp = 0.dp,
@@ -301,7 +310,7 @@ internal fun <P : Page, S : PageState> PageFooter(
          .requiredHeight(pageFooterHeight)
    ) {
       CompositionLocalProvider(
-         LocalContentColor provides MaterialTheme.colorScheme.onSurface,
+         LocalContentColor provides contentColor,
       ) {
          footerComposable(page, pageState, pageStackState)
       }

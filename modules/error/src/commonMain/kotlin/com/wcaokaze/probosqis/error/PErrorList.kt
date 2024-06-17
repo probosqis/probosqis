@@ -58,8 +58,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -111,6 +113,15 @@ class PErrorItemComposable<E : PError>(
    val composable: @Composable (E) -> Unit
 )
 
+@Immutable
+data class PErrorListColors(
+   val listBackground: Color,
+   val itemBackground: Color,
+   val content: Color,
+   val header: Color,
+   val headerContent: Color,
+)
+
 @Stable
 class PErrorListState(
    errorListCache: WritableCache<List<PError>>,
@@ -153,9 +164,7 @@ internal expect fun DismissHandler(onDismissRequest: () -> Unit)
 @Composable
 fun PErrorList(
    state: PErrorListState,
-   listBackgroundColor: Color,
-   headerBackgroundColor: Color,
-   itemBackgroundColor: Color,
+   colors: PErrorListColors,
    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    Layout(
@@ -170,7 +179,7 @@ fun PErrorList(
 
          PErrorListSheet(
             state,
-            listBackgroundColor, headerBackgroundColor, itemBackgroundColor,
+            colors,
             modifier = Modifier.windowInsetsPadding(
                // PErrorListContentはTopEndがPErrorActionButtonと合う位置に
                // 配置される（measurePolicy内に該当処理がある）のでWindowInsetsの
@@ -222,9 +231,7 @@ private fun <T> animSpec(easing: Easing = LinearEasing)
 @Composable
 private fun PErrorListSheet(
    state: PErrorListState,
-   listBackgroundColor: Color,
-   headerBackgroundColor: Color,
-   itemBackgroundColor: Color,
+   colors: PErrorListColors,
    modifier: Modifier = Modifier
 ) {
    val transition = updateTransition(state.isShown)
@@ -251,7 +258,7 @@ private fun PErrorListSheet(
          .shadow(elevation, MaterialTheme.shapes.small)
          .then(
             if (elevation > 0.dp) {
-               Modifier.background(listBackgroundColor)
+               Modifier.background(colors.listBackground)
             } else {
                Modifier
             }
@@ -265,39 +272,44 @@ private fun PErrorListSheet(
                .clip(MaterialTheme.shapes.small)
                .pointerInput(Unit) {}
          ) {
-            PErrorListHeader(headerBackgroundColor)
+            PErrorListHeader(colors.header, colors.headerContent)
 
-            PErrorListContent(state, itemBackgroundColor)
+            PErrorListContent(state, colors.itemBackground, colors.content)
          }
       }
    }
 }
 
 @Composable
-private fun AnimatedContentScope.PErrorListHeader(backgroundColor: Color) {
+private fun AnimatedContentScope.PErrorListHeader(
+   backgroundColor: Color,
+   contentColor: Color
+) {
    Box(
       modifier = Modifier
          .fillMaxWidth()
          .height(headerHeight)
          .background(backgroundColor)
    ) {
-      val hiddenIconOffset = with (LocalDensity.current) {
-         val hiddenIconPadding = (headerHeight - Icons.Default.Error.defaultWidth) / 2
-         (hiddenIconPadding - iconHorizontalPadding).roundToPx()
-      }
+      CompositionLocalProvider(LocalContentColor provides contentColor) {
+         val hiddenIconOffset = with (LocalDensity.current) {
+            val hiddenIconPadding = (headerHeight - Icons.Default.Error.defaultWidth) / 2
+            (hiddenIconPadding - iconHorizontalPadding).roundToPx()
+         }
 
-      @OptIn(ExperimentalAnimationApi::class)
-      Icon(
-         Icons.Default.Error,
-         contentDescription = null,
-         modifier = Modifier
-            .align(Alignment.CenterStart)
-            .padding(horizontal = iconHorizontalPadding)
-            .animateEnterExit(
-               enter = slideInHorizontally (animSpec()) { hiddenIconOffset },
-               exit  = slideOutHorizontally(animSpec()) { hiddenIconOffset }
-            )
-      )
+         @OptIn(ExperimentalAnimationApi::class)
+         Icon(
+            Icons.Default.Error,
+            contentDescription = null,
+            modifier = Modifier
+               .align(Alignment.CenterStart)
+               .padding(horizontal = iconHorizontalPadding)
+               .animateEnterExit(
+                  enter = slideInHorizontally (animSpec()) { hiddenIconOffset },
+                  exit  = slideOutHorizontally(animSpec()) { hiddenIconOffset }
+               )
+         )
+      }
    }
 }
 
@@ -305,26 +317,29 @@ private fun AnimatedContentScope.PErrorListHeader(backgroundColor: Color) {
 private fun PErrorListContent(
    state: PErrorListState,
    itemBackgroundColor: Color,
+   contentColor: Color,
    fallback: @Composable (PError) -> Unit = {}
 ) {
-   val errors = state.errors
+   CompositionLocalProvider(LocalContentColor provides contentColor) {
+      val errors = state.errors
 
-   LazyColumn {
-      itemsIndexed(errors) { index, error ->
-         Box(
-            contentAlignment = Alignment.CenterStart,
-            modifier = Modifier
-               .fillMaxWidth()
-               .heightIn(min = 48.dp)
-               .swipeDismiss()
-               .background(itemBackgroundColor)
-         ) {
-            val composable = state.getComposableFor(error)?.composable ?: fallback
-            composable(error)
-         }
+      LazyColumn {
+         itemsIndexed(errors) { index, error ->
+            Box(
+               contentAlignment = Alignment.CenterStart,
+               modifier = Modifier
+                  .fillMaxWidth()
+                  .heightIn(min = 48.dp)
+                  .swipeDismiss()
+                  .background(itemBackgroundColor)
+            ) {
+               val composable = state.getComposableFor(error)?.composable ?: fallback
+               composable(error)
+            }
 
-         if (index < errors.lastIndex) {
-            Divider()
+            if (index < errors.lastIndex) {
+               Divider()
+            }
          }
       }
    }

@@ -31,7 +31,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.deck.PositionInDeck
 import com.wcaokaze.probosqis.capsiqum.deck.sequence
@@ -90,6 +89,30 @@ class MultiColumnDeckTest {
       incomingTransitions = persistentMapOf()
    )
 
+   @OptIn(ExperimentalMaterial3Api::class)
+   @Composable
+   private fun MultiColumnPageDeck(
+      state: MultiColumnPageDeckState,
+      pageSwitcherState: CombinedPageSwitcherState,
+      pageStateStore: PageStateStore,
+      pageStackCount: Int,
+      modifier: Modifier = Modifier
+   ) {
+      MultiColumnPageDeck(
+         state, pageSwitcherState, pageStateStore, pageStackCount,
+         activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
+         inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
+         PageStackColors(
+            background = Color.Transparent,
+            content = Color.Black,
+            footer = Color.Transparent,
+            footerContent = Color.Black,
+         ),
+         WindowInsets(0),
+         modifier = modifier
+      )
+   }
+
    @Composable
    private fun rememberPageSwitcherState() = remember {
       CombinedPageSwitcherState(
@@ -137,14 +160,9 @@ class MultiColumnDeckTest {
             )
          }
 
-         @OptIn(ExperimentalMaterial3Api::class)
          MultiColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope), pageStackCount = 2,
-            activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
-            inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
-            pageStackBackgroundColor = Color.Transparent,
-            pageStackFooterBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier.fillMaxSize()
          )
       }
@@ -185,14 +203,9 @@ class MultiColumnDeckTest {
             )
          }
 
-         @OptIn(ExperimentalMaterial3Api::class)
          MultiColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope), pageStackCount = 2,
-            activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
-            inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
-            pageStackBackgroundColor = Color.Transparent,
-            pageStackFooterBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier.fillMaxSize()
          )
       }
@@ -234,15 +247,9 @@ class MultiColumnDeckTest {
             )
          }
 
-         @OptIn(ExperimentalMaterial3Api::class)
          MultiColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope), pageStackCount = 2,
-            activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
-            inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
-            pageStackBackgroundColor = Color.Transparent,
-            pageStackFooterBackgroundColor = Color.Transparent,
-            WindowInsets(left = 32.dp, right = 32.dp),
             modifier = Modifier.fillMaxSize()
          )
       }
@@ -291,14 +298,9 @@ class MultiColumnDeckTest {
             )
          }
 
-         @OptIn(ExperimentalMaterial3Api::class)
          MultiColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope), pageStackCount = 2,
-            activeAppBarColors = TopAppBarDefaults.topAppBarColors(),
-            inactiveAppBarColors = TopAppBarDefaults.topAppBarColors(),
-            pageStackBackgroundColor = Color.Transparent,
-            pageStackFooterBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier.fillMaxSize()
          )
       }

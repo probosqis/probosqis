@@ -80,9 +80,13 @@ class PErrorListTest {
    private fun PErrorList(state: PErrorListState) {
       PErrorList(
          state,
-         listBackgroundColor = Color.LightGray,
-         headerBackgroundColor = Color.DarkGray,
-         itemBackgroundColor = Color.White
+         PErrorListColors(
+            listBackground = Color.LightGray,
+            itemBackground = Color.White,
+            content = Color.Black,
+            header = Color.DarkGray,
+            headerContent = Color.Black,
+         )
       )
    }
 

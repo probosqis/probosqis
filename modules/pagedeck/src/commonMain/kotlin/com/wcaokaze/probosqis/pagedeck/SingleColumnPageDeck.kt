@@ -140,8 +140,7 @@ fun SingleColumnPageDeck(
    state: SingleColumnPageDeckState,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
-   pageStackBackgroundColor: Color,
-   pageStackFooterBackgroundColor: Color,
+   colors: PageStackColors,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
 ) {
@@ -178,8 +177,7 @@ fun SingleColumnPageDeck(
          } ?: false
 
          PageStackContent(
-            pageStackState, pageSwitcherState, pageStateStore,
-            pageStackBackgroundColor, pageStackFooterBackgroundColor,
+            pageStackState, pageSwitcherState, pageStateStore, colors,
             prevPageStackHasFooter, nextPageStackHasFooter,
             windowInsets
          )
@@ -214,8 +212,7 @@ private fun PageStackContent(
    state: PageStackState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
-   backgroundColor: Color,
-   footerBackgroundColor: Color,
+   colors: PageStackColors,
    prevPageStackHasFooter: Boolean,
    nextPageStackHasFooter: Boolean,
    windowInsets: WindowInsets
@@ -229,8 +226,8 @@ private fun PageStackContent(
       state.pageStack
    ) { pageStack ->
       PageContentFooter(
-         pageStack.head, state, pageSwitcher, pageStateStore, backgroundColor,
-         footerBackgroundColor, windowInsets, horizontalContentPadding = 8.dp,
+         pageStack.head, state, pageSwitcher, pageStateStore,
+         colors, windowInsets, horizontalContentPadding = 8.dp,
          footerStartPaddingType = if (prevPageStackHasFooter) {
             FooterPaddingType.Content
          } else {

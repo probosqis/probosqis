@@ -94,6 +94,26 @@ class SingleColumnDeckTest {
    )
 
    @Composable
+   fun SingleColumnPageDeck(
+      state: SingleColumnPageDeckState,
+      pageSwitcherState: CombinedPageSwitcherState,
+      pageStateStore: PageStateStore,
+      modifier: Modifier = Modifier,
+   ) {
+      SingleColumnPageDeck(
+         state, pageSwitcherState, pageStateStore,
+         PageStackColors(
+            background = Color.Transparent,
+            content = Color.Black,
+            footer = Color.Transparent,
+            footerContent = Color.Black,
+         ),
+         WindowInsets(0),
+         modifier = modifier
+      )
+   }
+
+   @Composable
    private fun rememberPageSwitcherState() = remember {
       CombinedPageSwitcherState(
          listOf(pageComposable)
@@ -146,8 +166,6 @@ class SingleColumnDeckTest {
          SingleColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope),
-            pageStackBackgroundColor = Color.Transparent,
-            pageStackFooterBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier
                .testTag(deckTestTag)
                .width(deckWidth)
@@ -214,8 +232,6 @@ class SingleColumnDeckTest {
          SingleColumnPageDeck(
             deckState, rememberPageSwitcherState(),
             rememberPageStateStore(coroutineScope),
-            pageStackBackgroundColor = Color.Transparent,
-            pageStackFooterBackgroundColor = Color.Transparent, WindowInsets(0),
             modifier = Modifier.fillMaxSize()
          )
       }

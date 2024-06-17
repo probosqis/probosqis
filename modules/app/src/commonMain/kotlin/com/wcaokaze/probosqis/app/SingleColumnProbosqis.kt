@@ -121,8 +121,7 @@ fun SingleColumnProbosqis(
             pageDeckState,
             pageSwitcherState,
             pageStateStore,
-            colorScheme.pageStackBackground,
-            colorScheme.pageStackFooter,
+            colorScheme.pageStack,
             windowInsets = safeDrawingWindowInsets
                .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
             modifier = Modifier
@@ -132,9 +131,7 @@ fun SingleColumnProbosqis(
 
       PErrorList(
          errorListState,
-         colorScheme.errorListBackgroundColor,
-         colorScheme.errorListHeaderBackgroundColor,
-         colorScheme.errorListItemBackgroundColor
+         colorScheme.errorListColors
       )
    }
 }

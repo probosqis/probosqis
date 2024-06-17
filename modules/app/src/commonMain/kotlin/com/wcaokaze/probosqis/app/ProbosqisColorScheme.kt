@@ -27,6 +27,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.error.PErrorListColors
+import com.wcaokaze.probosqis.pagedeck.PageStackColors
 
 @Composable
 fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisColorScheme {
@@ -50,11 +52,19 @@ fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisColorScheme
    return SingleColumnProbosqisColorScheme(
       background = materialColorScheme.background,
       appBar,
-      pageStackBackground,
-      pageStackFooter = materialColorScheme.surfaceColorAtElevation(3.dp),
-      errorListBackgroundColor,
-      errorListHeaderBackgroundColor = appBar,
-      errorListItemBackgroundColor,
+      pageStack = PageStackColors(
+         pageStackBackground,
+         content = materialColorScheme.onSurface,
+         footer = materialColorScheme.surfaceColorAtElevation(3.dp),
+         footerContent = materialColorScheme.onSurface,
+      ),
+      PErrorListColors(
+         errorListBackgroundColor,
+         errorListItemBackgroundColor,
+         content = materialColorScheme.onSurface,
+         header = appBar,
+         headerContent = materialColorScheme.onSurface,
+      )
    )
 }
 
@@ -62,11 +72,8 @@ fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisColorScheme
 class SingleColumnProbosqisColorScheme(
    val background: Color,
    val appBar: Color,
-   val pageStackBackground: Color,
-   val pageStackFooter: Color,
-   val errorListBackgroundColor: Color,
-   val errorListHeaderBackgroundColor: Color,
-   val errorListItemBackgroundColor: Color,
+   val pageStack: PageStackColors,
+   val errorListColors: PErrorListColors,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,20 +107,27 @@ fun rememberMultiColumnProbosqisColorScheme(): MultiColumnProbosqisColorScheme {
       actionIconContentColor = materialColorScheme.onPrimaryContainer,
    )
 
-   val inactivePageStackAppBarContainerColor = materialColorScheme.surfaceColorAtElevation(6.dp)
    val inactivePageStackAppBar = TopAppBarDefaults.topAppBarColors(
-      containerColor = inactivePageStackAppBarContainerColor,
+      containerColor = materialColorScheme.surfaceColorAtElevation(6.dp),
    )
 
    return MultiColumnProbosqisColorScheme(
       background,
+      PageStackColors(
+         pageStackBackground,
+         content = materialColorScheme.onSurface,
+         footer = materialColorScheme.surfaceColorAtElevation(6.dp),
+         footerContent = materialColorScheme.onSurface,
+      ),
       activePageStackAppBar,
       inactivePageStackAppBar,
-      pageStackBackground,
-      pageStackFooter = materialColorScheme.surfaceColorAtElevation(6.dp),
-      errorListBackgroundColor = background,
-      errorListHeaderBackgroundColor = inactivePageStackAppBarContainerColor,
-      errorListItemBackgroundColor = pageStackBackground,
+      PErrorListColors(
+         listBackground = background,
+         itemBackground = pageStackBackground,
+         content = materialColorScheme.onSurface,
+         header = background,
+         headerContent = materialColorScheme.onSurface,
+      )
    )
 }
 
@@ -121,11 +135,8 @@ fun rememberMultiColumnProbosqisColorScheme(): MultiColumnProbosqisColorScheme {
 @Immutable
 class MultiColumnProbosqisColorScheme(
    val background: Color,
+   val pageStack: PageStackColors,
    val activePageStackAppBar: TopAppBarColors,
    val inactivePageStackAppBar: TopAppBarColors,
-   val pageStackBackground: Color,
-   val pageStackFooter: Color,
-   val errorListBackgroundColor: Color,
-   val errorListHeaderBackgroundColor: Color,
-   val errorListItemBackgroundColor: Color,
+   val errorListColors: PErrorListColors,
 )

@@ -36,7 +36,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
@@ -72,8 +71,7 @@ fun MultiColumnPageDeck(
    pageStackCount: Int,
    activeAppBarColors: TopAppBarColors,
    inactiveAppBarColors: TopAppBarColors,
-   pageStackBackgroundColor: Color,
-   pageStackFooterBackgroundColor: Color,
+   colors: PageStackColors,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier
 ) {
@@ -110,12 +108,11 @@ fun MultiColumnPageDeck(
             } else {
                inactiveAppBarColors
             },
-            pageStackBackgroundColor,
-            pageStackFooterBackgroundColor,
+            colors,
             windowInsets.only(WindowInsetsSides.Bottom),
             modifier = Modifier
                .detectTouch(
-                  onTouch = { state.activeCardIndex = index }
+                  onTouch = remember(state) {{ state.activeCardIndex = index }}
                )
          )
       }
@@ -142,15 +139,14 @@ private fun PageStack(
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    appBarColors: TopAppBarColors,
-   contentBackgroundColor: Color,
-   footerBackgroundColor: Color,
+   colors: PageStackColors,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier
 ) {
    Column(
       modifier
          .clip(MaterialTheme.shapes.large)
-         .background(contentBackgroundColor)
+         .background(colors.background)
    ) {
       MultiColumnPageStackAppBar(
          state, pageSwitcherState, pageStateStore, appBarColors
@@ -166,7 +162,7 @@ private fun PageStack(
       ) { pageStack ->
          PageContentFooter(
             pageStack.head, state, pageSwitcherState, pageStateStore,
-            contentBackgroundColor, footerBackgroundColor, windowInsets
+            colors, windowInsets
          )
       }
    }

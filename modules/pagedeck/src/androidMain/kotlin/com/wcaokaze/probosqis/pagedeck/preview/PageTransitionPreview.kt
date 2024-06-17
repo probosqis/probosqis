@@ -28,8 +28,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.Page
-import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageId
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
@@ -41,6 +41,7 @@ import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageContentFooter
+import com.wcaokaze.probosqis.pagedeck.PageStackColors
 import com.wcaokaze.probosqis.pagedeck.PageStackState
 import com.wcaokaze.probosqis.pagedeck.PageTransitionStateImpl
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
@@ -157,10 +158,14 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       transitionState,
       pageStateTransition
    ) { pageStack ->
-      PageContentFooter(pageStack.head, pageStackState,
-         pageComposableSwitcher, pageStateStore,
-         contentBackgroundColor = MaterialTheme.colorScheme.surface,
-         footerBackgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+      PageContentFooter(
+         pageStack.head, pageStackState, pageComposableSwitcher, pageStateStore,
+         PageStackColors(
+            background = MaterialTheme.colorScheme.surface,
+            content = MaterialTheme.colorScheme.onSurface,
+            footer = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+            footerContent = MaterialTheme.colorScheme.onSurface,
+         ),
          WindowInsets(0, 0, 0, 0)
       )
    }

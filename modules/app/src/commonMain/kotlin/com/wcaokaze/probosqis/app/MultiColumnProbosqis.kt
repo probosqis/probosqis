@@ -94,8 +94,7 @@ fun MultiColumnProbosqis(
             pageStackCount,
             colorScheme.activePageStackAppBar,
             colorScheme.inactivePageStackAppBar,
-            colorScheme.pageStackBackground,
-            colorScheme.pageStackFooter,
+            colorScheme.pageStack,
             windowInsets = safeDrawingWindowInsets
                .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
             modifier = Modifier
@@ -105,9 +104,7 @@ fun MultiColumnProbosqis(
 
       PErrorList(
          errorListState,
-         colorScheme.errorListBackgroundColor,
-         colorScheme.errorListHeaderBackgroundColor,
-         colorScheme.errorListItemBackgroundColor
+         colorScheme.errorListColors
       )
    }
 }
