@@ -26,13 +26,14 @@ import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.calculateTargetValue
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.gestures.awaitDragOrCancellation
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -355,7 +356,7 @@ private fun Modifier.swipeDismiss(): Modifier {
       }
    }
 
-   val flingBehavior = ScrollableDefaults.flingBehavior()
+   val decaySpec = rememberSplineBasedDecay<Float>()
    val coroutineScope = rememberCoroutineScope()
 
    return pointerInput(Unit) {
@@ -368,11 +369,14 @@ private fun Modifier.swipeDismiss(): Modifier {
             },
             onDragEnd = { velocity ->
                coroutineScope.launch {
-                  scrollState.scroll {
-                     with (flingBehavior) {
-                        performFling(velocity)
-                     }
+                  val settledOffset = decaySpec.calculateTargetValue(offset, velocity)
+
+                  val targetOffset = when {
+                     settledOffset < -(size.width * 0.6f) -> -size.width.toFloat()
+                     settledOffset >   size.width * 0.6f  ->  size.width.toFloat()
+                     else                                 -> 0.0f
                   }
+                  scrollState.scrollBy(targetOffset - offset)
                }
             }
          )
