@@ -35,6 +35,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.click
@@ -535,6 +536,192 @@ class PErrorListTest {
       }
       rule.runOnIdle {
          assertEquals(1.0f, sliderValue)
+      }
+   }
+
+   private fun assertFlingAnim(
+      outputFileName: String,
+      itemTouchInput: TouchInjectionScope.() -> Unit
+   ) {
+      val errorList = List(50) { ErrorImpl(it) }
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state)
+         }
+      }
+
+      state.show()
+      rule.waitForIdle()
+      rule.mainClock.autoAdvance = false
+
+      rule.onNodeWithText("Error message 1").performTouchInput(itemTouchInput)
+
+      repeat (20) { i ->
+         rule.onRoot().captureRoboImage("test/$outputFileName$i.png")
+         rule.mainClock.advanceTimeBy(16L)
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_notEnoughVelocity_left() {
+      assertFlingAnim("flingAnim/notEnoughVelocity_left") {
+         swipeLeft(
+            centerX,
+            centerX - viewConfiguration.touchSlop - 16.dp.toPx(),
+            durationMillis = 40
+         )
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_notEnoughVelocity_right() {
+      assertFlingAnim("flingAnim/notEnoughVelocity_right") {
+         swipeRight(
+            centerX,
+            centerX + viewConfiguration.touchSlop + 16.dp.toPx(),
+            durationMillis = 40
+         )
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_enoughVelocity_left() {
+      assertFlingAnim("flingAnim/enoughVelocity_left") {
+         swipeLeft(
+            centerX,
+            centerX - viewConfiguration.touchSlop - 20.dp.toPx(),
+            durationMillis = 40
+         )
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_enoughVelocity_right() {
+      assertFlingAnim("flingAnim/enoughVelocity_right") {
+         swipeRight(
+            centerX,
+            centerX + viewConfiguration.touchSlop + 20.dp.toPx(),
+            durationMillis = 40
+         )
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_tooFast_left() {
+      assertFlingAnim("flingAnim/tooFast_left") {
+         swipeLeft(
+            centerX,
+            centerX - viewConfiguration.touchSlop - 64.dp.toPx(),
+            durationMillis = 30
+         )
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_tooFast_right() {
+      assertFlingAnim("flingAnim/tooFast_right") {
+         swipeRight(
+            centerX,
+            centerX + viewConfiguration.touchSlop + 64.dp.toPx(),
+            durationMillis = 30
+         )
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_backHome_left() {
+      assertFlingAnim("flingAnim/backHome_left") {
+         down(center)
+         moveBy(Offset(-viewConfiguration.touchSlop - 256.dp.toPx(), 0.0f))
+         moveBy(Offset(1.0f, 0.0f), delayMillis = 3000L)
+         repeat (2) { moveBy(Offset(20.dp.toPx(), 0.0f)) }
+         up()
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_backHome_right() {
+      assertFlingAnim("flingAnim/backHome_right") {
+         down(center)
+         moveBy(Offset(viewConfiguration.touchSlop + 256.dp.toPx(), 0.0f))
+         moveBy(Offset(-1.0f, 0.0f), delayMillis = 3000L)
+         repeat (2) { moveBy(Offset(-20.dp.toPx(), 0.0f)) }
+         up()
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_removeAfterRest_left() {
+      assertFlingAnim("flingAnim/removeAfterRest_left") {
+         down(center)
+         moveBy(Offset(-viewConfiguration.touchSlop - 216.dp.toPx(), 0.0f))
+         moveBy(Offset(1.0f, 0.0f), delayMillis = 3000L)
+         up()
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_removeAfterRest_right() {
+      assertFlingAnim("flingAnim/removeAfterRest_right") {
+         down(center)
+         moveBy(Offset(viewConfiguration.touchSlop + 216.dp.toPx(), 0.0f))
+         moveBy(Offset(-1.0f, 0.0f), delayMillis = 3000L)
+         up()
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_flingAfterRest_left() {
+      assertFlingAnim("flingAnim/flingAfterRest_left") {
+         down(center)
+         moveBy(Offset(-viewConfiguration.touchSlop - 184.dp.toPx(), 0.0f))
+         moveBy(Offset(-1.0f, 0.0f), delayMillis = 3000L)
+         repeat (2) { moveBy(Offset(-20.dp.toPx(), 0.0f)) }
+         up()
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_flingAfterRest_right() {
+      assertFlingAnim("flingAnim/flingAfterRest_right") {
+         down(center)
+         moveBy(Offset(viewConfiguration.touchSlop + 184.dp.toPx(), 0.0f))
+         moveBy(Offset(1.0f, 0.0f), delayMillis = 3000L)
+         repeat (2) { moveBy(Offset(20.dp.toPx(), 0.0f)) }
+         up()
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_flingToAnotherSide_left() {
+      assertFlingAnim("flingAnim/flingToAnotherSide_left") {
+         down(center)
+         moveBy(Offset(viewConfiguration.touchSlop + 288.dp.toPx(), 0.0f))
+         moveBy(Offset(-1.0f, 0.0f), delayMillis = 3000L)
+         repeat (2) { moveBy(Offset(-40.dp.toPx(), 0.0f)) }
+         up()
+      }
+   }
+
+   @Test
+   fun pErrorList_flingAnim_flingToAnotherSide_right() {
+      assertFlingAnim("flingAnim/flingToAnotherSide_right") {
+         down(center)
+         moveBy(Offset(-viewConfiguration.touchSlop - 288.dp.toPx(), 0.0f))
+         moveBy(Offset(1.0f, 0.0f), delayMillis = 3000L)
+         repeat (2) { moveBy(Offset(40.dp.toPx(), 0.0f)) }
+         up()
       }
    }
 }

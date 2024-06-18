@@ -22,10 +22,13 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.AnimationState
+import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.calculateTargetValue
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
@@ -35,6 +38,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.awaitDragOrCancellation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -348,40 +352,89 @@ private fun PErrorListContent(
 
 @Composable
 private fun Modifier.swipeDismiss(): Modifier {
-   var offset by remember { mutableFloatStateOf(0.0f) }
-   val scrollState = remember {
-      ScrollableState {
-         offset += it
-         it
-      }
-   }
-
+   val scrollingLogic = remember { ScrollingLogic() }
    val decaySpec = rememberSplineBasedDecay<Float>()
    val coroutineScope = rememberCoroutineScope()
 
    return pointerInput(Unit) {
          detectHorizontalDragGesture(
-            shouldStartDragImmediately = { scrollState.isScrollInProgress },
+            shouldStartDragImmediately = { scrollingLogic.shouldStartDragImmediately() },
             onDrag = { dragAmount ->
                coroutineScope.launch {
-                  scrollState.scrollBy(dragAmount)
+                  scrollingLogic.scrollBy(dragAmount)
                }
             },
             onDragEnd = { velocity ->
                coroutineScope.launch {
-                  val settledOffset = decaySpec.calculateTargetValue(offset, velocity)
-
-                  val targetOffset = when {
-                     settledOffset < -(size.width * 0.6f) -> -size.width.toFloat()
-                     settledOffset >   size.width * 0.6f  ->  size.width.toFloat()
-                     else                                 -> 0.0f
-                  }
-                  scrollState.scrollBy(targetOffset - offset)
+                  scrollingLogic.settle(velocity, decaySpec, size.width.toFloat())
                }
             }
          )
       }
-      .offset { IntOffset(offset.roundToInt(), 0) }
+      .offset { IntOffset(scrollingLogic.offset.roundToInt(), 0) }
+}
+
+@Stable
+private class ScrollingLogic {
+   var offset by mutableFloatStateOf(0.0f)
+      private set
+
+   private val scrollState = ScrollableState {
+      offset += it
+      it
+   }
+
+   fun shouldStartDragImmediately() = scrollState.isScrollInProgress
+
+   suspend fun scrollBy(offset: Float) {
+      scrollState.scrollBy(offset)
+   }
+
+   suspend fun settle(
+      initialVelocity: Float,
+      decaySpec: DecayAnimationSpec<Float>,
+      listWidth: Float
+   ) {
+      val settledOffset = decaySpec.calculateTargetValue(offset, initialVelocity)
+
+      when {
+         settledOffset < -(listWidth * 0.6f) -> settleTo(-listWidth, initialVelocity)
+         settledOffset >   listWidth * 0.6f  -> settleTo( listWidth, initialVelocity)
+         else                                -> settleToZero(initialVelocity)
+      }
+   }
+
+   private suspend fun settleToZero(initialVelocity: Float) {
+      scrollState.scroll {
+         AnimationState(offset, initialVelocity).animateTo(0.0f) {
+            offset = value
+         }
+      }
+   }
+
+   private suspend fun settleTo(
+      targetOffset: Float,
+      initialVelocity: Float
+   ) {
+      val velocityPxPerMillis = initialVelocity / 1000.0f
+      val scrollOffset = targetOffset - offset
+      val durationMillis = scrollOffset / velocityPxPerMillis
+      scrollState.animateScrollBy(
+         scrollOffset,
+         tween(
+            when {
+               // scrollOffsetとvelocityPxPerMillisの向きが逆。
+               // フリックと反対向きへスクロールするため算出したdurationは使えない
+               durationMillis <   0.0f -> 500
+               // フリックがおそすぎる
+               durationMillis > 500.0f -> 500
+               // 通常
+               else                    -> durationMillis.roundToInt()
+            },
+            easing = LinearEasing
+         )
+      )
+   }
 }
 
 private suspend fun PointerInputScope.detectHorizontalDragGesture(
