@@ -68,7 +68,7 @@ class PErrorListTest {
    @get:Rule
    val rule = createComposeRule()
 
-   private data class ErrorImpl(val i: Int) : PError()
+   private data class ErrorImpl(val i: Int) : PError(Id(i.toLong()))
 
    private val errorItemComposableImpl = PErrorItemComposable<ErrorImpl> { error ->
       Text(
@@ -472,7 +472,7 @@ class PErrorListTest {
    fun errorItemComposable_touchChildren() {
       val buttonTag = "button"
       var isButtonClicked by mutableStateOf(false)
-      class ButtonError : PError()
+      class ButtonError : PError(Id(0L))
       val buttonErrorComposable = PErrorItemComposable<ButtonError> {
          Button(
             onClick = { isButtonClicked = true },
@@ -484,7 +484,7 @@ class PErrorListTest {
 
       val sliderTag = "slider"
       var sliderValue by mutableStateOf(0.0f)
-      class SliderError : PError()
+      class SliderError : PError(Id(1L))
       val sliderErrorComposable = PErrorItemComposable<SliderError> {
          Slider(
             value = sliderValue,

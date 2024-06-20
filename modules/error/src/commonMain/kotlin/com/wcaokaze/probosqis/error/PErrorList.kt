@@ -124,6 +124,8 @@ class PErrorListState(
    }
 
    fun raise(error: PError) {
+      check(errors.none { it.id == error.id })
+
       errors += error
       raisedTime = Clock.System.now()
    }
@@ -301,7 +303,10 @@ private fun PErrorListContent(
       val errors = state.errors
 
       LazyColumn {
-         itemsIndexed(errors) { index, error ->
+         itemsIndexed(
+            errors,
+            key = { _, error -> error.id.value }
+         ) { index, error ->
             val composable = state.getComposableFor(error)?.composable ?: fallback
             PErrorListItem(error, composable, itemBackgroundColor)
 
