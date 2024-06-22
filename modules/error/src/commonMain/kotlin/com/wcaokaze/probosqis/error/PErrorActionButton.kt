@@ -32,14 +32,16 @@ fun PErrorActionButton(
    onClick: () -> Unit,
    modifier: Modifier = Modifier
 ) {
-   IconButton(
-      onClick,
-      modifier = modifier
-         .onGloballyPositioned { state.buttonBounds = it.boundsInRoot() }
-   ) {
-      Icon(
-         Icons.Default.Error,
-         contentDescription = Strings.PError.pErrorActionButtonContentDescription
-      )
+   if (state.errors.isNotEmpty()) {
+      IconButton(
+         onClick,
+         modifier = modifier
+            .onGloballyPositioned { state.buttonBounds = it.boundsInRoot() }
+      ) {
+         Icon(
+            Icons.Default.Error,
+            contentDescription = Strings.PError.pErrorActionButtonContentDescription
+         )
+      }
    }
 }

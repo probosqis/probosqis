@@ -95,6 +95,27 @@ class PErrorListTest {
    }
 
    @Test
+   fun pErrorActionButton_showIfErrorExists() {
+      val state = PErrorListState(
+         WritableCache(emptyList()),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         PErrorActionButton(
+            state,
+            onClick = {}
+         )
+      }
+
+      rule.onNodeWithContentDescription("Errors").assertDoesNotExist()
+
+      state.raise(ErrorImpl(0))
+
+      rule.onNodeWithContentDescription("Errors").assertExists()
+   }
+
+   @Test
    fun enterExitAnim() {
       val errorList = List(4) { ErrorImpl(it) } .toImmutableList()
       val state = PErrorListState(
