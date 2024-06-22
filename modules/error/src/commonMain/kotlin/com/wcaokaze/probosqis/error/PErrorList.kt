@@ -130,7 +130,7 @@ class PErrorListState(
       raisedTime = Clock.System.now()
    }
 
-   fun dispose(error: PError) {
+   fun dismiss(error: PError) {
       errors = errors.filterNot { it.id == error.id }
    }
 
@@ -314,7 +314,7 @@ private fun PErrorListContent(
             val composable = state.getComposableFor(error)?.composable ?: fallback
             PErrorListItem(
                error, composable, itemBackgroundColor,
-               onDismiss = { state.dispose(error) }
+               onDismiss = { state.dismiss(error) }
             )
 
             if (index < errors.lastIndex) {

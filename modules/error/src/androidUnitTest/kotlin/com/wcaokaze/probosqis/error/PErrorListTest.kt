@@ -726,7 +726,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun errorItem_disposeByFlinging() {
+   fun errorItem_dismissByFlinging() {
       val errorList = List(3) { ErrorImpl(it) }
       val state = PErrorListState(
          WritableCache(errorList),
