@@ -81,40 +81,37 @@ internal fun <E : PError> PErrorListItem(
 
 @Composable
 private fun Modifier.swipeDismiss(onDismiss: () -> Unit): Modifier {
-   val scrollingLogic = remember { ScrollingLogic() }
-   val heightMultiplier = remember { Animatable(1.0f) }
+   val swipeDismissState = remember { SwipeDismissState() }
    val decaySpec = rememberSplineBasedDecay<Float>()
    val coroutineScope = rememberCoroutineScope()
 
    return pointerInput(Unit) {
          detectHorizontalDragGesture(
-            shouldStartDragImmediately = { scrollingLogic.shouldStartDragImmediately() },
+            shouldStartDragImmediately = { swipeDismissState.shouldStartDragImmediately() },
             onDrag = { dragAmount ->
                coroutineScope.launch {
-                  scrollingLogic.scrollBy(dragAmount)
+                  swipeDismissState.scrollBy(dragAmount)
                }
             },
             onDragEnd = { velocity ->
                coroutineScope.launch {
                   val settledOffset = decaySpec
-                     .calculateTargetValue(scrollingLogic.offset, velocity)
+                     .calculateTargetValue(swipeDismissState.offset, velocity)
 
                   val listWidth = size.width.toFloat()
                   when {
                      settledOffset < -(listWidth * 0.6f) -> {
-                        scrollingLogic.settleTo(-listWidth, velocity)
+                        swipeDismissState.animateDismiss(-listWidth, velocity)
+                        onDismiss()
                      }
                      settledOffset > listWidth * 0.6f -> {
-                        scrollingLogic.settleTo(listWidth, velocity)
+                        swipeDismissState.animateDismiss(listWidth, velocity)
+                        onDismiss()
                      }
                      else -> {
-                        scrollingLogic.settleToZero(velocity)
-                        return@launch
+                        swipeDismissState.settleToZero(velocity)
                      }
                   }
-
-                  heightMultiplier.animateTo(0.0f)
-                  onDismiss()
                }
             }
          )
@@ -123,17 +120,20 @@ private fun Modifier.swipeDismiss(onDismiss: () -> Unit): Modifier {
          val placeable = measurable.measure(constraints)
          layout(
             placeable.width,
-            (placeable.height * heightMultiplier.value).toInt()
+            (placeable.height * swipeDismissState.heightMultiplier).toInt()
          ) {
-            placeable.place(scrollingLogic.offset.toInt(), 0)
+            placeable.place(swipeDismissState.offset.toInt(), 0)
          }
       }
 }
 
 @Stable
-private class ScrollingLogic {
+private class SwipeDismissState {
    var offset by mutableFloatStateOf(0.0f)
       private set
+
+   private var heightMultiplierAnimatable = Animatable(1.0f)
+   val heightMultiplier: Float by heightMultiplierAnimatable.asState()
 
    private val scrollState = ScrollableState {
       offset += it
@@ -154,7 +154,7 @@ private class ScrollingLogic {
       }
    }
 
-   suspend fun settleTo(
+   suspend fun animateDismiss(
       targetOffset: Float,
       initialVelocity: Float
    ) {
@@ -176,6 +176,7 @@ private class ScrollingLogic {
             easing = LinearEasing
          )
       )
+      heightMultiplierAnimatable.animateTo(0.0f)
    }
 }
 
