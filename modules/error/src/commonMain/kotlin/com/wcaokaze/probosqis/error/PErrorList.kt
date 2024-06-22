@@ -130,6 +130,10 @@ class PErrorListState(
       raisedTime = Clock.System.now()
    }
 
+   fun dispose(error: PError) {
+      errors = errors.filterNot { it.id == error.id }
+   }
+
    @Stable
    internal fun <E : PError> getComposableFor(error: E): PErrorItemComposable<E>? {
       @Suppress("UNCHECKED_CAST")
@@ -308,7 +312,10 @@ private fun PErrorListContent(
             key = { _, error -> error.id.value }
          ) { index, error ->
             val composable = state.getComposableFor(error)?.composable ?: fallback
-            PErrorListItem(error, composable, itemBackgroundColor)
+            PErrorListItem(
+               error, composable, itemBackgroundColor,
+               onDismiss = { state.dispose(error) }
+            )
 
             if (index < errors.lastIndex) {
                Divider()

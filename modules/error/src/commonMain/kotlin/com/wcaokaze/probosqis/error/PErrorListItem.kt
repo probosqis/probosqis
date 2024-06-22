@@ -16,8 +16,8 @@
 
 package com.wcaokaze.probosqis.error
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationState
-import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.calculateTargetValue
@@ -33,7 +33,6 @@ import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -54,7 +53,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.input.pointer.util.addPointerInputChange
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -65,14 +64,15 @@ import kotlin.math.sign
 internal fun <E : PError> PErrorListItem(
    pError: E,
    itemComposable: @Composable (E) -> Unit,
-   backgroundColor: Color
+   backgroundColor: Color,
+   onDismiss: () -> Unit
 ) {
    Box(
       contentAlignment = Alignment.CenterStart,
       modifier = Modifier
          .fillMaxWidth()
+         .swipeDismiss(onDismiss)
          .heightIn(min = 48.dp)
-         .swipeDismiss()
          .background(backgroundColor)
    ) {
       itemComposable(pError)
@@ -80,8 +80,9 @@ internal fun <E : PError> PErrorListItem(
 }
 
 @Composable
-private fun Modifier.swipeDismiss(): Modifier {
+private fun Modifier.swipeDismiss(onDismiss: () -> Unit): Modifier {
    val scrollingLogic = remember { ScrollingLogic() }
+   val heightMultiplier = remember { Animatable(1.0f) }
    val decaySpec = rememberSplineBasedDecay<Float>()
    val coroutineScope = rememberCoroutineScope()
 
@@ -95,12 +96,38 @@ private fun Modifier.swipeDismiss(): Modifier {
             },
             onDragEnd = { velocity ->
                coroutineScope.launch {
-                  scrollingLogic.settle(velocity, decaySpec, size.width.toFloat())
+                  val settledOffset = decaySpec
+                     .calculateTargetValue(scrollingLogic.offset, velocity)
+
+                  val listWidth = size.width.toFloat()
+                  when {
+                     settledOffset < -(listWidth * 0.6f) -> {
+                        scrollingLogic.settleTo(-listWidth, velocity)
+                     }
+                     settledOffset > listWidth * 0.6f -> {
+                        scrollingLogic.settleTo(listWidth, velocity)
+                     }
+                     else -> {
+                        scrollingLogic.settleToZero(velocity)
+                        return@launch
+                     }
+                  }
+
+                  heightMultiplier.animateTo(0.0f)
+                  onDismiss()
                }
             }
          )
       }
-      .offset { IntOffset(scrollingLogic.offset.roundToInt(), 0) }
+      .layout { measurable, constraints ->
+         val placeable = measurable.measure(constraints)
+         layout(
+            placeable.width,
+            (placeable.height * heightMultiplier.value).toInt()
+         ) {
+            placeable.place(scrollingLogic.offset.toInt(), 0)
+         }
+      }
 }
 
 @Stable
@@ -119,21 +146,7 @@ private class ScrollingLogic {
       scrollState.scrollBy(offset)
    }
 
-   suspend fun settle(
-      initialVelocity: Float,
-      decaySpec: DecayAnimationSpec<Float>,
-      listWidth: Float
-   ) {
-      val settledOffset = decaySpec.calculateTargetValue(offset, initialVelocity)
-
-      when {
-         settledOffset < -(listWidth * 0.6f) -> settleTo(-listWidth, initialVelocity)
-         settledOffset >   listWidth * 0.6f  -> settleTo( listWidth, initialVelocity)
-         else                                -> settleToZero(initialVelocity)
-      }
-   }
-
-   private suspend fun settleToZero(initialVelocity: Float) {
+   suspend fun settleToZero(initialVelocity: Float) {
       scrollState.scroll {
          AnimationState(offset, initialVelocity).animateTo(0.0f) {
             offset = value
@@ -141,7 +154,7 @@ private class ScrollingLogic {
       }
    }
 
-   private suspend fun settleTo(
+   suspend fun settleTo(
       targetOffset: Float,
       initialVelocity: Float
    ) {

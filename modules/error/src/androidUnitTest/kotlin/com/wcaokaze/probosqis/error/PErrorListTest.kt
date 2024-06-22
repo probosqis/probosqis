@@ -724,4 +724,42 @@ class PErrorListTest {
          up()
       }
    }
+
+   @Test
+   fun errorItem_disposeByFlinging() {
+      val errorList = List(3) { ErrorImpl(it) }
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state)
+         }
+      }
+
+      state.show()
+
+      rule.onNodeWithText("Error message 1").performTouchInput {
+         swipeLeft(
+            centerX,
+            centerX - viewConfiguration.touchSlop - 20.dp.toPx(),
+            durationMillis = 40
+         )
+      }
+
+      rule.runOnIdle {
+         assertContentEquals(
+            listOf(ErrorImpl(0), ErrorImpl(2)),
+            state.errors
+         )
+      }
+   }
 }
