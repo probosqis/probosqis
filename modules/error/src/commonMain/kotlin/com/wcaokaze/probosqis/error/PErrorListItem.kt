@@ -71,6 +71,7 @@ internal fun <E : PError> PErrorListItem(
       contentAlignment = Alignment.CenterStart,
       modifier = Modifier
          .fillMaxWidth()
+         // Material3のSwipeToDismissが使える可能性がある
          .swipeDismiss(onDismiss)
          .heightIn(min = 48.dp)
          .background(backgroundColor)
