@@ -23,20 +23,33 @@ import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.calculateTargetValue
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.awaitDragOrCancellation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -55,6 +68,7 @@ import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -67,50 +81,88 @@ internal fun <E : PError> PErrorListItem(
    backgroundColor: Color,
    onDismiss: () -> Unit
 ) {
-   Box(
-      contentAlignment = Alignment.CenterStart,
+   val coroutineScope = rememberCoroutineScope()
+
+   val interactionSource = remember { MutableInteractionSource() }
+   val swipeDismissState = remember { SwipeDismissState() }
+
+   Row(
+      verticalAlignment = Alignment.CenterVertically,
       modifier = Modifier
          .fillMaxWidth()
          // Material3のSwipeToDismissが使える可能性がある
-         .swipeDismiss(onDismiss)
+         .swipeDismiss(swipeDismissState, onDismiss)
+         .clickable(
+            interactionSource, LocalIndication.current,
+            onClick = {}
+         )
          .heightIn(min = 48.dp)
          .background(backgroundColor)
+         .padding(horizontal = 8.dp)
    ) {
-      itemComposable(pError)
+      Box(Modifier.weight(1.0f)) {
+         itemComposable(pError)
+      }
+
+      val isHovered by interactionSource.collectIsHoveredAsState()
+      if (isHovered) {
+         IconButton(
+            onClick = {
+               coroutineScope.launch {
+                  swipeDismissState.animateDismiss()
+                  onDismiss()
+               }
+            }
+         ) {
+            Icon(
+               Icons.Default.Close,
+               contentDescription = Strings.PError.pErrorItemDisposeButtonDescription
+            )
+         }
+      } else {
+         Spacer(Modifier.size(48.dp))
+      }
    }
 }
 
+private enum class DismissDirection {
+   LEFT_TO_RIGHT,
+   RIGHT_TO_LEFT
+}
+
 @Composable
-private fun Modifier.swipeDismiss(onDismiss: () -> Unit): Modifier {
-   val swipeDismissState = remember { SwipeDismissState() }
+private fun Modifier.swipeDismiss(
+   state: SwipeDismissState,
+   onDismiss: () -> Unit
+): Modifier {
    val decaySpec = rememberSplineBasedDecay<Float>()
    val coroutineScope = rememberCoroutineScope()
 
    return pointerInput(Unit) {
          detectHorizontalDragGesture(
-            shouldStartDragImmediately = { swipeDismissState.shouldStartDragImmediately() },
+            shouldStartDragImmediately = { state.shouldStartDragImmediately() },
             onDrag = { dragAmount ->
                coroutineScope.launch {
-                  swipeDismissState.scrollBy(dragAmount)
+                  state.scrollBy(dragAmount)
                }
             },
             onDragEnd = { velocity ->
                coroutineScope.launch {
                   val settledOffset = decaySpec
-                     .calculateTargetValue(swipeDismissState.offset, velocity)
+                     .calculateTargetValue(state.offset, velocity)
 
                   val listWidth = size.width.toFloat()
                   when {
                      settledOffset < -(listWidth * 0.6f) -> {
-                        swipeDismissState.animateDismiss(-listWidth, velocity)
+                        state.animateDismiss(DismissDirection.RIGHT_TO_LEFT, velocity)
                         onDismiss()
                      }
                      settledOffset > listWidth * 0.6f -> {
-                        swipeDismissState.animateDismiss(listWidth, velocity)
+                        state.animateDismiss(DismissDirection.LEFT_TO_RIGHT, velocity)
                         onDismiss()
                      }
                      else -> {
-                        swipeDismissState.settleToZero(velocity)
+                        state.settleToZero(velocity)
                      }
                   }
                }
@@ -119,11 +171,14 @@ private fun Modifier.swipeDismiss(onDismiss: () -> Unit): Modifier {
       }
       .layout { measurable, constraints ->
          val placeable = measurable.measure(constraints)
+
+         state.itemWidth = placeable.width
+
          layout(
             placeable.width,
-            (placeable.height * swipeDismissState.heightMultiplier).toInt()
+            (placeable.height * state.heightMultiplier).toInt()
          ) {
-            placeable.place(swipeDismissState.offset.toInt(), 0)
+            placeable.place(state.offset.toInt(), 0)
          }
       }
 }
@@ -132,6 +187,8 @@ private fun Modifier.swipeDismiss(onDismiss: () -> Unit): Modifier {
 private class SwipeDismissState {
    var offset by mutableFloatStateOf(0.0f)
       private set
+
+   var itemWidth by mutableIntStateOf(0)
 
    private var heightMultiplierAnimatable = Animatable(1.0f)
    val heightMultiplier: Float by heightMultiplierAnimatable.asState()
@@ -155,11 +212,22 @@ private class SwipeDismissState {
       }
    }
 
+   suspend fun animateDismiss() {
+      animateDismiss(
+         DismissDirection.RIGHT_TO_LEFT,
+         initialVelocity = -itemWidth / 0.2f
+      )
+   }
+
    suspend fun animateDismiss(
-      targetOffset: Float,
+      direction: DismissDirection,
       initialVelocity: Float
    ) {
       val velocityPxPerMillis = initialVelocity / 1000.0f
+      val targetOffset = when (direction) {
+         DismissDirection.LEFT_TO_RIGHT ->  itemWidth
+         DismissDirection.RIGHT_TO_LEFT -> -itemWidth
+      }
       val scrollOffset = targetOffset - offset
       val durationMillis = scrollOffset / velocityPxPerMillis
       scrollState.animateScrollBy(

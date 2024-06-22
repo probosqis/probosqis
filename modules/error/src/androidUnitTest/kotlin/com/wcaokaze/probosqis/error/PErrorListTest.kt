@@ -35,15 +35,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
@@ -753,6 +756,122 @@ class PErrorListTest {
             centerX - viewConfiguration.touchSlop - 20.dp.toPx(),
             durationMillis = 40
          )
+      }
+
+      rule.runOnIdle {
+         assertContentEquals(
+            listOf(ErrorImpl(0), ErrorImpl(2)),
+            state.errors
+         )
+      }
+   }
+
+   @OptIn(ExperimentalTestApi::class)
+   @Test
+   fun errorItem_showDismissButton() {
+      val errorList = List(3) { ErrorImpl(it) }
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state)
+         }
+      }
+
+      state.show()
+
+      rule.onNodeWithContentDescription("Dismiss").assertDoesNotExist()
+
+      rule.onNodeWithText("Error message 1").performMouseInput {
+         enter(center)
+      }
+
+      rule.onNodeWithContentDescription("Dismiss").assertExists()
+   }
+
+   @OptIn(ExperimentalTestApi::class)
+   @Test
+   fun errorItem_dismissAnim() {
+      val errorList = List(50) { ErrorImpl(it) }
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state)
+         }
+      }
+
+      state.show()
+
+      rule.onNodeWithText("Error message 1").performMouseInput {
+         enter(center)
+      }
+
+      rule.waitForIdle()
+      rule.mainClock.autoAdvance = false
+
+      rule.onNodeWithContentDescription("Dismiss").performMouseInput {
+         click()
+      }
+      rule.onNodeWithText("Error message 1").performMouseInput {
+         exit()
+      }
+
+      repeat (20) { i ->
+         rule.onRoot().captureRoboImage("test/dismissAnim/$i.png")
+         rule.mainClock.advanceTimeBy(16L)
+      }
+   }
+
+   @OptIn(ExperimentalTestApi::class)
+   @Test
+   fun errorItem_dismissByButton() {
+      val errorList = List(3) { ErrorImpl(it) }
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state)
+         }
+      }
+
+      state.show()
+
+      rule.onNodeWithText("Error message 1").performMouseInput {
+         enter(center)
+      }
+      rule.onNodeWithContentDescription("Dismiss").performMouseInput {
+         click()
+      }
+      rule.onNodeWithText("Error message 1").performMouseInput {
+         exit()
       }
 
       rule.runOnIdle {

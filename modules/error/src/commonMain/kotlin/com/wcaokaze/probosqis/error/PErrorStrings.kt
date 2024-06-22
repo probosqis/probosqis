@@ -23,6 +23,7 @@ import com.wcaokaze.probosqis.resources.Strings
 
 interface PErrorStrings {
    val pErrorActionButtonContentDescription: String
+   val pErrorItemDisposeButtonDescription: String
 }
 
 val Strings.Companion.PError: PErrorStrings
@@ -31,9 +32,11 @@ val Strings.Companion.PError: PErrorStrings
    get() = when (LocalLanguage.current) {
       Strings.Language.ENGLISH -> object : PErrorStrings {
          override val pErrorActionButtonContentDescription = "Errors"
+         override val pErrorItemDisposeButtonDescription = "Dismiss"
       }
 
       Strings.Language.JAPANESE -> object : PErrorStrings {
          override val pErrorActionButtonContentDescription = "エラー"
+         override val pErrorItemDisposeButtonDescription = "消去"
       }
    }
