@@ -318,7 +318,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_horizontalDrag() {
+   fun listItem_horizontalDrag() {
       val errorList = List(50) { ErrorImpl(it) }
       val state = PErrorListState(
          WritableCache(errorList),
@@ -369,7 +369,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_horizontalFling() {
+   fun listItem_horizontalFling() {
       val errorList = List(50) { ErrorImpl(it) }
       val state = PErrorListState(
          WritableCache(errorList),
@@ -431,7 +431,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_stopFlinging() {
+   fun listItem_stopFlinging() {
       val errorList = List(50) { ErrorImpl(it) }
       val state = PErrorListState(
          WritableCache(errorList),
@@ -574,7 +574,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_notEnoughVelocity_left() {
+   fun listItem_flingAnim_notEnoughVelocity_left() {
       assertFlingAnim("flingAnim/notEnoughVelocity_left") {
          swipeLeft(
             centerX,
@@ -585,7 +585,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_notEnoughVelocity_right() {
+   fun listItem_flingAnim_notEnoughVelocity_right() {
       assertFlingAnim("flingAnim/notEnoughVelocity_right") {
          swipeRight(
             centerX,
@@ -596,7 +596,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_enoughVelocity_left() {
+   fun listItem_flingAnim_enoughVelocity_left() {
       assertFlingAnim("flingAnim/enoughVelocity_left") {
          swipeLeft(
             centerX,
@@ -607,7 +607,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_enoughVelocity_right() {
+   fun listItem_flingAnim_enoughVelocity_right() {
       assertFlingAnim("flingAnim/enoughVelocity_right") {
          swipeRight(
             centerX,
@@ -618,7 +618,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_tooFast_left() {
+   fun listItem_flingAnim_tooFast_left() {
       assertFlingAnim("flingAnim/tooFast_left") {
          swipeLeft(
             centerX,
@@ -629,7 +629,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_tooFast_right() {
+   fun listItem_flingAnim_tooFast_right() {
       assertFlingAnim("flingAnim/tooFast_right") {
          swipeRight(
             centerX,
@@ -640,7 +640,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_backHome_left() {
+   fun listItem_flingAnim_backHome_left() {
       assertFlingAnim("flingAnim/backHome_left") {
          down(center)
          moveBy(Offset(-viewConfiguration.touchSlop - 256.dp.toPx(), 0.0f))
@@ -651,7 +651,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_backHome_right() {
+   fun listItem_flingAnim_backHome_right() {
       assertFlingAnim("flingAnim/backHome_right") {
          down(center)
          moveBy(Offset(viewConfiguration.touchSlop + 256.dp.toPx(), 0.0f))
@@ -662,7 +662,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_removeAfterRest_left() {
+   fun listItem_flingAnim_removeAfterRest_left() {
       assertFlingAnim("flingAnim/removeAfterRest_left") {
          down(center)
          moveBy(Offset(-viewConfiguration.touchSlop - 216.dp.toPx(), 0.0f))
@@ -672,7 +672,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_removeAfterRest_right() {
+   fun listItem_flingAnim_removeAfterRest_right() {
       assertFlingAnim("flingAnim/removeAfterRest_right") {
          down(center)
          moveBy(Offset(viewConfiguration.touchSlop + 216.dp.toPx(), 0.0f))
@@ -682,7 +682,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_flingAfterRest_left() {
+   fun listItem_flingAnim_flingAfterRest_left() {
       assertFlingAnim("flingAnim/flingAfterRest_left") {
          down(center)
          moveBy(Offset(-viewConfiguration.touchSlop - 184.dp.toPx(), 0.0f))
@@ -693,7 +693,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_flingAfterRest_right() {
+   fun listItem_flingAnim_flingAfterRest_right() {
       assertFlingAnim("flingAnim/flingAfterRest_right") {
          down(center)
          moveBy(Offset(viewConfiguration.touchSlop + 184.dp.toPx(), 0.0f))
@@ -704,7 +704,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_flingToAnotherSide_left() {
+   fun listItem_flingAnim_flingToAnotherSide_left() {
       assertFlingAnim("flingAnim/flingToAnotherSide_left") {
          down(center)
          moveBy(Offset(viewConfiguration.touchSlop + 288.dp.toPx(), 0.0f))
@@ -715,7 +715,7 @@ class PErrorListTest {
    }
 
    @Test
-   fun pErrorList_flingAnim_flingToAnotherSide_right() {
+   fun listItem_flingAnim_flingToAnotherSide_right() {
       assertFlingAnim("flingAnim/flingToAnotherSide_right") {
          down(center)
          moveBy(Offset(-viewConfiguration.touchSlop - 288.dp.toPx(), 0.0f))
