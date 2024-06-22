@@ -56,6 +56,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
@@ -169,6 +170,9 @@ private fun Modifier.swipeDismiss(
             }
          )
       }
+      .graphicsLayer {
+         alpha = state.alpha
+      }
       .layout { measurable, constraints ->
          val placeable = measurable.measure(constraints)
 
@@ -187,6 +191,8 @@ private fun Modifier.swipeDismiss(
 private class SwipeDismissState {
    var offset by mutableFloatStateOf(0.0f)
       private set
+
+   val alpha: Float get() = (itemWidth - abs(offset)) / (itemWidth * 0.8f)
 
    var itemWidth by mutableIntStateOf(0)
 
