@@ -902,4 +902,49 @@ class PErrorListTest {
          )
       }
    }
+
+   @Test
+   fun errorItemList_hideAfterLastItemDismissed() {
+      val errorList = List(1) { ErrorImpl(it) }
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state)
+         }
+      }
+
+      state.show()
+
+      rule.waitForIdle()
+      rule.mainClock.autoAdvance = false
+
+      rule.onNodeWithText("Error message 0").performTouchInput {
+         swipeLeft(
+            centerX,
+            centerX - viewConfiguration.touchSlop - 20.dp.toPx(),
+            durationMillis = 40
+         )
+      }
+
+      rule.mainClock.advanceTimeBy(350L)
+
+      repeat (35) { i ->
+         rule.onRoot().captureRoboImage("test/hideAfterLastItemDismissed/$i.png")
+         rule.mainClock.advanceTimeBy(16L)
+      }
+
+      rule.runOnIdle {
+         assertFalse(state.isShown)
+      }
+   }
 }

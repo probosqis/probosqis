@@ -28,6 +28,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -57,6 +58,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -132,6 +134,10 @@ class PErrorListState(
 
    fun dismiss(error: PError) {
       errors = errors.filterNot { it.id == error.id }
+
+      if (errors.isEmpty()) {
+         hide()
+      }
    }
 
    @Stable
@@ -255,7 +261,7 @@ private fun PErrorListSheet(
                .clip(MaterialTheme.shapes.small)
                .pointerInput(Unit) {}
          ) {
-            PErrorListHeader(colors.header, colors.headerContent)
+            PErrorListHeader(state, colors.header, colors.headerContent)
 
             PErrorListContent(state, colors.itemBackground, colors.content)
          }
@@ -265,6 +271,7 @@ private fun PErrorListSheet(
 
 @Composable
 private fun AnimatedContentScope.PErrorListHeader(
+   state: PErrorListState,
    backgroundColor: Color,
    contentColor: Color
 ) {
@@ -280,6 +287,11 @@ private fun AnimatedContentScope.PErrorListHeader(
             (hiddenIconPadding - iconHorizontalPadding).roundToPx()
          }
 
+         val slideIn  = slideInHorizontally (animSpec()) { hiddenIconOffset }
+         val slideOut = slideOutHorizontally(animSpec()) { hiddenIconOffset }
+
+         val isEmpty by derivedStateOf { state.errors.isEmpty() }
+
          @OptIn(ExperimentalAnimationApi::class)
          Icon(
             Icons.Default.Error,
@@ -288,8 +300,8 @@ private fun AnimatedContentScope.PErrorListHeader(
                .align(Alignment.CenterStart)
                .padding(horizontal = iconHorizontalPadding)
                .animateEnterExit(
-                  enter = slideInHorizontally (animSpec()) { hiddenIconOffset },
-                  exit  = slideOutHorizontally(animSpec()) { hiddenIconOffset }
+                  enter = slideIn,
+                  exit = if (isEmpty) { slideOut + fadeOut() } else { slideOut }
                )
          )
       }
