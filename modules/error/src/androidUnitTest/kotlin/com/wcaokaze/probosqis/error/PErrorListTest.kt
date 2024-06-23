@@ -18,10 +18,13 @@ package com.wcaokaze.probosqis.error
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -53,11 +56,13 @@ import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -81,7 +86,10 @@ class PErrorListTest {
    }
 
    @Composable
-   private fun PErrorList(state: PErrorListState) {
+   private fun PErrorList(
+      state: PErrorListState,
+      windowInsets: WindowInsets = WindowInsets(0)
+   ) {
       PErrorList(
          state,
          PErrorListColors(
@@ -90,7 +98,8 @@ class PErrorListTest {
             content = Color.Black,
             header = Color.DarkGray,
             headerContent = Color.Black,
-         )
+         ),
+         windowInsets
       )
    }
 
@@ -113,6 +122,75 @@ class PErrorListTest {
       state.raise(ErrorImpl(0))
 
       rule.onNodeWithContentDescription("Errors").assertExists()
+   }
+
+   @Config(qualifiers = "w600dp")
+   @Test
+   fun pErrorList_layout() {
+      val widthList = listOf(350.dp, 600.dp)
+      val windowInsetsList = listOf(
+         "narrowInsets" to WindowInsets(0),
+         "wideInsets"   to WindowInsets(64.dp, 48.dp, 56.dp, 16.dp)
+      )
+      val errorsList = listOf(
+         List( 1, ::ErrorImpl),
+         List(50, ::ErrorImpl),
+      )
+
+      val itemsCache = WritableCache<List<PError>>(errorsList.first())
+      val state = PErrorListState(
+         itemsCache,
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      var width by mutableStateOf(widthList.first())
+      var windowInsets by mutableStateOf(windowInsetsList.first().second)
+      var errors by itemsCache.asMutableState()
+
+      rule.setContent {
+         Box(
+            modifier = Modifier
+               .width(width)
+         ) {
+            Box(
+               modifier = Modifier
+                  .align(Alignment.TopEnd)
+                  .windowInsetsPadding(windowInsets)
+                  .padding(8.dp)
+            ) {
+               PErrorActionButton(
+                  state,
+                  onClick = {}
+               )
+            }
+
+            PErrorList(state, windowInsets = windowInsets)
+         }
+      }
+
+      state.show()
+
+      for (w in widthList) {
+         width = w
+
+         for ((windowInsetsStr, wi) in windowInsetsList) {
+            windowInsets = wi
+
+            for (e in errorsList) {
+               errors = e
+
+               val widthStr = "${w.value.toInt()}dp"
+               val errorCountStr = when {
+                  e.size == 1 -> "1error"
+                  else        -> "${e.size}errors"
+               }
+
+               rule.onRoot().captureRoboImage(
+                  "test/errorList/$widthStr-$windowInsetsStr-$errorCountStr.png"
+               )
+            }
+         }
+      }
    }
 
    @Test
@@ -225,7 +303,7 @@ class PErrorListTest {
       rule.waitForIdle()
 
       rule.onRoot().performTouchInput {
-         click(Offset(centerX, 12.dp.toPx()))
+         click(Offset(right - 24.dp.toPx(), 24.dp.toPx()))
       }
 
       rule.runOnIdle {

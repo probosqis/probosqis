@@ -46,6 +46,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -169,13 +170,15 @@ fun PErrorList(
          PErrorListSheet(
             state,
             colors,
-            modifier = Modifier.windowInsetsPadding(
-               // PErrorListContentはTopEndがPErrorActionButtonと合う位置に
-               // 配置される（measurePolicy内に該当処理がある）のでWindowInsetsの
-               // EndとTopは無視する
-               windowInsets
-                  .only(WindowInsetsSides.Start + WindowInsetsSides.Bottom)
-            )
+            modifier = Modifier
+               .windowInsetsPadding(
+                  // PErrorListContentはTopEndがPErrorActionButtonと合う位置に
+                  // 配置される（measurePolicy内に該当処理がある）のでWindowInsetsの
+                  // EndとTopは無視する
+                  windowInsets
+                     .only(WindowInsetsSides.Start + WindowInsetsSides.Bottom)
+               )
+               .widthIn(max = 400.dp)
          )
       },
       measurePolicy = { measurables, constraints ->
