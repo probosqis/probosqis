@@ -48,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -105,6 +106,8 @@ fun SingleColumnProbosqis(
             .nestedScroll(nestedScrollConnection)
             .inflateWidth(8.dp)
       ) {
+         val coroutineScope = rememberCoroutineScope()
+
          AppBar(
             appBarScrollState,
             errorListState,
@@ -114,7 +117,12 @@ fun SingleColumnProbosqis(
             backgroundColor = colorScheme.appBar,
             windowInsets = safeDrawingWindowInsets
                .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-            onErrorButtonClick = { errorListState.show() }
+            onErrorButtonClick = {
+               coroutineScope.launch {
+                  appBarScrollState.show()
+                  errorListState.show()
+               }
+            }
          )
 
          SingleColumnPageDeck(

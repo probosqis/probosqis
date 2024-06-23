@@ -23,10 +23,13 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
@@ -259,16 +262,63 @@ class ProbosqisTest {
          )
       }
 
-      rule.runOnIdle {
-         rule.onNodeWithText(topAppBarText)
-            .assertTopPositionInRootIsEqualTo(initialTop - 64.dp)
-      }
+      rule.onNodeWithText(topAppBarText)
+         .assertTopPositionInRootIsEqualTo(initialTop - 64.dp)
 
       errorListState.raise(ErrorImpl())
 
-      rule.runOnIdle {
-         rule.onNodeWithText(topAppBarText)
-            .assertTopPositionInRootIsEqualTo(initialTop)
+      rule.onNodeWithText(topAppBarText)
+         .assertTopPositionInRootIsEqualTo(initialTop)
+   }
+
+   @Test
+   fun singleColumn_showErrorList_showAppBar() {
+      val errorListState = PErrorListState(
+         WritableCache(
+            persistentListOf(ErrorImpl())
+         ),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      lateinit var topAppBarText: String
+      lateinit var errorActionButtonContentDescription: String
+
+      rule.setContent {
+         KoinIsolatedContext(
+            koinApplication(errorListState = errorListState)
+         ) {
+            topAppBarText = Strings.App.topAppBar
+            errorActionButtonContentDescription =
+                  Strings.PError.pErrorActionButtonContentDescription
+
+            val probosqisState = remember { ProbosqisState() }
+            SingleColumnProbosqis(probosqisState)
+         }
       }
+
+      val initialTop = rule.runOnIdle {
+         val node = rule.onNodeWithText(topAppBarText)
+            .fetchSemanticsNode()
+
+         with (node.layoutInfo.density) {
+            node.positionInRoot.y.toDp()
+         }
+      }
+
+      rule.onNodeWithText(topAppBarText).performTouchInput {
+         down(center)
+         moveBy(Offset(0.0f, -(viewConfiguration.touchSlop + 32.dp.toPx())))
+         moveBy(Offset(0.1f, 0.0f), delayMillis = 3000L)
+         up()
+      }
+
+      rule.onNodeWithText(topAppBarText)
+         .assertTopPositionInRootIsEqualTo(initialTop - 32.dp)
+
+      rule.onNodeWithContentDescription(errorActionButtonContentDescription)
+         .performClick()
+
+      rule.onNodeWithText(topAppBarText)
+         .assertTopPositionInRootIsEqualTo(initialTop)
    }
 }
