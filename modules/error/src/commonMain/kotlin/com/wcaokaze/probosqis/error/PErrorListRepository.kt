@@ -37,8 +37,8 @@ interface PErrorListRepository {
       val serializer: KSerializer<E>
    )
 
-   fun saveErrorList(errorList: List<PError>): WritableCache<List<PError>>
-   fun loadErrorList(): WritableCache<List<PError>>
+   fun saveErrorList(errorList: List<RaisedError>): WritableCache<List<RaisedError>>
+   fun loadErrorList(): WritableCache<List<RaisedError>>
 }
 
 abstract class AbstractPErrorListRepository

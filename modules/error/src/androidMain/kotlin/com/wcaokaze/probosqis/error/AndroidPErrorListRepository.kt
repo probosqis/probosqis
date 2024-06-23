@@ -32,13 +32,15 @@ class AndroidPErrorListRepository(
 
    /** @throws IOException */
    @TemporaryCacheApi
-   override fun saveErrorList(errorList: List<PError>): WritableCache<List<PError>> {
+   override fun saveErrorList(
+      errorList: List<RaisedError>
+   ): WritableCache<List<RaisedError>> {
       return saveCache(errorList, file, json)
    }
 
    /** @throws IOException */
    @TemporaryCacheApi
-   override fun loadErrorList(): WritableCache<List<PError>> {
+   override fun loadErrorList(): WritableCache<List<RaisedError>> {
       return loadCache(file, json)
    }
 }

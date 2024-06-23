@@ -44,6 +44,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorListState
+import com.wcaokaze.probosqis.error.RaisedError
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
@@ -170,7 +171,9 @@ class ProbosqisTest {
    fun multiColumn_errorNotifierAnim() {
       val errorListState = PErrorListState(
          WritableCache(
-            persistentListOf(ErrorImpl())
+            persistentListOf(
+               RaisedError(ErrorImpl(), PageId(0L)),
+            )
          ),
          itemComposables = listOf(errorItemComposableImpl)
       )
@@ -199,7 +202,9 @@ class ProbosqisTest {
    fun singleColumn_errorNotifierAnim() {
       val errorListState = PErrorListState(
          WritableCache(
-            persistentListOf(ErrorImpl())
+            persistentListOf(
+               RaisedError(ErrorImpl(), PageId(0L)),
+            )
          ),
          itemComposables = listOf(errorItemComposableImpl)
       )
@@ -228,7 +233,9 @@ class ProbosqisTest {
    fun singleColumn_errorNotifierAnim_showAppBar() {
       val errorListState = PErrorListState(
          WritableCache(
-            persistentListOf(ErrorImpl())
+            persistentListOf(
+               RaisedError(ErrorImpl(), PageId(0L)),
+            )
          ),
          itemComposables = listOf(errorItemComposableImpl)
       )
@@ -275,7 +282,9 @@ class ProbosqisTest {
    fun singleColumn_showErrorList_showAppBar() {
       val errorListState = PErrorListState(
          WritableCache(
-            persistentListOf(ErrorImpl())
+            persistentListOf(
+               RaisedError(ErrorImpl(), PageId(0L)),
+            )
          ),
          itemComposables = listOf(errorItemComposableImpl)
       )

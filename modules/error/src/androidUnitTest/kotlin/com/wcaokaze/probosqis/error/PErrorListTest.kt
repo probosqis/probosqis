@@ -55,10 +55,9 @@ import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -83,6 +82,12 @@ class PErrorListTest {
          "Error message ${error.i}",
          modifier = Modifier.fillMaxWidth().height(48.dp)
       )
+   }
+
+   private fun createRaisedErrorList(errorCount: Int): List<RaisedError> {
+      return List(errorCount) {
+         RaisedError(ErrorImpl(it), raisedIn = PageId(it.toLong()))
+      }
    }
 
    @Composable
@@ -133,11 +138,11 @@ class PErrorListTest {
          "wideInsets"   to WindowInsets(64.dp, 48.dp, 56.dp, 16.dp)
       )
       val errorsList = listOf(
-         List( 1, ::ErrorImpl),
-         List(50, ::ErrorImpl),
+         createRaisedErrorList( 1),
+         createRaisedErrorList(50),
       )
 
-      val itemsCache = WritableCache<List<PError>>(errorsList.first())
+      val itemsCache = WritableCache(errorsList.first())
       val state = PErrorListState(
          itemsCache,
          itemComposables = listOf(errorItemComposableImpl)
@@ -195,7 +200,7 @@ class PErrorListTest {
 
    @Test
    fun enterExitAnim() {
-      val errorList = List(4) { ErrorImpl(it) } .toImmutableList()
+      val errorList = createRaisedErrorList(4)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -239,7 +244,7 @@ class PErrorListTest {
 
    @Test
    fun dismissHandler() {
-      val errorList = persistentListOf(ErrorImpl(0))
+      val errorList = createRaisedErrorList(1)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -276,7 +281,7 @@ class PErrorListTest {
 
    @Test
    fun dismissHandler_doNotDismissTouchingErrorList() {
-      val errorList = persistentListOf(ErrorImpl(0))
+      val errorList = createRaisedErrorList(1)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -313,7 +318,7 @@ class PErrorListTest {
 
    @Test
    fun dismissHandler_consumeTouchEvent() {
-      val errorList = persistentListOf(ErrorImpl(0))
+      val errorList = createRaisedErrorList(1)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -371,22 +376,35 @@ class PErrorListTest {
 
    @Test
    fun pErrorListState_raise() {
-      val errorList = persistentListOf(ErrorImpl(0))
-      val cache = WritableCache<List<PError>>(errorList)
+      val errorList = createRaisedErrorList(1)
+      val cache = WritableCache(errorList)
 
       val state = PErrorListState(
          cache,
          itemComposables = listOf(errorItemComposableImpl)
       )
 
-      assertContentEquals(listOf(ErrorImpl(0)), cache.value)
+      assertContentEquals(
+         listOf(
+            RaisedError(ErrorImpl(0), PageId(0L)),
+         ),
+         cache.value
+      )
+
       state.raise(ErrorImpl(1))
-      assertContentEquals(listOf(ErrorImpl(0), ErrorImpl(1)), cache.value)
+
+      assertContentEquals(
+         listOf(
+            RaisedError(ErrorImpl(0), PageId(0L)),
+            RaisedError(ErrorImpl(1), PageId(1L)),
+         ),
+         cache.value
+      )
    }
 
    @Test
    fun pErrorList_verticalScroll() {
-      val errorList = List(50) { ErrorImpl(it) }
+      val errorList = createRaisedErrorList(50)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -421,7 +439,7 @@ class PErrorListTest {
 
    @Test
    fun listItem_horizontalDrag() {
-      val errorList = List(50) { ErrorImpl(it) }
+      val errorList = createRaisedErrorList(50)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -472,7 +490,7 @@ class PErrorListTest {
 
    @Test
    fun listItem_horizontalFling() {
-      val errorList = List(50) { ErrorImpl(it) }
+      val errorList = createRaisedErrorList(50)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -534,7 +552,7 @@ class PErrorListTest {
 
    @Test
    fun listItem_stopFlinging() {
-      val errorList = List(50) { ErrorImpl(it) }
+      val errorList = createRaisedErrorList(50)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -597,8 +615,8 @@ class PErrorListTest {
       }
 
       val errorList = listOf(
-         ButtonError(),
-         SliderError(),
+         RaisedError(ButtonError(), raisedIn = PageId(0L)),
+         RaisedError(SliderError(), raisedIn = PageId(1L)),
       )
       val state = PErrorListState(
          WritableCache(errorList),
@@ -645,7 +663,7 @@ class PErrorListTest {
       outputFileName: String,
       itemTouchInput: TouchInjectionScope.() -> Unit
    ) {
-      val errorList = List(50) { ErrorImpl(it) }
+      val errorList = createRaisedErrorList(50)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -829,7 +847,7 @@ class PErrorListTest {
 
    @Test
    fun errorItem_dismissByFlinging() {
-      val errorList = List(3) { ErrorImpl(it) }
+      val errorList = createRaisedErrorList(3)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -859,7 +877,10 @@ class PErrorListTest {
 
       rule.runOnIdle {
          assertContentEquals(
-            listOf(ErrorImpl(0), ErrorImpl(2)),
+            listOf(
+               RaisedError(ErrorImpl(0), PageId(0L)),
+               RaisedError(ErrorImpl(2), PageId(2L)),
+            ),
             state.errors
          )
       }
@@ -868,7 +889,7 @@ class PErrorListTest {
    @OptIn(ExperimentalTestApi::class)
    @Test
    fun errorItem_showDismissButton() {
-      val errorList = List(3) { ErrorImpl(it) }
+      val errorList = createRaisedErrorList(3)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -900,7 +921,7 @@ class PErrorListTest {
    @OptIn(ExperimentalTestApi::class)
    @Test
    fun errorItem_dismissAnim() {
-      val errorList = List(50) { ErrorImpl(it) }
+      val errorList = createRaisedErrorList(50)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -943,7 +964,7 @@ class PErrorListTest {
    @OptIn(ExperimentalTestApi::class)
    @Test
    fun errorItem_dismissByButton() {
-      val errorList = List(3) { ErrorImpl(it) }
+      val errorList = createRaisedErrorList(3)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)
@@ -975,7 +996,10 @@ class PErrorListTest {
 
       rule.runOnIdle {
          assertContentEquals(
-            listOf(ErrorImpl(0), ErrorImpl(2)),
+            listOf(
+               RaisedError(ErrorImpl(0), PageId(0L)),
+               RaisedError(ErrorImpl(2), PageId(2L)),
+            ),
             state.errors
          )
       }
@@ -983,7 +1007,7 @@ class PErrorListTest {
 
    @Test
    fun errorItemList_hideAfterLastItemDismissed() {
-      val errorList = List(1) { ErrorImpl(it) }
+      val errorList = createRaisedErrorList(1)
       val state = PErrorListState(
          WritableCache(errorList),
          itemComposables = listOf(errorItemComposableImpl)

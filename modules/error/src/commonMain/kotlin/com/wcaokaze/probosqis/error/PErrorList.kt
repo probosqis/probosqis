@@ -75,11 +75,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import com.wcaokaze.probosqis.resources.icons.Error
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 import kotlin.math.roundToInt
 import kotlin.reflect.KClass
 
@@ -102,9 +104,29 @@ data class PErrorListColors(
    val headerContent: Color,
 )
 
+@Serializable
+class RaisedError(
+   val error: PError,
+   val raisedIn: PageId
+) {
+   override fun equals(other: Any?): Boolean {
+      return other is RaisedError
+            && error    == other.error
+            && raisedIn == other.raisedIn
+   }
+
+   override fun hashCode(): Int {
+      var h =      error .hashCode()
+      h = h * 31 + raisedIn.hashCode()
+      return h
+   }
+
+   override fun toString() = "$error (raised in $raisedIn)"
+}
+
 @Stable
 class PErrorListState(
-   errorListCache: WritableCache<List<PError>>,
+   errorListCache: WritableCache<List<RaisedError>>,
    itemComposables: List<PErrorItemComposable<*>>
 ) {
    private val itemComposables = itemComposables.associateBy { it.errorClass }
@@ -114,7 +136,7 @@ class PErrorListState(
 
    internal var buttonBounds by mutableStateOf(Rect.Zero)
 
-   var errors: List<PError> by errorListCache.asMutableState()
+   var errors: List<RaisedError> by errorListCache.asMutableState()
 
    var isShown by mutableStateOf(false)
 
@@ -127,14 +149,14 @@ class PErrorListState(
    }
 
    fun raise(error: PError) {
-      check(errors.none { it.id == error.id })
+      check(errors.none { it.error.id == error.id })
 
-      errors += error
+      errors += RaisedError(error, PageId(0L))
       raisedTime = Clock.System.now()
    }
 
    fun dismiss(error: PError) {
-      errors = errors.filterNot { it.id == error.id }
+      errors = errors.filterNot { it.error.id == error.id }
 
       if (errors.isEmpty()) {
          hide()
@@ -324,8 +346,9 @@ private fun PErrorListContent(
       LazyColumn {
          itemsIndexed(
             errors,
-            key = { _, error -> error.id.value }
-         ) { index, error ->
+            key = { _, error -> error.error.id.value }
+         ) { index, raisedError ->
+            val error = raisedError.error
             val composable = state.getComposableFor(error)?.composable ?: fallback
             PErrorListItem(
                error, composable, itemBackgroundColor,

@@ -17,8 +17,8 @@
 package com.wcaokaze.probosqis.app
 
 import androidx.compose.runtime.Stable
-import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorListRepository
+import com.wcaokaze.probosqis.error.RaisedError
 import com.wcaokaze.probosqis.pagedeck.PageDeckState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
@@ -37,7 +37,7 @@ class ProbosqisState {
 
 fun loadErrorListOrDefault(
    errorListRepository: PErrorListRepository
-): WritableCache<List<PError>> {
+): WritableCache<List<RaisedError>> {
    return try {
       errorListRepository.loadErrorList()
    } catch (e: Exception) {

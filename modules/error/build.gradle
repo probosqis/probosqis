@@ -33,6 +33,7 @@ kotlin {
       commonMain.dependencies {
          implementation project(':panoptiqon')
          implementation project(':panoptiqon-compose')
+         implementation project(':capsiqum-page')
          implementation project(':modules:resources')
       }
    }
