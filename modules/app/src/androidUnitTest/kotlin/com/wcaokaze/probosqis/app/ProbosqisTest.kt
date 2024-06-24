@@ -172,7 +172,7 @@ class ProbosqisTest {
       val errorListState = PErrorListState(
          WritableCache(
             persistentListOf(
-               RaisedError(ErrorImpl(), PageId(0L)),
+               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L)),
             )
          ),
          itemComposables = listOf(errorItemComposableImpl)
@@ -203,7 +203,7 @@ class ProbosqisTest {
       val errorListState = PErrorListState(
          WritableCache(
             persistentListOf(
-               RaisedError(ErrorImpl(), PageId(0L)),
+               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L)),
             )
          ),
          itemComposables = listOf(errorItemComposableImpl)
@@ -234,7 +234,7 @@ class ProbosqisTest {
       val errorListState = PErrorListState(
          WritableCache(
             persistentListOf(
-               RaisedError(ErrorImpl(), PageId(0L)),
+               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L)),
             )
          ),
          itemComposables = listOf(errorItemComposableImpl)
@@ -283,7 +283,7 @@ class ProbosqisTest {
       val errorListState = PErrorListState(
          WritableCache(
             persistentListOf(
-               RaisedError(ErrorImpl(), PageId(0L)),
+               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L)),
             )
          ),
          itemComposables = listOf(errorItemComposableImpl)

@@ -16,18 +16,7 @@
 
 package com.wcaokaze.probosqis.error
 
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
 @Serializable
-abstract class PError(
-   val id: Id = Id()
-) {
-   @Serializable
-   @JvmInline
-   value class Id(val value: Long) {
-      constructor(clock: Clock = Clock.System) : this(
-         clock.now().toEpochMilliseconds()
-      )
-   }
-}
+abstract class PError

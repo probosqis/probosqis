@@ -75,7 +75,7 @@ class PErrorListTest {
    @get:Rule
    val rule = createComposeRule()
 
-   private data class ErrorImpl(val i: Int) : PError(Id(i.toLong()))
+   private data class ErrorImpl(val i: Int) : PError()
 
    private val errorItemComposableImpl = PErrorItemComposable<ErrorImpl> { error ->
       Text(
@@ -86,7 +86,11 @@ class PErrorListTest {
 
    private fun createRaisedErrorList(errorCount: Int): List<RaisedError> {
       return List(errorCount) {
-         RaisedError(ErrorImpl(it), raisedIn = PageId(it.toLong()))
+         RaisedError(
+            RaisedError.Id(it.toLong()),
+            ErrorImpl(it),
+            raisedIn = PageId(it.toLong())
+         )
       }
    }
 
@@ -386,17 +390,17 @@ class PErrorListTest {
 
       assertContentEquals(
          listOf(
-            RaisedError(ErrorImpl(0), PageId(0L)),
+            RaisedError(RaisedError.Id(0L), ErrorImpl(0), PageId(0L)),
          ),
          cache.value
       )
 
-      state.raise(ErrorImpl(1), raisedIn = PageId(1L))
+      state.raise(RaisedError.Id(1L), ErrorImpl(1), raisedIn = PageId(1L))
 
       assertContentEquals(
          listOf(
-            RaisedError(ErrorImpl(0), PageId(0L)),
-            RaisedError(ErrorImpl(1), PageId(1L)),
+            RaisedError(RaisedError.Id(0L), ErrorImpl(0), PageId(0L)),
+            RaisedError(RaisedError.Id(1L), ErrorImpl(1), PageId(1L)),
          ),
          cache.value
       )
@@ -592,7 +596,7 @@ class PErrorListTest {
    fun errorItemComposable_touchChildren() {
       val buttonTag = "button"
       var isButtonClicked by mutableStateOf(false)
-      class ButtonError : PError(Id(0L))
+      class ButtonError : PError()
       val buttonErrorComposable = PErrorItemComposable<ButtonError> {
          Button(
             onClick = { isButtonClicked = true },
@@ -604,7 +608,7 @@ class PErrorListTest {
 
       val sliderTag = "slider"
       var sliderValue by mutableStateOf(0.0f)
-      class SliderError : PError(Id(1L))
+      class SliderError : PError()
       val sliderErrorComposable = PErrorItemComposable<SliderError> {
          Slider(
             value = sliderValue,
@@ -615,8 +619,8 @@ class PErrorListTest {
       }
 
       val errorList = listOf(
-         RaisedError(ButtonError(), raisedIn = PageId(0L)),
-         RaisedError(SliderError(), raisedIn = PageId(1L)),
+         RaisedError(RaisedError.Id(0L), ButtonError(), raisedIn = PageId(0L)),
+         RaisedError(RaisedError.Id(1L), SliderError(), raisedIn = PageId(1L)),
       )
       val state = PErrorListState(
          WritableCache(errorList),
@@ -878,8 +882,8 @@ class PErrorListTest {
       rule.runOnIdle {
          assertContentEquals(
             listOf(
-               RaisedError(ErrorImpl(0), PageId(0L)),
-               RaisedError(ErrorImpl(2), PageId(2L)),
+               RaisedError(RaisedError.Id(0L), ErrorImpl(0), PageId(0L)),
+               RaisedError(RaisedError.Id(2L), ErrorImpl(2), PageId(2L)),
             ),
             state.errors
          )
@@ -997,8 +1001,8 @@ class PErrorListTest {
       rule.runOnIdle {
          assertContentEquals(
             listOf(
-               RaisedError(ErrorImpl(0), PageId(0L)),
-               RaisedError(ErrorImpl(2), PageId(2L)),
+               RaisedError(RaisedError.Id(0L), ErrorImpl(0), PageId(0L)),
+               RaisedError(RaisedError.Id(2L), ErrorImpl(2), PageId(2L)),
             ),
             state.errors
          )

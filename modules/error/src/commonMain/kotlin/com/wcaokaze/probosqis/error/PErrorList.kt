@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.error
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.EnterTransition
@@ -106,17 +107,24 @@ data class PErrorListColors(
 
 @Serializable
 class RaisedError(
+   val id: Id,
    val error: PError,
    val raisedIn: PageId
 ) {
+   @Serializable
+   @JvmInline
+   value class Id(val value: Long)
+
    override fun equals(other: Any?): Boolean {
       return other is RaisedError
+            && id       == other.id
             && error    == other.error
             && raisedIn == other.raisedIn
    }
 
    override fun hashCode(): Int {
-      var h =      error .hashCode()
+      var h =      id      .hashCode()
+      h = h * 31 + error   .hashCode()
       h = h * 31 + raisedIn.hashCode()
       return h
    }
@@ -148,15 +156,22 @@ class PErrorListState(
       isShown = false
    }
 
-   fun raise(error: PError, raisedIn: PageId) {
-      check(errors.none { it.error.id == error.id })
-
-      errors += RaisedError(error, raisedIn)
+   @VisibleForTesting
+   internal fun raise(id: RaisedError.Id, error: PError, raisedIn: PageId) {
+      errors += RaisedError(id, error, raisedIn)
       raisedTime = Clock.System.now()
    }
 
-   fun dismiss(error: PError) {
-      errors = errors.filterNot { it.error.id == error.id }
+   fun raise(error: PError, raisedIn: PageId) {
+      raise(
+         id = RaisedError.Id(Clock.System.now().toEpochMilliseconds()),
+         error,
+         raisedIn
+      )
+   }
+
+   fun dismiss(errorId: RaisedError.Id) {
+      errors = errors.filterNot { it.id == errorId }
 
       if (errors.isEmpty()) {
          hide()
@@ -346,13 +361,13 @@ private fun PErrorListContent(
       LazyColumn {
          itemsIndexed(
             errors,
-            key = { _, error -> error.error.id.value }
+            key = { _, error -> error.id.value }
          ) { index, raisedError ->
             val error = raisedError.error
             val composable = state.getComposableFor(error)?.composable ?: fallback
             PErrorListItem(
                error, composable, itemBackgroundColor,
-               onDismiss = { state.dismiss(error) }
+               onDismiss = { state.dismiss(raisedError.id) }
             )
 
             if (index < errors.lastIndex) {
