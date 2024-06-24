@@ -148,10 +148,10 @@ class PErrorListState(
       isShown = false
    }
 
-   fun raise(error: PError) {
+   fun raise(error: PError, raisedIn: PageId) {
       check(errors.none { it.error.id == error.id })
 
-      errors += RaisedError(error, PageId(0L))
+      errors += RaisedError(error, raisedIn)
       raisedTime = Clock.System.now()
    }
 

@@ -124,7 +124,7 @@ class PErrorListTest {
 
       rule.onNodeWithContentDescription("Errors").assertDoesNotExist()
 
-      state.raise(ErrorImpl(0))
+      state.raise(ErrorImpl(0), raisedIn = PageId(0L))
 
       rule.onNodeWithContentDescription("Errors").assertExists()
    }
@@ -391,7 +391,7 @@ class PErrorListTest {
          cache.value
       )
 
-      state.raise(ErrorImpl(1))
+      state.raise(ErrorImpl(1), raisedIn = PageId(1L))
 
       assertContentEquals(
          listOf(

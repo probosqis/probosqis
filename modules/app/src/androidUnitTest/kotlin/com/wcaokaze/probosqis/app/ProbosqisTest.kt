@@ -189,7 +189,7 @@ class ProbosqisTest {
 
       rule.mainClock.autoAdvance = false
 
-      errorListState.raise(ErrorImpl())
+      errorListState.raise(ErrorImpl(), raisedIn = PageId(0L))
       rule.waitForIdle()
 
       repeat (20) { i ->
@@ -220,7 +220,7 @@ class ProbosqisTest {
 
       rule.mainClock.autoAdvance = false
 
-      errorListState.raise(ErrorImpl())
+      errorListState.raise(ErrorImpl(), raisedIn = PageId(0L))
       rule.waitForIdle()
 
       repeat (20) { i ->
@@ -272,7 +272,7 @@ class ProbosqisTest {
       rule.onNodeWithText(topAppBarText)
          .assertTopPositionInRootIsEqualTo(initialTop - 64.dp)
 
-      errorListState.raise(ErrorImpl())
+      errorListState.raise(ErrorImpl(), raisedIn = PageId(0L))
 
       rule.onNodeWithText(topAppBarText)
          .assertTopPositionInRootIsEqualTo(initialTop)
