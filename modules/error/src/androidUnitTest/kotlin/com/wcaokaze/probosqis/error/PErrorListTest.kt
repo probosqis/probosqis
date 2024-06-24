@@ -89,7 +89,7 @@ class PErrorListTest {
          RaisedError(
             RaisedError.Id(it.toLong()),
             ErrorImpl(it),
-            raisedIn = PageId(it.toLong())
+            raiserPageId = PageId(it.toLong())
          )
       }
    }
@@ -128,7 +128,7 @@ class PErrorListTest {
 
       rule.onNodeWithContentDescription("Errors").assertDoesNotExist()
 
-      state.raise(ErrorImpl(0), raisedIn = PageId(0L))
+      state.raise(ErrorImpl(0), raiserPageId = PageId(0L))
 
       rule.onNodeWithContentDescription("Errors").assertExists()
    }
@@ -395,7 +395,7 @@ class PErrorListTest {
          cache.value
       )
 
-      state.raise(RaisedError.Id(1L), ErrorImpl(1), raisedIn = PageId(1L))
+      state.raise(RaisedError.Id(1L), ErrorImpl(1), raiserPageId = PageId(1L))
 
       assertContentEquals(
          listOf(
@@ -619,8 +619,8 @@ class PErrorListTest {
       }
 
       val errorList = listOf(
-         RaisedError(RaisedError.Id(0L), ButtonError(), raisedIn = PageId(0L)),
-         RaisedError(RaisedError.Id(1L), SliderError(), raisedIn = PageId(1L)),
+         RaisedError(RaisedError.Id(0L), ButtonError(), raiserPageId = PageId(0L)),
+         RaisedError(RaisedError.Id(1L), SliderError(), raiserPageId = PageId(1L)),
       )
       val state = PErrorListState(
          WritableCache(errorList),

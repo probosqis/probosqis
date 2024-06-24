@@ -109,7 +109,7 @@ data class PErrorListColors(
 class RaisedError(
    val id: Id,
    val error: PError,
-   val raisedIn: PageId
+   val raiserPageId: PageId
 ) {
    @Serializable
    @JvmInline
@@ -117,19 +117,19 @@ class RaisedError(
 
    override fun equals(other: Any?): Boolean {
       return other is RaisedError
-            && id       == other.id
-            && error    == other.error
-            && raisedIn == other.raisedIn
+            && id           == other.id
+            && error        == other.error
+            && raiserPageId == other.raiserPageId
    }
 
    override fun hashCode(): Int {
-      var h =      id      .hashCode()
-      h = h * 31 + error   .hashCode()
-      h = h * 31 + raisedIn.hashCode()
+      var h =      id          .hashCode()
+      h = h * 31 + error       .hashCode()
+      h = h * 31 + raiserPageId.hashCode()
       return h
    }
 
-   override fun toString() = "$error (raised in $raisedIn)"
+   override fun toString() = "$error (raised in $raiserPageId)"
 }
 
 @Stable
@@ -157,16 +157,16 @@ class PErrorListState(
    }
 
    @VisibleForTesting
-   internal fun raise(id: RaisedError.Id, error: PError, raisedIn: PageId) {
-      errors += RaisedError(id, error, raisedIn)
+   internal fun raise(id: RaisedError.Id, error: PError, raiserPageId: PageId) {
+      errors += RaisedError(id, error, raiserPageId)
       raisedTime = Clock.System.now()
    }
 
-   fun raise(error: PError, raisedIn: PageId) {
+   fun raise(error: PError, raiserPageId: PageId) {
       raise(
          id = RaisedError.Id(Clock.System.now().toEpochMilliseconds()),
          error,
-         raisedIn
+         raiserPageId
       )
    }
 
