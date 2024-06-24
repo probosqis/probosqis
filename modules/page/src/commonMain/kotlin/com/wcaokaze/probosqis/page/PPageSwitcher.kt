@@ -31,7 +31,12 @@ internal fun <P : PPage, S : PPageState>
    return CombinedPageComposable(
       pageClass,
       pageStateClass,
-      pageStateFactory,
+      pageStateFactory = pageStateFactory.copy(
+         pageStateFactory = { page, pageId, stateSaver ->
+            pageStateFactory.pageStateFactory(page, pageId, stateSaver)
+               .also { it.pageId = pageId }
+         }
+      ),
       contentComposable = { page, pageState, pageStackState, windowInsets ->
          pageState.inject(pageStackState)
          contentComposable(page, pageState, windowInsets)
