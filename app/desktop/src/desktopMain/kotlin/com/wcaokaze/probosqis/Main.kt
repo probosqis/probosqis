@@ -27,11 +27,11 @@ import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.errorItemComposableImpl
 import com.wcaokaze.probosqis.app.loadErrorListOrDefault
 import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.page.PPageStateStore
 import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
@@ -78,8 +78,8 @@ private val koinModule = module {
    single { PPageSwitcherState(allPageComposables) }
 
    single {
-      PageStateStore(
-         allPageComposables.map { it.pageStateFactory },
+      PPageStateStore(
+         allPageComposables,
          appCoroutineScope = get()
       )
    }

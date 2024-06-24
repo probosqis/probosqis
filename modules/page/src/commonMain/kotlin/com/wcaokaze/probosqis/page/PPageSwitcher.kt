@@ -16,8 +16,11 @@
 
 package com.wcaokaze.probosqis.page
 
+import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
+import kotlinx.coroutines.CoroutineScope
 
 fun PPageSwitcherState(
    allPageComposables: List<PPageComposable<*, *>>
@@ -25,18 +28,31 @@ fun PPageSwitcherState(
    allPageComposables.map { it.asCombinedPageComposable() }
 )
 
+fun PPageStateStore(
+   allPageComposables: List<PPageComposable<*, *>>,
+   appCoroutineScope: CoroutineScope
+) = PageStateStore(
+   allPageComposables.map { it.pageStateFactory.asCombinedPageStateFactory() },
+   appCoroutineScope
+)
+
+internal fun <P : PPage, S : PPageState>
+      PageStateFactory<P, S>.asCombinedPageStateFactory(): PageStateFactory<P, S>
+{
+   return copy(
+      pageStateFactory = { page, pageId, stateSaver ->
+         pageStateFactory(page, pageId, stateSaver).also { it.pageId = pageId }
+      }
+   )
+}
+
 internal fun <P : PPage, S : PPageState>
       PPageComposable<P, S>.asCombinedPageComposable(): CombinedPageComposable<P, S>
 {
    return CombinedPageComposable(
       pageClass,
       pageStateClass,
-      pageStateFactory = pageStateFactory.copy(
-         pageStateFactory = { page, pageId, stateSaver ->
-            pageStateFactory.pageStateFactory(page, pageId, stateSaver)
-               .also { it.pageId = pageId }
-         }
-      ),
+      pageStateFactory = pageStateFactory.asCombinedPageStateFactory(),
       contentComposable = { page, pageState, pageStackState, windowInsets ->
          pageState.inject(pageStackState)
          contentComposable(page, pageState, windowInsets)
