@@ -78,7 +78,7 @@ class ProbosqisTest {
 
    private val allPageComposables = listOf(
       CombinedPageComposable<PageImpl, PageStateImpl>(
-         PageStateFactory { _, _ -> PageStateImpl() },
+         PageStateFactory { _, _, _ -> PageStateImpl() },
          content = { page, _, _, _ ->
             Text(
                "content${page.i}",

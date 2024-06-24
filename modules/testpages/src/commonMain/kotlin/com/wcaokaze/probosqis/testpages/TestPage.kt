@@ -43,7 +43,7 @@ class TestPage(val i: Int) : PPage()
 class TestPageState : PPageState()
 
 val testPageComposable = PPageComposable<TestPage, TestPageState>(
-   PageStateFactory { _, _ -> TestPageState() },
+   PageStateFactory { _, _, _ -> TestPageState() },
    content = { page, pageState, windowInsets ->
       Column(
          Modifier

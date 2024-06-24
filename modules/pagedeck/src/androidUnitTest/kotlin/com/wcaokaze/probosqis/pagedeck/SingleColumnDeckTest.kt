@@ -67,7 +67,7 @@ class SingleColumnDeckTest {
    private class PageStateImpl : PageState()
 
    private val pageComposable = CombinedPageComposable<PageImpl, PageStateImpl>(
-      PageStateFactory { _, _ -> PageStateImpl() },
+      PageStateFactory { _, _, _ -> PageStateImpl() },
       content = { page, _, pageStackState, _ ->
          Column {
             Text("${page.i}")

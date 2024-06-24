@@ -91,7 +91,7 @@ class TestTimelinePageState(stateSaver: StateSaver) : PPageState() {
 }
 
 val testTimelinePageComposable = PPageComposable<TestTimelinePage, TestTimelinePageState>(
-   PageStateFactory { _, stateSaver -> TestTimelinePageState(stateSaver) },
+   PageStateFactory { _, _, stateSaver -> TestTimelinePageState(stateSaver) },
    content = { _, pageState, windowInsets ->
       TestTimeline(pageState, windowInsets)
    },

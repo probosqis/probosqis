@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.page.preview
 
 import androidx.compose.runtime.Composable
+import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.preview.StateSaverBuilder
 import com.wcaokaze.probosqis.page.PPage
@@ -33,8 +34,8 @@ fun <P : PPage, C : PPage, PS : PPageState, CS : PPageState> PPageTransitionPrev
    childPageComposable:  PPageComposable<C, CS>,
    parentPageStateSaver: StateSaverBuilder.() -> Unit = {},
    childPageStateSaver:  StateSaverBuilder.() -> Unit = {},
-   parentPageState: (P, PageState.StateSaver) -> PS = parentPageComposable.pageStateFactory.pageStateFactory,
-   childPageState:  (C, PageState.StateSaver) -> CS = childPageComposable .pageStateFactory.pageStateFactory,
+   parentPageState: (P, PageId, PageState.StateSaver) -> PS = parentPageComposable.pageStateFactory.pageStateFactory,
+   childPageState:  (C, PageId, PageState.StateSaver) -> CS = childPageComposable .pageStateFactory.pageStateFactory,
    parentPageStateModification: PS.() -> Unit = {},
    childPageStateModification:  CS.() -> Unit = {},
 ) {
