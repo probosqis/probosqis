@@ -41,7 +41,10 @@ internal fun <P : PPage, S : PPageState>
 {
    return copy(
       pageStateFactory = { page, pageId, stateSaver ->
-         pageStateFactory(page, pageId, stateSaver).also { it.pageId = pageId }
+         pageStateFactory(page, pageId, stateSaver).also {
+            it.page = page
+            it.pageId = pageId
+         }
       }
    )
 }

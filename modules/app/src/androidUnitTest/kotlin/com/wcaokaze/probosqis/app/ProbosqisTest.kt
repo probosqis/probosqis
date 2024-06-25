@@ -172,7 +172,7 @@ class ProbosqisTest {
       val errorListState = PErrorListState(
          WritableCache(
             persistentListOf(
-               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L)),
+               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L), PageImpl(0)),
             )
          ),
          itemComposables = listOf(errorItemComposableImpl)
@@ -189,7 +189,11 @@ class ProbosqisTest {
 
       rule.mainClock.autoAdvance = false
 
-      errorListState.raise(ErrorImpl(), raiserPageId = PageId(0L))
+      errorListState.raise(
+         ErrorImpl(),
+         raiserPageId = PageId(0L),
+         raiserPageClone = PageImpl(0)
+      )
       rule.waitForIdle()
 
       repeat (20) { i ->
@@ -203,7 +207,7 @@ class ProbosqisTest {
       val errorListState = PErrorListState(
          WritableCache(
             persistentListOf(
-               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L)),
+               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L), PageImpl(0)),
             )
          ),
          itemComposables = listOf(errorItemComposableImpl)
@@ -220,7 +224,11 @@ class ProbosqisTest {
 
       rule.mainClock.autoAdvance = false
 
-      errorListState.raise(ErrorImpl(), raiserPageId = PageId(0L))
+      errorListState.raise(
+         ErrorImpl(),
+         raiserPageId = PageId(0L),
+         raiserPageClone = PageImpl(0)
+      )
       rule.waitForIdle()
 
       repeat (20) { i ->
@@ -234,7 +242,7 @@ class ProbosqisTest {
       val errorListState = PErrorListState(
          WritableCache(
             persistentListOf(
-               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L)),
+               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L), PageImpl(0)),
             )
          ),
          itemComposables = listOf(errorItemComposableImpl)
@@ -272,7 +280,11 @@ class ProbosqisTest {
       rule.onNodeWithText(topAppBarText)
          .assertTopPositionInRootIsEqualTo(initialTop - 64.dp)
 
-      errorListState.raise(ErrorImpl(), raiserPageId = PageId(0L))
+      errorListState.raise(
+         ErrorImpl(),
+         raiserPageId = PageId(0L),
+         raiserPageClone = PageImpl(0)
+      )
 
       rule.onNodeWithText(topAppBarText)
          .assertTopPositionInRootIsEqualTo(initialTop)
@@ -283,7 +295,7 @@ class ProbosqisTest {
       val errorListState = PErrorListState(
          WritableCache(
             persistentListOf(
-               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L)),
+               RaisedError(RaisedError.Id(0L), ErrorImpl(), PageId(0L), PageImpl(0)),
             )
          ),
          itemComposables = listOf(errorItemComposableImpl)

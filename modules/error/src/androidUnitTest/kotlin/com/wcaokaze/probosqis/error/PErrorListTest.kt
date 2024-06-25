@@ -55,6 +55,7 @@ import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
@@ -84,12 +85,25 @@ class PErrorListTest {
       )
    }
 
+   private object DummyPage : Page()
+
+   private fun RaisedError(
+      id: Long,
+      error: PError,
+      raiserPageId: PageId
+   ) = RaisedError(
+      RaisedError.Id(id),
+      error,
+      raiserPageId,
+      raiserPageClone = DummyPage
+   )
+
    private fun createRaisedErrorList(errorCount: Int): List<RaisedError> {
       return List(errorCount) {
          RaisedError(
-            RaisedError.Id(it.toLong()),
+            id = it.toLong(),
             ErrorImpl(it),
-            raiserPageId = PageId(it.toLong())
+            raiserPageId = PageId(it.toLong()),
          )
       }
    }
@@ -128,7 +142,11 @@ class PErrorListTest {
 
       rule.onNodeWithContentDescription("Errors").assertDoesNotExist()
 
-      state.raise(ErrorImpl(0), raiserPageId = PageId(0L))
+      state.raise(
+         ErrorImpl(0),
+         raiserPageId = PageId(0L),
+         raiserPageClone = DummyPage
+      )
 
       rule.onNodeWithContentDescription("Errors").assertExists()
    }
@@ -390,17 +408,22 @@ class PErrorListTest {
 
       assertContentEquals(
          listOf(
-            RaisedError(RaisedError.Id(0L), ErrorImpl(0), PageId(0L)),
+            RaisedError(0L, ErrorImpl(0), raiserPageId = PageId(0L)),
          ),
          cache.value
       )
 
-      state.raise(RaisedError.Id(1L), ErrorImpl(1), raiserPageId = PageId(1L))
+      state.raise(
+         RaisedError.Id(1L),
+         ErrorImpl(1),
+         raiserPageId = PageId(1L),
+         raiserPageClone = DummyPage
+      )
 
       assertContentEquals(
          listOf(
-            RaisedError(RaisedError.Id(0L), ErrorImpl(0), PageId(0L)),
-            RaisedError(RaisedError.Id(1L), ErrorImpl(1), PageId(1L)),
+            RaisedError(0L, ErrorImpl(0), raiserPageId = PageId(0L)),
+            RaisedError(1L, ErrorImpl(1), raiserPageId = PageId(1L)),
          ),
          cache.value
       )
@@ -619,8 +642,8 @@ class PErrorListTest {
       }
 
       val errorList = listOf(
-         RaisedError(RaisedError.Id(0L), ButtonError(), raiserPageId = PageId(0L)),
-         RaisedError(RaisedError.Id(1L), SliderError(), raiserPageId = PageId(1L)),
+         RaisedError(0L, ButtonError(), raiserPageId = PageId(0L)),
+         RaisedError(1L, SliderError(), raiserPageId = PageId(1L)),
       )
       val state = PErrorListState(
          WritableCache(errorList),
@@ -882,8 +905,8 @@ class PErrorListTest {
       rule.runOnIdle {
          assertContentEquals(
             listOf(
-               RaisedError(RaisedError.Id(0L), ErrorImpl(0), PageId(0L)),
-               RaisedError(RaisedError.Id(2L), ErrorImpl(2), PageId(2L)),
+               RaisedError(0L, ErrorImpl(0), raiserPageId = PageId(0L)),
+               RaisedError(2L, ErrorImpl(2), raiserPageId = PageId(2L)),
             ),
             state.errors
          )
@@ -1001,8 +1024,8 @@ class PErrorListTest {
       rule.runOnIdle {
          assertContentEquals(
             listOf(
-               RaisedError(RaisedError.Id(0L), ErrorImpl(0), PageId(0L)),
-               RaisedError(RaisedError.Id(2L), ErrorImpl(2), PageId(2L)),
+               RaisedError(0L, ErrorImpl(0), raiserPageId = PageId(0L)),
+               RaisedError(2L, ErrorImpl(2), raiserPageId = PageId(2L)),
             ),
             state.errors
          )

@@ -76,6 +76,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
@@ -109,7 +110,8 @@ data class PErrorListColors(
 class RaisedError(
    val id: Id,
    val error: PError,
-   val raiserPageId: PageId
+   val raiserPageId: PageId,
+   val raiserPageClone: Page
 ) {
    @Serializable
    @JvmInline
@@ -157,16 +159,22 @@ class PErrorListState(
    }
 
    @VisibleForTesting
-   internal fun raise(id: RaisedError.Id, error: PError, raiserPageId: PageId) {
-      errors += RaisedError(id, error, raiserPageId)
+   internal fun raise(
+      id: RaisedError.Id,
+      error: PError,
+      raiserPageId: PageId,
+      raiserPageClone: Page
+   ) {
+      errors += RaisedError(id, error, raiserPageId, raiserPageClone)
       raisedTime = Clock.System.now()
    }
 
-   fun raise(error: PError, raiserPageId: PageId) {
+   fun raise(error: PError, raiserPageId: PageId, raiserPageClone: Page) {
       raise(
          id = RaisedError.Id(Clock.System.now().toEpochMilliseconds()),
          error,
-         raiserPageId
+         raiserPageId,
+         raiserPageClone
       )
    }
 

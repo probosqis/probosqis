@@ -46,12 +46,19 @@ abstract class PPageState : PageState(), KoinComponent {
    private var pageStackStateRc = RC<PageStackState>()
 
    private var _pageId: PageId? = null
-
    internal var pageId: PageId
       get() = _pageId ?: throwUninitializedException()
       set(value) {
          _pageId = value
       }
+
+   private var _page: PPage? = null
+   internal var page: PPage
+      get() = _page ?: throwUninitializedException()
+      set(value) {
+         _page = value
+      }
+
 
    fun startPage(page: PPage) {
       pageStackStateRc.get().startPage(page)
@@ -74,7 +81,7 @@ abstract class PPageState : PageState(), KoinComponent {
    }
 
    fun raiseError(error: PError) {
-      errorListState.raise(error, raiserPageId = pageId)
+      errorListState.raise(error, raiserPageId = pageId, raiserPageClone = page)
    }
 
    @Composable
