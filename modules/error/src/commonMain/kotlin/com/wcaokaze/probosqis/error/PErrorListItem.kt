@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -74,6 +75,17 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sign
+import kotlin.reflect.KClass
+
+inline fun <reified E : PError> PErrorItemComposable(
+   noinline composable: @Composable (E) -> Unit
+) = PErrorItemComposable(E::class, composable)
+
+@Immutable
+class PErrorItemComposable<E : PError>(
+   val errorClass: KClass<E>,
+   val composable: @Composable (E) -> Unit
+)
 
 @Composable
 internal fun <E : PError> PErrorListItem(

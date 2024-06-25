@@ -85,17 +85,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlin.math.roundToInt
-import kotlin.reflect.KClass
-
-inline fun <reified E : PError> PErrorItemComposable(
-   noinline composable: @Composable (E) -> Unit
-) = PErrorItemComposable(E::class, composable)
-
-@Immutable
-class PErrorItemComposable<E : PError>(
-   val errorClass: KClass<E>,
-   val composable: @Composable (E) -> Unit
-)
 
 @Immutable
 data class PErrorListColors(
