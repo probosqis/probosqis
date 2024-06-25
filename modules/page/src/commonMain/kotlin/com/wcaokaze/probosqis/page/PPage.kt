@@ -20,4 +20,11 @@ import com.wcaokaze.probosqis.capsiqum.page.Page
 import kotlinx.serialization.Serializable
 
 @Serializable
-abstract class PPage : Page()
+abstract class PPage : Page() {
+   /**
+    * サブクラスはこの関数をオーバーライドしてPPageを複製する処理を実装する必要がある。
+    * しかし原則としてPPageはImmutableであるため、基本的には
+    * `this` を返却するだけの実装でよい
+    */
+   abstract fun clone(): PPage
+}

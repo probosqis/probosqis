@@ -59,7 +59,6 @@ abstract class PPageState : PageState(), KoinComponent {
          _page = value
       }
 
-
    fun startPage(page: PPage) {
       pageStackStateRc.get().startPage(page)
    }
@@ -81,7 +80,11 @@ abstract class PPageState : PageState(), KoinComponent {
    }
 
    fun raiseError(error: PError) {
-      errorListState.raise(error, raiserPageId = pageId, raiserPageClone = page)
+      errorListState.raise(
+         error,
+         raiserPageId = pageId,
+         raiserPageClone = page.clone()
+      )
    }
 
    @Composable

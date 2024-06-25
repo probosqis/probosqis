@@ -37,7 +37,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.testpages.TestPage")
-class TestPage(val i: Int) : PPage()
+class TestPage(val i: Int) : PPage() {
+   override fun clone() = this
+}
 
 @Stable
 class TestPageState : PPageState()
