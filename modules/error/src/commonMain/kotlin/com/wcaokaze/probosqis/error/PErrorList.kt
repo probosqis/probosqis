@@ -363,9 +363,8 @@ private fun PErrorListContent(
             val itemComposable = state.getComposableFor(error) ?: TODO()
             PErrorListItem(
                error,
-               itemComposable = itemComposable.composable,
+               itemComposable,
                itemBackgroundColor,
-               onClick = itemComposable.onClick,
                onDismiss = { state.dismiss(raisedError.id) }
             )
 

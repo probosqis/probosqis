@@ -92,6 +92,22 @@ class PErrorItemComposable<E : PError>(
 @Composable
 internal fun <E : PError> PErrorListItem(
    pError: E,
+   composable: PErrorItemComposable<E>,
+   backgroundColor: Color,
+   onDismiss: () -> Unit
+) {
+   PErrorListItem(
+      pError,
+      itemComposable = composable.composable,
+      backgroundColor,
+      onClick = composable.onClick,
+      onDismiss
+   )
+}
+
+@Composable
+private fun <E : PError> PErrorListItem(
+   pError: E,
    itemComposable: @Composable (E) -> Unit,
    backgroundColor: Color,
    onClick: (E) -> Unit,
