@@ -44,10 +44,8 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.MultiColumnProbosqis
-import com.wcaokaze.probosqis.app.PErrorImpl
 import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.SingleColumnProbosqis
-import com.wcaokaze.probosqis.app.errorItemComposableImpl
 import com.wcaokaze.probosqis.app.loadErrorListOrDefault
 import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
 import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
@@ -89,7 +87,6 @@ private val allPageSerializers = persistentListOf(
 )
 
 private val allErrorItemComposables = persistentListOf(
-   errorItemComposableImpl,
    testErrorComposable,
 )
 
@@ -142,7 +139,6 @@ private val repositoriesKoinModule = module {
       AndroidPErrorListRepository(
          context = get(),
          allErrorSerializers = listOf(
-            errorSerializer<PErrorImpl>(),
             errorSerializer<TestError>(),
          ),
          allPageSerializers

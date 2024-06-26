@@ -43,6 +43,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PError
+import com.wcaokaze.probosqis.error.PErrorItemComposable
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.RaisedError
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
@@ -74,8 +75,6 @@ class ProbosqisTest {
    private class PageImpl(val i: Int) : Page()
    private class PageStateImpl : PageState()
 
-   private class ErrorImpl : PError()
-
    private val allPageComposables = listOf(
       CombinedPageComposable<PageImpl, PageStateImpl>(
          PageStateFactory { _, _, _ -> PageStateImpl() },
@@ -91,6 +90,11 @@ class ProbosqisTest {
          incomingTransitions = persistentMapOf()
       )
    )
+
+   private class ErrorImpl : PError()
+
+   private val errorItemComposableImpl = PErrorItemComposable<ErrorImpl> {
+   }
 
    private fun koinApplication(
       pageStackCount: Int = 2,

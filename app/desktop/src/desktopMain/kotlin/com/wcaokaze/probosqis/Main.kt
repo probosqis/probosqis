@@ -22,9 +22,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.wcaokaze.probosqis.app.App
 import com.wcaokaze.probosqis.app.MultiColumnProbosqis
-import com.wcaokaze.probosqis.app.PErrorImpl
 import com.wcaokaze.probosqis.app.ProbosqisState
-import com.wcaokaze.probosqis.app.errorItemComposableImpl
 import com.wcaokaze.probosqis.app.loadErrorListOrDefault
 import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
 import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
@@ -68,7 +66,6 @@ private val allPageSerializers = persistentListOf(
 )
 
 private val allErrorItemComposables = persistentListOf(
-   errorItemComposableImpl,
    testErrorComposable,
 )
 
@@ -122,7 +119,6 @@ private val repositoriesKoinModule = module {
    single<PErrorListRepository> {
       DesktopPErrorListRepository(
          allErrorSerializers = listOf(
-            errorSerializer<PErrorImpl>(),
             errorSerializer<TestError>(),
          ),
          allPageSerializers,

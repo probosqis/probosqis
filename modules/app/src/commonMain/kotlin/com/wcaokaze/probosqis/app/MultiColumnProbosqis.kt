@@ -43,24 +43,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorActionButton
-import com.wcaokaze.probosqis.error.PErrorItemComposable
 import com.wcaokaze.probosqis.error.PErrorList
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeck
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.resources.Strings
-import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
-
-@Serializable
-class PErrorImpl(val text: String) : PError()
-
-val errorItemComposableImpl = PErrorItemComposable<PErrorImpl> { error ->
-   Text(error.text)
-}
 
 @Composable
 fun MultiColumnProbosqis(
