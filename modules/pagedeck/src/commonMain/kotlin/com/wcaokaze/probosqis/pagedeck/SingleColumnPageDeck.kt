@@ -82,6 +82,10 @@ class SingleColumnPageDeckState(
          firstVisibleIndex + 1
       }
    }
+
+   override suspend fun activate(cardIndex: Int) {
+      deckState.animateScroll(cardIndex)
+   }
 }
 
 @ExperimentalMaterial3Api

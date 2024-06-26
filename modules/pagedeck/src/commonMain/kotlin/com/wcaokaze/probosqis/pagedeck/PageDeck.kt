@@ -96,6 +96,8 @@ sealed class PageDeckState(
    abstract val deckState: DeckState<LazyPageStackState>
 
    abstract val activeCardIndex: Int
+
+   abstract suspend fun activate(cardIndex: Int)
    
    private var coroutineScope: CoroutineScope? = null
    internal fun setCoroutineScope(coroutineScope: CoroutineScope) {

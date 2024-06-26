@@ -282,6 +282,50 @@ class MultiColumnDeckTest {
    }
 
    @Test
+   fun activateCard() {
+      lateinit var coroutineScope: CoroutineScope
+      lateinit var deckState: MultiColumnPageDeckState
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         deckState = remember {
+            MultiColumnPageDeckState(
+               pageDeckCache = WritableCache(createPageDeck()),
+               pageStackRepository = mockk()
+            )
+         }
+
+         MultiColumnPageDeck(
+            deckState, rememberPageSwitcherState(),
+            rememberPageStateStore(coroutineScope), pageStackCount = 2,
+            modifier = Modifier.fillMaxSize()
+         )
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, deckState.activeCardIndex)
+         assertEquals(0, deckState.deckState.firstContentCardIndex)
+      }
+
+      coroutineScope.launch {
+         deckState.activate(3)
+      }
+
+      rule.runOnIdle {
+         assertEquals(3, deckState.activeCardIndex)
+         assertEquals(2, deckState.deckState.firstContentCardIndex)
+      }
+
+      coroutineScope.launch {
+         deckState.activate(1)
+      }
+
+      rule.runOnIdle {
+         assertEquals(1, deckState.activeCardIndex)
+         assertEquals(1, deckState.deckState.firstContentCardIndex)
+      }
+   }
+
+   @Test
    fun addCard_viaDeckState() {
       lateinit var coroutineScope: CoroutineScope
       lateinit var deckState: MultiColumnPageDeckState

@@ -60,6 +60,11 @@ class MultiColumnPageDeckState(
 
    override var activeCardIndex by mutableIntStateOf(0)
       internal set
+
+   override suspend fun activate(cardIndex: Int) {
+      deckState.animateScroll(cardIndex)
+      activeCardIndex = cardIndex
+   }
 }
 
 @ExperimentalMaterial3Api
