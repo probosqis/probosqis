@@ -93,8 +93,10 @@ class ProbosqisTest {
 
    private class ErrorImpl : PError()
 
-   private val errorItemComposableImpl = PErrorItemComposable<ErrorImpl> {
-   }
+   private val errorItemComposableImpl = PErrorItemComposable<ErrorImpl>(
+      composable = {},
+      onClick = {}
+   )
 
    private fun koinApplication(
       pageStackCount: Int = 2,

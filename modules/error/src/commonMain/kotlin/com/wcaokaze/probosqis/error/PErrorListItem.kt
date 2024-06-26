@@ -78,13 +78,15 @@ import kotlin.math.sign
 import kotlin.reflect.KClass
 
 inline fun <reified E : PError> PErrorItemComposable(
-   noinline composable: @Composable (E) -> Unit
-) = PErrorItemComposable(E::class, composable)
+   noinline composable: @Composable (E) -> Unit,
+   noinline onClick: (E) -> Unit,
+) = PErrorItemComposable(E::class, composable, onClick)
 
 @Immutable
 class PErrorItemComposable<E : PError>(
    val errorClass: KClass<E>,
-   val composable: @Composable (E) -> Unit
+   val composable: @Composable (E) -> Unit,
+   val onClick: (E) -> Unit
 )
 
 @Composable
@@ -92,6 +94,7 @@ internal fun <E : PError> PErrorListItem(
    pError: E,
    itemComposable: @Composable (E) -> Unit,
    backgroundColor: Color,
+   onClick: (E) -> Unit,
    onDismiss: () -> Unit
 ) {
    val coroutineScope = rememberCoroutineScope()
@@ -107,7 +110,7 @@ internal fun <E : PError> PErrorListItem(
          .swipeDismiss(swipeDismissState, onDismiss)
          .clickable(
             interactionSource, LocalIndication.current,
-            onClick = {}
+            onClick = { onClick(pError) }
          )
          .heightIn(min = 48.dp)
          .background(backgroundColor)

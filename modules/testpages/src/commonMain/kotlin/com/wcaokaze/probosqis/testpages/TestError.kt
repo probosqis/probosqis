@@ -30,16 +30,19 @@ import kotlinx.serialization.Serializable
 @SerialName("com.wcaokaze.probosqis.testpages.TestError")
 class TestError(val time: Instant) : PError()
 
-val testErrorComposable = PErrorItemComposable<TestError> { error ->
-   val message = remember(error) {
-      val timeZone = TimeZone.currentSystemDefault()
-      val localDateTime = error.time.toLocalDateTime(timeZone)
+val testErrorComposable = PErrorItemComposable<TestError>(
+   composable = { error ->
+      val message = remember(error) {
+         val timeZone = TimeZone.currentSystemDefault()
+         val localDateTime = error.time.toLocalDateTime(timeZone)
 
-      "TestError %d/%d/%d %02d:%02d".format(
-         localDateTime.year, localDateTime.monthNumber, localDateTime.dayOfMonth,
-         localDateTime.hour, localDateTime.minute
-      )
-   }
+         "TestError %d/%d/%d %02d:%02d".format(
+            localDateTime.year, localDateTime.monthNumber, localDateTime.dayOfMonth,
+            localDateTime.hour, localDateTime.minute
+         )
+      }
 
-   Text(message)
-}
+      Text(message)
+   },
+   onClick = {}
+)

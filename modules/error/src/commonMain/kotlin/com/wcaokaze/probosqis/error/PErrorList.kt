@@ -349,8 +349,7 @@ private fun AnimatedContentScope.PErrorListHeader(
 private fun PErrorListContent(
    state: PErrorListState,
    itemBackgroundColor: Color,
-   contentColor: Color,
-   fallback: @Composable (PError) -> Unit = {}
+   contentColor: Color
 ) {
    CompositionLocalProvider(LocalContentColor provides contentColor) {
       val errors = state.errors
@@ -361,9 +360,12 @@ private fun PErrorListContent(
             key = { _, error -> error.id.value }
          ) { index, raisedError ->
             val error = raisedError.error
-            val composable = state.getComposableFor(error)?.composable ?: fallback
+            val itemComposable = state.getComposableFor(error) ?: TODO()
             PErrorListItem(
-               error, composable, itemBackgroundColor,
+               error,
+               itemComposable = itemComposable.composable,
+               itemBackgroundColor,
+               onClick = itemComposable.onClick,
                onDismiss = { state.dismiss(raisedError.id) }
             )
 

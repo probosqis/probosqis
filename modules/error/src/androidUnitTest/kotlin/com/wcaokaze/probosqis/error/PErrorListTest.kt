@@ -78,12 +78,15 @@ class PErrorListTest {
 
    private data class ErrorImpl(val i: Int) : PError()
 
-   private val errorItemComposableImpl = PErrorItemComposable<ErrorImpl> { error ->
-      Text(
-         "Error message ${error.i}",
-         modifier = Modifier.fillMaxWidth().height(48.dp)
-      )
-   }
+   private val errorItemComposableImpl = PErrorItemComposable<ErrorImpl>(
+      composable = { error ->
+         Text(
+            "Error message ${error.i}",
+            modifier = Modifier.fillMaxWidth().height(48.dp)
+         )
+      },
+      onClick = {}
+   )
 
    private object DummyPage : Page()
 
@@ -620,26 +623,32 @@ class PErrorListTest {
       val buttonTag = "button"
       var isButtonClicked by mutableStateOf(false)
       class ButtonError : PError()
-      val buttonErrorComposable = PErrorItemComposable<ButtonError> {
-         Button(
-            onClick = { isButtonClicked = true },
-            modifier = Modifier.testTag(buttonTag)
-         ) {
-            Text("")
-         }
-      }
+      val buttonErrorComposable = PErrorItemComposable<ButtonError>(
+         composable = {
+            Button(
+               onClick = { isButtonClicked = true },
+               modifier = Modifier.testTag(buttonTag)
+            ) {
+               Text("")
+            }
+         },
+         onClick = {}
+      )
 
       val sliderTag = "slider"
       var sliderValue by mutableStateOf(0.0f)
       class SliderError : PError()
-      val sliderErrorComposable = PErrorItemComposable<SliderError> {
-         Slider(
-            value = sliderValue,
-            onValueChange = { sliderValue = it },
-            steps = 10,
-            modifier = Modifier.testTag(sliderTag)
-         )
-      }
+      val sliderErrorComposable = PErrorItemComposable<SliderError>(
+         composable = {
+            Slider(
+               value = sliderValue,
+               onValueChange = { sliderValue = it },
+               steps = 10,
+               modifier = Modifier.testTag(sliderTag)
+            )
+         },
+         onClick = {}
+      )
 
       val errorList = listOf(
          RaisedError(0L, ButtonError(), raiserPageId = PageId(0L)),
