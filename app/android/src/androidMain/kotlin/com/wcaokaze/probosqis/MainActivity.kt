@@ -144,7 +144,8 @@ private val repositoriesKoinModule = module {
          allErrorSerializers = listOf(
             errorSerializer<PErrorImpl>(),
             errorSerializer<TestError>(),
-         )
+         ),
+         allPageSerializers
       )
    }
 }

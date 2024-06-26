@@ -125,6 +125,7 @@ private val repositoriesKoinModule = module {
             errorSerializer<PErrorImpl>(),
             errorSerializer<TestError>(),
          ),
+         allPageSerializers,
          probosqisDataDir
       )
    }

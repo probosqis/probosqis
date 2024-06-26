@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.error
 
+import com.wcaokaze.probosqis.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.loadCache
@@ -25,8 +26,9 @@ import java.io.IOException
 
 class DesktopPErrorListRepository(
    allErrorSerializers: List<PErrorListRepository.PErrorSerializer<*>>,
+   allPageSerializers: List<PageStackRepository.PageSerializer<*>>,
    directory: File
-) : AbstractPErrorListRepository(allErrorSerializers) {
+) : AbstractPErrorListRepository(allErrorSerializers, allPageSerializers) {
    private val file = File(directory, "MrVA3boZqIa78Man")
 
    /** @throws IOException */

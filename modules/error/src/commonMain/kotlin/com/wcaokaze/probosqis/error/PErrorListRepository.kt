@@ -16,6 +16,8 @@
 
 package com.wcaokaze.probosqis.error
 
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -43,7 +45,8 @@ interface PErrorListRepository {
 
 abstract class AbstractPErrorListRepository
    internal constructor(
-      allErrorSerializers: List<PErrorListRepository.PErrorSerializer<*>>
+      allErrorSerializers: List<PErrorListRepository.PErrorSerializer<*>>,
+      allPageSerializers: List<PageStackRepository.PageSerializer<*>>
    )
    : PErrorListRepository
 {
@@ -53,10 +56,22 @@ abstract class AbstractPErrorListRepository
       subclass(errorSerializer.errorClass, errorSerializer.serializer)
    }
 
+   private fun <P : Page> PolymorphicModuleBuilder<Page>.subclass(
+      pageSerializer: PageStackRepository.PageSerializer<P>
+   ) {
+      subclass(pageSerializer.pageClass, pageSerializer.serializer)
+   }
+
    protected val json = Json {
       serializersModule = SerializersModule {
          polymorphic(PError::class) {
             for (s in allErrorSerializers) {
+               subclass(s)
+            }
+         }
+
+         polymorphic(Page::class) {
+            for (s in allPageSerializers) {
                subclass(s)
             }
          }
