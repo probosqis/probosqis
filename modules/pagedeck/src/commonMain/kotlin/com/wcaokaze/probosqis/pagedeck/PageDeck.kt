@@ -136,7 +136,7 @@ sealed class PageDeckState(
                   snapshotFlow { deckState.layoutInfo.cardsInfo }
                      .first { cards -> cards.any { it.key == pageStack.id } }
 
-                  deckState.animateScroll(index)
+                  activate(index)
                }
                delay(50.milliseconds)
             } finally {

@@ -33,6 +33,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.deck.PositionInDeck
+import com.wcaokaze.probosqis.capsiqum.deck.get
 import com.wcaokaze.probosqis.capsiqum.deck.sequence
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
@@ -53,6 +54,8 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.fail
 
 @RunWith(RobolectricTestRunner::class)
@@ -385,7 +388,10 @@ class MultiColumnDeckTest {
       }
 
       coroutineScope.launch {
-         deckState.navigateToPage(PageId(103), fallbackPage = { fail() })
+         deckState.navigateToPage(
+            PageId(103),
+            fallbackPage = fun (): SavedPageState { fail() }
+         )
       }
 
       rule.runOnIdle {
@@ -394,12 +400,168 @@ class MultiColumnDeckTest {
       }
 
       coroutineScope.launch {
-         deckState.navigateToPage(PageId(101), fallbackPage = { fail() })
+         deckState.navigateToPage(
+            PageId(101),
+            fallbackPage = fun (): SavedPageState { fail() }
+         )
       }
 
       rule.runOnIdle {
          assertEquals(1, deckState.activeCardIndex)
          assertEquals(1, deckState.deckState.firstContentCardIndex)
+      }
+   }
+
+   @Test
+   fun navigateToPage_fallback() {
+      val pageDeck = createPageDeck(
+         0L to listOf(100),
+         1L to listOf(101),
+         2L to listOf(102),
+         3L to listOf(103),
+      )
+
+      lateinit var coroutineScope: CoroutineScope
+      lateinit var deckState: MultiColumnPageDeckState
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         deckState = remember {
+            MultiColumnPageDeckState(
+               pageDeckCache = WritableCache(pageDeck),
+               pageStackRepository = mockk {
+                  every { savePageStack(any()) } answers { WritableCache(firstArg()) }
+               }
+            )
+         }
+
+         MultiColumnPageDeck(
+            deckState, rememberPageSwitcherState(),
+            rememberPageStateStore(coroutineScope), pageStackCount = 2,
+            modifier = Modifier.fillMaxSize()
+         )
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, deckState.activeCardIndex)
+         assertEquals(0, deckState.deckState.firstContentCardIndex)
+      }
+
+      coroutineScope.launch {
+         deckState.navigateToPage(
+            PageId(104),
+            fallbackPage = { SavedPageState(PageId(204L), PageImpl(4)) }
+         )
+      }
+
+      rule.runOnIdle {
+         assertEquals(1, deckState.activeCardIndex)
+         assertEquals(0, deckState.deckState.firstContentCardIndex)
+
+         val pageStack = deckState.deck[1].content.pageStackCache.value
+         assertNull(pageStack.tailOrNull())
+         assertEquals(PageId(204L), pageStack.head.id)
+         val page = pageStack.head.page
+         assertIs<PageImpl>(page)
+         assertEquals(4, page.i)
+      }
+
+      coroutineScope.launch {
+         deckState.activate(1)
+
+         deckState.navigateToPage(
+            PageId(104),
+            fallbackPage = { SavedPageState(PageId(205L), PageImpl(5)) }
+         )
+      }
+
+      rule.runOnIdle {
+         assertEquals(2, deckState.activeCardIndex)
+         assertEquals(1, deckState.deckState.firstContentCardIndex)
+
+         val pageStack = deckState.deck[2].content.pageStackCache.value
+         assertNull(pageStack.tailOrNull())
+         assertEquals(PageId(205L), pageStack.head.id)
+         val page = pageStack.head.page
+         assertIs<PageImpl>(page)
+         assertEquals(5, page.i)
+      }
+
+      coroutineScope.launch {
+         deckState.activate(5)
+
+         deckState.navigateToPage(
+            PageId(104),
+            fallbackPage = { SavedPageState(PageId(206L), PageImpl(6)) }
+         )
+      }
+
+      rule.runOnIdle {
+         assertEquals(6, deckState.activeCardIndex)
+         assertEquals(5, deckState.deckState.firstContentCardIndex)
+
+         val pageStack = deckState.deck[6].content.pageStackCache.value
+         assertNull(pageStack.tailOrNull())
+         assertEquals(PageId(206L), pageStack.head.id)
+         val page = pageStack.head.page
+         assertIs<PageImpl>(page)
+         assertEquals(6, page.i)
+      }
+   }
+
+   @Test
+   fun navigateToPage_fallback_ifTargetPageIsBuried() {
+      val pageDeck = createPageDeck(
+         0L to listOf(100),
+         1L to listOf(101),
+         2L to listOf(202, 102),
+         3L to listOf(103),
+      )
+
+      lateinit var coroutineScope: CoroutineScope
+      lateinit var deckState: MultiColumnPageDeckState
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         deckState = remember {
+            MultiColumnPageDeckState(
+               pageDeckCache = WritableCache(pageDeck),
+               pageStackRepository = mockk {
+                  every { savePageStack(any()) } answers { WritableCache(firstArg()) }
+               }
+            )
+         }
+
+         MultiColumnPageDeck(
+            deckState, rememberPageSwitcherState(),
+            rememberPageStateStore(coroutineScope), pageStackCount = 2,
+            modifier = Modifier.fillMaxSize()
+         )
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, deckState.activeCardIndex)
+         assertEquals(0, deckState.deckState.firstContentCardIndex)
+      }
+
+      coroutineScope.launch {
+         deckState.navigateToPage(
+            PageId(102),
+            fallbackPage = { SavedPageState(PageId(204L), PageImpl(4)) }
+         )
+      }
+
+      rule.runOnIdle {
+         assertEquals(1, deckState.activeCardIndex)
+         assertEquals(0, deckState.deckState.firstContentCardIndex)
+
+         val actual = deckState.deck.sequence()
+            .map { it.content.pageStackCache.value }
+            .map { it.head.id.value }
+            .toList()
+
+         assertContentEquals(
+            listOf(100L, 204L, 101L, 202L, 103L),
+            actual
+         )
       }
    }
 
@@ -442,12 +604,14 @@ class MultiColumnDeckTest {
       rule.runOnIdle {
          assertCardNumbers(listOf(0, 1), deckState.deck)
          assertEquals(0, deckState.deckState.firstContentCardIndex)
+         assertEquals(0, deckState.activeCardIndex)
       }
 
       rule.onNodeWithText("Add Card 1").performClick()
       rule.runOnIdle {
          assertCardNumbers(listOf(0, 1, 101), deckState.deck)
          assertEquals(1, deckState.deckState.firstContentCardIndex)
+         assertEquals(2, deckState.activeCardIndex)
       }
 
       coroutineScope.launch {
@@ -458,12 +622,14 @@ class MultiColumnDeckTest {
       rule.runOnIdle {
          assertCardNumbers(listOf(0, 100, 1, 101), deckState.deck)
          assertEquals(0, deckState.deckState.firstContentCardIndex)
+         assertEquals(1, deckState.activeCardIndex)
       }
 
       rule.onNodeWithText("Add Card 100").performClick()
       rule.runOnIdle {
          assertCardNumbers(listOf(0, 100, 200, 1, 101), deckState.deck)
          assertEquals(1, deckState.deckState.firstContentCardIndex)
+         assertEquals(2, deckState.activeCardIndex)
       }
    }
 }

@@ -19,13 +19,39 @@ package com.wcaokaze.probosqis.pagedeck
 import com.wcaokaze.probosqis.capsiqum.deck.sequence
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import kotlin.experimental.ExperimentalTypeInference
 
-internal suspend fun PageDeckState.navigateToPage(pageId: PageId, fallbackPage: () -> Page) {
+internal suspend fun PageDeckState.navigateToPage(
+   pageId: PageId,
+   fallbackPage: () -> Page
+) {
+   navigateToPage(
+      pageId,
+      fallbackPage = {
+         val page = fallbackPage()
+         SavedPageState(
+            PageId(),
+            page
+         )
+      }
+   )
+}
+
+@JvmName("navigateToPageWithFallbackSavedPageState")
+@OptIn(ExperimentalTypeInference::class)
+@OverloadResolutionByLambdaReturnType
+internal suspend fun PageDeckState.navigateToPage(
+   pageId: PageId,
+   fallbackPage: () -> SavedPageState
+) {
    val idx = deck.sequence()
       .indexOfFirst { it.content.pageStackCache.value.head.id == pageId }
 
    if (idx < 0) {
-      TODO()
+      val pageStack = PageStack(fallbackPage())
+      addColumn(activeCardIndex + 1, pageStack)
    } else {
       activate(idx)
    }
