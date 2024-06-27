@@ -135,20 +135,15 @@ class MultiColumnDeckTest {
    private fun createPageDeck(
       vararg pageStacks: Pair<Long, List<Int>>
    ): PageDeck {
-      fun createSavedPageState(i: Int) = SavedPageState(PageId(i.toLong()), PageImpl(i))
-
       return Deck(
          pageStacks.map { (id, pages) ->
-            val bottom = PageStack(
-               PageStack.Id(id),
-               createSavedPageState(pages.last())
-            )
+            val savedPageStates
+               = pages.map { SavedPageState(PageId(it.toLong()), PageImpl(it)) }
 
-            val pageStack = pages.dropLast(1)
-               .reversed()
-               .fold(bottom) { acc, i ->
-                  acc.added(createSavedPageState(i))
-               }
+            val pageStackId = PageStack.Id(id)
+            val bottom = savedPageStates.first()
+            val pageStack = savedPageStates.drop(1)
+               .fold(PageStack(pageStackId, bottom), PageStack::added)
 
             val lazyPageStackState = LazyPageStackState(
                PageStack.Id(id), WritableCache(pageStack), initialVisibility = true
@@ -513,7 +508,7 @@ class MultiColumnDeckTest {
       val pageDeck = createPageDeck(
          0L to listOf(100),
          1L to listOf(101),
-         2L to listOf(202, 102),
+         2L to listOf(102, 202),
          3L to listOf(103),
       )
 
