@@ -53,6 +53,7 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.fail
 
 @RunWith(RobolectricTestRunner::class)
 class MultiColumnDeckTest {
@@ -125,6 +126,32 @@ class MultiColumnDeckTest {
       PageStateStore(
          listOf(pageComposable.pageStateFactory),
          coroutineScope
+      )
+   }
+
+   private fun createPageDeck(
+      vararg pageStacks: Pair<Long, List<Int>>
+   ): PageDeck {
+      fun createSavedPageState(i: Int) = SavedPageState(PageId(i.toLong()), PageImpl(i))
+
+      return Deck(
+         pageStacks.map { (id, pages) ->
+            val bottom = PageStack(
+               PageStack.Id(id),
+               createSavedPageState(pages.last())
+            )
+
+            val pageStack = pages.dropLast(1)
+               .reversed()
+               .fold(bottom) { acc, i ->
+                  acc.added(createSavedPageState(i))
+               }
+
+            val lazyPageStackState = LazyPageStackState(
+               PageStack.Id(id), WritableCache(pageStack), initialVisibility = true
+            )
+            Deck.Card(lazyPageStackState)
+         }
       )
    }
 
@@ -317,6 +344,57 @@ class MultiColumnDeckTest {
 
       coroutineScope.launch {
          deckState.activate(1)
+      }
+
+      rule.runOnIdle {
+         assertEquals(1, deckState.activeCardIndex)
+         assertEquals(1, deckState.deckState.firstContentCardIndex)
+      }
+   }
+
+   @Test
+   fun navigateToPage() {
+      val pageDeck = createPageDeck(
+         0L to listOf(100),
+         1L to listOf(101),
+         2L to listOf(102),
+         3L to listOf(103),
+      )
+
+      lateinit var coroutineScope: CoroutineScope
+      lateinit var deckState: MultiColumnPageDeckState
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         deckState = remember {
+            MultiColumnPageDeckState(
+               pageDeckCache = WritableCache(pageDeck),
+               pageStackRepository = mockk()
+            )
+         }
+
+         MultiColumnPageDeck(
+            deckState, rememberPageSwitcherState(),
+            rememberPageStateStore(coroutineScope), pageStackCount = 2,
+            modifier = Modifier.fillMaxSize()
+         )
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, deckState.activeCardIndex)
+         assertEquals(0, deckState.deckState.firstContentCardIndex)
+      }
+
+      coroutineScope.launch {
+         deckState.navigateToPage(PageId(103), fallbackPage = { fail() })
+      }
+
+      rule.runOnIdle {
+         assertEquals(3, deckState.activeCardIndex)
+         assertEquals(2, deckState.deckState.firstContentCardIndex)
+      }
+
+      coroutineScope.launch {
+         deckState.navigateToPage(PageId(101), fallbackPage = { fail() })
       }
 
       rule.runOnIdle {
