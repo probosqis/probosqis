@@ -118,6 +118,9 @@ internal fun PErrorListItem(
             }
          }
 
+         state.errors = state.errors.filterNot { it.id == raisedError.id }
+         state.hide()
+
          val onClick = itemComposable.onClick
          with (scope) {
             onClick(raisedError.error)

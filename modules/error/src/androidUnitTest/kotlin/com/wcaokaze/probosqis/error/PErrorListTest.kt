@@ -702,6 +702,42 @@ class PErrorListTest {
    }
 
    @Test
+   fun errorItem_removedAfterClicked() {
+      val errorList = createRaisedErrorList(2)
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state, onRequestNavigateToPage = { _, _ -> })
+         }
+      }
+
+      state.show()
+
+      rule.onNodeWithText("Error message 0").performClick()
+
+      rule.runOnIdle {
+         assertContentEquals(
+            listOf(
+               RaisedError(1L, ErrorImpl(1), raiserPageId = PageId(1L)),
+            ),
+            state.errors
+         )
+
+         assertFalse(state.isShown)
+      }
+   }
+
+   @Test
    fun errorItemComposableScope_navigateToPage() {
       class RaiserPage : Page()
 
