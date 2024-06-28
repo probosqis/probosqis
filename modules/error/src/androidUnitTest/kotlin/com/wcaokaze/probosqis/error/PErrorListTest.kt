@@ -59,6 +59,9 @@ import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -69,6 +72,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -85,7 +89,7 @@ class PErrorListTest {
             modifier = Modifier.fillMaxWidth().height(48.dp)
          )
       },
-      onClick = {}
+      onClick = { navigateToPage() }
    )
 
    private object DummyPage : Page()
@@ -114,6 +118,7 @@ class PErrorListTest {
    @Composable
    private fun PErrorList(
       state: PErrorListState,
+      onRequestNavigateToPage: (PageId, Page) -> Unit = { _, _ -> fail() },
       windowInsets: WindowInsets = WindowInsets(0)
    ) {
       PErrorList(
@@ -125,6 +130,7 @@ class PErrorListTest {
             header = Color.DarkGray,
             headerContent = Color.Black,
          ),
+         onRequestNavigateToPage,
          windowInsets
       )
    }
@@ -692,6 +698,49 @@ class PErrorListTest {
       }
       rule.runOnIdle {
          assertEquals(1.0f, sliderValue)
+      }
+   }
+
+   @Test
+   fun errorItemComposableScope_navigateToPage() {
+      class RaiserPage : Page()
+
+      val raiserPageClone = RaiserPage()
+      val errorList = listOf(
+         RaisedError(
+            RaisedError.Id(0L),
+            ErrorImpl(0),
+            raiserPageId = PageId(42L),
+            raiserPageClone
+         )
+      )
+      val state = PErrorListState(
+         WritableCache(errorList),
+         itemComposables = listOf(errorItemComposableImpl)
+      )
+
+      val spyRequestNavigateToPage: (PageId, Page) -> Unit = mockk {
+         every { this@mockk.invoke(any(), any()) } returns Unit
+      }
+
+      rule.setContent {
+         Box {
+            PErrorActionButton(
+               state,
+               onClick = {},
+               modifier = Modifier.align(Alignment.TopEnd)
+            )
+
+            PErrorList(state, spyRequestNavigateToPage)
+         }
+      }
+
+      state.show()
+
+      rule.onNodeWithText("Error message 0").performClick()
+
+      rule.runOnIdle {
+         verify { spyRequestNavigateToPage(PageId(42L), raiserPageClone) }
       }
    }
 

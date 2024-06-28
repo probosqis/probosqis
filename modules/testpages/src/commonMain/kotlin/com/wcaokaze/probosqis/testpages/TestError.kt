@@ -44,5 +44,5 @@ val testErrorComposable = PErrorItemComposable<TestError>(
 
       Text(message)
    },
-   onClick = {}
+   onClick = { navigateToPage() }
 )

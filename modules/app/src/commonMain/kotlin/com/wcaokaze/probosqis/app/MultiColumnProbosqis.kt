@@ -37,6 +37,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,7 +50,9 @@ import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeck
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.navigateToPage
 import com.wcaokaze.probosqis.resources.Strings
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @Composable
@@ -92,9 +95,19 @@ fun MultiColumnProbosqis(
          )
       }
 
+      val coroutineScope = rememberCoroutineScope()
+
       PErrorList(
          errorListState,
-         colorScheme.errorListColors
+         colorScheme.errorListColors,
+         onRequestNavigateToPage = { pageId, pageClone ->
+            coroutineScope.launch {
+               state.pageDeckState.navigateToPage(
+                  pageId,
+                  fallbackPage = { pageClone }
+               )
+            }
+         }
       )
    }
 }

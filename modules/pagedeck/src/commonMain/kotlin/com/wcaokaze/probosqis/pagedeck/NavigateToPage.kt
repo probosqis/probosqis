@@ -23,7 +23,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import kotlin.experimental.ExperimentalTypeInference
 
-internal suspend fun PageDeckState.navigateToPage(
+suspend fun PageDeckState.navigateToPage(
    pageId: PageId,
    fallbackPage: () -> Page
 ) {

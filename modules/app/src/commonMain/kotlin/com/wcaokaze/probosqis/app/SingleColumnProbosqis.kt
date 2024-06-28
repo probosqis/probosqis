@@ -73,6 +73,7 @@ import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.navigateToPage
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -137,9 +138,19 @@ fun SingleColumnProbosqis(
          )
       }
 
+      val coroutineScope = rememberCoroutineScope()
+
       PErrorList(
          errorListState,
-         colorScheme.errorListColors
+         colorScheme.errorListColors,
+         onRequestNavigateToPage = { pageId, pageClone ->
+            coroutineScope.launch {
+               state.pageDeckState.navigateToPage(
+                  pageId,
+                  fallbackPage = { pageClone }
+               )
+            }
+         }
       )
    }
 }

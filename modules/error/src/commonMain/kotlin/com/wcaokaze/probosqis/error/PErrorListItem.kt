@@ -70,6 +70,8 @@ import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -77,31 +79,51 @@ import kotlin.math.roundToInt
 import kotlin.math.sign
 import kotlin.reflect.KClass
 
+interface PErrorItemComposableScope {
+   fun navigateToPage()
+}
+
 inline fun <reified E : PError> PErrorItemComposable(
    noinline composable: @Composable (E) -> Unit,
-   noinline onClick: (E) -> Unit,
+   noinline onClick: PErrorItemComposableScope.(E) -> Unit
 ) = PErrorItemComposable(E::class, composable, onClick)
 
 @Immutable
 class PErrorItemComposable<E : PError>(
    val errorClass: KClass<E>,
    val composable: @Composable (E) -> Unit,
-   val onClick: (E) -> Unit
+   val onClick: PErrorItemComposableScope.(E) -> Unit
 )
 
 @Composable
-internal fun <E : PError> PErrorListItem(
-   pError: E,
-   composable: PErrorItemComposable<E>,
+internal fun PErrorListItem(
+   state: PErrorListState,
+   raisedError: RaisedError,
    backgroundColor: Color,
-   onDismiss: () -> Unit
+   onRequestNavigateToPage: (PageId, Page) -> Unit,
 ) {
+   val itemComposable = state.getComposableFor(raisedError.error) ?: TODO()
+
    PErrorListItem(
-      pError,
-      itemComposable = composable.composable,
+      raisedError.error,
+      itemComposable = itemComposable.composable,
       backgroundColor,
-      onClick = composable.onClick,
-      onDismiss
+      onClick = {
+         val scope = object : PErrorItemComposableScope {
+            override fun navigateToPage() {
+               onRequestNavigateToPage(
+                  raisedError.raiserPageId,
+                  raisedError.raiserPageClone
+               )
+            }
+         }
+
+         val onClick = itemComposable.onClick
+         with (scope) {
+            onClick(raisedError.error)
+         }
+      },
+      onDismiss = { state.dismiss(raisedError.id) }
    )
 }
 

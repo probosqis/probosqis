@@ -189,6 +189,7 @@ internal expect fun DismissHandler(onDismissRequest: () -> Unit)
 fun PErrorList(
    state: PErrorListState,
    colors: PErrorListColors,
+   onRequestNavigateToPage: (PageId, Page) -> Unit,
    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    Layout(
@@ -204,6 +205,7 @@ fun PErrorList(
          PErrorListSheet(
             state,
             colors,
+            onRequestNavigateToPage,
             modifier = Modifier
                .windowInsetsPadding(
                   // PErrorListContentはTopEndがPErrorActionButtonと合う位置に
@@ -258,6 +260,7 @@ private fun <T> animSpec(easing: Easing = LinearEasing)
 private fun PErrorListSheet(
    state: PErrorListState,
    colors: PErrorListColors,
+   onRequestNavigateToPage: (PageId, Page) -> Unit,
    modifier: Modifier = Modifier
 ) {
    val transition = updateTransition(state.isShown)
@@ -300,7 +303,10 @@ private fun PErrorListSheet(
          ) {
             PErrorListHeader(state, colors.header, colors.headerContent)
 
-            PErrorListContent(state, colors.itemBackground, colors.content)
+            PErrorListContent(
+               state, colors.itemBackground, colors.content,
+               onRequestNavigateToPage
+            )
          }
       }
    }
@@ -349,7 +355,8 @@ private fun AnimatedContentScope.PErrorListHeader(
 private fun PErrorListContent(
    state: PErrorListState,
    itemBackgroundColor: Color,
-   contentColor: Color
+   contentColor: Color,
+   onRequestNavigateToPage: (PageId, Page) -> Unit
 ) {
    CompositionLocalProvider(LocalContentColor provides contentColor) {
       val errors = state.errors
@@ -359,13 +366,11 @@ private fun PErrorListContent(
             errors,
             key = { _, error -> error.id.value }
          ) { index, raisedError ->
-            val error = raisedError.error
-            val itemComposable = state.getComposableFor(error) ?: TODO()
             PErrorListItem(
-               error,
-               itemComposable,
+               state,
+               raisedError,
                itemBackgroundColor,
-               onDismiss = { state.dismiss(raisedError.id) }
+               onRequestNavigateToPage
             )
 
             if (index < errors.lastIndex) {
