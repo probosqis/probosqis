@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis
 
-import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -34,7 +33,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
@@ -46,105 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.MultiColumnProbosqis
 import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.SingleColumnProbosqis
-import com.wcaokaze.probosqis.app.loadErrorListOrDefault
-import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
-import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.error.errorSerializer
-import com.wcaokaze.probosqis.page.PPageStateStore
-import com.wcaokaze.probosqis.page.PPageSwitcherState
-import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
-import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
-import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
-import com.wcaokaze.probosqis.pagedeck.PageStackRepository
-import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
-import com.wcaokaze.probosqis.testpages.TestError
-import com.wcaokaze.probosqis.testpages.TestNotePage
-import com.wcaokaze.probosqis.testpages.TestPage
-import com.wcaokaze.probosqis.testpages.TestTimelinePage
-import com.wcaokaze.probosqis.testpages.testErrorComposable
-import com.wcaokaze.probosqis.testpages.testNotePageComposable
-import com.wcaokaze.probosqis.testpages.testPageComposable
-import com.wcaokaze.probosqis.testpages.testTimelinePageComposable
-import kotlinx.collections.immutable.persistentListOf
-import org.koin.compose.KoinApplication
-import org.koin.dsl.module
-
-private val allPageComposables = persistentListOf(
-   testPageComposable,
-   testTimelinePageComposable,
-   testNotePageComposable,
-)
-
-private val allPageSerializers = persistentListOf(
-   pageSerializer<TestPage>(),
-   pageSerializer<TestTimelinePage>(),
-   pageSerializer<TestNotePage>(),
-)
-
-private val allErrorItemComposables = persistentListOf(
-   testErrorComposable,
-)
-
-private val koinModule = module {
-   single { PPageSwitcherState(allPageComposables) }
-
-   single {
-      PPageStateStore(
-         allPageComposables,
-         appCoroutineScope = get()
-      )
-   }
-
-   factory {
-      val pageDeckCache = loadPageDeckOrDefault(
-         pageDeckRepository = get(),
-         pageStackRepository = get()
-      )
-
-      MultiColumnPageDeckState(pageDeckCache, pageStackRepository = get())
-   }
-
-   factory {
-      val pageDeckCache = loadPageDeckOrDefault(
-         pageDeckRepository = get(),
-         pageStackRepository = get()
-      )
-
-      SingleColumnPageDeckState(pageDeckCache, pageStackRepository = get())
-   }
-
-   single {
-      PErrorListState(
-         loadErrorListOrDefault(errorListRepository = get()),
-         allErrorItemComposables
-      )
-   }
-}
-
-private val repositoriesKoinModule = module {
-   single<PageDeckRepository> {
-      AndroidPageDeckRepository(context = get(), pageStackRepository = get())
-   }
-
-   single<PageStackRepository> {
-      AndroidPageStackRepository(context = get(), allPageSerializers)
-   }
-
-   single<PErrorListRepository> {
-      AndroidPErrorListRepository(
-         context = get(),
-         allErrorSerializers = listOf(
-            errorSerializer<TestError>(),
-         ),
-         allPageSerializers
-      )
-   }
-}
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -152,35 +52,22 @@ class MainActivity : ComponentActivity() {
       super.onCreate(savedInstanceState)
 
       setContent {
-         val appCoroutineScope = rememberCoroutineScope()
+         ProbosqisTheme {
+            val probosqisState = remember { ProbosqisState() }
 
-         KoinApplication(
-            application = {
-               val appKoinModule = module {
-                  single<Context> { this@MainActivity }
-                  single { appCoroutineScope }
-               }
-
-               modules(koinModule, repositoriesKoinModule, appKoinModule)
+            BackHandler {
+               probosqisState.pageDeckState.activePageStackState.finishPage()
             }
-         ) {
-            ProbosqisTheme {
-               val probosqisState = remember { ProbosqisState() }
 
-               BackHandler {
-                  probosqisState.pageDeckState.activePageStackState.finishPage()
-               }
+            NavigationBarController()
 
-               NavigationBarController()
+            @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+            val windowSizeClass = calculateWindowSizeClass(activity = this)
 
-               @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-               val windowSizeClass = calculateWindowSizeClass(activity = this)
-
-               if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
-                  MultiColumnProbosqis(probosqisState)
-               } else {
-                  SingleColumnProbosqis(probosqisState)
-               }
+            if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
+               MultiColumnProbosqis(probosqisState)
+            } else {
+               SingleColumnProbosqis(probosqisState)
             }
          }
       }
