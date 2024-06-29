@@ -90,7 +90,7 @@ fun <P : Page, S : PageState> PagePreview(
    val stateSaver = rememberPreviewStateSaver {}
 
    val pageState = remember {
-      pageComposable.pageStateFactory.pageStateFactory(page, stateSaver)
+      pageComposable.pageStateFactory.pageStateFactory(page, savedPageState.id, stateSaver)
    }
 
    Surface(

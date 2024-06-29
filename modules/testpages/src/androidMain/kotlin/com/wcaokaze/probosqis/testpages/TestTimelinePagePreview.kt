@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.testpages
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
@@ -23,10 +23,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
 import com.wcaokaze.probosqis.page.preview.PPagePreview
 import com.wcaokaze.probosqis.page.preview.PPageTransitionPreview
-import com.wcaokaze.probosqis.testpages.TestNotePage
-import com.wcaokaze.probosqis.testpages.TestTimelinePage
-import com.wcaokaze.probosqis.testpages.testNotePageComposable
-import com.wcaokaze.probosqis.testpages.testTimelinePageComposable
 
 @Preview
 @Composable
