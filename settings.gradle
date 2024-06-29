@@ -40,6 +40,7 @@ dependencyResolutionManagement {
          version('compose-compiler', '1.5.7')
          version('compose-material3', '1.2.1')
          version('accompanist', '0.32.0')
+         version('koin', '3.5.6')
          version('roborazzi', '1.7.0-rc-1')
 
          plugin('kotlin-multiplatform', 'org.jetbrains.kotlin.multiplatform').versionRef('kotlin')
@@ -60,6 +61,9 @@ dependencyResolutionManagement {
          library('accompanist-pager', 'com.google.accompanist', 'accompanist-pager').versionRef('accompanist')
 
          library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.6.2')
+
+         library('koin-core', 'io.insert-koin', 'koin-core').versionRef('koin')
+         library('koin-compose', 'io.insert-koin', 'koin-compose').version('1.1.5')
 
          library('kotlin-test-junit', 'org.jetbrains.kotlin', 'kotlin-test-junit').versionRef('kotlin')
          library('mockk', 'io.mockk', 'mockk').version('1.13.8')
@@ -83,10 +87,16 @@ include ':app:desktop'
 // include ':app:js'
 includeSubmodule ':panoptiqon', 'modules/panoptiqon/panoptiqon'
 includeSubmodule ':panoptiqon-compose', 'modules/panoptiqon/panoptiqon-compose'
-includeSubmodule ':capsiqum', 'modules/capsiqum'
+includeSubmodule ':capsiqum-page', 'modules/capsiqum/capsiqum-page'
+includeSubmodule ':capsiqum-deck', 'modules/capsiqum/capsiqum-deck'
+includeSubmodule ':capsiqum-transition', 'modules/capsiqum/capsiqum-transition'
 include ':modules:app'
+include ':modules:error'
 include ':modules:ext:kotlin'
 include ':modules:ext:kotlinTest'
 include ':modules:ext:android'
 include ':modules:ext:compose'
+include ':modules:page'
+include ':modules:pagedeck'
 include ':modules:resources'
+include ':modules:testpages'

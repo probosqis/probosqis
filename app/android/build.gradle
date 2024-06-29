@@ -51,8 +51,16 @@ android {
 kotlin {
    sourceSets {
       androidMain.dependencies {
-         implementation project(':capsiqum')
+         implementation project(':panoptiqon')
+         implementation project(':panoptiqon-compose')
+         implementation project(':capsiqum-page')
+         implementation project(':capsiqum-deck')
+         implementation project(':capsiqum-transition')
          implementation project(':modules:app')
+         implementation project(':modules:error')
+         implementation project(':modules:page')
+         implementation project(':modules:pagedeck')
+         implementation project(':modules:testpages')
          implementation project(':modules:resources')
          implementation libs.androidx.compose.material3.window.size
       }

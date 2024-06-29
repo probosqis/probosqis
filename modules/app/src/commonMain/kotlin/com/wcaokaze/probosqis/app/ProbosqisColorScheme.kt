@@ -24,31 +24,60 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.error.PErrorListColors
+import com.wcaokaze.probosqis.pagedeck.PageStackColors
 
 @Composable
 fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisColorScheme {
    val materialColorScheme = MaterialTheme.colorScheme
 
-   return remember(materialColorScheme) {
-      SingleColumnProbosqisColorScheme(
-         background = materialColorScheme.background,
-         appBar = materialColorScheme.surfaceColorAtElevation(3.dp),
-         pageStackBackground = materialColorScheme.surface,
-         pageStackFooter = materialColorScheme.surfaceColorAtElevation(3.dp),
-      )
+   val pageStackBackground = materialColorScheme.surface
+
+   val pageStackActivationAnimColor: Color
+   val errorListBackgroundColor: Color
+   val errorListItemBackgroundColor: Color
+
+   if (isSystemInDarkTheme()) {
+      pageStackActivationAnimColor = materialColorScheme.surfaceTint.copy(alpha = 0.09f)
+      errorListBackgroundColor = pageStackBackground
+      errorListItemBackgroundColor = materialColorScheme.surfaceColorAtElevation(1.dp)
+   } else {
+      pageStackActivationAnimColor = materialColorScheme.surfaceTint.copy(alpha = 0.04f)
+      errorListBackgroundColor = materialColorScheme.surfaceColorAtElevation(1.dp)
+      errorListItemBackgroundColor = pageStackBackground
    }
+
+   val appBar = materialColorScheme.surfaceColorAtElevation(3.dp)
+
+   return SingleColumnProbosqisColorScheme(
+      background = materialColorScheme.background,
+      appBar,
+      pageStack = PageStackColors(
+         pageStackBackground,
+         content = materialColorScheme.onSurface,
+         pageStackActivationAnimColor,
+         footer = materialColorScheme.surfaceColorAtElevation(3.dp),
+         footerContent = materialColorScheme.onSurface,
+      ),
+      PErrorListColors(
+         errorListBackgroundColor,
+         errorListItemBackgroundColor,
+         content = materialColorScheme.onSurface,
+         header = appBar,
+         headerContent = materialColorScheme.onSurface,
+      )
+   )
 }
 
 @Immutable
 class SingleColumnProbosqisColorScheme(
    val background: Color,
    val appBar: Color,
-   val pageStackBackground: Color,
-   val pageStackFooter: Color,
+   val pageStack: PageStackColors,
+   val errorListColors: PErrorListColors,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,60 +85,66 @@ class SingleColumnProbosqisColorScheme(
 fun rememberMultiColumnProbosqisColorScheme(): MultiColumnProbosqisColorScheme {
    val materialColorScheme = MaterialTheme.colorScheme
 
+   val background: Color
+   val pageStackBackground: Color
+   val pageStackActivationAnimColor: Color
+   val activePageStackAppBarContainer: Color
+
    if (isSystemInDarkTheme()) {
-      val activePageStackAppBar = TopAppBarDefaults.topAppBarColors(
-         containerColor = materialColorScheme.primaryContainer
-            .let { materialColorScheme.surface    .copy(alpha = 0.75f).compositeOver(it) }
-            .let { materialColorScheme.surfaceTint.copy(alpha = 0.15f).compositeOver(it) },
-         navigationIconContentColor = materialColorScheme.onPrimaryContainer,
-         titleContentColor = materialColorScheme.onPrimaryContainer,
-         actionIconContentColor = materialColorScheme.onPrimaryContainer,
-      )
+      activePageStackAppBarContainer = materialColorScheme.primaryContainer
+         .let { materialColorScheme.surface    .copy(alpha = 0.75f).compositeOver(it) }
+         .let { materialColorScheme.surfaceTint.copy(alpha = 0.15f).compositeOver(it) }
 
-      val inactivePageStackAppBar = TopAppBarDefaults.topAppBarColors(
-         containerColor = materialColorScheme.surfaceColorAtElevation(6.dp),
-      )
-
-      return remember(materialColorScheme) {
-         MultiColumnProbosqisColorScheme(
-            background = materialColorScheme.surface,
-            activePageStackAppBar,
-            inactivePageStackAppBar,
-            pageStackBackground = materialColorScheme.surfaceColorAtElevation(1.dp),
-            pageStackFooter = materialColorScheme.surfaceColorAtElevation(6.dp),
-         )
-      }
+      background = materialColorScheme.surface
+      pageStackBackground = materialColorScheme.surfaceColorAtElevation(1.dp)
+      pageStackActivationAnimColor = materialColorScheme.surfaceTint.copy(alpha = 0.09f)
    } else {
-      val activePageStackAppBar = TopAppBarDefaults.topAppBarColors(
-         containerColor = materialColorScheme.primaryContainer
-            .let { materialColorScheme.surface.copy(alpha = 0.5f).compositeOver(it) },
-         navigationIconContentColor = materialColorScheme.onPrimaryContainer,
-         titleContentColor = materialColorScheme.onPrimaryContainer,
-         actionIconContentColor = materialColorScheme.onPrimaryContainer,
-      )
+      activePageStackAppBarContainer = materialColorScheme.primaryContainer
+         .let { materialColorScheme.surface.copy(alpha = 0.5f).compositeOver(it) }
 
-      val inactivePageStackAppBar = TopAppBarDefaults.topAppBarColors(
-         containerColor = materialColorScheme.surfaceColorAtElevation(6.dp),
-      )
-
-      return remember(materialColorScheme) {
-         MultiColumnProbosqisColorScheme(
-            background = materialColorScheme.surfaceColorAtElevation(1.dp),
-            activePageStackAppBar,
-            inactivePageStackAppBar,
-            pageStackBackground = materialColorScheme.surface,
-            pageStackFooter = materialColorScheme.surfaceColorAtElevation(6.dp),
-         )
-      }
+      background = materialColorScheme.surfaceColorAtElevation(1.dp)
+      pageStackBackground = materialColorScheme.surface
+      pageStackActivationAnimColor = materialColorScheme.surfaceTint.copy(alpha = 0.04f)
    }
+
+   val activePageStackAppBar = TopAppBarDefaults.topAppBarColors(
+      containerColor = activePageStackAppBarContainer,
+      navigationIconContentColor = materialColorScheme.onPrimaryContainer,
+      titleContentColor = materialColorScheme.onPrimaryContainer,
+      actionIconContentColor = materialColorScheme.onPrimaryContainer,
+   )
+
+   val inactivePageStackAppBar = TopAppBarDefaults.topAppBarColors(
+      containerColor = materialColorScheme.surfaceColorAtElevation(6.dp),
+   )
+
+   return MultiColumnProbosqisColorScheme(
+      background,
+      PageStackColors(
+         pageStackBackground,
+         content = materialColorScheme.onSurface,
+         pageStackActivationAnimColor,
+         footer = materialColorScheme.surfaceColorAtElevation(6.dp),
+         footerContent = materialColorScheme.onSurface,
+      ),
+      activePageStackAppBar,
+      inactivePageStackAppBar,
+      PErrorListColors(
+         listBackground = background,
+         itemBackground = pageStackBackground,
+         content = materialColorScheme.onSurface,
+         header = background,
+         headerContent = materialColorScheme.onSurface,
+      )
+   )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Immutable
 class MultiColumnProbosqisColorScheme(
    val background: Color,
+   val pageStack: PageStackColors,
    val activePageStackAppBar: TopAppBarColors,
    val inactivePageStackAppBar: TopAppBarColors,
-   val pageStackBackground: Color,
-   val pageStackFooter: Color,
+   val errorListColors: PErrorListColors,
 )

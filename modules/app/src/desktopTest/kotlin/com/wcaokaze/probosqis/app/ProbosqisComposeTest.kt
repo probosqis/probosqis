@@ -20,14 +20,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.wcaokaze.probosqis.app.pagedeck.LazyPageStackState
-import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
-import com.wcaokaze.probosqis.app.pagedeck.PageDeck
-import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
-import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
-import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.error.PErrorListState
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
+import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.PageDeck
+import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import com.wcaokaze.probosqis.testpages.TestPage
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -35,13 +39,52 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.koin.compose.KoinIsolatedContext
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import java.io.IOException
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFails
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 @RunWith(JUnit4::class)
 class ProbosqisComposeTest {
    @get:Rule
    val rule = createComposeRule()
+
+   private val emptyPageDeckModule = module {
+      single { CombinedPageSwitcherState(allPageComposables = emptyList()) }
+
+      single {
+         PageStateStore(
+            allPageStateFactories = emptyList(),
+            appCoroutineScope = mockk()
+         )
+      }
+
+      single {
+         MultiColumnPageDeckState(
+            WritableCache(PageDeck()),
+            pageStackRepository = mockk()
+         )
+      }
+
+      single {
+         SingleColumnPageDeckState(
+            WritableCache(PageDeck()),
+            pageStackRepository = mockk()
+         )
+      }
+
+      single {
+         PErrorListState(
+            errorListCache = WritableCache(emptyList()),
+            itemComposables = emptyList()
+         )
+      }
+   }
 
    @Test
    fun loadPageDeck() {
@@ -51,18 +94,14 @@ class ProbosqisComposeTest {
          every { loadPageDeck() } returns WritableCache(pageDeck)
       }
 
-      val probosqisState = ProbosqisState(
-         allPageComposables = emptyList(),
-         pageDeckRepository,
-         pageStackRepository = mockk(),
-         coroutineScope = mockk()
+      val loadedCache = loadPageDeckOrDefault(
+         pageDeckRepository, pageStackRepository = mockk()
       )
-
-      val loadedCache = probosqisState.loadPageDeckOrDefault()
 
       assertSame(pageDeck, loadedCache.value)
    }
 
+   @Suppress("INVISIBLE_MEMBER")
    @Test
    fun loadPageDeck_default() {
       val pageDeckRepository = mockk<PageDeckRepository> {
@@ -75,14 +114,7 @@ class ProbosqisComposeTest {
          every { deleteAllPageStacks() } returns Unit
       }
 
-      val probosqisState = ProbosqisState(
-         allPageComposables = emptyList(),
-         pageDeckRepository,
-         pageStackRepository,
-         coroutineScope = mockk()
-      )
-
-      val loadedCache = probosqisState.loadPageDeckOrDefault()
+      val loadedCache = loadPageDeckOrDefault(pageDeckRepository, pageStackRepository)
 
       verify { pageStackRepository.deleteAllPageStacks() }
       assertEquals(2, loadedCache.value.rootRow.childCount)
@@ -106,19 +138,12 @@ class ProbosqisComposeTest {
 
    @Test
    fun getDeckState_singleColumn() {
-      val pageDeck = PageDeck()
-
-      val probosqisState = ProbosqisState(
-         allPageComposables = emptyList(),
-         pageDeckRepository = mockk {
-            every { loadPageDeck() } returns WritableCache(pageDeck)
-         },
-         pageStackRepository = mockk(),
-         coroutineScope = mockk()
-      )
+      val probosqisState = ProbosqisState()
 
       rule.setContent {
-         SingleColumnProbosqis(probosqisState)
+         KoinIsolatedContext(koinApplication { modules(emptyPageDeckModule) }) {
+            SingleColumnProbosqis(probosqisState)
+         }
       }
 
       rule.runOnIdle {
@@ -128,19 +153,12 @@ class ProbosqisComposeTest {
 
    @Test
    fun getDeckState_multiColumn() {
-      val pageDeck = PageDeck()
-
-      val probosqisState = ProbosqisState(
-         allPageComposables = emptyList(),
-         pageDeckRepository = mockk {
-            every { loadPageDeck() } returns WritableCache(pageDeck)
-         },
-         pageStackRepository = mockk(),
-         coroutineScope = mockk()
-      )
+      val probosqisState = ProbosqisState()
 
       rule.setContent {
-         MultiColumnProbosqis(probosqisState)
+         KoinIsolatedContext(koinApplication { modules(emptyPageDeckModule) }) {
+            MultiColumnProbosqis(probosqisState)
+         }
       }
 
       rule.runOnIdle {
@@ -150,24 +168,17 @@ class ProbosqisComposeTest {
 
    @Test
    fun getDeckState_switchingSingleColumnMultiColumn() {
-      val pageDeck = PageDeck()
-
-      val probosqisState = ProbosqisState(
-         allPageComposables = emptyList(),
-         pageDeckRepository = mockk {
-            every { loadPageDeck() } returns WritableCache(pageDeck)
-         },
-         pageStackRepository = mockk(),
-         coroutineScope = mockk()
-      )
+      val probosqisState = ProbosqisState()
 
       var isMultiColumn by mutableStateOf(false)
 
       rule.setContent {
-         if (isMultiColumn) {
-            MultiColumnProbosqis(probosqisState)
-         } else {
-            SingleColumnProbosqis(probosqisState)
+         KoinIsolatedContext(koinApplication { modules(emptyPageDeckModule) }) {
+            if (isMultiColumn) {
+               MultiColumnProbosqis(probosqisState)
+            } else {
+               SingleColumnProbosqis(probosqisState)
+            }
          }
       }
 
@@ -190,12 +201,7 @@ class ProbosqisComposeTest {
 
    @Test
    fun getDeckState_beforeComposition() {
-      val probosqisState = ProbosqisState(
-         allPageComposables = emptyList(),
-         pageDeckRepository = mockk(),
-         pageStackRepository = mockk(),
-         coroutineScope = mockk()
-      )
+      val probosqisState = ProbosqisState()
 
       assertFails {
          probosqisState.pageDeckState

@@ -23,58 +23,131 @@ import androidx.compose.ui.window.application
 import com.wcaokaze.probosqis.app.App
 import com.wcaokaze.probosqis.app.MultiColumnProbosqis
 import com.wcaokaze.probosqis.app.ProbosqisState
-import com.wcaokaze.probosqis.app.TestNotePage
-import com.wcaokaze.probosqis.app.TestPage
-import com.wcaokaze.probosqis.app.TestTimelinePage
-import com.wcaokaze.probosqis.app.pagedeck.DesktopPageDeckRepository
-import com.wcaokaze.probosqis.app.pagedeck.DesktopPageStackRepository
-import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
-import com.wcaokaze.probosqis.app.testNotePageComposable
-import com.wcaokaze.probosqis.app.testPageComposable
-import com.wcaokaze.probosqis.app.testTimelinePageComposable
+import com.wcaokaze.probosqis.app.loadErrorListOrDefault
+import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
+import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
+import com.wcaokaze.probosqis.error.PErrorListRepository
+import com.wcaokaze.probosqis.error.PErrorListState
+import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.page.PPageStateStore
+import com.wcaokaze.probosqis.page.PPageSwitcherState
+import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
+import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.resources.Strings
+import com.wcaokaze.probosqis.testpages.TestError
+import com.wcaokaze.probosqis.testpages.TestNotePage
+import com.wcaokaze.probosqis.testpages.TestPage
+import com.wcaokaze.probosqis.testpages.TestTimelinePage
+import com.wcaokaze.probosqis.testpages.testErrorComposable
+import com.wcaokaze.probosqis.testpages.testNotePageComposable
+import com.wcaokaze.probosqis.testpages.testPageComposable
+import com.wcaokaze.probosqis.testpages.testTimelinePageComposable
 import kotlinx.collections.immutable.persistentListOf
+import org.koin.compose.KoinApplication
+import org.koin.dsl.module
 import java.io.File
+
+private val allPageComposables = persistentListOf(
+   testPageComposable,
+   testTimelinePageComposable,
+   testNotePageComposable,
+)
+
+private val allPageSerializers = persistentListOf(
+   pageSerializer<TestPage>(),
+   pageSerializer<TestTimelinePage>(),
+   pageSerializer<TestNotePage>(),
+)
+
+private val allErrorItemComposables = persistentListOf(
+   testErrorComposable,
+)
+
+private val probosqisDataDir = File(System.getProperty("user.home"), ".probosqisData")
+
+private val koinModule = module {
+   single { PPageSwitcherState(allPageComposables) }
+
+   single {
+      PPageStateStore(
+         allPageComposables,
+         appCoroutineScope = get()
+      )
+   }
+
+   factory {
+      val pageDeckCache = loadPageDeckOrDefault(
+         pageDeckRepository = get(),
+         pageStackRepository = get()
+      )
+
+      MultiColumnPageDeckState(pageDeckCache, pageStackRepository = get())
+   }
+
+   factory {
+      val pageDeckCache = loadPageDeckOrDefault(
+         pageDeckRepository = get(),
+         pageStackRepository = get()
+      )
+
+      SingleColumnPageDeckState(pageDeckCache, pageStackRepository = get())
+   }
+
+   single {
+      PErrorListState(
+         loadErrorListOrDefault(errorListRepository = get()),
+         allErrorItemComposables
+      )
+   }
+}
+
+private val repositoriesKoinModule = module {
+   single<PageDeckRepository> {
+      DesktopPageDeckRepository(pageStackRepository = get(), probosqisDataDir)
+   }
+
+   single<PageStackRepository> {
+      DesktopPageStackRepository(allPageSerializers, probosqisDataDir)
+   }
+
+   single<PErrorListRepository> {
+      DesktopPErrorListRepository(
+         allErrorSerializers = listOf(
+            errorSerializer<TestError>(),
+         ),
+         allPageSerializers,
+         probosqisDataDir
+      )
+   }
+}
 
 fun main() {
    application {
-      ProbosqisTheme {
-         Window(
-            title = Strings.App.topAppBar,
-            onCloseRequest = { exitApplication() }
-         ) {
-            val coroutineScope = rememberCoroutineScope()
+      val appCoroutineScope = rememberCoroutineScope()
 
-            val probosqisState = remember {
-               val probosqisDataDir
-                     = File(System.getProperty("user.home"), ".probosqisData")
-
-               val allPageComposables = persistentListOf(
-                  testPageComposable,
-                  testTimelinePageComposable,
-                  testNotePageComposable,
-               )
-
-               val pageStackRepository = DesktopPageStackRepository(
-                  allPageSerializers = listOf(
-                     pageSerializer<TestPage>(),
-                     pageSerializer<TestTimelinePage>(),
-                     pageSerializer<TestNotePage>(),
-                  ),
-                  probosqisDataDir
-               )
-
-               val pageDeckRepository = DesktopPageDeckRepository(
-                  pageStackRepository,
-                  probosqisDataDir
-               )
-
-               ProbosqisState(allPageComposables, pageDeckRepository,
-                  pageStackRepository, coroutineScope)
+      KoinApplication(
+         application = {
+            val appKoinModule = module {
+               single { appCoroutineScope }
             }
 
-            MultiColumnProbosqis(probosqisState)
+            modules(koinModule, repositoriesKoinModule, appKoinModule)
+         }
+      ) {
+         ProbosqisTheme {
+            Window(
+               title = Strings.App.topAppBar,
+               onCloseRequest = { exitApplication() }
+            ) {
+               val probosqisState = remember { ProbosqisState() }
+               MultiColumnProbosqis(probosqisState)
+            }
          }
       }
    }
