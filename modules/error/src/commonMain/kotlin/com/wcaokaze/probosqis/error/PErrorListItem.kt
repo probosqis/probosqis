@@ -372,9 +372,9 @@ private suspend fun AwaitPointerEventScope.awaitPointerSlop(
       val yDragOffset = dragEvent.position.y - down.position.y
 
       when {
-         abs(xDragOffset) > touchSlop -> {
+         abs(xDragOffset) > touchSlop * 1.25f -> {
             dragEvent.consume()
-            onDrag(xDragOffset - sign(xDragOffset) * touchSlop)
+            onDrag(xDragOffset - sign(xDragOffset) * touchSlop * 1.25f)
             return down.id
          }
          abs(yDragOffset) > touchSlop -> return null

@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.TouchInjectionScope
@@ -79,6 +80,8 @@ import kotlin.test.fail
 class PErrorListTest {
    @get:Rule
    val rule = createComposeRule()
+
+   private val ViewConfiguration.errorItemTouchSlop get() = touchSlop * 1.25f
 
    private data class ErrorImpl(val i: Int) : PError()
 
@@ -500,7 +503,7 @@ class PErrorListTest {
 
       rule.onNodeWithText("Error message 0").performTouchInput {
          down(center)
-         moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
+         moveBy(Offset(-viewConfiguration.errorItemTouchSlop, 0.0f))
          moveBy(Offset(-32.dp.toPx(), 0.0f))
       }
 
@@ -516,7 +519,7 @@ class PErrorListTest {
 
       rule.onNodeWithText("Error message 1").performTouchInput {
          down(center)
-         moveBy(Offset(viewConfiguration.touchSlop, 0.0f))
+         moveBy(Offset(viewConfiguration.errorItemTouchSlop, 0.0f))
          moveBy(Offset(64.dp.toPx(), 0.0f))
       }
 
@@ -552,7 +555,7 @@ class PErrorListTest {
       rule.onNodeWithText("Error message 0").performTouchInput {
          swipeLeft(
             centerX,
-            centerX - viewConfiguration.touchSlop - 32.dp.toPx(),
+            centerX - viewConfiguration.errorItemTouchSlop - 32.dp.toPx(),
             durationMillis = 50
          )
       }
@@ -572,7 +575,7 @@ class PErrorListTest {
       rule.onNodeWithText("Error message 1").performTouchInput {
          swipeRight(
             centerX,
-            centerX + viewConfiguration.touchSlop + 32.dp.toPx(),
+            centerX + viewConfiguration.errorItemTouchSlop + 32.dp.toPx(),
             durationMillis = 50
          )
       }
@@ -614,7 +617,7 @@ class PErrorListTest {
       rule.onNodeWithText("Error message 0").performTouchInput {
          swipeLeft(
             centerX,
-            centerX - viewConfiguration.touchSlop - 32.dp.toPx(),
+            centerX - viewConfiguration.errorItemTouchSlop - 32.dp.toPx(),
             durationMillis = 50
          )
          down(center)
@@ -819,8 +822,8 @@ class PErrorListTest {
       assertFlingAnim("flingAnim/notEnoughVelocity_left") {
          swipeLeft(
             centerX,
-            centerX - viewConfiguration.touchSlop - 16.dp.toPx(),
-            durationMillis = 40
+            centerX - viewConfiguration.errorItemTouchSlop - 16.dp.toPx(),
+            durationMillis = 50
          )
       }
    }
@@ -830,8 +833,8 @@ class PErrorListTest {
       assertFlingAnim("flingAnim/notEnoughVelocity_right") {
          swipeRight(
             centerX,
-            centerX + viewConfiguration.touchSlop + 16.dp.toPx(),
-            durationMillis = 40
+            centerX + viewConfiguration.errorItemTouchSlop + 16.dp.toPx(),
+            durationMillis = 50
          )
       }
    }
@@ -841,7 +844,7 @@ class PErrorListTest {
       assertFlingAnim("flingAnim/enoughVelocity_left") {
          swipeLeft(
             centerX,
-            centerX - viewConfiguration.touchSlop - 20.dp.toPx(),
+            centerX - viewConfiguration.errorItemTouchSlop - 20.dp.toPx(),
             durationMillis = 40
          )
       }
@@ -852,7 +855,7 @@ class PErrorListTest {
       assertFlingAnim("flingAnim/enoughVelocity_right") {
          swipeRight(
             centerX,
-            centerX + viewConfiguration.touchSlop + 20.dp.toPx(),
+            centerX + viewConfiguration.errorItemTouchSlop + 20.dp.toPx(),
             durationMillis = 40
          )
       }
@@ -863,7 +866,7 @@ class PErrorListTest {
       assertFlingAnim("flingAnim/tooFast_left") {
          swipeLeft(
             centerX,
-            centerX - viewConfiguration.touchSlop - 64.dp.toPx(),
+            centerX - viewConfiguration.errorItemTouchSlop - 64.dp.toPx(),
             durationMillis = 30
          )
       }
@@ -874,7 +877,7 @@ class PErrorListTest {
       assertFlingAnim("flingAnim/tooFast_right") {
          swipeRight(
             centerX,
-            centerX + viewConfiguration.touchSlop + 64.dp.toPx(),
+            centerX + viewConfiguration.errorItemTouchSlop + 64.dp.toPx(),
             durationMillis = 30
          )
       }
@@ -884,7 +887,7 @@ class PErrorListTest {
    fun listItem_flingAnim_backHome_left() {
       assertFlingAnim("flingAnim/backHome_left") {
          down(center)
-         moveBy(Offset(-viewConfiguration.touchSlop - 256.dp.toPx(), 0.0f))
+         moveBy(Offset(-viewConfiguration.errorItemTouchSlop - 256.dp.toPx(), 0.0f))
          moveBy(Offset(1.0f, 0.0f), delayMillis = 3000L)
          repeat (2) { moveBy(Offset(20.dp.toPx(), 0.0f)) }
          up()
@@ -895,7 +898,7 @@ class PErrorListTest {
    fun listItem_flingAnim_backHome_right() {
       assertFlingAnim("flingAnim/backHome_right") {
          down(center)
-         moveBy(Offset(viewConfiguration.touchSlop + 256.dp.toPx(), 0.0f))
+         moveBy(Offset(viewConfiguration.errorItemTouchSlop + 256.dp.toPx(), 0.0f))
          moveBy(Offset(-1.0f, 0.0f), delayMillis = 3000L)
          repeat (2) { moveBy(Offset(-20.dp.toPx(), 0.0f)) }
          up()
@@ -906,7 +909,7 @@ class PErrorListTest {
    fun listItem_flingAnim_removeAfterRest_left() {
       assertFlingAnim("flingAnim/removeAfterRest_left") {
          down(center)
-         moveBy(Offset(-viewConfiguration.touchSlop - 216.dp.toPx(), 0.0f))
+         moveBy(Offset(-viewConfiguration.errorItemTouchSlop - 216.dp.toPx(), 0.0f))
          moveBy(Offset(1.0f, 0.0f), delayMillis = 3000L)
          up()
       }
@@ -916,7 +919,7 @@ class PErrorListTest {
    fun listItem_flingAnim_removeAfterRest_right() {
       assertFlingAnim("flingAnim/removeAfterRest_right") {
          down(center)
-         moveBy(Offset(viewConfiguration.touchSlop + 216.dp.toPx(), 0.0f))
+         moveBy(Offset(viewConfiguration.errorItemTouchSlop + 216.dp.toPx(), 0.0f))
          moveBy(Offset(-1.0f, 0.0f), delayMillis = 3000L)
          up()
       }
@@ -926,7 +929,7 @@ class PErrorListTest {
    fun listItem_flingAnim_flingAfterRest_left() {
       assertFlingAnim("flingAnim/flingAfterRest_left") {
          down(center)
-         moveBy(Offset(-viewConfiguration.touchSlop - 184.dp.toPx(), 0.0f))
+         moveBy(Offset(-viewConfiguration.errorItemTouchSlop - 184.dp.toPx(), 0.0f))
          moveBy(Offset(-1.0f, 0.0f), delayMillis = 3000L)
          repeat (2) { moveBy(Offset(-20.dp.toPx(), 0.0f)) }
          up()
@@ -937,7 +940,7 @@ class PErrorListTest {
    fun listItem_flingAnim_flingAfterRest_right() {
       assertFlingAnim("flingAnim/flingAfterRest_right") {
          down(center)
-         moveBy(Offset(viewConfiguration.touchSlop + 184.dp.toPx(), 0.0f))
+         moveBy(Offset(viewConfiguration.errorItemTouchSlop + 184.dp.toPx(), 0.0f))
          moveBy(Offset(1.0f, 0.0f), delayMillis = 3000L)
          repeat (2) { moveBy(Offset(20.dp.toPx(), 0.0f)) }
          up()
@@ -948,7 +951,7 @@ class PErrorListTest {
    fun listItem_flingAnim_flingToAnotherSide_left() {
       assertFlingAnim("flingAnim/flingToAnotherSide_left") {
          down(center)
-         moveBy(Offset(viewConfiguration.touchSlop + 288.dp.toPx(), 0.0f))
+         moveBy(Offset(viewConfiguration.errorItemTouchSlop + 288.dp.toPx(), 0.0f))
          moveBy(Offset(-1.0f, 0.0f), delayMillis = 3000L)
          repeat (2) { moveBy(Offset(-40.dp.toPx(), 0.0f)) }
          up()
@@ -959,7 +962,7 @@ class PErrorListTest {
    fun listItem_flingAnim_flingToAnotherSide_right() {
       assertFlingAnim("flingAnim/flingToAnotherSide_right") {
          down(center)
-         moveBy(Offset(-viewConfiguration.touchSlop - 288.dp.toPx(), 0.0f))
+         moveBy(Offset(-viewConfiguration.errorItemTouchSlop - 288.dp.toPx(), 0.0f))
          moveBy(Offset(1.0f, 0.0f), delayMillis = 3000L)
          repeat (2) { moveBy(Offset(40.dp.toPx(), 0.0f)) }
          up()
@@ -991,7 +994,7 @@ class PErrorListTest {
       rule.onNodeWithText("Error message 1").performTouchInput {
          swipeLeft(
             centerX,
-            centerX - viewConfiguration.touchSlop - 20.dp.toPx(),
+            centerX - viewConfiguration.errorItemTouchSlop - 20.dp.toPx(),
             durationMillis = 40
          )
       }
@@ -1154,7 +1157,7 @@ class PErrorListTest {
       rule.onNodeWithText("Error message 0").performTouchInput {
          swipeLeft(
             centerX,
-            centerX - viewConfiguration.touchSlop - 20.dp.toPx(),
+            centerX - viewConfiguration.errorItemTouchSlop - 20.dp.toPx(),
             durationMillis = 40
          )
       }
