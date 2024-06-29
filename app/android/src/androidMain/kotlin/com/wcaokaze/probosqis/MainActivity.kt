@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,128 +17,147 @@
 package com.wcaokaze.probosqis
 
 import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
-import android.view.View
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import com.wcaokaze.probosqis.app.Probosqis
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.app.MultiColumnProbosqis
 import com.wcaokaze.probosqis.app.ProbosqisState
-import com.wcaokaze.probosqis.app.TestNotePage
-import com.wcaokaze.probosqis.app.TestPage
-import com.wcaokaze.probosqis.app.TestTimelinePage
-import com.wcaokaze.probosqis.app.testNotePageComposable
-import com.wcaokaze.probosqis.app.testPageComposable
-import com.wcaokaze.probosqis.app.testTimelinePageComposable
-import com.wcaokaze.probosqis.capsiqum.AndroidPageStackBoardRepository
-import com.wcaokaze.probosqis.capsiqum.AndroidPageStackRepository
-import com.wcaokaze.probosqis.capsiqum.pageSerializer
-import kotlinx.collections.immutable.persistentListOf
+import com.wcaokaze.probosqis.app.SingleColumnProbosqis
+import com.wcaokaze.probosqis.resources.ProbosqisTheme
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
+      initializeEdgeToEdge()
       super.onCreate(savedInstanceState)
 
-      setUpSystemBars()
-
       setContent {
-         val context = LocalContext.current
+         ProbosqisTheme {
+            val probosqisState = remember { ProbosqisState() }
 
-         val coroutineScope = rememberCoroutineScope()
+            BackHandler {
+               probosqisState.pageDeckState.activePageStackState.finishPage()
+            }
 
-         val probosqisState = remember(context) {
-            val allPageComposables = persistentListOf(
-               testPageComposable,
-               testTimelinePageComposable,
-               testNotePageComposable,
-            )
-            val pageStackRepository = AndroidPageStackRepository(
-               context,
-               allPageSerializers = listOf(
-                  pageSerializer<TestPage>(),
-                  pageSerializer<TestTimelinePage>(),
-                  pageSerializer<TestNotePage>(),
-               )
-            )
-            val pageStackBoardRepository = AndroidPageStackBoardRepository(
-               context, pageStackRepository
-            )
+            NavigationBarController()
 
-            ProbosqisState(allPageComposables, pageStackBoardRepository,
-               pageStackRepository, coroutineScope)
+            @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+            val windowSizeClass = calculateWindowSizeClass(activity = this)
+
+            if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
+               MultiColumnProbosqis(probosqisState)
+            } else {
+               SingleColumnProbosqis(probosqisState)
+            }
          }
-
-         BackHandler {
-            val boardState = probosqisState.pageStackBoardState
-            boardState.pageStackState(boardState.activePageStackIndex).finishPage()
-         }
-
-         Probosqis(probosqisState)
       }
    }
 
-   private fun isDarkMode(): Boolean {
-      return (resources.configuration.uiMode and
-            Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+   @Composable
+   private fun NavigationBarController() {
+      val colorScheme = MaterialTheme.colorScheme
+      val navigationBarsInsets = WindowInsets.navigationBars
+      val density = LocalDensity.current
+      val layoutDirection = LocalLayoutDirection.current
+
+      @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+      val windowSizeClass = calculateWindowSizeClass(activity = this)
+
+      LaunchedEffect(
+         colorScheme, navigationBarsInsets, density, layoutDirection,
+         windowSizeClass
+      ) {
+         updateSystemBarColors(colorScheme, windowSizeClass.widthSizeClass,
+            navigationBarsInsets, density, layoutDirection)
+      }
    }
 
-   private fun setUpSystemBars() {
-      WindowCompat.setDecorFitsSystemWindows(window, false)
+   private fun isDarkTheme() = (
+         resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+      ) == Configuration.UI_MODE_NIGHT_YES
 
-      val view = findViewById<View>(android.R.id.content)
-      val windowInsetsController = WindowInsetsControllerCompat(window, view)
+   private val lightNavigationBarBackground = Color.White
+   private val darkNavigationBarBackground = Color(0x1B, 0x1B, 0x1B)
 
-      val isDarkMode = isDarkMode()
-      setUpStatusBar(windowInsetsController, isDarkMode)
-      setUpNavigationBar(windowInsetsController, isDarkMode)
+   private fun initializeEdgeToEdge() {
+      val lightScrim = lightNavigationBarBackground.copy(alpha = 0.9f)
+      val darkScrim = darkNavigationBarBackground.copy(alpha = 0.5f)
+
+      enableEdgeToEdge(
+         navigationBarStyle = if (isDarkTheme()) {
+            SystemBarStyle.dark(darkScrim.toArgb())
+         } else {
+            SystemBarStyle.light(lightScrim.toArgb(), darkScrim.toArgb())
+         }
+      )
    }
 
-   private fun setUpStatusBar(
-      windowInsetsController: WindowInsetsControllerCompat,
-      isDarkMode: Boolean
+   private fun updateSystemBarColors(
+      colorScheme: ColorScheme,
+      windowWidthClass: WindowWidthSizeClass,
+      navigationBarsInsets: WindowInsets,
+      density: Density,
+      layoutDirection: LayoutDirection
    ) {
-      if (Build.VERSION.SDK_INT >= 23) {
-         window.statusBarColor = 0
-         windowInsetsController.isAppearanceLightStatusBars = !isDarkMode
+      val lightNavigationBarScrim: Color
+      val darkNavigationBarScrim:  Color
+
+      val isNavigationBarBottom
+            =  navigationBarsInsets.getBottom(density)                  >  0
+            && navigationBarsInsets.getLeft  (density, layoutDirection) <= 0
+            && navigationBarsInsets.getTop   (density)                  <= 0
+            && navigationBarsInsets.getRight (density, layoutDirection) <= 0
+
+      // ナビゲーションバーが十分に薄いときtrue
+      // 具体的にはジェスチャーナビゲーションのときtrue、2ボタン、3ボタンのときfalse
+      val isNavigationBarThin
+            = navigationBarsInsets.getBottom(density) <= with (density) { 32.dp.toPx() }
+
+      val isSingleColumn = windowWidthClass <= WindowWidthSizeClass.Medium
+
+      val shouldTransparentNavigationBar
+            = isNavigationBarBottom && (isNavigationBarThin || isSingleColumn)
+
+      if (shouldTransparentNavigationBar) {
+         lightNavigationBarScrim = Color.Transparent
+         darkNavigationBarScrim  = Color.Transparent
       } else {
-         // 22以前は透明にはできるもののアイコンの色を変更できないため半透明にする
-         window.addFlags(
-            @Suppress("DEPRECATION")
-            WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS
-         )
-      }
-   }
+         lightNavigationBarScrim = lightNavigationBarBackground.copy(alpha = 0.9f)
+            .compositeOver(colorScheme.primaryContainer)
+            .copy(alpha = 0.9f)
 
-   private fun setUpNavigationBar(
-      windowInsetsController: WindowInsetsControllerCompat,
-      isDarkMode: Boolean
-   ) {
-      when {
-         Build.VERSION.SDK_INT >= 29 -> {
-            // 29以降はジェスチャーナビゲーションのとき透明、
-            // 3ボタンナビゲーションのときはいい感じの半透明にしてくれる
-            window.navigationBarColor = 0
-            windowInsetsController.isAppearanceLightNavigationBars = !isDarkMode
-         }
-         Build.VERSION.SDK_INT >= 26 -> {
-            window.navigationBarColor =
-               if (isDarkMode) { 0x80000000.toInt() } else { 0xccffffff.toInt() }
-            windowInsetsController.isAppearanceLightNavigationBars = !isDarkMode
-         }
-         else -> {
-            // 25以前は透明にはできるもののアイコンの色を変更できないため半透明にする
-            window.addFlags(
-               @Suppress("DEPRECATION")
-               WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION
-            )
-         }
+         darkNavigationBarScrim = darkNavigationBarBackground.copy(alpha = 0.9f)
+            .compositeOver(colorScheme.primaryContainer)
+            .copy(alpha = 0.8f)
       }
+
+      enableEdgeToEdge(
+         navigationBarStyle = if (isDarkTheme()) {
+            SystemBarStyle.dark(darkNavigationBarScrim.toArgb())
+         } else {
+            SystemBarStyle.light(
+               lightNavigationBarScrim.toArgb(), darkNavigationBarScrim.toArgb())
+         }
+      )
    }
 }

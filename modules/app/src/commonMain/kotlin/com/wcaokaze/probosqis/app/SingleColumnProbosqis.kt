@@ -16,17 +16,21 @@
 
 package com.wcaokaze.probosqis.app
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationState
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateTo
+import androidx.compose.foundation.MutatorMutex
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
@@ -34,20 +38,20 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -56,28 +60,34 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
-import com.wcaokaze.probosqis.capsiqum.PageStateStore
-import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoard
-import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoardAppBar
-import com.wcaokaze.probosqis.capsiqum.SingleColumnPageStackBoardState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.error.PErrorActionButton
+import com.wcaokaze.probosqis.error.PErrorList
+import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeck
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckAppBar
+import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.navigateToPage
 import com.wcaokaze.probosqis.resources.Strings
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
-internal fun SingleColumnProbosqis(
+fun SingleColumnProbosqis(
    state: ProbosqisState,
+   colorScheme: SingleColumnProbosqisColorScheme = rememberSingleColumnProbosqisColorScheme(),
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
-   val coroutineScope = rememberCoroutineScope()
-   val pageStackBoardState = remember(state, coroutineScope) {
-      val pageStackBoardCache = state.loadPageStackBoardOrDefault()
-
-      SingleColumnPageStackBoardState(
-         pageStackBoardCache, state.pageStackRepository, coroutineScope
-      ).also { state.pageStackBoardState = it }
-   }
+   val pageDeckState = koinInject<SingleColumnPageDeckState>()
+      .also { state.pageDeckState = it }
 
    // 現状Desktopで動作しないため自前実装する
    // val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -86,27 +96,60 @@ internal fun SingleColumnProbosqis(
       AppBarNestedScrollConnection(appBarScrollState)
    }
 
-   Column(
-      modifier = Modifier
-         .nestedScroll(nestedScrollConnection)
-   ) {
-      AppBar(
-         appBarScrollState,
-         pageStackBoardState,
-         state.pageComposableSwitcher,
-         state.pageStateStore,
-         windowInsets = safeDrawingWindowInsets
-            .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
-      )
+   Box {
+      val errorListState: PErrorListState = koinInject()
+      val pageSwitcherState: CombinedPageSwitcherState = koinInject()
+      val pageStateStore: PageStateStore = koinInject()
 
-      SingleColumnPageStackBoard(
-         pageStackBoardState,
-         state.pageComposableSwitcher,
-         state.pageStateStore,
-         windowInsets = safeDrawingWindowInsets
-            .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
+      Column(
          modifier = Modifier
-            .fillMaxSize()
+            .background(colorScheme.background)
+            .nestedScroll(nestedScrollConnection)
+      ) {
+         val coroutineScope = rememberCoroutineScope()
+
+         AppBar(
+            appBarScrollState,
+            errorListState,
+            pageDeckState,
+            pageSwitcherState,
+            pageStateStore,
+            backgroundColor = colorScheme.appBar,
+            windowInsets = safeDrawingWindowInsets
+               .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+            onErrorButtonClick = {
+               coroutineScope.launch {
+                  appBarScrollState.show()
+                  errorListState.show()
+               }
+            }
+         )
+
+         SingleColumnPageDeck(
+            pageDeckState,
+            pageSwitcherState,
+            pageStateStore,
+            colorScheme.pageStack,
+            windowInsets = safeDrawingWindowInsets
+               .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
+            modifier = Modifier
+               .fillMaxSize()
+         )
+      }
+
+      val coroutineScope = rememberCoroutineScope()
+
+      PErrorList(
+         errorListState,
+         colorScheme.errorListColors,
+         onRequestNavigateToPage = { pageId, pageClone ->
+            coroutineScope.launch {
+               state.pageDeckState.navigateToPage(
+                  pageId,
+                  fallbackPage = { pageClone }
+               )
+            }
+         }
       )
    }
 }
@@ -115,67 +158,84 @@ internal fun SingleColumnProbosqis(
 @Composable
 private fun AppBar(
    scrollState: AppBarScrollState,
-   boardState: SingleColumnPageStackBoardState,
-   pageComposableSwitcher: PageComposableSwitcher,
+   errorListState: PErrorListState,
+   deckState: SingleColumnPageDeckState,
+   pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
-   windowInsets: WindowInsets
+   backgroundColor: Color,
+   windowInsets: WindowInsets,
+   onErrorButtonClick: () -> Unit
 ) {
+   val anim = remember { Animatable(0.dp, Dp.VectorConverter) }
+
+   LaunchedEffect(errorListState.raisedTime) {
+      if (errorListState.raisedTime == null) { return@LaunchedEffect }
+
+      if (scrollState.isShown) {
+         anim.animateErrorNotifier()
+      } else {
+         launch {
+            scrollState.show()
+         }
+         launch {
+            delay(100.milliseconds)
+            anim.animateErrorNotifier()
+         }
+      }
+   }
+
    Column(
       Modifier
-         .shadow(4.dp)
-         .background(MaterialTheme.colorScheme.primaryContainer)
+         .scrollable(rememberScrollState(), Orientation.Vertical)
+         .background(backgroundColor)
          .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
          .clipToBounds()
-         .scrollable(rememberScrollState(), Orientation.Vertical)
-   ) {
-      Column(
-         Modifier
-            .layout { measurable, constraints ->
-               val placeable = measurable.measure(constraints)
+         .layout { measurable, constraints ->
+            val placeable = measurable.measure(constraints)
 
-               layout(
-                  placeable.width,
-                  placeable.height + scrollState.scrollOffset.toInt()
-               ) {
-                  placeable.place(0, scrollState.scrollOffset.toInt())
-               }
+            layout(
+               placeable.width,
+               placeable.height + scrollState.scrollOffset.toInt()
+            ) {
+               placeable.place(0, scrollState.scrollOffset.toInt())
             }
-      ) {
-         val colorScheme = MaterialTheme.colorScheme
-         val innerTopAppBarColors = TopAppBarDefaults.topAppBarColors(
+         }
+   ) {
+      TopAppBar(
+         title = {
+            Text(
+               text = Strings.App.topAppBar,
+               maxLines = 1,
+               overflow = TextOverflow.Ellipsis
+            )
+         },
+         navigationIcon = {
+            MenuButton(
+               onClick = {}
+            )
+         },
+         actions = {
+            PErrorActionButton(
+               errorListState,
+               onClick = onErrorButtonClick,
+               modifier = Modifier
+                  .offset { IntOffset(anim.value.roundToPx(), 0) }
+            )
+         },
+         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent,
-            navigationIconContentColor = colorScheme.onPrimaryContainer,
-            titleContentColor = colorScheme.onPrimaryContainer,
-            actionIconContentColor = colorScheme.onPrimaryContainer,
-         )
+         ),
+         windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
+         modifier = Modifier
+            .onSizeChanged { scrollState.updateAppBarHeight(it.height) }
+      )
 
-         TopAppBar(
-            title = {
-               Text(
-                  text = Strings.App.topAppBar,
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis
-               )
-            },
-            navigationIcon = {
-               MenuButton(
-                  onClick = {}
-               )
-            },
-            windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
-            colors = innerTopAppBarColors,
-            modifier = Modifier
-               .onSizeChanged { scrollState.updateAppBarHeight(it.height) },
-         )
-
-         SingleColumnPageStackBoardAppBar(
-            boardState,
-            pageComposableSwitcher,
-            pageStateStore,
-            windowInsets = windowInsets.only(WindowInsetsSides.Horizontal),
-            colors = innerTopAppBarColors
-         )
-      }
+      SingleColumnPageDeckAppBar(
+         deckState,
+         pageSwitcherState,
+         pageStateStore,
+         windowInsets = windowInsets.only(WindowInsetsSides.Horizontal)
+      )
    }
 }
 
@@ -193,10 +253,14 @@ private fun MenuButton(
 
 @Stable
 private class AppBarScrollState {
-   var scrollOffset by mutableStateOf(0.0f)
+   private val scrollMutex = MutatorMutex()
+
+   var scrollOffset by mutableFloatStateOf(0.0f)
       private set
 
-   private var appBarHeight by mutableStateOf(0)
+   var appBarHeight by mutableIntStateOf(0)
+
+   val isShown: Boolean get() = scrollOffset / appBarHeight > -0.5f
 
    fun scroll(offset: Float): Float {
       val oldScrollOffset = scrollOffset
@@ -212,17 +276,21 @@ private class AppBarScrollState {
       scrollOffset = scrollOffset.coerceIn(-appBarHeight.toFloat(), 0.0f)
    }
 
+   suspend fun show() {
+      scrollMutex.mutate {
+         AnimationState(scrollOffset).animateTo(0.0f) { scrollOffset = value }
+      }
+   }
+
    @Suppress("UNUSED")
    suspend fun settle() {
       if (appBarHeight == 0) { return }
 
-      val targetOffset = if (scrollOffset / appBarHeight < -0.5f) {
-         -appBarHeight.toFloat()
-      } else {
-         0.0f
-      }
+      scrollMutex.mutate {
+         val targetOffset = if (isShown) { 0.0f } else { -appBarHeight.toFloat() }
 
-      AnimationState(scrollOffset).animateTo(targetOffset) { scrollOffset = value }
+         AnimationState(scrollOffset).animateTo(targetOffset) { scrollOffset = value }
+      }
    }
 }
 

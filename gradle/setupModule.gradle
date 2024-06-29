@@ -59,6 +59,7 @@ kotlin {
          implementation libs.kotlinx.serialization
          implementation libs.kotlinx.collections.immutable
          implementation libs.androidx.annotation
+         implementation libs.koin.core
       }
 
       commonTest.dependencies {
@@ -83,6 +84,7 @@ kotlin {
 
       if (isAndroidModule) {
          androidMain.dependencies {
+            implementation libs.koin.android
          }
 
          androidUnitTest.dependencies {
@@ -94,6 +96,7 @@ kotlin {
       if (isComposeModule) {
          commonMain.dependencies {
             implementation compose.material3
+            implementation libs.koin.compose
          }
 
          commonTest.dependencies {

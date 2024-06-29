@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,60 +19,91 @@ package com.wcaokaze.probosqis.app
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import com.wcaokaze.probosqis.capsiqum.PageStack
-import com.wcaokaze.probosqis.capsiqum.PageStackBoard
-import com.wcaokaze.probosqis.capsiqum.PageStackBoardRepository
-import com.wcaokaze.probosqis.capsiqum.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.deck.Deck
+import com.wcaokaze.probosqis.capsiqum.page.PageId
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.error.PErrorListState
+import com.wcaokaze.probosqis.page.PPageSwitcherState
+import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import com.wcaokaze.probosqis.resources.ProbosqisTheme
+import com.wcaokaze.probosqis.testpages.TestPage
+import com.wcaokaze.probosqis.testpages.testPageComposable
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
+import org.koin.compose.KoinIsolatedContext
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
+import kotlin.coroutines.EmptyCoroutineContext
+
+private val allPageComposables = persistentListOf(
+   testPageComposable,
+)
+
+private val koinModule = module {
+   single { PPageSwitcherState(allPageComposables) }
+
+   single {
+      PageStateStore(
+         allPageStateFactories = allPageComposables.map { it.pageStateFactory },
+         appCoroutineScope = CoroutineScope(EmptyCoroutineContext)
+      )
+   }
+
+   factory {
+      val children = List(4) { pageStackId ->
+         val pageStack = PageStack(
+            PageStack.Id(pageStackId.toLong()),
+            SavedPageState(
+               PageId(0L),
+               TestPage(0)
+            )
+         )
+         val lazyPageStackState = LazyPageStackState(
+            pageStack.id,
+            WritableCache(pageStack),
+            initialVisibility = true
+         )
+         Deck.Card(lazyPageStackState)
+      } .toImmutableList()
+
+      val rootRow = Deck.Row(children)
+      val deck = Deck(rootRow)
+
+      MultiColumnPageDeckState(
+         WritableCache(deck),
+         pageStackRepository = object : PageStackRepository {
+            override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
+                  = throw NotImplementedError()
+            override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
+                  = throw NotImplementedError()
+            override fun deleteAllPageStacks()
+                  = throw NotImplementedError()
+         }
+      )
+   }
+
+   single {
+      PErrorListState(
+         errorListCache = WritableCache(emptyList()),
+         itemComposables = emptyList()
+      )
+   }
+}
 
 @Preview
 @Composable
 private fun ProbosqisPreview() {
-   val allPageComposables = persistentListOf(
-      testPageComposable,
-   )
-
-   val pageStackBoardRepository = object : PageStackBoardRepository {
-      override fun savePageStackBoard(pageStackBoard: PageStackBoard)
-            = throw NotImplementedError()
-
-      override fun loadPageStackBoard(): WritableCache<PageStackBoard> {
-         val pageStack = PageStack(
-            PageStack.Id(0L),
-            PageStack.SavedPageState(
-               PageStack.PageId(0L),
-               TestPage(0)
-            )
+   KoinIsolatedContext(koinApplication { modules(koinModule) }) {
+      ProbosqisTheme {
+         MultiColumnProbosqis(
+            remember { ProbosqisState() }
          )
-         val children = persistentListOf(
-            PageStackBoard.PageStack(
-               PageStackBoard.PageStackId(0L),
-               WritableCache(pageStack)
-            ),
-         )
-         val rootRow = PageStackBoard.Row(children)
-         val pageStackBoard = PageStackBoard(rootRow)
-         return WritableCache(pageStackBoard)
       }
    }
-
-   val pageStackRepository = object : PageStackRepository {
-      override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
-            = throw NotImplementedError()
-      override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
-            = throw NotImplementedError()
-      override fun deleteAllPageStacks()
-            = throw NotImplementedError()
-   }
-
-   val coroutineScope = rememberCoroutineScope()
-
-   val probosqisState = remember {
-      ProbosqisState(allPageComposables, pageStackBoardRepository,
-         pageStackRepository, coroutineScope)
-   }
-
-   Probosqis(probosqisState)
 }

@@ -16,87 +16,98 @@
 
 package com.wcaokaze.probosqis.app
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoard
-import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoardState
+import com.wcaokaze.probosqis.error.PErrorActionButton
+import com.wcaokaze.probosqis.error.PErrorList
+import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeck
+import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.navigateToPage
 import com.wcaokaze.probosqis.resources.Strings
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @Composable
-internal fun MultiColumnProbosqis(
+fun MultiColumnProbosqis(
    state: ProbosqisState,
+   colorScheme: MultiColumnProbosqisColorScheme = rememberMultiColumnProbosqisColorScheme(),
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    BoxWithConstraints(
-      Modifier
-         .background(MaterialTheme.colorScheme.background)
+      modifier = Modifier
+         .background(colorScheme.background)
    ) {
-      val density = LocalDensity.current
-      var appBarHeight by remember(density, safeDrawingWindowInsets) {
-         val initialHeight = with (density) {
-            safeDrawingWindowInsets.getTop(density).toDp() + 64.dp
-         }
-         mutableStateOf(initialHeight)
-      }
-      var pageStackTopAppBarHeight by remember { mutableStateOf(64.dp) }
+      val errorListState: PErrorListState = koinInject()
 
-      AppBar(
-         safeDrawingWindowInsets,
-         pageStackTopAppBarHeight,
-         onHeightChanged = { appBarHeight = it }
-      )
+      val pageStackCount = (maxWidth / 330.dp).toInt().coerceAtLeast(1)
+
+      Column {
+         AppBar(
+            errorListState,
+            safeDrawingWindowInsets,
+            onErrorButtonClick = { errorListState.show() }
+         )
+
+         val pageDeckState = koinInject<MultiColumnPageDeckState>()
+            .also { state.pageDeckState = it }
+
+         @OptIn(ExperimentalMaterial3Api::class)
+         MultiColumnPageDeck(
+            pageDeckState,
+            pageSwitcherState = koinInject(),
+            pageStateStore = koinInject(),
+            pageStackCount,
+            colorScheme.activePageStackAppBar,
+            colorScheme.inactivePageStackAppBar,
+            colorScheme.pageStack,
+            windowInsets = safeDrawingWindowInsets
+               .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+            modifier = Modifier
+               .fillMaxSize()
+         )
+      }
 
       val coroutineScope = rememberCoroutineScope()
-      val pageStackBoardState = remember(state, coroutineScope) {
-         val pageStackBoardCache = state.loadPageStackBoardOrDefault()
 
-         MultiColumnPageStackBoardState(
-            pageStackBoardCache, state.pageStackRepository, coroutineScope
-         ).also { state.pageStackBoardState = it }
-      }
-
-      @OptIn(ExperimentalMaterial3Api::class)
-      MultiColumnPageStackBoard(
-         pageStackBoardState,
-         state.pageComposableSwitcher,
-         state.pageStateStore,
-         pageStackCount = (maxWidth / 330.dp).toInt(),
-         windowInsets = safeDrawingWindowInsets
-            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
-         onTopAppBarHeightChanged = { pageStackTopAppBarHeight = it },
-         modifier = Modifier
-            .padding(top = appBarHeight)
+      PErrorList(
+         errorListState,
+         colorScheme.errorListColors,
+         onRequestNavigateToPage = { pageId, pageClone ->
+            coroutineScope.launch {
+               state.pageDeckState.navigateToPage(
+                  pageId,
+                  fallbackPage = { pageClone }
+               )
+            }
+         }
       )
    }
 }
@@ -104,44 +115,44 @@ internal fun MultiColumnProbosqis(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AppBar(
+   errorListState: PErrorListState,
    safeDrawingWindowInsets: WindowInsets,
-   pageStackTopAppBarHeight: Dp,
-   onHeightChanged: (Dp) -> Unit
+   onErrorButtonClick: () -> Unit
 ) {
-   val density by rememberUpdatedState(LocalDensity.current)
+   val anim = remember { Animatable(0.dp, Dp.VectorConverter) }
 
-   Column(
-      Modifier
-         .background(MaterialTheme.colorScheme.primaryContainer)
-   ) {
-      TopAppBar(
-         title = {
-            Text(
-               text = Strings.App.topAppBar,
-               maxLines = 1,
-               overflow = TextOverflow.Ellipsis
-            )
-         },
-         navigationIcon = {
-            MenuButton(
-               onClick = {}
-            )
-         },
-         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent
-         ),
-         windowInsets = safeDrawingWindowInsets
-            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
-         modifier = Modifier
-            .onSizeChanged {
-               val heightPx = it.height
-               val heightDp = with (density) { heightPx.toDp() }
-               onHeightChanged(heightDp)
-            }
-      )
-
-      Spacer(Modifier.height(pageStackTopAppBarHeight))
+   LaunchedEffect(errorListState.raisedTime) {
+      if (errorListState.raisedTime == null) { return@LaunchedEffect }
+      anim.animateErrorNotifier()
    }
+
+   TopAppBar(
+      title = {
+         Text(
+            text = Strings.App.topAppBar,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+         )
+      },
+      navigationIcon = {
+         MenuButton(
+            onClick = {}
+         )
+      },
+      actions = {
+         PErrorActionButton(
+            errorListState,
+            onClick = onErrorButtonClick,
+            modifier = Modifier
+               .offset { IntOffset(anim.value.roundToPx(), 0) }
+         )
+      },
+      colors = TopAppBarDefaults.topAppBarColors(
+         containerColor = Color.Transparent
+      ),
+      windowInsets = safeDrawingWindowInsets
+         .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+   )
 }
 
 @Composable

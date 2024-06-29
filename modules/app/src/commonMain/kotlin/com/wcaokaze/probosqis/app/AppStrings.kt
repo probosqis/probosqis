@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ val Strings.Companion.App: AppStrings
       Strings.Language.ENGLISH -> object : AppStrings {
          override val topAppBar = "Probosqis"
          override val topAppBarNavigationContentDescription = "Menu"
+
       }
 
       Strings.Language.JAPANESE -> object : AppStrings {

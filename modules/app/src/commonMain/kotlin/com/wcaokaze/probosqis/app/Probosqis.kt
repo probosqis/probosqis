@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,105 +16,31 @@
 
 package com.wcaokaze.probosqis.app
 
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.PageComposable
-import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
-import com.wcaokaze.probosqis.capsiqum.PageStack
-import com.wcaokaze.probosqis.capsiqum.PageStackBoard
-import com.wcaokaze.probosqis.capsiqum.PageStackBoardRepository
-import com.wcaokaze.probosqis.capsiqum.PageStackBoardState
-import com.wcaokaze.probosqis.capsiqum.PageStackRepository
-import com.wcaokaze.probosqis.capsiqum.PageStateStore
-import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.error.PErrorListRepository
+import com.wcaokaze.probosqis.error.RaisedError
+import com.wcaokaze.probosqis.pagedeck.PageDeckState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.resources.ProbosqisTheme
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CoroutineScope
 
 @Stable
-class ProbosqisState(
-   allPageComposables: List<PageComposable<*, *>>,
-   val pageStackBoardRepository: PageStackBoardRepository,
-   val pageStackRepository: PageStackRepository,
-   coroutineScope: CoroutineScope
-) {
-   val pageComposableSwitcher = PageComposableSwitcher(allPageComposables)
-   val pageStateStore = PageStateStore(
-      allPageComposables.map { it.pageStateFactory },
-      coroutineScope
-   )
-
-   private var _pageStackBoardState: PageStackBoardState? = null
-   var pageStackBoardState: PageStackBoardState
+class ProbosqisState {
+   private var _pageDeckState: PageDeckState? = null
+   var pageDeckState: PageDeckState
       get() {
-         return _pageStackBoardState ?: throw IllegalStateException(
-            "attempt to get pageStackBoardState before the first Composition")
+         return _pageDeckState ?: throw IllegalStateException(
+            "attempt to get pageDeckState before the first Composition")
       }
       internal set(value) {
-         _pageStackBoardState = value
+         _pageDeckState = value
       }
-
-   internal fun loadPageStackBoardOrDefault(): WritableCache<PageStackBoard> {
-      return try {
-         pageStackBoardRepository.loadPageStackBoard()
-      } catch (e: Exception) {
-         pageStackRepository.deleteAllPageStacks()
-
-         val rootRow = PageStackBoard.Row(
-            createDefaultPageStacks(pageStackRepository)
-         )
-         val pageStackBoard = PageStackBoard(rootRow)
-         pageStackBoardRepository.savePageStackBoard(pageStackBoard)
-      }
-   }
-
-   private fun createDefaultPageStacks(
-      pageStackRepository: PageStackRepository
-   ): ImmutableList<PageStackBoard.LayoutElement> {
-      return sequenceOf(
-            PageStack(
-               PageStack.Id(0L),
-               PageStack.SavedPageState(
-                  PageStack.PageId(0L),
-                  TestPage(0)
-               )
-            ),
-            PageStack(
-               PageStack.Id(1L),
-               PageStack.SavedPageState(
-                  PageStack.PageId(1L),
-                  TestPage(1)
-               )
-            ),
-         )
-         .map { pageStackRepository.savePageStack(it) }
-         .map { pageStackCache ->
-            PageStackBoard.PageStack(
-               PageStackBoard.PageStackId(pageStackCache.value.id.value),
-               pageStackCache
-            )
-         }
-         .toImmutableList()
-   }
 }
 
-@Composable
-fun Probosqis(
-   state: ProbosqisState,
-   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
-) {
-   ProbosqisTheme {
-      BoxWithConstraints {
-         if (maxWidth < 512.dp) {
-            SingleColumnProbosqis(state, safeDrawingWindowInsets)
-         } else {
-            MultiColumnProbosqis(state, safeDrawingWindowInsets)
-         }
-      }
+fun loadErrorListOrDefault(
+   errorListRepository: PErrorListRepository
+): WritableCache<List<RaisedError>> {
+   return try {
+      errorListRepository.loadErrorList()
+   } catch (e: Exception) {
+      errorListRepository.saveErrorList(emptyList())
    }
 }
