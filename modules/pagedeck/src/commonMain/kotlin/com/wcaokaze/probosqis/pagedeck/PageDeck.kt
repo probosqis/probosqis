@@ -68,6 +68,8 @@ class LazyPageStackState(
       pageStackState = s
       return s
    }
+
+   fun getIfInitialized(): PageStackState? = pageStackState
 }
 
 internal val CARD_ANIM_DURATION = 200.milliseconds
@@ -97,7 +99,11 @@ sealed class PageDeckState(
 
    abstract val activeCardIndex: Int
 
-   abstract suspend fun activate(cardIndex: Int)
+   protected abstract suspend fun activate(cardIndex: Int, animate: Boolean)
+
+   suspend fun activate(cardIndex: Int) {
+      activate(cardIndex, animate = true)
+   }
    
    private var coroutineScope: CoroutineScope? = null
    internal fun setCoroutineScope(coroutineScope: CoroutineScope) {
@@ -136,7 +142,7 @@ sealed class PageDeckState(
                   snapshotFlow { deckState.layoutInfo.cardsInfo }
                      .first { cards -> cards.any { it.key == pageStack.id } }
 
-                  activate(index)
+                  activate(index, animate = false)
                }
                delay(50.milliseconds)
             } finally {

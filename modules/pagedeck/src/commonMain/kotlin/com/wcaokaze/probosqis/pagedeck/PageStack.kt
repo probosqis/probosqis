@@ -74,6 +74,7 @@ class PageStackState internal constructor(
    val pageDeckState: PageDeckState
 ) {
    internal val pageStack: PageStack by pageStackCache.asState()
+   internal val multiColumnActivationAnimState = MultiColumnPageStackActivationAnimState()
 
    fun startPage(page: Page) {
       pageStackCache.update {

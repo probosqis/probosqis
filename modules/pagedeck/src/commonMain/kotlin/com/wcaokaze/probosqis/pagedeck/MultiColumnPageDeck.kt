@@ -17,6 +17,10 @@
 package com.wcaokaze.probosqis.pagedeck
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.layout.Column
@@ -36,15 +40,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
 import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.deck.MultiColumnDeck
 import com.wcaokaze.probosqis.capsiqum.deck.MultiColumnDeckState
+import com.wcaokaze.probosqis.capsiqum.deck.get
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
@@ -61,9 +68,14 @@ class MultiColumnPageDeckState(
    override var activeCardIndex by mutableIntStateOf(0)
       internal set
 
-   override suspend fun activate(cardIndex: Int) {
+   override suspend fun activate(cardIndex: Int, animate: Boolean) {
       deckState.animateScroll(cardIndex)
       activeCardIndex = cardIndex
+
+      if (animate) {
+         deck[cardIndex].content.getIfInitialized()
+            ?.multiColumnActivationAnimState?.animate()
+      }
    }
 }
 
@@ -137,6 +149,17 @@ private fun ActiveCardCorrector(state: MultiColumnPageDeckState) {
    }
 }
 
+@Stable
+internal class MultiColumnPageStackActivationAnimState {
+   private val scaleOffsetAnim = Animatable(0.dp, Dp.VectorConverter)
+   val scaleOffset by scaleOffsetAnim.asState()
+
+   suspend fun animate() {
+      scaleOffsetAnim.animateTo(12.dp, tween(32, easing = LinearEasing))
+      scaleOffsetAnim.animateTo(0.dp)
+   }
+}
+
 @ExperimentalMaterial3Api
 @Composable
 private fun PageStack(
@@ -150,6 +173,12 @@ private fun PageStack(
 ) {
    Column(
       modifier
+         .graphicsLayer {
+            val anim = state.multiColumnActivationAnimState
+            val scale = (size.width + anim.scaleOffset.toPx()) / size.width
+            scaleX = scale
+            scaleY = scale
+         }
          .clip(MaterialTheme.shapes.large)
          .background(colors.background)
    ) {

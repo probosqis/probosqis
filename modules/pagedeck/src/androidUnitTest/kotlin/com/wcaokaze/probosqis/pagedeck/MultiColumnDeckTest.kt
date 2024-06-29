@@ -30,7 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.deck.PositionInDeck
 import com.wcaokaze.probosqis.capsiqum.deck.get
@@ -51,6 +53,7 @@ import kotlinx.coroutines.launch
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -59,6 +62,7 @@ import kotlin.test.assertNull
 import kotlin.test.fail
 
 @RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class MultiColumnDeckTest {
    @get:Rule
    val rule = createComposeRule()
@@ -347,6 +351,51 @@ class MultiColumnDeckTest {
       rule.runOnIdle {
          assertEquals(1, deckState.activeCardIndex)
          assertEquals(1, deckState.deckState.firstContentCardIndex)
+      }
+   }
+
+   @Test
+   fun activateCard_anim() {
+      lateinit var coroutineScope: CoroutineScope
+      lateinit var deckState: MultiColumnPageDeckState
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         deckState = remember {
+            MultiColumnPageDeckState(
+               pageDeckCache = WritableCache(createPageDeck()),
+               pageStackRepository = mockk()
+            )
+         }
+
+         MultiColumnPageDeck(
+            deckState, rememberPageSwitcherState(),
+            rememberPageStateStore(coroutineScope), pageStackCount = 2,
+            modifier = Modifier.fillMaxSize()
+         )
+      }
+
+      rule.mainClock.autoAdvance = false
+
+      coroutineScope.launch {
+         deckState.activate(3)
+      }
+
+      repeat (40) { i ->
+         rule.onRoot().captureRoboImage("test/multiColumnDeck_activate/scrolling$i.png")
+         rule.mainClock.advanceTimeBy(16L)
+      }
+
+      rule.mainClock.autoAdvance = true
+      rule.waitForIdle()
+      rule.mainClock.autoAdvance = false
+
+      coroutineScope.launch {
+         deckState.activate(3)
+      }
+
+      repeat (20) { i ->
+         rule.onRoot().captureRoboImage("test/multiColumnDeck_activate/nonscrolling$i.png")
+         rule.mainClock.advanceTimeBy(16L)
       }
    }
 
