@@ -85,12 +85,15 @@ class SingleColumnPageDeckState(
    }
 
    override suspend fun activate(cardIndex: Int, animate: Boolean) {
-      deckState.animateScroll(cardIndex)
-
-      if (animate) {
-         deck[cardIndex].content.getIfInitialized()
-            ?.animateActivationBackground()
+      if (activeCardIndex == cardIndex) {
+         if (animate) {
+            deck[cardIndex].content.getIfInitialized()
+               ?.animateActivationBackground()
+         }
+      } else {
+         deckState.animateScroll(cardIndex)
       }
+
    }
 }
 
