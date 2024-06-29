@@ -165,6 +165,7 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
          PageStackColors(
             background = MaterialTheme.colorScheme.surface,
             content = MaterialTheme.colorScheme.onSurface,
+            activationAnimColor = MaterialTheme.colorScheme.surfaceTint.copy(alpha = 0.04f),
             footer = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
             footerContent = MaterialTheme.colorScheme.onSurface,
          ),

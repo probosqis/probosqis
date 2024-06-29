@@ -33,9 +33,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
+import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.deck.sequence
 import com.wcaokaze.probosqis.capsiqum.page.Page
@@ -54,11 +56,13 @@ import kotlinx.coroutines.launch
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class SingleColumnDeckTest {
    @get:Rule
    val rule = createComposeRule()
@@ -105,6 +109,7 @@ class SingleColumnDeckTest {
          PageStackColors(
             background = Color.Transparent,
             content = Color.Black,
+            activationAnimColor = Color.DarkGray,
             footer = Color.Transparent,
             footerContent = Color.Black,
          ),
@@ -253,6 +258,51 @@ class SingleColumnDeckTest {
       rule.runOnIdle {
          assertEquals(1, deckState.activeCardIndex)
          assertEquals(1, deckState.deckState.firstContentCardIndex)
+      }
+   }
+
+   @Test
+   fun activateCard_anim() {
+      lateinit var coroutineScope: CoroutineScope
+      lateinit var deckState: SingleColumnPageDeckState
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         deckState = remember {
+            SingleColumnPageDeckState(
+               pageDeckCache = WritableCache(createPageDeck()),
+               pageStackRepository = mockk()
+            )
+         }
+
+         SingleColumnPageDeck(
+            deckState, rememberPageSwitcherState(),
+            rememberPageStateStore(coroutineScope),
+            modifier = Modifier.fillMaxSize()
+         )
+      }
+
+      rule.mainClock.autoAdvance = false
+
+      coroutineScope.launch {
+         deckState.activate(3)
+      }
+
+      repeat (40) { i ->
+         rule.onRoot().captureRoboImage("test/singleColumnDeck_activate/scrolling$i.png")
+         rule.mainClock.advanceTimeBy(16L)
+      }
+
+      rule.mainClock.autoAdvance = true
+      rule.waitForIdle()
+      rule.mainClock.autoAdvance = false
+
+      coroutineScope.launch {
+         deckState.activate(3)
+      }
+
+      repeat (20) { i ->
+         rule.onRoot().captureRoboImage("test/singleColumnDeck_activate/nonscrolling$i.png")
+         rule.mainClock.advanceTimeBy(16L)
       }
    }
 

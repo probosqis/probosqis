@@ -16,6 +16,10 @@
 
 package com.wcaokaze.probosqis.pagedeck
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -33,11 +37,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -63,6 +69,7 @@ private val pageFooterHeight = 48.dp
 data class PageStackColors(
    val background: Color,
    val content: Color,
+   val activationAnimColor: Color,
    val footer: Color,
    val footerContent: Color,
 )
@@ -75,6 +82,19 @@ class PageStackState internal constructor(
 ) {
    internal val pageStack: PageStack by pageStackCache.asState()
    internal val multiColumnActivationAnimState = MultiColumnPageStackActivationAnimState()
+
+   private val activationBackgroundAlphaAnim = Animatable(0.0f)
+   val activationBackgroundAlpha by activationBackgroundAlphaAnim.asState()
+
+   internal suspend fun animateActivationBackground() {
+      activationBackgroundAlphaAnim.snapTo(1.0f)
+      repeat (2) {
+         activationBackgroundAlphaAnim.animateTo(0.0f, snap(150))
+         activationBackgroundAlphaAnim.animateTo(1.0f, snap(120))
+      }
+      activationBackgroundAlphaAnim
+         .animateTo(0.0f, tween(500, delayMillis = 200, easing = LinearOutSlowInEasing))
+   }
 
    fun startPage(page: Page) {
       pageStackCache.update {
@@ -207,11 +227,11 @@ private fun <P : Page, S : PageState> PageContentFooter(
    footerEndPaddingType:   FooterPaddingType
 ) {
    Box(Modifier.transitionElement(GlobalLayoutIds.root)) {
-      Box(
-         Modifier
+      PageContentBackground(
+         pageStackState, colors,
+         modifier = Modifier
             .transitionElement(GlobalLayoutIds.background)
             .fillMaxSize()
-            .background(colors.background)
       )
 
       val footerComposable = combined.footerComposable
@@ -254,6 +274,19 @@ private fun <P : Page, S : PageState> PageContentFooter(
          )
       }
    }
+}
+
+@Composable
+private fun PageContentBackground(
+   pageStackState: PageStackState,
+   colors: PageStackColors,
+   modifier: Modifier = Modifier
+) {
+   val background = colors.activationAnimColor
+      .copy(alpha = colors.activationAnimColor.alpha * pageStackState.activationBackgroundAlpha)
+      .compositeOver(colors.background)
+
+   Box(modifier.background(background))
 }
 
 @Composable

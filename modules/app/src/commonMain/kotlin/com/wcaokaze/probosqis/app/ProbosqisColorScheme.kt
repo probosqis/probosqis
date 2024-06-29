@@ -36,13 +36,16 @@ fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisColorScheme
 
    val pageStackBackground = materialColorScheme.surface
 
+   val pageStackActivationAnimColor: Color
    val errorListBackgroundColor: Color
    val errorListItemBackgroundColor: Color
 
    if (isSystemInDarkTheme()) {
+      pageStackActivationAnimColor = materialColorScheme.surfaceTint.copy(alpha = 0.09f)
       errorListBackgroundColor = pageStackBackground
       errorListItemBackgroundColor = materialColorScheme.surfaceColorAtElevation(1.dp)
    } else {
+      pageStackActivationAnimColor = materialColorScheme.surfaceTint.copy(alpha = 0.04f)
       errorListBackgroundColor = materialColorScheme.surfaceColorAtElevation(1.dp)
       errorListItemBackgroundColor = pageStackBackground
    }
@@ -55,6 +58,7 @@ fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisColorScheme
       pageStack = PageStackColors(
          pageStackBackground,
          content = materialColorScheme.onSurface,
+         pageStackActivationAnimColor,
          footer = materialColorScheme.surfaceColorAtElevation(3.dp),
          footerContent = materialColorScheme.onSurface,
       ),
@@ -83,6 +87,7 @@ fun rememberMultiColumnProbosqisColorScheme(): MultiColumnProbosqisColorScheme {
 
    val background: Color
    val pageStackBackground: Color
+   val pageStackActivationAnimColor: Color
    val activePageStackAppBarContainer: Color
 
    if (isSystemInDarkTheme()) {
@@ -92,12 +97,14 @@ fun rememberMultiColumnProbosqisColorScheme(): MultiColumnProbosqisColorScheme {
 
       background = materialColorScheme.surface
       pageStackBackground = materialColorScheme.surfaceColorAtElevation(1.dp)
+      pageStackActivationAnimColor = materialColorScheme.surfaceTint.copy(alpha = 0.09f)
    } else {
       activePageStackAppBarContainer = materialColorScheme.primaryContainer
          .let { materialColorScheme.surface.copy(alpha = 0.5f).compositeOver(it) }
 
       background = materialColorScheme.surfaceColorAtElevation(1.dp)
       pageStackBackground = materialColorScheme.surface
+      pageStackActivationAnimColor = materialColorScheme.surfaceTint.copy(alpha = 0.04f)
    }
 
    val activePageStackAppBar = TopAppBarDefaults.topAppBarColors(
@@ -116,6 +123,7 @@ fun rememberMultiColumnProbosqisColorScheme(): MultiColumnProbosqisColorScheme {
       PageStackColors(
          pageStackBackground,
          content = materialColorScheme.onSurface,
+         pageStackActivationAnimColor,
          footer = materialColorScheme.surfaceColorAtElevation(6.dp),
          footerContent = materialColorScheme.onSurface,
       ),

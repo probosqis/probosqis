@@ -113,6 +113,7 @@ class MultiColumnDeckTest {
          PageStackColors(
             background = Color.Transparent,
             content = Color.Black,
+            activationAnimColor = Color.DarkGray,
             footer = Color.Transparent,
             footerContent = Color.Black,
          ),

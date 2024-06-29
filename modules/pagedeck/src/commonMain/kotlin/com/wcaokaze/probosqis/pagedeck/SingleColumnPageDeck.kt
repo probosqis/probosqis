@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.deck.SingleColumnDeck
 import com.wcaokaze.probosqis.capsiqum.deck.SingleColumnDeckState
+import com.wcaokaze.probosqis.capsiqum.deck.get
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
@@ -83,8 +84,13 @@ class SingleColumnPageDeckState(
       }
    }
 
-   override suspend fun activate(cardIndex: Int) {
+   override suspend fun activate(cardIndex: Int, animate: Boolean) {
       deckState.animateScroll(cardIndex)
+
+      if (animate) {
+         deck[cardIndex].content.getIfInitialized()
+            ?.animateActivationBackground()
+      }
    }
 }
 
