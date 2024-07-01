@@ -80,11 +80,7 @@ abstract class PPageState : PageState(), KoinComponent {
    }
 
    fun raiseError(error: PError) {
-      errorListState.raise(
-         error,
-         raiserPageId = pageId,
-         raiserPageClone = page.clone()
-      )
+      errorListState.raise(error, raiserPageId = pageId)
    }
 
    @Composable

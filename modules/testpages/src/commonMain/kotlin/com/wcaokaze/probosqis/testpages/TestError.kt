@@ -28,7 +28,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.testpages.TestError")
-class TestError(val time: Instant) : PError()
+class TestError(
+   val time: Instant,
+   private val raiserPage: TestPage
+) : PError() {
+   override fun restorePage() = raiserPage
+}
 
 val testErrorComposable = PErrorItemComposable<TestError>(
    composable = { error ->

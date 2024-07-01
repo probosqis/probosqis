@@ -37,9 +37,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.testpages.TestPage")
-class TestPage(val i: Int) : PPage() {
-   override fun clone() = this
-}
+class TestPage(val i: Int) : PPage()
 
 @Stable
 class TestPageState : PPageState()
@@ -83,7 +81,7 @@ val testPageComposable = PPageComposable<TestPage, TestPageState>(
 
          Button(
             onClick = {
-               val error = TestError(Clock.System.now())
+               val error = TestError(Clock.System.now(), raiserPage = page)
                pageState.raiseError(error)
             }
          ) {
