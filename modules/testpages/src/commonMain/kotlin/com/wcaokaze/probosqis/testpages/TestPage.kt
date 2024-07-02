@@ -22,24 +22,28 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.error.PError
+import com.wcaokaze.probosqis.error.PErrorItemComposable
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.testpages.TestPage")
-class TestPage(val i: Int) : PPage() {
-   override fun clone() = this
-}
+class TestPage(val i: Int) : PPage()
 
 @Stable
 class TestPageState : PPageState()
@@ -83,7 +87,7 @@ val testPageComposable = PPageComposable<TestPage, TestPageState>(
 
          Button(
             onClick = {
-               val error = TestError(Clock.System.now())
+               val error = TestError(Clock.System.now(), raiserPage = page)
                pageState.raiseError(error)
             }
          ) {
@@ -94,4 +98,30 @@ val testPageComposable = PPageComposable<TestPage, TestPageState>(
    header = { _, _ -> },
    footer = null,
    pageTransitions = {}
+)
+
+@Serializable
+@SerialName("com.wcaokaze.probosqis.testpages.TestError")
+class TestError(
+   val time: Instant,
+   private val raiserPage: TestPage
+) : PError() {
+   override fun restorePage() = raiserPage
+}
+
+val testErrorComposable = PErrorItemComposable<TestError>(
+   composable = { error ->
+      val message = remember(error) {
+         val timeZone = TimeZone.currentSystemDefault()
+         val localDateTime = error.time.toLocalDateTime(timeZone)
+
+         "TestError %d/%d/%d %02d:%02d".format(
+            localDateTime.year, localDateTime.monthNumber, localDateTime.dayOfMonth,
+            localDateTime.hour, localDateTime.minute
+         )
+      }
+
+      Text(message)
+   },
+   onClick = { navigateToPage() }
 )

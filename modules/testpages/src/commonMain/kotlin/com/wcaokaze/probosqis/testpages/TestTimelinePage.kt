@@ -76,9 +76,7 @@ import kotlin.math.pow
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.testpages.TestTimelinePage")
-class TestTimelinePage : PPage() {
-   override fun clone() = this
-}
+class TestTimelinePage : PPage()
 
 @Stable
 class TestTimelinePageState(stateSaver: StateSaver) : PPageState() {

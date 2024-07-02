@@ -60,7 +60,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -142,11 +141,11 @@ fun SingleColumnProbosqis(
       PErrorList(
          errorListState,
          colorScheme.errorListColors,
-         onRequestNavigateToPage = { pageId, pageClone ->
+         onRequestNavigateToPage = { pageId, fallbackPage ->
             coroutineScope.launch {
                state.pageDeckState.navigateToPage(
                   pageId,
-                  fallbackPage = { pageClone }
+                  fallbackPage
                )
             }
          }

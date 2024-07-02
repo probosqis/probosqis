@@ -69,6 +69,10 @@ private val allErrorItemComposables = persistentListOf(
    testErrorComposable,
 )
 
+private val allErrorSerializers = listOf(
+   errorSerializer<TestError>(),
+)
+
 private val probosqisDataDir = File(System.getProperty("user.home"), ".probosqisData")
 
 private val koinModule = module {
@@ -118,9 +122,7 @@ private val repositoriesKoinModule = module {
 
    single<PErrorListRepository> {
       DesktopPErrorListRepository(
-         allErrorSerializers = listOf(
-            errorSerializer<TestError>(),
-         ),
+         allErrorSerializers,
          allPageSerializers,
          probosqisDataDir
       )

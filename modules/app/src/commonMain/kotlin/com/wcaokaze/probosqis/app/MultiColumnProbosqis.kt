@@ -100,11 +100,11 @@ fun MultiColumnProbosqis(
       PErrorList(
          errorListState,
          colorScheme.errorListColors,
-         onRequestNavigateToPage = { pageId, pageClone ->
+         onRequestNavigateToPage = { pageId, fallbackPage ->
             coroutineScope.launch {
                state.pageDeckState.navigateToPage(
                   pageId,
-                  fallbackPage = { pageClone }
+                  fallbackPage
                )
             }
          }

@@ -16,7 +16,10 @@
 
 package com.wcaokaze.probosqis.error
 
+import com.wcaokaze.probosqis.capsiqum.page.Page
 import kotlinx.serialization.Serializable
 
 @Serializable
-abstract class PError
+abstract class PError {
+   abstract fun restorePage(): Page
+}
