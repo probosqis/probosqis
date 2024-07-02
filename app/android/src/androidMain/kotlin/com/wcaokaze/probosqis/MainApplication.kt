@@ -63,6 +63,10 @@ class MainApplication : Application() {
       testErrorComposable,
    )
 
+   private val allErrorSerializers = persistentListOf(
+      errorSerializer<TestError>(),
+   )
+
    private val koinModule = module {
       single { PPageSwitcherState(allPageComposables) }
 
@@ -111,9 +115,7 @@ class MainApplication : Application() {
       single<PErrorListRepository> {
          AndroidPErrorListRepository(
             context = get(),
-            allErrorSerializers = listOf(
-               errorSerializer<TestError>(),
-            ),
+            allErrorSerializers,
             allPageSerializers
          )
       }
