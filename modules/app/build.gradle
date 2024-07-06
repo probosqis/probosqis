@@ -16,6 +16,7 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.rust.android
    alias libs.plugins.kotlinx.serialization
    alias libs.plugins.android.library
    alias libs.plugins.compose.jb
@@ -26,6 +27,7 @@ apply from: rootProject.file('gradle/setupModule.gradle')
 
 android {
    namespace 'com.wcaokaze.probosqis.app'
+   ndkVersion libs.versions.android.ndk.get()
 }
 
 kotlin {
@@ -42,5 +44,25 @@ kotlin {
          implementation project(':modules:testpages')
          implementation project(':modules:resources')
       }
+   }
+}
+
+cargo {
+   module = '.'
+   libname = 'app'
+   targets = ['arm', 'arm64', 'x86', 'x86_64']
+}
+
+tasks.register('cargoBuildDesktop', Exec) {
+   workingDir project.projectDir
+   commandLine 'cargo', 'build'
+}
+
+tasks.configureEach { task ->
+   if (task.name.contains('javaPreCompile')) {
+      task.dependsOn 'cargoBuild'
+   }
+   if (task.name.contains('compileKotlinDesktop')) {
+      task.dependsOn 'cargoBuildDesktop'
    }
 }

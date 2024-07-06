@@ -20,6 +20,7 @@ pluginManagement {
       google()
       mavenCentral()
       maven { url 'https://maven.pkg.jetbrains.space/public/p/compose/dev' }
+      maven { url 'https://plugins.gradle.org/m2/' }
    }
 }
 
@@ -34,7 +35,9 @@ dependencyResolutionManagement {
    versionCatalogs {
       libs {
          version('kotlin', '1.9.21')
+         version('rust-android-plugin', '0.9.4')
          version('android-plugin', '8.2.0')
+         version('android-ndk', '27.0.11902837')
          version('compose-jb', '1.5.11')
          version('compose-androidx', '1.5.4')
          version('compose-compiler', '1.5.7')
@@ -44,6 +47,7 @@ dependencyResolutionManagement {
          version('roborazzi', '1.7.0-rc-1')
 
          plugin('kotlin-multiplatform', 'org.jetbrains.kotlin.multiplatform').versionRef('kotlin')
+         plugin('rust-android', 'org.mozilla.rust-android-gradle.rust-android').versionRef('rust-android-plugin')
          plugin('android-application', 'com.android.application').versionRef('android-plugin')
          plugin('android-library', 'com.android.library').versionRef('android-plugin')
          plugin('compose-jb', 'org.jetbrains.compose').versionRef('compose-jb')
