@@ -47,6 +47,10 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 
 class MainApplication : Application() {
+   init {
+      System.loadLibrary("app")
+   }
+
    private val allPageComposables = persistentListOf(
       testPageComposable,
       testTimelinePageComposable,

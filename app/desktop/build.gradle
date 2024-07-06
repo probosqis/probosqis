@@ -24,7 +24,7 @@ apply from: rootProject.file('gradle/setupModule.gradle')
 
 compose.desktop {
    application {
-      mainClass = "com.wcaokaze.probosqis.MainKt"
+      mainClass = "com.wcaokaze.probosqis.Main"
    }
 }
 
