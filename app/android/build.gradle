@@ -16,6 +16,7 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.rust.android
    alias libs.plugins.kotlinx.serialization
    alias libs.plugins.android.application
    alias libs.plugins.compose.jb
@@ -26,6 +27,8 @@ apply from: rootProject.file('gradle/setupModule.gradle')
 
 android {
    namespace 'com.wcaokaze.probosqis'
+   ndkVersion libs.versions.android.ndk.get()
+
    sourceSets.main {
       manifest.srcFile 'src/androidMain/AndroidManifest.xml'
       kotlin.srcDirs = ['src/androidMain/kotlin']
@@ -64,5 +67,17 @@ kotlin {
          implementation project(':modules:resources')
          implementation libs.androidx.compose.material3.window.size
       }
+   }
+}
+
+cargo {
+   module = '../..'
+   libname = 'app'
+   targets = ['arm', 'arm64', 'x86', 'x86_64']
+}
+
+tasks.configureEach { task ->
+   if (task.name.contains('javaPreCompile')) {
+      task.dependsOn 'cargoBuild'
    }
 }

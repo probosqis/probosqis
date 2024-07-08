@@ -17,3 +17,4 @@ members = [
     "modules/app",
     "modules/mastodon/webapi",
 ]
+resolver = "2"
