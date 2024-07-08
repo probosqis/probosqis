@@ -48,13 +48,13 @@ kotlin {
 }
 
 cargo {
-   module = '.'
+   module = '../..'
    libname = 'app'
    targets = ['arm', 'arm64', 'x86', 'x86_64']
 }
 
 tasks.register('cargoBuildDesktop', Exec) {
-   workingDir project.projectDir
+   workingDir rootProject.projectDir
    commandLine 'cargo', 'build'
 }
 
