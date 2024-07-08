@@ -167,7 +167,7 @@ object Main {
          osName.startsWith("linux") -> {
             val lib = File(
                System.getProperty("user.dir").split('/').dropLast(2).joinToString("/"),
-               "modules/app/target/debug/libapp.so"
+               "target/debug/libapp.so"
             )
             System.load(lib.absolutePath)
          }

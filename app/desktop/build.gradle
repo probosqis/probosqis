@@ -46,3 +46,14 @@ kotlin {
       }
    }
 }
+
+tasks.register('cargoBuild', Exec) {
+   workingDir rootProject.projectDir
+   commandLine 'cargo', 'build'
+}
+
+tasks.configureEach { task ->
+   if (task.name.contains('compileKotlinDesktop')) {
+      task.dependsOn 'cargoBuild'
+   }
+}

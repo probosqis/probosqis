@@ -1,9 +1,7 @@
-.DS_Store
-*.iml
+# Gradle
 /.gradle
-/.idea
-/local.properties
 /build
-/captures
-.externalNativeBuild
-.cxx
+/local.properties
+
+# Cargo
+/target
