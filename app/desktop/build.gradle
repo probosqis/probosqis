@@ -52,8 +52,16 @@ tasks.register('cargoBuild', Exec) {
    commandLine 'cargo', 'build'
 }
 
+tasks.register('cargoTest', Exec) {
+   workingDir rootProject.projectDir
+   commandLine 'cargo', 'test'
+}
+
 tasks.configureEach { task ->
    if (task.name.contains('compileKotlinDesktop')) {
       task.dependsOn 'cargoBuild'
+   }
+   if (task.name.contains('desktopTestClasses')) {
+      task.dependsOn 'cargoTest'
    }
 }
