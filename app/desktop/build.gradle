@@ -49,12 +49,12 @@ kotlin {
 
 tasks.register('cargoBuild', Exec) {
    workingDir rootProject.projectDir
-   commandLine 'cargo', 'build'
+   commandLine 'cargo', 'build', '--color=always'
 }
 
 tasks.register('cargoTest', Exec) {
    workingDir rootProject.projectDir
-   commandLine 'cargo', 'test'
+   commandLine 'cargo', 'test', '--color=always'
 }
 
 tasks.configureEach { task ->
