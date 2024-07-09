@@ -47,14 +47,28 @@ kotlin {
    }
 }
 
+static def isXterm() {
+   return System.getenv('TERM').startsWith('xterm')
+}
+
 tasks.register('cargoBuild', Exec) {
    workingDir rootProject.projectDir
-   commandLine 'cargo', 'build', '--color=always'
+
+   def args = []
+   if (isXterm()) {
+      args += '--color=always'
+   }
+   commandLine('cargo', 'build', *args)
 }
 
 tasks.register('cargoTest', Exec) {
    workingDir rootProject.projectDir
-   commandLine 'cargo', 'test', '--color=always'
+
+   def args = []
+   if (isXterm()) {
+      args += '--color=always'
+   }
+   commandLine('cargo', 'test', *args)
 }
 
 tasks.configureEach { task ->
