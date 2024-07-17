@@ -32,11 +32,11 @@ subprojects {
    tasks.register('cargoJniTestBuild', Exec) {
       workingDir rootProject.projectDir
 
-      def args = ['--features', 'jni-test']
+      def args = ['+nightly', 'build', '--features', 'jni-test']
       if (isXterm()) {
          args += '--color=always'
       }
-      commandLine('cargo', 'build', *args)
+      commandLine('cargo', *args)
    }
 
    tasks.configureEach { task ->

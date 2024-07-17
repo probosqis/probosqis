@@ -50,21 +50,21 @@ kotlin {
 tasks.register('cargoBuild', Exec) {
    workingDir rootProject.projectDir
 
-   def args = []
+   def args = ['+nightly', 'build']
    if (isXterm()) {
       args += '--color=always'
    }
-   commandLine('cargo', 'build', *args)
+   commandLine('cargo', *args)
 }
 
 tasks.register('cargoTest', Exec) {
    workingDir rootProject.projectDir
 
-   def args = []
+   def args = ['+nightly', 'test']
    if (isXterm()) {
       args += '--color=always'
    }
-   commandLine('cargo', 'test', *args)
+   commandLine('cargo', *args)
 }
 
 tasks.configureEach { task ->
