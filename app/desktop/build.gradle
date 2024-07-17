@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,10 +45,6 @@ kotlin {
          implementation project(':modules:resources')
       }
    }
-}
-
-static def isXterm() {
-   return System.getenv('TERM').startsWith('xterm')
 }
 
 tasks.register('cargoBuild', Exec) {
