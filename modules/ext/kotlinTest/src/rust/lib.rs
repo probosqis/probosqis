@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#![cfg(feature="jni-test")]
 use std::ptr::null_mut;
 
 use jni::JavaVM;
 use jni::sys::{JNI_GetCreatedJavaVMs, JNI_OK, jsize};
 
-#[cfg(feature="jni-test")]
 pub(crate) fn get_vm() -> JavaVM {
    let mut buf: [*mut jni::sys::JavaVM; 4] = [null_mut(); 4];
    let mut vm_count = 0;
