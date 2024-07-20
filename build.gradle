@@ -40,7 +40,9 @@ subprojects {
    }
 
    tasks.configureEach { task ->
-      if (task.name.contains('compileTestKotlin')) {
+      if (task.name.contains('compileTestKotlin')
+         && ['Jvm', 'Desktop', 'Android'].any { task.name.contains(it) }
+      ) {
          task.dependsOn 'cargoJniTestBuild'
       }
    }
