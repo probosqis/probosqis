@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,28 +47,24 @@ kotlin {
    }
 }
 
-static def isXterm() {
-   return System.getenv('TERM').startsWith('xterm')
-}
-
 tasks.register('cargoBuild', Exec) {
    workingDir rootProject.projectDir
 
-   def args = []
+   def args = ['+nightly', 'build', '--features', 'jvm']
    if (isXterm()) {
       args += '--color=always'
    }
-   commandLine('cargo', 'build', *args)
+   commandLine('cargo', *args)
 }
 
 tasks.register('cargoTest', Exec) {
    workingDir rootProject.projectDir
 
-   def args = []
+   def args = ['+nightly', 'test']
    if (isXterm()) {
       args += '--color=always'
    }
-   commandLine('cargo', 'test', *args)
+   commandLine('cargo', *args)
 }
 
 tasks.configureEach { task ->

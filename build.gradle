@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,3 +22,34 @@ plugins {
    alias libs.plugins.roborazzi apply false
 }
 
+static def isXterm() {
+   def term = System.getenv('TERM')
+   if (term == null) { return false }
+   return term.startsWith('xterm')
+}
+
+subprojects {
+   tasks.register('cargoJniTestBuild', Exec) {
+      workingDir rootProject.projectDir
+
+      def args = ['+nightly', 'build', '--features', 'jni-test']
+      if (isXterm()) {
+         args += '--color=always'
+      }
+      commandLine('cargo', *args)
+   }
+
+   tasks.configureEach { task ->
+      if (task.name.contains('compileTestKotlin')
+         && ['Jvm', 'Desktop', 'Android'].any { task.name.contains(it) }
+      ) {
+         task.dependsOn 'cargoJniTestBuild'
+      }
+
+      if (task.name.matches(/test(Debug|Release)UnitTest/) ||
+          task.name.matches(/jvmTest/))
+      {
+         task.outputs.upToDateWhen { false }
+      }
+   }
+}
