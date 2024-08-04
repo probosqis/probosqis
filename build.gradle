@@ -45,5 +45,11 @@ subprojects {
       ) {
          task.dependsOn 'cargoJniTestBuild'
       }
+
+      if (task.name.matches(/test(Debug|Release)UnitTest/) ||
+          task.name.matches(/jvmTest/))
+      {
+         task.outputs.upToDateWhen { false }
+      }
    }
 }
