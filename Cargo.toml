@@ -17,6 +17,7 @@ members = [
     "modules/app",
     "modules/ext/kotlinTest",
     "modules/mastodon/webapi",
+    "modules/panoptiqon/panoptiqon",
 ]
 resolver = "2"
 
