@@ -13,7 +13,7 @@
 # limitations under the License.
 
 [package]
-name = "mastodon_webapi"
+name = "mastodon"
 edition = "2021"
 
 [dependencies]

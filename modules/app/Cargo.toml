@@ -21,4 +21,4 @@ path = "src/rust/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-mastodon_webapi.workspace = true
+mastodon.workspace = true
