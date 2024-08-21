@@ -12,21 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[workspace]
-members = [
-    "modules/app",
-    "modules/ext/kotlinTest",
-    "modules/mastodon/entity",
-    "modules/mastodon/repository",
-    "modules/mastodon/webapi",
-    "modules/panoptiqon/panoptiqon",
-]
-resolver = "2"
+[package]
+name = "mastodon_entity"
+edition = "2021"
 
-[workspace.dependencies]
-jni = "0.21.1"
-ext-kotlintest = { path = "modules/ext/kotlinTest" }
-panoptiqon = { path = "modules/panoptiqon/panoptiqon" }
-mastodon_entity = { path = "modules/mastodon/entity" }
-mastodon_repository = { path = "modules/mastodon/repository" }
-mastodon_webapi = { path = "modules/mastodon/webapi" }
+[lib]
+path = "src/rust/lib.rs"
+
+[dependencies]
