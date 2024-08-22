@@ -14,4 +14,11 @@
  * limitations under the License.
  */
 
-pub mod application;
+package com.wcaokaze.probosqis.mastodon.entity
+
+data class Application(
+   val name: String,
+   val website: String?,
+   val clientId: String?,
+   val clientSecret: String?,
+)

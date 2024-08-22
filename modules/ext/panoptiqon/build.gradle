@@ -14,4 +14,17 @@
  * limitations under the License.
  */
 
-pub mod application;
+plugins {
+   alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
+}
+
+apply from: rootProject.file('gradle/setupModule.gradle')
+
+kotlin {
+   sourceSets {
+      commonTest.dependencies {
+         implementation project(':modules:ext:kotlinTest')
+      }
+   }
+}

@@ -16,6 +16,7 @@
 members = [
     "modules/app",
     "modules/ext/kotlinTest",
+    "modules/ext/panoptiqon",
     "modules/mastodon/entity",
     "modules/mastodon/repository",
     "modules/mastodon/webapi",
@@ -24,8 +25,16 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
+anyhow = "1.0.86"
+serde = { version = "1.0.208", features = ["derive"] }
+
 jni = "0.21.1"
+
+url = "2.5.2"
+ureq = { version = "2.10.1", features = ["json"] }
+
 ext-kotlintest = { path = "modules/ext/kotlinTest" }
+ext_panoptiqon = { path = "modules/ext/panoptiqon" }
 panoptiqon = { path = "modules/panoptiqon/panoptiqon" }
 mastodon_entity = { path = "modules/mastodon/entity" }
 mastodon_repository = { path = "modules/mastodon/repository" }

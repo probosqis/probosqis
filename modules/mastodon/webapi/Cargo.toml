@@ -17,4 +17,10 @@ name = "mastodon_webapi"
 edition = "2021"
 
 [dependencies]
-jni.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+
+url.workspace = true
+ureq.workspace = true
+
+mastodon_entity.workspace = true

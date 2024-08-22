@@ -13,7 +13,7 @@
 # limitations under the License.
 
 [package]
-name = "mastodon_entity"
+name = "ext_panoptiqon"
 edition = "2021"
 
 [lib]
@@ -27,4 +27,3 @@ jni-test = ["jvm", "panoptiqon/jni-test"]
 serde.workspace = true
 jni = { workspace = true, optional = true }
 panoptiqon.workspace = true
-ext_panoptiqon.workspace = true

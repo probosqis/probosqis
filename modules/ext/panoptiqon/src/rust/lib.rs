@@ -14,4 +14,5 @@
  * limitations under the License.
  */
 
-pub mod application;
+#[cfg(feature="jvm")]
+pub mod convert_java_helper;
