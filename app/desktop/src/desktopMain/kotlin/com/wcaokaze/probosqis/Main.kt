@@ -29,6 +29,10 @@ import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.repository.AppRepositoryImpl
+import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
+import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
 import com.wcaokaze.probosqis.page.PPageStateStore
 import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
@@ -62,12 +66,14 @@ object Main {
       testPageComposable,
       testTimelinePageComposable,
       testNotePageComposable,
+      mastodonTestPageComposable,
    )
 
    private val allPageSerializers = persistentListOf(
       pageSerializer<TestPage>(),
       pageSerializer<TestTimelinePage>(),
       pageSerializer<TestNotePage>(),
+      pageSerializer<MastodonTestPage>(),
    )
 
    private val allErrorItemComposables = persistentListOf(
@@ -131,6 +137,10 @@ object Main {
             allPageSerializers,
             probosqisDataDir
          )
+      }
+
+      single<AppRepository> {
+         AppRepositoryImpl()
       }
    }
 

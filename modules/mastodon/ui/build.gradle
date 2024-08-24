@@ -17,14 +17,24 @@
 plugins {
    alias libs.plugins.kotlin.multiplatform
    alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.android.library
+   alias libs.plugins.compose.jb
+   alias libs.plugins.compose.compiler
+   alias libs.plugins.roborazzi
 }
 
 apply from: rootProject.file('gradle/setupModule.gradle')
 
+android {
+   namespace 'com.wcaokaze.probosqis.mastodon.ui'
+}
+
 kotlin {
    sourceSets {
       commonMain.dependencies {
+         implementation project(':modules:page')
          implementation project(':modules:mastodon:entity')
+         implementation project(':modules:mastodon:repository')
       }
    }
 }

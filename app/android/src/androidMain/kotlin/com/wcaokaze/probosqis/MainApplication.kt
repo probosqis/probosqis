@@ -23,6 +23,10 @@ import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.repository.AppRepositoryImpl
+import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
+import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
 import com.wcaokaze.probosqis.page.PPageStateStore
 import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
@@ -55,12 +59,14 @@ class MainApplication : Application() {
       testPageComposable,
       testTimelinePageComposable,
       testNotePageComposable,
+      mastodonTestPageComposable,
    )
 
    private val allPageSerializers = persistentListOf(
       pageSerializer<TestPage>(),
       pageSerializer<TestTimelinePage>(),
       pageSerializer<TestNotePage>(),
+      pageSerializer<MastodonTestPage>(),
    )
 
    private val allErrorItemComposables = persistentListOf(
@@ -122,6 +128,10 @@ class MainApplication : Application() {
             allErrorSerializers,
             allPageSerializers
          )
+      }
+
+      single<AppRepository> {
+         AppRepositoryImpl()
       }
    }
 

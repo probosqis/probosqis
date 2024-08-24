@@ -14,5 +14,10 @@
  * limitations under the License.
  */
 
-pub use mastodon_repository;
+package com.wcaokaze.probosqis.mastodon.repository
 
+import com.wcaokaze.probosqis.mastodon.entity.Application
+
+interface AppRepository {
+   fun createApp(instanceBaseUrl: String): Application
+}

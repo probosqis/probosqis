@@ -13,4 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use std::cell::LazyCell;
 
+use ureq::Agent;
+
+const AGENT: LazyCell<Agent> = LazyCell::new(|| Agent::new());
+
+mod app_repository;

@@ -31,6 +31,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorItemComposable
+import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
@@ -92,6 +93,14 @@ val testPageComposable = PPageComposable<TestPage, TestPageState>(
             }
          ) {
             Text("Raise an error")
+         }
+
+         Button(
+            onClick = {
+               pageState.startPage(MastodonTestPage())
+            }
+         ) {
+            Text("Start Mastodon Test")
          }
       }
    },
