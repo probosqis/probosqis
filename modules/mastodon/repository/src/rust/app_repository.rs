@@ -23,7 +23,7 @@ use {
 };
 use mastodon_webapi::apps;
 
-use crate::AGENT;
+use crate::CLIENT;
 
 #[cfg(feature="jvm")]
 #[no_mangle]
@@ -38,7 +38,7 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AppRepositoryImpl_
    let instance_base_url: Url = instance_base_url.parse().unwrap();
 
    let application = apps::post_apps(
-      &AGENT, &instance_base_url,
+      &CLIENT, &instance_base_url,
       /* client_name = */ "Probosqis",
       /* redirect_uris = */ "https://3iqura.wcaokaze.com/auth/callback",
       /* scopes = */ Some("read write push"),

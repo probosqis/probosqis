@@ -15,8 +15,10 @@
  */
 use std::cell::LazyCell;
 
-use ureq::Agent;
+use reqwest::blocking::Client;
 
-const AGENT: LazyCell<Agent> = LazyCell::new(|| Agent::new());
+const CLIENT: LazyCell<Client> = LazyCell::new(
+   || Client::builder().build().unwrap()
+);
 
 mod app_repository;

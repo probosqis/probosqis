@@ -27,7 +27,7 @@ jni-test = ["jvm", "panoptiqon/jni-test"]
 jni = { workspace = true, optional = true }
 
 url.workspace = true
-ureq.workspace = true
+reqwest.workspace = true
 
 panoptiqon.workspace = true
 

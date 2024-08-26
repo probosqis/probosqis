@@ -31,7 +31,9 @@ serde = { version = "1.0.208", features = ["derive"] }
 jni = "0.21.1"
 
 url = "2.5.2"
-ureq = { version = "2.10.1", features = ["json"] }
+reqwest.version = "0.12.7"
+reqwest.default-features = false
+reqwest.features = ["rustls-tls", "charset", "http2", "blocking", "json"]
 
 ext-kotlintest = { path = "modules/ext/kotlinTest" }
 ext_panoptiqon = { path = "modules/ext/panoptiqon" }

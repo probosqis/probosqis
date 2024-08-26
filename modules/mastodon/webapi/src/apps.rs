@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use std::collections::HashMap;
+
 use anyhow::Result;
-use ureq::Agent;
+use reqwest::blocking::Client;
 use url::Url;
 
 use mastodon_entity::application::Application;
 
 pub fn post_apps<'a>(
-   agent: &Agent,
+   client: &Client,
    instance_base_url: &Url,
    client_name: &str,
    redirect_uris: &str,
@@ -29,30 +31,21 @@ pub fn post_apps<'a>(
 ) -> Result<Application> {
    let url = instance_base_url.join("api/v1/apps")?;
 
-   let form = filter_some([
-      ("client_name", Some(client_name)),
-      ("redirect_uris", Some(redirect_uris)),
-      ("scopes", scopes),
-      ("website", website),
-   ]);
+   let mut form = HashMap::new();
+   form.insert("client_name", client_name);
+   form.insert("redirect_uris", redirect_uris);
+   if let Some(scopes) = scopes {
+      form.insert("scopes", scopes);
+   }
+   if let Some(website) = website {
+      form.insert("website", website);
+   }
 
-   let application = agent
-      .post(url.as_str())
-      .send_form(&form)?
-      .into_json()?;
+   let application = client
+      .post(url)
+      .form(&form)
+      .send()?
+      .json()?;
 
    Ok(application)
-}
-
-#[inline]
-fn filter_some<'a, const N: usize>(
-   options: [(&'a str, Option<&'a str>); N]
-) -> Vec<(&'a str, &'a str)> {
-   let mut result = Vec::with_capacity(N);
-   for (k, o) in options {
-      if let Some(v) = o {
-         result.push((k, v));
-      }
-   }
-   result
 }
