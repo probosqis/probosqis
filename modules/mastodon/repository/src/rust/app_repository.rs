@@ -13,37 +13,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use url::Url;
 
 #[cfg(feature="jvm")]
-use {
-   jni::JNIEnv,
-   jni::objects::{JObject, JString},
-   panoptiqon::convert_java::ConvertJava,
-};
-use mastodon_webapi::apps;
+mod jvm {
+   use jni::JNIEnv;
+   use jni::objects::{JObject, JString};
+   use url::Url;
 
-use crate::CLIENT;
+   use mastodon_webapi::apps;
+   use panoptiqon::convert_java::ConvertJava;
 
-#[cfg(feature="jvm")]
-#[no_mangle]
-extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AppRepositoryImpl_createApp<'local>(
-   mut env: JNIEnv<'local>,
-   _obj: JObject<'local>,
-   instance_base_url: JString<'local>
-) -> JObject<'local> {
-   let instance_base_url: String
-      = env.get_string(&instance_base_url).unwrap().into();
+   use crate::CLIENT;
 
-   let instance_base_url: Url = instance_base_url.parse().unwrap();
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_postApp<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      instance_base_url: JString<'local>
+   ) -> JObject<'local> {
+      post_app(&mut env, instance_base_url)
+   }
 
-   let application = apps::post_apps(
-      &CLIENT, &instance_base_url,
-      /* client_name = */ "Probosqis",
-      /* redirect_uris = */ "https://3iqura.wcaokaze.com/auth/callback",
-      /* scopes = */ Some("read write push"),
-      /* website = */ None
-   ).unwrap();
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_postApp<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      instance_base_url: JString<'local>
+   ) -> JObject<'local> {
+      post_app(&mut env, instance_base_url)
+   }
 
-   application.clone_into_java(&mut env)
+   #[cfg(feature="jvm")]
+   fn post_app<'local>(
+      env: &mut JNIEnv<'local>,
+      instance_base_url: JString<'local>
+   ) -> JObject<'local> {
+      let instance_base_url: String
+         = env.get_string(&instance_base_url).unwrap().into();
+
+      let instance_base_url: Url = instance_base_url.parse().unwrap();
+
+      let application = apps::post_apps(
+         &CLIENT, &instance_base_url,
+         /* client_name = */ "Probosqis",
+         /* redirect_uris = */ "https://3iqura.wcaokaze.com/auth/callback",
+         /* scopes = */ Some("read write push"),
+         /* website = */ None
+      ).unwrap();
+
+      application.clone_into_java(env)
+   }
 }

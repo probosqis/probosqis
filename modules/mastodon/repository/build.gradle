@@ -17,14 +17,20 @@
 plugins {
    alias libs.plugins.kotlin.multiplatform
    alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.android.library
 }
 
 apply from: rootProject.file('gradle/setupModule.gradle')
+
+android {
+   namespace 'com.wcaokaze.probosqis.mastodon.repository'
+}
 
 kotlin {
    sourceSets {
       commonMain.dependencies {
          implementation project(':modules:mastodon:entity')
+         implementation project(':panoptiqon')
       }
    }
 }

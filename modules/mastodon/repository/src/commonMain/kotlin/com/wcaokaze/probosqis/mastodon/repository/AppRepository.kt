@@ -17,7 +17,10 @@
 package com.wcaokaze.probosqis.mastodon.repository
 
 import com.wcaokaze.probosqis.mastodon.entity.Application
+import com.wcaokaze.probosqis.panoptiqon.Cache
 
 interface AppRepository {
-   fun createApp(instanceBaseUrl: String): Application
+   fun createApp(instanceBaseUrl: String): Cache<Application>
+
+   fun loadAppCache(instanceBaseUrl: String): Cache<Application>?
 }

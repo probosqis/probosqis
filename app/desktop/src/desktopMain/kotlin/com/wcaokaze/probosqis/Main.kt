@@ -30,7 +30,7 @@ import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
-import com.wcaokaze.probosqis.mastodon.repository.AppRepositoryImpl
+import com.wcaokaze.probosqis.mastodon.repository.DesktopAppRepository
 import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
 import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
 import com.wcaokaze.probosqis.page.PPageStateStore
@@ -139,9 +139,7 @@ object Main {
          )
       }
 
-      single<AppRepository> {
-         AppRepositoryImpl()
-      }
+      single<AppRepository> { DesktopAppRepository(probosqisDataDir) }
    }
 
    @JvmStatic

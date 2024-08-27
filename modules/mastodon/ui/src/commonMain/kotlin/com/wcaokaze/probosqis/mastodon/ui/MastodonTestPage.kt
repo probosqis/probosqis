@@ -31,6 +31,7 @@ import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,7 +47,8 @@ class MastodonTestPage : PPage()
 class MastodonTestPageState : PPageState() {
    private val appRepository: AppRepository by inject()
 
-   var application: Application? by mutableStateOf(null)
+   var application: Cache<Application>? by mutableStateOf(null)
+   val applicationCache = appRepository.loadAppCache("https://pawoo.net/")
 
    suspend fun createApplication() {
       withContext(Dispatchers.IO) {
@@ -70,7 +72,11 @@ val mastodonTestPageComposable = PPageComposable<MastodonTestPage, MastodonTestP
 private fun MastodonTestPage(state: MastodonTestPageState) {
    Column {
       Text(
-         state.application.toString()
+         state.application?.value.toString()
+      )
+
+      Text(
+         "cache: ${state.applicationCache?.value.toString()}"
       )
 
       val coroutineScope = rememberCoroutineScope()
