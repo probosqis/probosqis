@@ -16,6 +16,9 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Application(
    val name: String,
    val website: String?,
