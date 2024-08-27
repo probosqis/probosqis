@@ -443,6 +443,7 @@ dependencies = [
 name = "mastodon_repository"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
  "jni",
  "mastodon_entity",
  "mastodon_webapi",

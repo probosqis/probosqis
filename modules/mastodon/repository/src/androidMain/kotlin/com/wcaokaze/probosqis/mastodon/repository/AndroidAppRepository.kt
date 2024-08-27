@@ -41,13 +41,9 @@ class AndroidAppRepository(context: Context) : AppRepository {
    external fun postApp(instanceBaseUrl: String): Application
 
    @TemporaryCacheApi
-   override fun loadAppCache(instanceBaseUrl: String): Cache<Application>? {
+   override fun loadAppCache(instanceBaseUrl: String): Cache<Application> {
       val fileName = URLEncoder.encode(instanceBaseUrl, "UTF-8")
       val file = File(dir, fileName)
-      return try {
-         loadCache<Application>(file, Json).asCache()
-      } catch (_: Exception) {
-         null
-      }
+      return loadCache<Application>(file, Json).asCache()
    }
 }

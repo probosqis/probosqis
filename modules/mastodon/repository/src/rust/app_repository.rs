@@ -16,8 +16,9 @@
 
 #[cfg(feature="jvm")]
 mod jvm {
+   use anyhow::Result;
    use jni::JNIEnv;
-   use jni::objects::{JObject, JString};
+   use jni::objects::{JObject, JString, JThrowable};
    use url::Url;
 
    use mastodon_webapi::apps;
@@ -32,6 +33,14 @@ mod jvm {
       instance_base_url: JString<'local>
    ) -> JObject<'local> {
       post_app(&mut env, instance_base_url)
+         .unwrap_or_else(|_| {
+            let exception = JThrowable::from(
+               env.new_object("java/io/IOException", "()V", &[]).unwrap()
+            );
+            env.throw(exception).unwrap();
+
+            JObject::null()
+         })
    }
 
    #[no_mangle]
@@ -41,17 +50,23 @@ mod jvm {
       instance_base_url: JString<'local>
    ) -> JObject<'local> {
       post_app(&mut env, instance_base_url)
+         .unwrap_or_else(|_| {
+            let exception = JThrowable::from(
+               env.new_object("java/io/IOException", "()V", &[]).unwrap()
+            );
+            env.throw(exception).unwrap();
+
+            JObject::null()
+         })
    }
 
    #[cfg(feature="jvm")]
    fn post_app<'local>(
       env: &mut JNIEnv<'local>,
       instance_base_url: JString<'local>
-   ) -> JObject<'local> {
-      let instance_base_url: String
-         = env.get_string(&instance_base_url).unwrap().into();
-
-      let instance_base_url: Url = instance_base_url.parse().unwrap();
+   ) -> Result<JObject<'local>> {
+      let instance_base_url: String = env.get_string(&instance_base_url)?.into();
+      let instance_base_url: Url = instance_base_url.parse()?;
 
       let application = apps::post_apps(
          &CLIENT, &instance_base_url,
@@ -59,8 +74,8 @@ mod jvm {
          /* redirect_uris = */ "https://3iqura.wcaokaze.com/auth/callback",
          /* scopes = */ Some("read write push"),
          /* website = */ None
-      ).unwrap();
+      )?;
 
-      application.clone_into_java(env)
+      Ok(application.clone_into_java(env))
    }
 }

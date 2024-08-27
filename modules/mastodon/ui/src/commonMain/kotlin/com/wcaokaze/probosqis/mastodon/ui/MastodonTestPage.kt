@@ -18,6 +18,8 @@ package com.wcaokaze.probosqis.mastodon.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -48,11 +50,22 @@ class MastodonTestPageState : PPageState() {
    private val appRepository: AppRepository by inject()
 
    var application: Cache<Application>? by mutableStateOf(null)
-   val applicationCache = appRepository.loadAppCache("https://pawoo.net/")
+
+   val applicationCache = try {
+      appRepository.loadAppCache("https://pawoo.net/")
+   } catch (_: Exception) {
+      null
+   }
+
+   val snackbarHostState = SnackbarHostState()
 
    suspend fun createApplication() {
-      withContext(Dispatchers.IO) {
-         application = appRepository.createApp("https://pawoo.net/")
+      try {
+         withContext(Dispatchers.IO) {
+            application = appRepository.createApp("https://pawoo.net/")
+         }
+      } catch (_: Exception) {
+         snackbarHostState.showSnackbar("ERROROROR")
       }
    }
 }
@@ -64,7 +77,9 @@ val mastodonTestPageComposable = PPageComposable<MastodonTestPage, MastodonTestP
    },
    header = { _, _ ->
    },
-   footer = { _, _ -> },
+   footer = { _, state ->
+      SnackbarHost(state.snackbarHostState)
+   },
    pageTransitions = {}
 )
 

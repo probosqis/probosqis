@@ -18,9 +18,16 @@ package com.wcaokaze.probosqis.mastodon.repository
 
 import com.wcaokaze.probosqis.mastodon.entity.Application
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import java.io.IOException
 
 interface AppRepository {
+   /**
+    * @throws IOException
+    */
    fun createApp(instanceBaseUrl: String): Cache<Application>
 
-   fun loadAppCache(instanceBaseUrl: String): Cache<Application>?
+   /**
+    * @throws IOException
+    */
+   fun loadAppCache(instanceBaseUrl: String): Cache<Application>
 }
