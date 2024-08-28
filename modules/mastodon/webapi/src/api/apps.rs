@@ -19,9 +19,9 @@ use anyhow::Result;
 use reqwest::blocking::Client;
 use url::Url;
 
-use mastodon_entity::application::Application;
+use crate::entity::application::Application;
 
-pub fn post_apps<'a>(
+pub fn post_apps(
    client: &Client,
    instance_base_url: &Url,
    client_name: &str,

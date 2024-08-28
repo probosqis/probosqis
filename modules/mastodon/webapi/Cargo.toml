@@ -22,5 +22,3 @@ serde.workspace = true
 
 url.workspace = true
 reqwest.workspace = true
-
-mastodon_entity.workspace = true

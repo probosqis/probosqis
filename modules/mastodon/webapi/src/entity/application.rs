@@ -13,6 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use serde::Deserialize;
 
-pub mod api;
-pub mod entity;
+#[derive(Deserialize)]
+pub struct Application {
+   /// since 0.9.9
+   pub name: String,
+   /// since 0.9.9
+   pub website: Option<String>,
+   /// since 0.9.9
+   pub client_id: Option<String>,
+   /// since 0.9.9
+   pub client_secret: Option<String>,
+}

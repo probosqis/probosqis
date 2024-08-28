@@ -26,13 +26,9 @@ use {
 
 #[derive(Deserialize)]
 pub struct Application {
-   /// since 0.9.9
    pub name: String,
-   /// since 0.9.9
    pub website: Option<String>,
-   /// since 0.9.9
    pub client_id: Option<String>,
-   /// since 0.9.9
    pub client_secret: Option<String>,
 }
 

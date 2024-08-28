@@ -457,7 +457,6 @@ name = "mastodon_webapi"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "mastodon_entity",
  "reqwest",
  "serde",
  "url",

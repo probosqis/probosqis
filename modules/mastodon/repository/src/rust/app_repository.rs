@@ -21,7 +21,9 @@ mod jvm {
    use jni::objects::{JObject, JString, JThrowable};
    use url::Url;
 
-   use mastodon_webapi::apps;
+   use mastodon_entity::application::Application;
+   use mastodon_webapi::api::apps;
+   use mastodon_webapi::entity::application::Application as ApiApplication;
    use panoptiqon::convert_java::ConvertJava;
 
    use crate::CLIENT;
@@ -68,13 +70,15 @@ mod jvm {
       let instance_base_url: String = env.get_string(&instance_base_url)?.into();
       let instance_base_url: Url = instance_base_url.parse()?;
 
-      let application = apps::post_apps(
+      let ApiApplication { name, website, client_id, client_secret } = apps::post_apps(
          &CLIENT, &instance_base_url,
          /* client_name = */ "Probosqis",
          /* redirect_uris = */ "https://3iqura.wcaokaze.com/auth/callback",
          /* scopes = */ Some("read write push"),
          /* website = */ None
       )?;
+
+      let application = Application { name, website, client_id, client_secret };
 
       Ok(application.clone_into_java(env))
    }
