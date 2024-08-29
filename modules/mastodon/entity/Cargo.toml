@@ -26,5 +26,8 @@ jni-test = ["jvm", "panoptiqon/jni-test"]
 [dependencies]
 serde.workspace = true
 jni = { workspace = true, optional = true }
+
+url.workspace = true
+
 panoptiqon.workspace = true
 ext_panoptiqon.workspace = true

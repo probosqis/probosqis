@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 use serde::Deserialize;
+use url::Url;
 
 #[cfg(feature="jvm")]
 use {
@@ -26,6 +27,7 @@ use {
 
 #[derive(Deserialize)]
 pub struct Application {
+   pub instance_base_url: Url,
    pub name: String,
    pub website: Option<String>,
    pub client_id: Option<String>,
@@ -33,42 +35,47 @@ pub struct Application {
 }
 
 #[cfg(feature="jvm")]
-const HELPER: ConvertJavaHelper<4> = ConvertJavaHelper::new(
+const HELPER: ConvertJavaHelper<5> = ConvertJavaHelper::new(
    "com/wcaokaze/probosqis/mastodon/entity/Application",
-   "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
+   "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
    [
-      ("getName",         "Ljava/lang/String;"),
-      ("getWebsite",      "Ljava/lang/String;"),
-      ("getClientId",     "Ljava/lang/String;"),
-      ("getClientSecret", "Ljava/lang/String;"),
+      ("getInstanceBaseUrl", "Ljava/lang/String;"),
+      ("getName",            "Ljava/lang/String;"),
+      ("getWebsite",         "Ljava/lang/String;"),
+      ("getClientId",        "Ljava/lang/String;"),
+      ("getClientSecret",    "Ljava/lang/String;"),
    ]
 );
 
 #[cfg(feature="jvm")]
 impl ConvertJava for Application {
    fn clone_into_java<'local>(&self, env: &mut JNIEnv<'local>) -> JObject<'local> {
-      let name          = self.name         .clone_into_java(env);
-      let website       = self.website      .clone_into_java(env);
-      let client_id     = self.client_id    .clone_into_java(env);
-      let client_secret = self.client_secret.clone_into_java(env);
+      let instance_base_url = self.instance_base_url.to_string().clone_into_java(env);
+      let name              = self.name                         .clone_into_java(env);
+      let website           = self.website                      .clone_into_java(env);
+      let client_id         = self.client_id                    .clone_into_java(env);
+      let client_secret     = self.client_secret                .clone_into_java(env);
 
       let args = [
-         jvalue { l: name         .into_raw() },
-         jvalue { l: website      .into_raw() },
-         jvalue { l: client_id    .into_raw() },
-         jvalue { l: client_secret.into_raw() },
+         jvalue { l: instance_base_url.into_raw() },
+         jvalue { l: name             .into_raw() },
+         jvalue { l: website          .into_raw() },
+         jvalue { l: client_id        .into_raw() },
+         jvalue { l: client_secret    .into_raw() },
       ];
 
       HELPER.clone_into_java(env, &args)
    }
 
    fn clone_from_java(env: &mut JNIEnv, java_object: &JObject) -> Self {
-      let name          = HELPER.get(env, &java_object, 0).l().unwrap();
-      let website       = HELPER.get(env, &java_object, 1).l().unwrap();
-      let client_id     = HELPER.get(env, &java_object, 2).l().unwrap();
-      let client_secret = HELPER.get(env, &java_object, 3).l().unwrap();
+      let instance_base_url = HELPER.get(env, &java_object, 0).l().unwrap();
+      let name              = HELPER.get(env, &java_object, 1).l().unwrap();
+      let website           = HELPER.get(env, &java_object, 2).l().unwrap();
+      let client_id         = HELPER.get(env, &java_object, 3).l().unwrap();
+      let client_secret     = HELPER.get(env, &java_object, 4).l().unwrap();
 
       Application {
+         instance_base_url: String::clone_from_java(env, &instance_base_url).parse().unwrap(),
          name: String::clone_from_java(env, &name),
          website: Option::<String>::clone_from_java(env, &website),
          client_id: Option::<String>::clone_from_java(env, &client_id),

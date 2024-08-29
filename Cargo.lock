@@ -437,6 +437,7 @@ dependencies = [
  "jni",
  "panoptiqon",
  "serde",
+ "url",
 ]
 
 [[package]]
@@ -1059,6 +1060,7 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]

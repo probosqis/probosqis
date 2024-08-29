@@ -78,7 +78,9 @@ mod jvm {
          /* website = */ None
       )?;
 
-      let application = Application { name, website, client_id, client_secret };
+      let application = Application {
+         instance_base_url, name, website, client_id, client_secret
+      };
 
       Ok(application.clone_into_java(env))
    }

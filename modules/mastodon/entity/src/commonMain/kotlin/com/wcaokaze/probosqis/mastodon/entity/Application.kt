@@ -20,6 +20,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Application(
+   val instanceBaseUrl: String,
    val name: String,
    val website: String?,
    val clientId: String?,

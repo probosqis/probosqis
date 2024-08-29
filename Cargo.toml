@@ -30,7 +30,7 @@ serde = { version = "1.0.208", features = ["derive"] }
 
 jni = "0.21.1"
 
-url = "2.5.2"
+url = { version = "2.5.2", features = ["serde"] }
 reqwest.version = "0.12.7"
 reqwest.default-features = false
 reqwest.features = ["rustls-tls", "charset", "http2", "blocking", "json"]
