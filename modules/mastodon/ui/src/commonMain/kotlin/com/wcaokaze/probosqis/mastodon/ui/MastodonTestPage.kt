@@ -23,17 +23,12 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
-import com.wcaokaze.probosqis.mastodon.entity.Application
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
-import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -49,23 +44,11 @@ class MastodonTestPage : PPage()
 class MastodonTestPageState : PPageState() {
    private val appRepository: AppRepository by inject()
 
-   var application: Cache<Application>? by mutableStateOf(null)
-
-   val applicationCache = try {
-      appRepository.loadAppCache("https://pawoo.net/")
-   } catch (_: Exception) {
-      null
-   }
-
    val snackbarHostState = SnackbarHostState()
 
-   suspend fun createApplication() {
-      try {
-         withContext(Dispatchers.IO) {
-            application = appRepository.createApp("https://pawoo.net/")
-         }
-      } catch (_: Exception) {
-         snackbarHostState.showSnackbar("ERROROROR")
+   suspend fun getAuthorizeUrl(): String {
+      return withContext(Dispatchers.IO) {
+         appRepository.getAuthorizeUrl("https://pawoo.net/")
       }
    }
 }
@@ -86,23 +69,24 @@ val mastodonTestPageComposable = PPageComposable<MastodonTestPage, MastodonTestP
 @Composable
 private fun MastodonTestPage(state: MastodonTestPageState) {
    Column {
-      Text(
-         state.application?.value.toString()
-      )
-
-      Text(
-         "cache: ${state.applicationCache?.value.toString()}"
-      )
-
       val coroutineScope = rememberCoroutineScope()
+      val browserLauncher = getBrowserLauncher()
+
       Button(
          onClick = {
             coroutineScope.launch {
-               state.createApplication()
+               val authorizeUrl = try {
+                  state.getAuthorizeUrl()
+               } catch (_: Exception) {
+                  state.snackbarHostState.showSnackbar("ERROROROR")
+                  return@launch
+               }
+
+               browserLauncher.launchBrowser(authorizeUrl)
             }
          }
       ) {
-         Text("CREATE APP")
+         Text("START AUTH")
       }
    }
 }

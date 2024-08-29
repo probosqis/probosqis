@@ -24,6 +24,7 @@ import com.wcaokaze.probosqis.panoptiqon.loadCache
 import com.wcaokaze.probosqis.panoptiqon.saveCache
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.io.IOException
 import java.net.URLEncoder
 
 class AndroidAppRepository(context: Context) : AppRepository {
@@ -46,4 +47,13 @@ class AndroidAppRepository(context: Context) : AppRepository {
       val file = File(dir, fileName)
       return loadCache<Application>(file, Json).asCache()
    }
+
+   override fun getAuthorizeUrl(application: Application): String {
+      return getAuthorizeUrl(
+         application.instanceBaseUrl,
+         application.clientId ?: throw IOException()
+      )
+   }
+
+   external fun getAuthorizeUrl(instanceBaseUrl: String, clientId: String): String
 }

@@ -30,4 +30,19 @@ interface AppRepository {
     * @throws IOException
     */
    fun loadAppCache(instanceBaseUrl: String): Cache<Application>
+
+   /**
+    * @throws IOException
+    */
+   fun getAuthorizeUrl(application: Application): String
+
+   fun getAuthorizeUrl(instanceBaseUrl: String): String {
+      val appCache = try {
+         loadAppCache(instanceBaseUrl)
+      } catch (_: Exception) {
+         createApp(instanceBaseUrl)
+      }
+
+      return getAuthorizeUrl(appCache.value)
+   }
 }

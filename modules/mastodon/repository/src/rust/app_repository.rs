@@ -22,11 +22,18 @@ mod jvm {
    use url::Url;
 
    use mastodon_entity::application::Application;
-   use mastodon_webapi::api::apps;
+   use mastodon_webapi::api::{apps, oauth};
    use mastodon_webapi::entity::application::Application as ApiApplication;
    use panoptiqon::convert_java::ConvertJava;
 
    use crate::CLIENT;
+
+   fn throw_io_exception(env: &mut JNIEnv) {
+      let exception = JThrowable::from(
+         env.new_object("java/io/IOException", "()V", &[]).unwrap()
+      );
+      env.throw(exception).unwrap();
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_postApp<'local>(
@@ -36,11 +43,7 @@ mod jvm {
    ) -> JObject<'local> {
       post_app(&mut env, instance_base_url)
          .unwrap_or_else(|_| {
-            let exception = JThrowable::from(
-               env.new_object("java/io/IOException", "()V", &[]).unwrap()
-            );
-            env.throw(exception).unwrap();
-
+            throw_io_exception(&mut env);
             JObject::null()
          })
    }
@@ -53,16 +56,11 @@ mod jvm {
    ) -> JObject<'local> {
       post_app(&mut env, instance_base_url)
          .unwrap_or_else(|_| {
-            let exception = JThrowable::from(
-               env.new_object("java/io/IOException", "()V", &[]).unwrap()
-            );
-            env.throw(exception).unwrap();
-
+            throw_io_exception(&mut env);
             JObject::null()
          })
    }
 
-   #[cfg(feature="jvm")]
    fn post_app<'local>(
       env: &mut JNIEnv<'local>,
       instance_base_url: JString<'local>
@@ -83,5 +81,57 @@ mod jvm {
       };
 
       Ok(application.clone_into_java(env))
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getAuthorizeUrl<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      instance_base_url: JString<'local>,
+      client_id: JString<'local>
+   ) -> JString<'local> {
+      get_authorize_url(&mut env, instance_base_url, client_id)
+         .unwrap_or_else(|_| {
+            throw_io_exception(&mut env);
+            JObject::null().into()
+         })
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_getAuthorizeUrl<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      instance_base_url: JString<'local>,
+      client_id: JString<'local>
+   ) -> JString<'local> {
+      get_authorize_url(&mut env, instance_base_url, client_id)
+         .unwrap_or_else(|_| {
+            throw_io_exception(&mut env);
+            JObject::null().into()
+         })
+   }
+
+   fn get_authorize_url<'local>(
+      env: &mut JNIEnv<'local>,
+      instance_base_url: JString<'local>,
+      client_id: JString<'local>
+   ) -> Result<JString<'local>> {
+      let instance_base_url: String = env.get_string(&instance_base_url)?.into();
+      let instance_base_url: Url = instance_base_url.parse()?;
+
+      let client_id: String = env.get_string(&client_id)?.into();
+
+      let authorize_url = oauth::get_authorize_url(
+         &instance_base_url,
+         /* response_type = */ "code",
+         /* client_id = */ &client_id,
+         /* redirect_uri = */ "https://3iqura.wcaokaze.com/auth/callback",
+         /* scope = */ Some("read write push"),
+         /* force_login = */ None,
+         /* lang = */ None,
+      )?;
+
+      let authorize_url = env.new_string(authorize_url.as_str())?;
+      Ok(authorize_url)
    }
 }

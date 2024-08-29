@@ -53,4 +53,13 @@ class DesktopAppRepository(directory: File) : AppRepository {
       val file = File(dir, fileName)
       return loadCache<Application>(file, Json).asCache()
    }
+
+   override fun getAuthorizeUrl(application: Application): String {
+      return getAuthorizeUrl(
+         application.instanceBaseUrl,
+         application.clientId ?: throw IOException()
+      )
+   }
+
+   external fun getAuthorizeUrl(instanceBaseUrl: String, clientId: String): String
 }
