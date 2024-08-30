@@ -71,7 +71,7 @@ mod jvm {
       let ApiApplication { name, website, client_id, client_secret } = apps::post_apps(
          &CLIENT, &instance_base_url,
          /* client_name = */ "Probosqis",
-         /* redirect_uris = */ "https://3iqura.wcaokaze.com/auth/callback",
+         /* redirect_uris = */ "https://probosqis.wcaokaze.com/auth/callback",
          /* scopes = */ Some("read write push"),
          /* website = */ None
       )?;
@@ -125,7 +125,7 @@ mod jvm {
          &instance_base_url,
          /* response_type = */ "code",
          /* client_id = */ &client_id,
-         /* redirect_uri = */ "https://3iqura.wcaokaze.com/auth/callback",
+         /* redirect_uri = */ "https://probosqis.wcaokaze.com/auth/callback",
          /* scope = */ Some("read write push"),
          /* force_login = */ None,
          /* lang = */ None,
