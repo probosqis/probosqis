@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -71,6 +72,12 @@ class MainActivity : ComponentActivity() {
             }
          }
       }
+   }
+
+   override fun onNewIntent(intent: Intent?) {
+      super.onNewIntent(intent)
+
+      val code = intent?.data?.getQueryParameter("code")
    }
 
    @Composable
