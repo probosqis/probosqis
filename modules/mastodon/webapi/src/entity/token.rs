@@ -13,6 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use serde::Deserialize;
 
-pub mod application;
-pub mod token;
+/// since 0.1.0
+#[derive(Deserialize)]
+pub struct Token {
+   pub access_token: String,
+   pub token_type: String,
+   pub scope: String,
+   pub created_at: i64,
+}

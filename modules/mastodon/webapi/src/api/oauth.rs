@@ -13,8 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use std::collections::HashMap;
+
 use anyhow::Result;
+use reqwest::blocking::Client;
 use url::Url;
+
+use crate::entity::token::Token;
 
 /// since 0.1.0
 ///
@@ -48,4 +53,38 @@ pub fn get_authorize_url(
    }
 
    Ok(url)
+}
+
+/// since 0.1.0
+pub fn post_token(
+   client: &Client,
+   instance_base_url: &Url,
+   grant_type: &str,
+   code: Option<&str>,
+   client_id: &str,
+   client_secret: &str,
+   redirect_uri: &str,
+   scope: Option<&str>,
+) -> Result<Token> {
+   let url = instance_base_url.join("oauth/token")?;
+
+   let mut form = HashMap::new();
+   form.insert("grant_type", grant_type);
+   if let Some(code) = code {
+      form.insert("code", code);
+   }
+   form.insert("client_id", client_id);
+   form.insert("client_secret", client_secret);
+   form.insert("redirect_uri", redirect_uri);
+   if let Some(scope) = scope {
+      form.insert("scope", scope);
+   }
+
+   let token = client
+      .post(url)
+      .form(&form)
+      .send()?
+      .json()?;
+
+   Ok(token)
 }
