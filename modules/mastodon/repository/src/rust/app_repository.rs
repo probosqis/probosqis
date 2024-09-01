@@ -17,13 +17,16 @@
 #[cfg(feature="jvm")]
 mod jvm {
    use anyhow::Result;
+   use chrono::DateTime;
    use jni::JNIEnv;
    use jni::objects::{JObject, JString, JThrowable};
    use url::Url;
 
    use mastodon_entity::application::Application;
+   use mastodon_entity::token::Token;
    use mastodon_webapi::api::{apps, oauth};
    use mastodon_webapi::entity::application::Application as ApiApplication;
+   use mastodon_webapi::entity::token::Token as ApiToken;
    use panoptiqon::convert_java::ConvertJava;
 
    use crate::CLIENT;
@@ -128,10 +131,74 @@ mod jvm {
          /* redirect_uri = */ "https://probosqis.wcaokaze.com/auth/callback",
          /* scope = */ Some("read write push"),
          /* force_login = */ None,
-         /* lang = */ None,
+         /* lang = */ None
       )?;
 
       let authorize_url = env.new_string(authorize_url.as_str())?;
       Ok(authorize_url)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getToken<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      instance_base_url: JString<'local>,
+      code: JString<'local>,
+      client_id: JString<'local>,
+      client_secret: JString<'local>
+   ) -> JObject<'local> {
+      get_token(&mut env, instance_base_url, code, client_id, client_secret)
+         .unwrap_or_else(|_| {
+            throw_io_exception(&mut env);
+            JObject::null()
+         })
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_getToken<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      instance_base_url: JString<'local>,
+      code: JString<'local>,
+      client_id: JString<'local>,
+      client_secret: JString<'local>
+   ) -> JObject<'local> {
+      get_token(&mut env, instance_base_url, code, client_id, client_secret)
+         .unwrap_or_else(|_| {
+            throw_io_exception(&mut env);
+            JObject::null()
+         })
+   }
+
+   fn get_token<'local>(
+      env: &mut JNIEnv<'local>,
+      instance_base_url: JString<'local>,
+      code: JString<'local>,
+      client_id: JString<'local>,
+      client_secret: JString<'local>
+   ) -> Result<JObject<'local>> {
+      let instance_base_url: String = env.get_string(&instance_base_url)?.into();
+      let instance_base_url: Url = instance_base_url.parse()?;
+
+      let code: String = env.get_string(&code)?.into();
+      let client_id: String = env.get_string(&client_id)?.into();
+      let client_secret: String = env.get_string(&client_secret)?.into();
+
+      let ApiToken { access_token, token_type, scope, created_at } = oauth::post_token(
+         &CLIENT, &instance_base_url,
+         /* grant_type = */ "authorization_code",
+         /* code = */ Some(&code),
+         /* client_id = */ &client_id,
+         /* client_secret = */ &client_secret,
+         /* redirect_uri = */ "https://probosqis.wcaokaze.com/auth/callback",
+         /* scope = */ Some("read write push")
+      )?;
+
+      let token = Token {
+         instance_base_url, access_token, token_type, scope,
+         created_at: DateTime::from_timestamp(created_at, 0).unwrap()
+      };
+
+      Ok(token.clone_into_java(env))
    }
 }

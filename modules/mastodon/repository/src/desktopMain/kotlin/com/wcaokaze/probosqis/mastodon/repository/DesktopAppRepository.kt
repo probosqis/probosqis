@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.mastodon.repository
 
 import com.wcaokaze.probosqis.mastodon.entity.Application
+import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
 import com.wcaokaze.probosqis.panoptiqon.loadCache
@@ -62,4 +63,20 @@ class DesktopAppRepository(directory: File) : AppRepository {
    }
 
    external fun getAuthorizeUrl(instanceBaseUrl: String, clientId: String): String
+
+   override fun getToken(application: Application, code: String): Token {
+      return getToken(
+         application.instanceBaseUrl,
+         code,
+         application.clientId     ?: throw IOException(),
+         application.clientSecret ?: throw IOException()
+      )
+   }
+
+   external fun getToken(
+      instanceBaseUrl: String,
+      code: String,
+      clientId: String,
+      clientSecret: String
+   ): Token
 }

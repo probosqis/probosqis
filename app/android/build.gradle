@@ -71,6 +71,7 @@ kotlin {
          implementation project(':modules:testpages')
 
          implementation project(':modules:mastodon:ui')
+         implementation project(':modules:mastodon:entity')
          implementation project(':modules:mastodon:repository')
 
          implementation project(':modules:resources')

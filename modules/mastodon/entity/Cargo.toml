@@ -24,6 +24,7 @@ jvm = ["dep:jni", "panoptiqon/jvm"]
 jni-test = ["jvm", "panoptiqon/jni-test"]
 
 [dependencies]
+chrono.workspace = true
 serde.workspace = true
 jni = { workspace = true, optional = true }
 

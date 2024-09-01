@@ -26,6 +26,7 @@ resolver = "2"
 
 [workspace.dependencies]
 anyhow = "1.0.86"
+chrono = { version = "0.4.38", features = ["serde"] }
 serde = { version = "1.0.208", features = ["derive"] }
 
 jni = "0.21.1"

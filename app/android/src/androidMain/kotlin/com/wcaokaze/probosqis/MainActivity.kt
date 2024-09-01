@@ -42,12 +42,18 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import com.wcaokaze.probosqis.app.MultiColumnProbosqis
 import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.SingleColumnProbosqis
+import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
+   private val appRepository: AppRepository by inject()
+
    override fun onCreate(savedInstanceState: Bundle?) {
       initializeEdgeToEdge()
       super.onCreate(savedInstanceState)
@@ -77,7 +83,12 @@ class MainActivity : ComponentActivity() {
    override fun onNewIntent(intent: Intent?) {
       super.onNewIntent(intent)
 
-      val code = intent?.data?.getQueryParameter("code")
+      lifecycleScope.launch {
+         val code = intent?.data?.getQueryParameter("code")!!
+         val application = appRepository.loadAppCache("https://pawoo.net/")
+         val token = appRepository.getToken(application.value, code)
+         println("token: $token")
+      }
    }
 
    @Composable
