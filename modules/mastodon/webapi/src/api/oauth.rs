@@ -21,10 +21,10 @@ use url::Url;
 
 use crate::entity::token::Token;
 
-/// since 0.1.0
+/// since mastodon 0.1.0
 ///
-/// * `force_login` - since 2.6.0
-/// * `lang` - since 3.5.0
+/// * `force_login` - since mastodon 2.6.0
+/// * `lang` - since mastodon 3.5.0
 pub fn get_authorize_url(
    instance_base_url: &Url,
    response_type: &str,
@@ -55,7 +55,7 @@ pub fn get_authorize_url(
    Ok(url)
 }
 
-/// since 0.1.0
+/// since mastodon 0.1.0
 pub fn post_token(
    client: &Client,
    instance_base_url: &Url,

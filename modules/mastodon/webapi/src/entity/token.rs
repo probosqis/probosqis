@@ -15,7 +15,7 @@
  */
 use serde::Deserialize;
 
-/// since 0.1.0
+/// since mastodon 0.1.0
 #[derive(Deserialize)]
 pub struct Token {
    pub access_token: String,

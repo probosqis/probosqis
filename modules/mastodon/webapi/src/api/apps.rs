@@ -21,6 +21,7 @@ use url::Url;
 
 use crate::entity::application::Application;
 
+/// since mastodon 0.0.0
 pub fn post_apps(
    client: &Client,
    instance_base_url: &Url,
