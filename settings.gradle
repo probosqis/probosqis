@@ -51,6 +51,7 @@ dependencyResolutionManagement {
          plugin('android-application', 'com.android.application').versionRef('android-plugin')
          plugin('android-library', 'com.android.library').versionRef('android-plugin')
          plugin('compose-jb', 'org.jetbrains.compose').versionRef('compose-jb')
+         plugin('compose-compiler', 'org.jetbrains.kotlin.plugin.compose').versionRef('kotlin')
          plugin('kotlinx-serialization', 'org.jetbrains.kotlin.plugin.serialization').versionRef('kotlin')
          plugin('roborazzi', 'io.github.takahirom.roborazzi').versionRef('roborazzi')
 
