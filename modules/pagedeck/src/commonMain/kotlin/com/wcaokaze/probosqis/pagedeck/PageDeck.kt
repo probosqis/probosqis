@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.pagedeck
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -56,6 +57,9 @@ class LazyPageStackState(
    initialVisibility: Boolean
 ) {
    private var pageStackState: PageStackState? = null
+
+   @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+   val pageStack get() = pageStackCache.value
 
    var _isVisible = mutableStateOf(initialVisibility)
    var isVisible by _isVisible
