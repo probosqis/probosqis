@@ -59,7 +59,7 @@ dependencyResolutionManagement {
          library('kotlinx-datetime', 'org.jetbrains.kotlinx', 'kotlinx-datetime').version('0.6.1')
          library('androidx-annotation', 'androidx.annotation', 'annotation').version('1.8.2')
 
-         library('android-desugaring-jdk', 'com.android.tools', 'desugar_jdk_libs').version('1.2.2')
+         library('android-desugaring-jdk', 'com.android.tools', 'desugar_jdk_libs').version('2.1.2')
 
          library('androidx-activity-compose', 'androidx.activity', 'activity-compose').version('1.8.2')
          library('androidx-compose-material3-window-size', 'androidx.compose.material3', 'material3-window-size-class').versionRef('compose-material3')
