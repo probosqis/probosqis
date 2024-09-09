@@ -23,3 +23,6 @@ resolver = "2"
 
 [workspace.dependencies]
 jni = "0.21.1"
+ext-kotlintest = { path = "modules/ext/kotlinTest" }
+panoptiqon = { path = "modules/panoptiqon/panoptiqon" }
+mastodon_webapi = { path = "modules/mastodon/webapi" }
