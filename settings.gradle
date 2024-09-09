@@ -76,7 +76,7 @@ dependencyResolutionManagement {
          library('robolectric', 'org.robolectric', 'robolectric').version('4.13')
          library('roborazzi-core', 'io.github.takahirom.roborazzi', 'roborazzi').versionRef('roborazzi')
          library('roborazzi-compose', 'io.github.takahirom.roborazzi', 'roborazzi-compose').versionRef('roborazzi')
-         library('androidx-test-ext', 'androidx.test.ext:junit:1.1.5')
+         library('androidx-test-ext', 'androidx.test.ext', 'junit').version('1.2.1')
          library('compose-ui-test-manifest', 'androidx.compose.ui', 'ui-test-manifest').versionRef('compose-androidx')
       }
    }
