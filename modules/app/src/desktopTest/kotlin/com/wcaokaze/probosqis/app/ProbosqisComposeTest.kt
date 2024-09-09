@@ -101,7 +101,6 @@ class ProbosqisComposeTest {
       assertSame(pageDeck, loadedCache.value)
    }
 
-   @Suppress("INVISIBLE_MEMBER")
    @Test
    fun loadPageDeck_default() {
       val pageDeckRepository = mockk<PageDeckRepository> {
@@ -122,7 +121,7 @@ class ProbosqisComposeTest {
       val pageStack1 = loadedCache.value
          .let { assertIs<Deck.Card<*>>(it.rootRow[0]) }
          .let { assertIs<LazyPageStackState>(it.content) }
-         .pageStackCache.value
+         .pageStack
       assertIs<TestPage>(pageStack1.head.page)
       assertNull(pageStack1.tailOrNull())
       verify { pageStackRepository.savePageStack(pageStack1) }
@@ -130,7 +129,7 @@ class ProbosqisComposeTest {
       val pageStack2 = loadedCache.value
          .let { assertIs<Deck.Card<*>>(it.rootRow[1]) }
          .let { assertIs<LazyPageStackState>(it.content) }
-         .pageStackCache.value
+         .pageStack
       assertIs<TestPage>(pageStack2.head.page)
       assertNull(pageStack2.tailOrNull())
       verify { pageStackRepository.savePageStack(pageStack2) }

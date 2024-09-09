@@ -40,6 +40,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
@@ -54,6 +55,7 @@ import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.page.Page
@@ -84,6 +86,17 @@ class PErrorListTest {
    val rule = createComposeRule()
 
    private val ViewConfiguration.errorItemTouchSlop get() = touchSlop * 1.25f
+
+   private val SemanticsNodeInteraction.dpPositionInRoot: DpOffset
+      get() {
+         val node = fetchSemanticsNode()
+         return with (node.layoutInfo.density) {
+            DpOffset(
+               node.positionInRoot.x.toDp(),
+               node.positionInRoot.y.toDp()
+            )
+         }
+      }
 
    private data class ErrorImpl(val i: Int) : PError() {
       override fun restorePage() = fail()
@@ -540,6 +553,8 @@ class PErrorListTest {
       }
 
       state.show()
+      rule.waitForIdle()
+      rule.mainClock.autoAdvance = false
 
       rule.onNodeWithText("Error message 0")
          .assertLeftPositionInRootIsEqualTo(32.dp)
@@ -552,14 +567,13 @@ class PErrorListTest {
          )
       }
 
-      rule.onNodeWithText("Error message 0")
-         .fetchSemanticsNode()
-         .let {
-            with (it.layoutInfo.density) {
-               // スワイプが終わる位置はx = 0だがFlingによってさらに16dpくらいは動く
-               assertTrue(it.positionInRoot.x < (0 - 16).dp.toPx())
-            }
-         }
+      rule.waitUntil {
+         rule.waitForIdle()
+         rule.mainClock.advanceTimeByFrame()
+
+         // スワイプが終わる位置はx = 0だがFlingによってさらに16dpくらいは動く
+         rule.onNodeWithText("Error message 0").dpPositionInRoot.x > (-16).dp
+      }
 
       rule.onNodeWithText("Error message 1")
          .assertLeftPositionInRootIsEqualTo(32.dp)
@@ -572,13 +586,12 @@ class PErrorListTest {
          )
       }
 
-      rule.onNodeWithText("Error message 1")
-         .fetchSemanticsNode()
-         .let {
-            with (it.layoutInfo.density) {
-               assertTrue(it.positionInRoot.x > (96 + 16).dp.toPx())
-            }
-         }
+      rule.waitUntil {
+         rule.waitForIdle()
+         rule.mainClock.advanceTimeByFrame()
+
+         rule.onNodeWithText("Error message 1").dpPositionInRoot.x < (64 + 16).dp
+      }
    }
 
    @Test
@@ -1122,9 +1135,6 @@ class PErrorListTest {
       }
       rule.onNodeWithContentDescription("Dismiss").performMouseInput {
          click()
-      }
-      rule.onNodeWithText("Error message 1").performMouseInput {
-         exit()
       }
 
       rule.runOnIdle {
