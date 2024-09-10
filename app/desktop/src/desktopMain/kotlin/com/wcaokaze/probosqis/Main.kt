@@ -66,6 +66,7 @@ object Main {
       testPageComposable,
       testTimelinePageComposable,
       testNotePageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.urlInputPageComposable,
       mastodonTestPageComposable,
    )
 
@@ -73,6 +74,7 @@ object Main {
       pageSerializer<TestPage>(),
       pageSerializer<TestTimelinePage>(),
       pageSerializer<TestNotePage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage>(),
       pageSerializer<MastodonTestPage>(),
    )
 
