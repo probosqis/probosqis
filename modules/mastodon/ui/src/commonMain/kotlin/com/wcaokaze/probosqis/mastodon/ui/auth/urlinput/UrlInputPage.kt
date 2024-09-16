@@ -45,7 +45,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 
 @Serializable
-@SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.urlinput")
+@SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage")
 class UrlInputPage : PPage()
 
 @Stable
