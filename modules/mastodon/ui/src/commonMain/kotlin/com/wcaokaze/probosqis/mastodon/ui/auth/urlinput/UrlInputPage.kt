@@ -27,11 +27,17 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
@@ -40,6 +46,7 @@ import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.resources.Strings
+import kotlinx.coroutines.delay
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -50,9 +57,15 @@ class UrlInputPage : PPage()
 
 @Stable
 class UrlInputPageState(stateSaver: StateSaver) : PPageState() {
+   var hasKeyboardShown by stateSaver.save(
+      "has_keyboard_shown", Boolean.serializer(),
+      init = { false }, recover = { true }
+   )
+
    var inputUrl: String by stateSaver.save("inputUrl", String.serializer()) { "" }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
    PageStateFactory { _, _, stateSaver -> UrlInputPageState(stateSaver) },
    header = { _, _ ->
@@ -63,6 +76,19 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
       )
    },
    content = { _, state, _ ->
+      val focusRequester = remember { FocusRequester() }
+      val keyboardController = LocalSoftwareKeyboardController.current
+
+      LaunchedEffect(Unit) {
+         if (!state.hasKeyboardShown) {
+            state.hasKeyboardShown = true
+
+            focusRequester.requestFocus()
+            delay(100L)
+            keyboardController?.show()
+         }
+      }
+
       Column(
          modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -87,6 +113,7 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
             modifier = Modifier
                .padding(vertical = 8.dp)
                .fillMaxWidth()
+               .focusRequester(focusRequester)
          )
 
          Button(
