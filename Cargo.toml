@@ -16,7 +16,7 @@
 members = [
     "modules/app",
     "modules/ext/kotlinTest",
-    "modules/mastodon",
+    "modules/mastodon/webapi",
     "modules/panoptiqon/panoptiqon",
 ]
 resolver = "2"
@@ -25,4 +25,4 @@ resolver = "2"
 jni = "0.21.1"
 ext-kotlintest = { path = "modules/ext/kotlinTest" }
 panoptiqon = { path = "modules/panoptiqon/panoptiqon" }
-mastodon = { path = "modules/mastodon" }
+mastodon_webapi = { path = "modules/mastodon/webapi" }

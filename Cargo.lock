@@ -12,7 +12,7 @@ checksum = "b3d1d046238990b9cf5bcde22a3fb3584ee5cf65fb2765f454ed428c7a0063da"
 name = "app"
 version = "0.0.0"
 dependencies = [
- "mastodon",
+ "mastodon_webapi",
 ]
 
 [[package]]
@@ -85,7 +85,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 
 [[package]]
-name = "mastodon"
+name = "mastodon_webapi"
 version = "0.0.0"
 dependencies = [
  "jni",

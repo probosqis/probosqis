@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-pub use mastodon;
+pub use mastodon_webapi;
 
