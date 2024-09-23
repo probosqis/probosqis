@@ -38,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
@@ -62,7 +64,9 @@ class UrlInputPageState(stateSaver: StateSaver) : PPageState() {
       init = { false }, recover = { true }
    )
 
-   var inputUrl: String by stateSaver.save("inputUrl", String.serializer()) { "" }
+   var inputUrl: TextFieldValue by stateSaver.save("inputUrl", TextFieldValue.Saver) {
+      TextFieldValue("https://mastodon.social/", selection = TextRange(8, 24))
+   }
 }
 
 @OptIn(ExperimentalComposeUiApi::class)

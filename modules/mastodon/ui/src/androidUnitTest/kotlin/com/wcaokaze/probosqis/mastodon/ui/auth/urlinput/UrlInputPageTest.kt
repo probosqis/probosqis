@@ -20,11 +20,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import com.wcaokaze.probosqis.capsiqum.page.test.buildTestStateSaver
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestStateSaver
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class UrlInputPageTest {
@@ -44,5 +46,35 @@ class UrlInputPageTest {
 
       rule.onNodeWithText("https://mastodon.social/")
          .assertIsFocused()
+   }
+
+   @Test
+   fun textField_domain_selected_afterPageStarted() {
+      lateinit var state: UrlInputPageState
+
+      rule.setContent {
+         val page = UrlInputPage()
+         state = UrlInputPageState(rememberTestStateSaver())
+
+         urlInputPageComposable.contentComposable(
+            page, state, WindowInsets(0)
+         )
+      }
+
+      rule.runOnIdle {
+         val inputUrl = state.inputUrl
+         assertEquals(
+            "https://",
+            inputUrl.text.substring(0, inputUrl.selection.min)
+         )
+         assertEquals(
+            "mastodon.social/",
+            inputUrl.text.substring(inputUrl.selection.min, inputUrl.selection.max)
+         )
+         assertEquals(
+            "",
+            inputUrl.text.substring(inputUrl.selection.max)
+         )
+      }
    }
 }
