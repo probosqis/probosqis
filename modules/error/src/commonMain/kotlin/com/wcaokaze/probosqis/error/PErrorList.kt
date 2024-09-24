@@ -323,7 +323,7 @@ private fun AnimatedContentScope.PErrorListHeader(
    ) {
       CompositionLocalProvider(LocalContentColor provides contentColor) {
          val hiddenIconOffset = with (LocalDensity.current) {
-            val hiddenIconPadding = (headerHeight - Icons.Default.Error.defaultWidth) / 2
+            val hiddenIconPadding = (headerHeight - Icons.Outlined.Error.defaultWidth) / 2
             (hiddenIconPadding - iconHorizontalPadding).roundToPx()
          }
 
@@ -334,7 +334,7 @@ private fun AnimatedContentScope.PErrorListHeader(
 
          @OptIn(ExperimentalAnimationApi::class)
          Icon(
-            Icons.Default.Error,
+            Icons.Outlined.Error,
             contentDescription = null,
             modifier = Modifier
                .align(Alignment.CenterStart)

@@ -22,7 +22,7 @@ import androidx.compose.material.icons.materialPath
 import androidx.compose.ui.graphics.vector.ImageVector
 
 @Suppress("UnusedReceiverParameter")
-val Icons.Filled.Error: ImageVector get() {
+val Icons.Outlined.Error: ImageVector get() {
    if (_error != null) { return _error!! }
 
    _error = materialIcon("Filled.Error") {
