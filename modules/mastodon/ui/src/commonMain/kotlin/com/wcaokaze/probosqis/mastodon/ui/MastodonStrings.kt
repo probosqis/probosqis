@@ -26,6 +26,7 @@ interface MastodonStrings {
    class AuthUrlInput(
       val appBar: String,
       val description: String,
+      val serverUrlTextFieldLabel: String,
       val startAuthButton: String,
    )
 
@@ -40,6 +41,7 @@ val Strings.Companion.Mastodon: MastodonStrings
          override val authUrlInput = MastodonStrings.AuthUrlInput(
             appBar = "Add an account",
             description = "Add an existing account to $appName.",
+            serverUrlTextFieldLabel = "Server URL",
             startAuthButton = "GO",
          )
       }
@@ -48,6 +50,7 @@ val Strings.Companion.Mastodon: MastodonStrings
          override val authUrlInput = MastodonStrings.AuthUrlInput(
             appBar = "アカウントを追加",
             description = "作成済みのアカウントを${appName}に追加します",
+            serverUrlTextFieldLabel = "サーバーURL",
             startAuthButton = "GO",
          )
       }

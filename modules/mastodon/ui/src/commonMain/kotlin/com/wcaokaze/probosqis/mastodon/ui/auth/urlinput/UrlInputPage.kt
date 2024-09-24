@@ -25,15 +25,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -69,7 +68,6 @@ class UrlInputPageState(stateSaver: StateSaver) : PPageState() {
    }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
    PageStateFactory { _, _, stateSaver -> UrlInputPageState(stateSaver) },
    header = { _, _ ->
@@ -105,10 +103,13 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
 
          Spacer(modifier = Modifier.height(16.dp))
 
-         TextField(
+         OutlinedTextField(
             state.inputUrl,
             onValueChange = { newValue ->
                state.inputUrl = newValue
+            },
+            label = {
+               Text(Strings.Mastodon.authUrlInput.serverUrlTextFieldLabel)
             },
             placeholder = {
                Text("https://mastodon.social/")
