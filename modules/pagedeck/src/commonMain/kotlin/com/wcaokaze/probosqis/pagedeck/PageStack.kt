@@ -75,7 +75,7 @@ data class PageStackColors(
 )
 
 @Stable
-class PageStackState internal constructor(
+class PPageStackState internal constructor(
    val pageStackId: PageStack.Id,
    internal val pageStackCache: WritableCache<PageStack>,
    val pageDeckState: PageDeckState
@@ -159,7 +159,7 @@ internal enum class FooterPaddingType {
 
 private fun <P : Page, S : PageState> extractPageComposable(
    combined: CombinedPageComposable<P, S>,
-   pageStackState: State<PageStackState>,
+   pageStackState: State<PPageStackState>,
    colors: State<PageStackColors>,
    windowInsets: State<WindowInsets>,
    horizontalContentPadding: State<Dp>,
@@ -182,7 +182,7 @@ private fun <P : Page, S : PageState> extractPageComposable(
 @Composable
 internal fun PageContentFooter(
    savedPageState: SavedPageState,
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    colors: PageStackColors,
@@ -219,7 +219,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
    combined: CombinedPageComposable<P, S>,
    page: P,
    pageState: S,
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    colors: PageStackColors,
    windowInsets: WindowInsets,
    horizontalContentPadding: Dp,
@@ -278,7 +278,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
 
 @Composable
 private fun PageContentBackground(
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    colors: PageStackColors,
    modifier: Modifier = Modifier
 ) {
@@ -291,10 +291,10 @@ private fun PageContentBackground(
 
 @Composable
 internal fun <P : Page, S : PageState> PageContent(
-   contentComposable: @Composable (P, S, PageStackState, WindowInsets) -> Unit,
+   contentComposable: @Composable (P, S, PPageStackState, WindowInsets) -> Unit,
    page: P,
    pageState: S,
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    isFooterShown: Boolean,
    contentColor: Color,
    windowInsets: WindowInsets,
@@ -320,10 +320,10 @@ internal fun <P : Page, S : PageState> PageContent(
 
 @Composable
 internal fun <P : Page, S : PageState> PageFooter(
-   footerComposable: @Composable (P, S, PageStackState) -> Unit,
+   footerComposable: @Composable (P, S, PPageStackState) -> Unit,
    page: P,
    pageState: S,
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    backgroundColor: Color,
    contentColor: Color,
    windowInsets: WindowInsets,

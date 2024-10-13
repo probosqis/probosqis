@@ -163,7 +163,7 @@ internal class MultiColumnPageStackActivationAnimState {
 @ExperimentalMaterial3Api
 @Composable
 private fun PageStack(
-   state: PageStackState,
+   state: PPageStackState,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    appBarColors: TopAppBarColors,
@@ -205,7 +205,7 @@ private fun PageStack(
 @ExperimentalMaterial3Api
 @Composable
 private fun MultiColumnPageStackAppBar(
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    pageSwitcherState: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    colors: TopAppBarColors,

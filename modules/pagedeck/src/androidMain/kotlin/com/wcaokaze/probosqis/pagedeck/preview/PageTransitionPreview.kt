@@ -40,9 +40,9 @@ import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.PPageStackState
 import com.wcaokaze.probosqis.pagedeck.PageContentFooter
 import com.wcaokaze.probosqis.pagedeck.PageStackColors
-import com.wcaokaze.probosqis.pagedeck.PageStackState
 import com.wcaokaze.probosqis.pagedeck.PageTransitionStateImpl
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
@@ -95,7 +95,7 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
    }
 
    val pageStackState = remember {
-      PageStackState(
+      PPageStackState(
          pageStackId = pageStackCache.value.id,
          pageStackCache,
          deckState

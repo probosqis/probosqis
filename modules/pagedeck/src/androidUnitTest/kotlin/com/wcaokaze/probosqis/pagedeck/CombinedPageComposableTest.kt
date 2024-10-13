@@ -145,7 +145,7 @@ class CombinedPageComposableTest {
       val savedPageState = SavedPageState(PageId(0L), PageA())
       val pageStack = PageStack(PageStack.Id(0L), savedPageState)
 
-      val pageStackState = PageStackState(
+      val pageStackState = PPageStackState(
          PageStack.Id(0L),
          WritableCache(pageStack),
          pageDeckState = mockk()
@@ -249,10 +249,10 @@ class CombinedPageComposableTest {
       var headerArgumentPageState:        PageAState? = null
       var headerActionsArgumentPageState: PageAState? = null
       var footerArgumentPageState:        PageAState? = null
-      var contentArgumentPageStackState:       PageStackState? = null
-      var headerArgumentPageStackState:        PageStackState? = null
-      var headerActionsArgumentPageStackState: PageStackState? = null
-      var footerArgumentPageStackState:        PageStackState? = null
+      var contentArgumentPageStackState:       PPageStackState? = null
+      var headerArgumentPageStackState:        PPageStackState? = null
+      var headerActionsArgumentPageStackState: PPageStackState? = null
+      var footerArgumentPageStackState:        PPageStackState? = null
 
       val pageComposable = CombinedPageComposable<PageA, PageAState>(
          PageStateFactory { _, _, _ -> PageAState() },
@@ -284,7 +284,7 @@ class CombinedPageComposableTest {
       val savedPageState = SavedPageState(PageId(0L), page)
       val pageStack = PageStack(PageStack.Id(0L), savedPageState)
 
-      val pageStackState = PageStackState(
+      val pageStackState = PPageStackState(
          PageStack.Id(0L),
          WritableCache(pageStack),
          pageDeckState = mockk()

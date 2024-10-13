@@ -206,7 +206,7 @@ fun SingleColumnPageDeck(
 @ExperimentalMaterial3Api
 @Composable
 private fun SingleColumnPageStackAppBar(
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    windowInsets: WindowInsets,
@@ -227,7 +227,7 @@ private fun SingleColumnPageStackAppBar(
 
 @Composable
 private fun PageStackContent(
-   state: PageStackState,
+   state: PPageStackState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    colors: PageStackColors,

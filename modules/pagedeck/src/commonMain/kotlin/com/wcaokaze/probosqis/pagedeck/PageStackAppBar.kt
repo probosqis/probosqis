@@ -45,7 +45,7 @@ import com.wcaokaze.probosqis.resources.Strings
 @ExperimentalMaterial3Api
 private fun <P : Page, S : PageState> extractPageComposable(
    combined: CombinedPageComposable<P, S>,
-   pageStackState: State<PageStackState>,
+   pageStackState: State<PPageStackState>,
    colors: State<TopAppBarColors>,
    windowInsets: State<WindowInsets>,
    horizontalContentPadding: State<Dp>
@@ -66,7 +66,7 @@ private fun <P : Page, S : PageState> extractPageComposable(
 @ExperimentalMaterial3Api
 @Composable
 internal fun PageStackAppBar(
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    pageSwitcher: CombinedPageSwitcherState,
    pageStateStore: PageStateStore,
    colors: TopAppBarColors,
@@ -103,7 +103,7 @@ internal fun <P : Page, S : PageState> PageStackAppBar(
    combined: CombinedPageComposable<P, S>,
    page: P,
    pageState: S,
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    colors: TopAppBarColors,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,

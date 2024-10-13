@@ -41,11 +41,11 @@ import com.wcaokaze.probosqis.capsiqum.page.preview.rememberPreviewStateSaver
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.PPageStackState
 import com.wcaokaze.probosqis.pagedeck.PageContent
 import com.wcaokaze.probosqis.pagedeck.PageFooter
 import com.wcaokaze.probosqis.pagedeck.PageStackAppBar
 import com.wcaokaze.probosqis.pagedeck.PageStackRepository
-import com.wcaokaze.probosqis.pagedeck.PageStackState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
 @Composable
@@ -80,7 +80,7 @@ fun <P : Page, S : PageState> PagePreview(
    }
 
    val pageStackState = remember {
-      PageStackState(
+      PPageStackState(
          pageStackId = pageStackCache.value.id,
          pageStackCache,
          pageDeckState
