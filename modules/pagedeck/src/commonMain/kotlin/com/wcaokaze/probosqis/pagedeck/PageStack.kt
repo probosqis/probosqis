@@ -53,15 +53,15 @@ import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageComposable
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStackState
 import com.wcaokaze.probosqis.capsiqum.page.PageState
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.PageSwitcher
-import com.wcaokaze.probosqis.capsiqum.page.PageSwitcherState
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.panoptiqon.compose.asState
-import com.wcaokaze.probosqis.panoptiqon.update
+import kotlinx.collections.immutable.toImmutableList
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 private val pageFooterHeight = 48.dp
 
@@ -75,12 +75,22 @@ data class PageStackColors(
 )
 
 @Stable
-class PPageStackState internal constructor(
-   val pageStackId: PageStack.Id,
-   internal val pageStackCache: WritableCache<PageStack>,
-   val pageDeckState: PageDeckState
-) {
-   internal val pageStack: PageStack by pageStackCache.asState()
+class PPageStackState
+   internal constructor(
+      val pageStackId: PageStack.Id,
+      pageStackCache: WritableCache<PageStack>,
+      val pageDeckState: PageDeckState
+   )
+   : KoinComponent
+{
+   internal val rawState = PageStackState(
+      pageStackCache,
+      allPageStateFactories = get<CombinedPageSwitcherState>()
+         .allPageComposables.map { it.pageStateFactory },
+      coroutineScope = get()
+   )
+
+   internal val pageStack: PageStack by rawState::pageStack
    internal val multiColumnActivationAnimState = MultiColumnPageStackActivationAnimState()
 
    private val activationBackgroundAlphaAnim = Animatable(0.0f)
@@ -97,25 +107,23 @@ class PPageStackState internal constructor(
    }
 
    fun startPage(page: Page) {
-      pageStackCache.update {
-         it.added(
-            SavedPageState(
-               PageId(),
-               page
-            )
+      rawState.pageStack = rawState.pageStack.added(
+         SavedPageState(
+            PageId(),
+            page
          )
-      }
+      )
    }
 
    fun finishPage() {
-      val tail = pageStackCache.value.tailOrNull()
+      val tail = rawState.pageStack.tailOrNull()
 
       if (tail == null) {
          removeFromDeck()
          return
       }
 
-      pageStackCache.value = tail
+      rawState.pageStack = tail
    }
 
    fun addColumn(page: Page) {
@@ -184,7 +192,6 @@ internal fun PageContentFooter(
    savedPageState: SavedPageState,
    pageStackState: PPageStackState,
    pageSwitcher: CombinedPageSwitcherState,
-   pageStateStore: PageStateStore,
    colors: PageStackColors,
    windowInsets: WindowInsets,
    horizontalContentPadding: Dp = 0.dp,
@@ -198,20 +205,19 @@ internal fun PageContentFooter(
    val updatedFooterStartPaddingType   = rememberUpdatedState(footerStartPaddingType)
    val updatedFooterEndPaddingType     = rememberUpdatedState(footerEndPaddingType)
 
-   val switcherState = remember(pageSwitcher, pageStateStore) {
-      PageSwitcherState(
-         pageSwitcher.allPageComposables.map {
+   val pageComposables = remember(pageSwitcher) {
+      pageSwitcher.allPageComposables
+         .map {
             extractPageComposable(
                it, updatedPageStackState,
                updatedColors, updatedWindowInsets, updatedHorizontalContentPadding,
                updatedFooterStartPaddingType, updatedFooterEndPaddingType
             )
-         },
-         pageStateStore
-      )
+         }
+         .toImmutableList()
    }
 
-   PageSwitcher(switcherState, savedPageState)
+   PageSwitcher(pageStackState.rawState, pageComposables, savedPageState)
 }
 
 @Composable

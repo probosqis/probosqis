@@ -50,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.deck.SingleColumnDeck
 import com.wcaokaze.probosqis.capsiqum.deck.SingleColumnDeckState
 import com.wcaokaze.probosqis.capsiqum.deck.get
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlin.time.DurationUnit
@@ -107,7 +106,6 @@ class SingleColumnPageDeckState(
 fun SingleColumnPageDeckAppBar(
    state: SingleColumnPageDeckState,
    pageSwitcherState: CombinedPageSwitcherState,
-   pageStateStore: PageStateStore,
    windowInsets: WindowInsets = WindowInsets
       .safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
 ) {
@@ -146,7 +144,7 @@ fun SingleColumnPageDeckAppBar(
             val pageStackState = lazyPageStackState.get(state)
 
             SingleColumnPageStackAppBar(
-               pageStackState, pageSwitcherState, pageStateStore, windowInsets
+               pageStackState, pageSwitcherState, windowInsets
             )
          }
       }
@@ -157,7 +155,6 @@ fun SingleColumnPageDeckAppBar(
 fun SingleColumnPageDeck(
    state: SingleColumnPageDeckState,
    pageSwitcherState: CombinedPageSwitcherState,
-   pageStateStore: PageStateStore,
    colors: PageStackColors,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
@@ -195,7 +192,7 @@ fun SingleColumnPageDeck(
          } ?: false
 
          PageStackContent(
-            pageStackState, pageSwitcherState, pageStateStore, colors,
+            pageStackState, pageSwitcherState, colors,
             prevPageStackHasFooter, nextPageStackHasFooter,
             windowInsets
          )
@@ -208,14 +205,12 @@ fun SingleColumnPageDeck(
 private fun SingleColumnPageStackAppBar(
    pageStackState: PPageStackState,
    pageSwitcher: CombinedPageSwitcherState,
-   pageStateStore: PageStateStore,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier
 ) {
    PageStackAppBar(
       pageStackState,
       pageSwitcher,
-      pageStateStore,
       colors = TopAppBarDefaults.topAppBarColors(
          containerColor = Color.Transparent,
       ),
@@ -229,7 +224,6 @@ private fun SingleColumnPageStackAppBar(
 private fun PageStackContent(
    state: PPageStackState,
    pageSwitcher: CombinedPageSwitcherState,
-   pageStateStore: PageStateStore,
    colors: PageStackColors,
    prevPageStackHasFooter: Boolean,
    nextPageStackHasFooter: Boolean,
@@ -244,7 +238,7 @@ private fun PageStackContent(
       state.pageStack
    ) { pageStack ->
       PageContentFooter(
-         pageStack.head, state, pageSwitcher, pageStateStore,
+         pageStack.head, state, pageSwitcher,
          colors, windowInsets, horizontalContentPadding = cardPadding,
          footerStartPaddingType = if (prevPageStackHasFooter) {
             FooterPaddingType.Content

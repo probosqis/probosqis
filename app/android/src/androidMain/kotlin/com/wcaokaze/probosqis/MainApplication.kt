@@ -27,7 +27,6 @@ import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
 import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
-import com.wcaokaze.probosqis.page.PPageStateStore
 import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
@@ -81,13 +80,6 @@ class MainApplication : Application() {
 
    private val koinModule = module {
       single { PPageSwitcherState(allPageComposables) }
-
-      single {
-         PPageStateStore(
-            allPageComposables,
-            appCoroutineScope = get()
-         )
-      }
 
       factory {
          val pageDeckCache = loadPageDeckOrDefault(

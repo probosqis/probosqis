@@ -37,10 +37,9 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageComposable
 import com.wcaokaze.probosqis.capsiqum.page.PageState
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.PageSwitcher
-import com.wcaokaze.probosqis.capsiqum.page.PageSwitcherState
 import com.wcaokaze.probosqis.resources.Strings
+import kotlinx.collections.immutable.toImmutableList
 
 @ExperimentalMaterial3Api
 private fun <P : Page, S : PageState> extractPageComposable(
@@ -68,7 +67,6 @@ private fun <P : Page, S : PageState> extractPageComposable(
 internal fun PageStackAppBar(
    pageStackState: PPageStackState,
    pageSwitcher: CombinedPageSwitcherState,
-   pageStateStore: PageStateStore,
    colors: TopAppBarColors,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
@@ -79,21 +77,19 @@ internal fun PageStackAppBar(
    val updatedWindowInsets = rememberUpdatedState(windowInsets)
    val updatedHorizontalContentPadding = rememberUpdatedState(horizontalContentPadding)
 
-   val switcherState = remember(pageSwitcher, pageStateStore) {
-      PageSwitcherState(
-         pageSwitcher.allPageComposables.map {
+   val pageComposables = remember(pageSwitcher) {
+      pageSwitcher.allPageComposables
+         .map {
             extractPageComposable(
                it, updatedPageStackState, updatedColors, updatedWindowInsets,
                updatedHorizontalContentPadding
             )
-         },
-         pageStateStore
-      )
+         }
+         .toImmutableList()
    }
 
    Box(modifier) {
-      val savedPageState = pageStackState.pageStack.head
-      PageSwitcher(switcherState, savedPageState)
+      PageSwitcher(pageStackState.rawState, pageComposables)
    }
 }
 

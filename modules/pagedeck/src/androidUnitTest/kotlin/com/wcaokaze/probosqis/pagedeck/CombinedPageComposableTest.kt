@@ -22,7 +22,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.page.Page
@@ -30,7 +29,6 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
@@ -152,21 +150,9 @@ class CombinedPageComposableTest {
       )
 
       rule.setContent {
-         val coroutineScope = rememberCoroutineScope()
-
          val pageSwitcherState = remember {
             CombinedPageSwitcherState(
                listOf(pageAComposable, pageBComposable)
-            )
-         }
-
-         val pageStateStore = remember {
-            PageStateStore(
-               listOf(
-                  pageAComposable.pageStateFactory,
-                  pageBComposable.pageStateFactory,
-               ),
-               coroutineScope
             )
          }
 
@@ -177,7 +163,7 @@ class CombinedPageComposableTest {
          Column {
             @OptIn(ExperimentalMaterial3Api::class)
             PageStackAppBar(
-               pageStackState, pageSwitcherState, pageStateStore,
+               pageStackState, pageSwitcherState,
                TopAppBarDefaults.topAppBarColors(), WindowInsets(0)
             )
 
@@ -187,7 +173,7 @@ class CombinedPageComposableTest {
             ) {
                PageContentFooter(
                   savedPageState = it.head, pageStackState,
-                  pageSwitcherState, pageStateStore,
+                  pageSwitcherState,
                   PageStackColors(
                      background = Color.Transparent,
                      content = Color.Black,
@@ -291,18 +277,9 @@ class CombinedPageComposableTest {
       )
 
       rule.setContent {
-         val coroutineScope = rememberCoroutineScope()
-
          val pageSwitcherState = remember {
             CombinedPageSwitcherState(
                listOf(pageComposable)
-            )
-         }
-
-         val pageStateStore = remember {
-            PageStateStore(
-               listOf(pageComposable.pageStateFactory),
-               coroutineScope
             )
          }
 
@@ -313,7 +290,7 @@ class CombinedPageComposableTest {
          Column {
             @OptIn(ExperimentalMaterial3Api::class)
             PageStackAppBar(
-               pageStackState, pageSwitcherState, pageStateStore,
+               pageStackState, pageSwitcherState,
                TopAppBarDefaults.topAppBarColors(), WindowInsets(0)
             )
 
@@ -323,7 +300,7 @@ class CombinedPageComposableTest {
             ) {
                PageContentFooter(
                   savedPageState = it.head, pageStackState,
-                  pageSwitcherState, pageStateStore,
+                  pageSwitcherState,
                   PageStackColors(
                      background = Color.Transparent,
                      content = Color.Black,

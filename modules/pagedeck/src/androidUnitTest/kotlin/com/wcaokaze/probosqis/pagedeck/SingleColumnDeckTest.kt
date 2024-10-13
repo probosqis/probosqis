@@ -45,7 +45,6 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.every
@@ -109,11 +108,10 @@ class SingleColumnDeckTest {
    fun SingleColumnPageDeck(
       state: SingleColumnPageDeckState,
       pageSwitcherState: CombinedPageSwitcherState,
-      pageStateStore: PageStateStore,
       modifier: Modifier = Modifier,
    ) {
       SingleColumnPageDeck(
-         state, pageSwitcherState, pageStateStore,
+         state, pageSwitcherState,
          PageStackColors(
             background = Color.Transparent,
             content = Color.Black,
@@ -130,14 +128,6 @@ class SingleColumnDeckTest {
    private fun rememberPageSwitcherState() = remember {
       CombinedPageSwitcherState(
          listOf(pageComposable)
-      )
-   }
-
-   @Composable
-   private fun rememberPageStateStore(coroutineScope: CoroutineScope) = remember {
-      PageStateStore(
-         listOf(pageComposable.pageStateFactory),
-         coroutineScope
       )
    }
 
@@ -178,7 +168,6 @@ class SingleColumnDeckTest {
 
          SingleColumnPageDeck(
             deckState, rememberPageSwitcherState(),
-            rememberPageStateStore(coroutineScope),
             modifier = Modifier
                .testTag(deckTestTag)
                .width(deckWidth)
@@ -240,7 +229,6 @@ class SingleColumnDeckTest {
 
          SingleColumnPageDeck(
             deckState, rememberPageSwitcherState(),
-            rememberPageStateStore(coroutineScope),
             modifier = Modifier.fillMaxSize()
          )
       }
@@ -284,7 +272,6 @@ class SingleColumnDeckTest {
 
          SingleColumnPageDeck(
             deckState, rememberPageSwitcherState(),
-            rememberPageStateStore(coroutineScope),
             modifier = Modifier.fillMaxSize()
          )
       }
@@ -333,7 +320,6 @@ class SingleColumnDeckTest {
 
          SingleColumnPageDeck(
             deckState, rememberPageSwitcherState(),
-            rememberPageStateStore(coroutineScope),
             modifier = Modifier.fillMaxSize()
          )
       }
@@ -379,7 +365,6 @@ class SingleColumnDeckTest {
 
          SingleColumnPageDeck(
             deckState, rememberPageSwitcherState(),
-            rememberPageStateStore(coroutineScope),
             modifier = Modifier.fillMaxSize()
          )
       }

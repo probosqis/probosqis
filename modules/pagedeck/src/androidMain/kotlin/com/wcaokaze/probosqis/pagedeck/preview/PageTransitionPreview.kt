@@ -31,7 +31,6 @@ import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.preview.StateSaverBuilder
 import com.wcaokaze.probosqis.capsiqum.page.preview.buildPreviewStateSaver
@@ -131,16 +130,6 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       )
    }
 
-   val pageStateStore = remember {
-      PageStateStore(
-         listOf(
-            parentPageStateFactory,
-            childPageStateFactory,
-         ),
-         coroutineScope
-      )
-   }
-
    val transition = updateTransition(
       PageTransitionPreviewValue.Parent, label = "PageTransition")
 
@@ -161,7 +150,7 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       pageStateTransition
    ) { pageStack ->
       PageContentFooter(
-         pageStack.head, pageStackState, pageComposableSwitcher, pageStateStore,
+         pageStack.head, pageStackState, pageComposableSwitcher,
          PageStackColors(
             background = MaterialTheme.colorScheme.surface,
             content = MaterialTheme.colorScheme.onSurface,

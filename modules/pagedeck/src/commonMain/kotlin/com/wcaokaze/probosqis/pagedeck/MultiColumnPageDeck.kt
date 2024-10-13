@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.deck.MultiColumnDeck
 import com.wcaokaze.probosqis.capsiqum.deck.MultiColumnDeckState
 import com.wcaokaze.probosqis.capsiqum.deck.get
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
@@ -84,7 +83,6 @@ class MultiColumnPageDeckState(
 fun MultiColumnPageDeck(
    state: MultiColumnPageDeckState,
    pageSwitcherState: CombinedPageSwitcherState,
-   pageStateStore: PageStateStore,
    pageStackCount: Int,
    activeAppBarColors: TopAppBarColors,
    inactiveAppBarColors: TopAppBarColors,
@@ -119,7 +117,6 @@ fun MultiColumnPageDeck(
          PageStack(
             pageStackState,
             pageSwitcherState,
-            pageStateStore,
             appBarColors = if (state.activeCardIndex == index) {
                activeAppBarColors
             } else {
@@ -165,7 +162,6 @@ internal class MultiColumnPageStackActivationAnimState {
 private fun PageStack(
    state: PPageStackState,
    pageSwitcherState: CombinedPageSwitcherState,
-   pageStateStore: PageStateStore,
    appBarColors: TopAppBarColors,
    colors: PageStackColors,
    windowInsets: WindowInsets,
@@ -182,9 +178,7 @@ private fun PageStack(
          .clip(MaterialTheme.shapes.large)
          .background(colors.background)
    ) {
-      MultiColumnPageStackAppBar(
-         state, pageSwitcherState, pageStateStore, appBarColors
-      )
+      MultiColumnPageStackAppBar(state, pageSwitcherState, appBarColors)
 
       val transitionState = remember(pageSwitcherState) {
          PageTransitionStateImpl(pageSwitcherState)
@@ -195,8 +189,7 @@ private fun PageStack(
          state.pageStack
       ) { pageStack ->
          PageContentFooter(
-            pageStack.head, state, pageSwitcherState, pageStateStore,
-            colors, windowInsets
+            pageStack.head, state, pageSwitcherState, colors, windowInsets
          )
       }
    }
@@ -207,7 +200,6 @@ private fun PageStack(
 private fun MultiColumnPageStackAppBar(
    pageStackState: PPageStackState,
    pageSwitcherState: CombinedPageSwitcherState,
-   pageStateStore: PageStateStore,
    colors: TopAppBarColors,
    modifier: Modifier = Modifier
 ) {
@@ -215,7 +207,6 @@ private fun MultiColumnPageStackAppBar(
    PageStackAppBar(
       pageStackState,
       pageSwitcherState,
-      pageStateStore,
       colors,
       WindowInsets(0),
       modifier = modifier
