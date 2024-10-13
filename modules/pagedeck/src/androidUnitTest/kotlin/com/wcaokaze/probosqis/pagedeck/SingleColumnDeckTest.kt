@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -54,8 +55,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.junit.Rule
 import org.junit.runner.RunWith
+import org.koin.compose.KoinIsolatedContext
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.GraphicsMode
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -65,6 +72,35 @@ import kotlin.test.assertEquals
 class SingleColumnDeckTest {
    @get:Rule
    val rule = createComposeRule()
+
+   @AfterTest
+   fun after() {
+      stopKoin()
+   }
+
+   @Composable
+   private fun KoinIsolatedContext(
+      pageSwitcherState: CombinedPageSwitcherState,
+      coroutineScope: CoroutineScope = rememberCoroutineScope(),
+      content: @Composable () -> Unit
+   ) {
+      val koinApplication = remember {
+         koinApplication {
+            modules(
+               module {
+                  single { coroutineScope }
+                  single { pageSwitcherState }
+               }
+            )
+         }
+      }
+
+      LaunchedEffect(Unit) {
+         startKoin(koinApplication)
+      }
+
+      KoinIsolatedContext(koinApplication, content)
+   }
 
    private class PageImpl(val i: Int) : Page()
    private class PageStateImpl : PageState()
@@ -158,21 +194,27 @@ class SingleColumnDeckTest {
       lateinit var coroutineScope: CoroutineScope
       lateinit var deckState: SingleColumnPageDeckState
       rule.setContent {
-         coroutineScope = rememberCoroutineScope()
-         deckState = remember {
-            SingleColumnPageDeckState(
-               pageDeckCache = WritableCache(createPageDeck()),
-               pageStackRepository = mockk()
+         val pageSwitcherState = rememberPageSwitcherState()
+
+         KoinIsolatedContext(
+            pageSwitcherState = pageSwitcherState
+         ) {
+            coroutineScope = rememberCoroutineScope()
+            deckState = remember {
+               SingleColumnPageDeckState(
+                  pageDeckCache = WritableCache(createPageDeck()),
+                  pageStackRepository = mockk()
+               )
+            }
+
+            SingleColumnPageDeck(
+               deckState, pageSwitcherState,
+               modifier = Modifier
+                  .testTag(deckTestTag)
+                  .width(deckWidth)
+                  .fillMaxHeight()
             )
          }
-
-         SingleColumnPageDeck(
-            deckState, rememberPageSwitcherState(),
-            modifier = Modifier
-               .testTag(deckTestTag)
-               .width(deckWidth)
-               .fillMaxHeight()
-         )
       }
 
       rule.mainClock.autoAdvance = false
@@ -219,18 +261,24 @@ class SingleColumnDeckTest {
       lateinit var coroutineScope: CoroutineScope
       lateinit var deckState: SingleColumnPageDeckState
       rule.setContent {
-         coroutineScope = rememberCoroutineScope()
-         deckState = remember {
-            SingleColumnPageDeckState(
-               pageDeckCache = WritableCache(createPageDeck()),
-               pageStackRepository = mockk()
+         val pageSwitcherState = rememberPageSwitcherState()
+
+         KoinIsolatedContext(
+            pageSwitcherState = pageSwitcherState
+         ) {
+            coroutineScope = rememberCoroutineScope()
+            deckState = remember {
+               SingleColumnPageDeckState(
+                  pageDeckCache = WritableCache(createPageDeck()),
+                  pageStackRepository = mockk()
+               )
+            }
+
+            SingleColumnPageDeck(
+               deckState, pageSwitcherState,
+               modifier = Modifier.fillMaxSize()
             )
          }
-
-         SingleColumnPageDeck(
-            deckState, rememberPageSwitcherState(),
-            modifier = Modifier.fillMaxSize()
-         )
       }
 
       rule.runOnIdle {
@@ -262,18 +310,24 @@ class SingleColumnDeckTest {
       lateinit var coroutineScope: CoroutineScope
       lateinit var deckState: SingleColumnPageDeckState
       rule.setContent {
-         coroutineScope = rememberCoroutineScope()
-         deckState = remember {
-            SingleColumnPageDeckState(
-               pageDeckCache = WritableCache(createPageDeck()),
-               pageStackRepository = mockk()
+         val pageSwitcherState = rememberPageSwitcherState()
+
+         KoinIsolatedContext(
+            pageSwitcherState = pageSwitcherState
+         ) {
+            coroutineScope = rememberCoroutineScope()
+            deckState = remember {
+               SingleColumnPageDeckState(
+                  pageDeckCache = WritableCache(createPageDeck()),
+                  pageStackRepository = mockk()
+               )
+            }
+
+            SingleColumnPageDeck(
+               deckState, pageSwitcherState,
+               modifier = Modifier.fillMaxSize()
             )
          }
-
-         SingleColumnPageDeck(
-            deckState, rememberPageSwitcherState(),
-            modifier = Modifier.fillMaxSize()
-         )
       }
 
       rule.mainClock.autoAdvance = false
@@ -306,22 +360,28 @@ class SingleColumnDeckTest {
       lateinit var coroutineScope: CoroutineScope
       lateinit var deckState: SingleColumnPageDeckState
       rule.setContent {
-         coroutineScope = rememberCoroutineScope()
+         val pageSwitcherState = rememberPageSwitcherState()
 
-         val deck = createPageDeck(cardCount = 2)
-         deckState = remember {
-            SingleColumnPageDeckState(
-               pageDeckCache = WritableCache(deck),
-               pageStackRepository = mockk {
-                  every { savePageStack(any()) } answers { WritableCache(firstArg()) }
-               }
+         KoinIsolatedContext(
+            pageSwitcherState = pageSwitcherState
+         ) {
+            coroutineScope = rememberCoroutineScope()
+
+            val deck = createPageDeck(cardCount = 2)
+            deckState = remember {
+               SingleColumnPageDeckState(
+                  pageDeckCache = WritableCache(deck),
+                  pageStackRepository = mockk {
+                     every { savePageStack(any()) } answers { WritableCache(firstArg()) }
+                  }
+               )
+            }
+
+            SingleColumnPageDeck(
+               deckState, pageSwitcherState,
+               modifier = Modifier.fillMaxSize()
             )
          }
-
-         SingleColumnPageDeck(
-            deckState, rememberPageSwitcherState(),
-            modifier = Modifier.fillMaxSize()
-         )
       }
 
       fun assertCardNumbers(expected: List<Int>, actual: PageDeck) {
@@ -353,20 +413,26 @@ class SingleColumnDeckTest {
       lateinit var coroutineScope: CoroutineScope
       lateinit var deckState: SingleColumnPageDeckState
       rule.setContent {
-         coroutineScope = rememberCoroutineScope()
+         val pageSwitcherState = rememberPageSwitcherState()
 
-         val deck = createPageDeck(cardCount = 4)
-         deckState = remember {
-            SingleColumnPageDeckState(
-               pageDeckCache = WritableCache(deck),
-               pageStackRepository = mockk()
+         KoinIsolatedContext(
+            pageSwitcherState = pageSwitcherState
+         ) {
+            coroutineScope = rememberCoroutineScope()
+
+            val deck = createPageDeck(cardCount = 4)
+            deckState = remember {
+               SingleColumnPageDeckState(
+                  pageDeckCache = WritableCache(deck),
+                  pageStackRepository = mockk()
+               )
+            }
+
+            SingleColumnPageDeck(
+               deckState, pageSwitcherState,
+               modifier = Modifier.fillMaxSize()
             )
          }
-
-         SingleColumnPageDeck(
-            deckState, rememberPageSwitcherState(),
-            modifier = Modifier.fillMaxSize()
-         )
       }
 
       fun assertCardNumbers(expected: List<Int>, actual: PageDeck) {

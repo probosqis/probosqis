@@ -20,8 +20,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.page.Page
@@ -34,10 +36,17 @@ import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.coroutines.CoroutineScope
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.compose.KoinIsolatedContext
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.AfterTest
 import kotlin.test.assertFalse
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -46,6 +55,37 @@ import kotlin.test.assertTrue
 class CombinedPageComposableTest {
    @get:Rule
    val rule = createComposeRule()
+
+   @AfterTest
+   fun after() {
+      stopKoin()
+   }
+
+   @Composable
+   private fun KoinIsolatedContext(
+      pageSwitcherState: CombinedPageSwitcherState,
+      coroutineScope: CoroutineScope = rememberCoroutineScope(),
+      content: @Composable () -> Unit
+   ) {
+      val koinApplication = remember {
+         koinApplication {
+            modules(
+               module {
+                  single { coroutineScope }
+                  single { pageSwitcherState }
+               }
+            )
+         }
+      }
+
+      /// XXX: LaunchedEffectでは初回コンポジションで注入が間に合わないので
+      //       rememberでやっている
+      remember {
+         startKoin(koinApplication)
+      }
+
+      KoinIsolatedContext(koinApplication, content)
+   }
 
    private class PageA : Page()
    private class PageB : Page()
@@ -140,14 +180,7 @@ class CombinedPageComposableTest {
          incomingTransitions = persistentMapOf()
       )
 
-      val savedPageState = SavedPageState(PageId(0L), PageA())
-      val pageStack = PageStack(PageStack.Id(0L), savedPageState)
-
-      val pageStackState = PPageStackState(
-         PageStack.Id(0L),
-         WritableCache(pageStack),
-         pageDeckState = mockk()
-      )
+      lateinit var pageStackState: PPageStackState
 
       rule.setContent {
          val pageSwitcherState = remember {
@@ -156,33 +189,47 @@ class CombinedPageComposableTest {
             )
          }
 
-         val transitionState = remember {
-            PageTransitionStateImpl(pageSwitcherState)
-         }
-
-         Column {
-            @OptIn(ExperimentalMaterial3Api::class)
-            PageStackAppBar(
-               pageStackState, pageSwitcherState,
-               TopAppBarDefaults.topAppBarColors(), WindowInsets(0)
-            )
-
-            PageTransition(
-               transitionState,
-               targetState = pageStackState.pageStack
-            ) {
-               PageContentFooter(
-                  savedPageState = it.head, pageStackState,
-                  pageSwitcherState,
-                  PageStackColors(
-                     background = Color.Transparent,
-                     content = Color.Black,
-                     activationAnimColor = Color.DarkGray,
-                     footer = Color.Transparent,
-                     footerContent = Color.Black,
-                  ),
-                  WindowInsets(0)
+         KoinIsolatedContext(
+            pageSwitcherState = pageSwitcherState
+         ) {
+            pageStackState = remember {
+               val savedPageState = SavedPageState(PageId(0L), PageA())
+               val pageStack = PageStack(PageStack.Id(0L), savedPageState)
+               PPageStackState(
+                  PageStack.Id(0L),
+                  WritableCache(pageStack),
+                  pageDeckState = mockk()
                )
+            }
+
+            val transitionState = remember {
+               PageTransitionStateImpl(pageSwitcherState)
+            }
+
+            Column {
+               @OptIn(ExperimentalMaterial3Api::class)
+               PageStackAppBar(
+                  pageStackState, pageSwitcherState,
+                  TopAppBarDefaults.topAppBarColors(), WindowInsets(0)
+               )
+
+               PageTransition(
+                  transitionState,
+                  targetState = pageStackState.pageStack
+               ) {
+                  PageContentFooter(
+                     savedPageState = it.head, pageStackState,
+                     pageSwitcherState,
+                     PageStackColors(
+                        background = Color.Transparent,
+                        content = Color.Black,
+                        activationAnimColor = Color.DarkGray,
+                        footer = Color.Transparent,
+                        footerContent = Color.Black,
+                     ),
+                     WindowInsets(0)
+                  )
+               }
             }
          }
       }
@@ -267,14 +314,8 @@ class CombinedPageComposableTest {
       )
 
       val page = PageA()
-      val savedPageState = SavedPageState(PageId(0L), page)
-      val pageStack = PageStack(PageStack.Id(0L), savedPageState)
 
-      val pageStackState = PPageStackState(
-         PageStack.Id(0L),
-         WritableCache(pageStack),
-         pageDeckState = mockk()
-      )
+      lateinit var pageStackState: PPageStackState
 
       rule.setContent {
          val pageSwitcherState = remember {
@@ -283,33 +324,47 @@ class CombinedPageComposableTest {
             )
          }
 
-         val transitionState = remember {
-            PageTransitionStateImpl(pageSwitcherState)
-         }
-
-         Column {
-            @OptIn(ExperimentalMaterial3Api::class)
-            PageStackAppBar(
-               pageStackState, pageSwitcherState,
-               TopAppBarDefaults.topAppBarColors(), WindowInsets(0)
-            )
-
-            PageTransition(
-               transitionState,
-               targetState = pageStackState.pageStack
-            ) {
-               PageContentFooter(
-                  savedPageState = it.head, pageStackState,
-                  pageSwitcherState,
-                  PageStackColors(
-                     background = Color.Transparent,
-                     content = Color.Black,
-                     activationAnimColor = Color.DarkGray,
-                     footer = Color.Transparent,
-                     footerContent = Color.Black,
-                  ),
-                  WindowInsets(0)
+         KoinIsolatedContext(
+            pageSwitcherState = pageSwitcherState
+         ) {
+            pageStackState = remember {
+               val savedPageState = SavedPageState(PageId(0L), page)
+               val pageStack = PageStack(PageStack.Id(0L), savedPageState)
+               PPageStackState(
+                  PageStack.Id(0L),
+                  WritableCache(pageStack),
+                  pageDeckState = mockk()
                )
+            }
+
+            val transitionState = remember {
+               PageTransitionStateImpl(pageSwitcherState)
+            }
+
+            Column {
+               @OptIn(ExperimentalMaterial3Api::class)
+               PageStackAppBar(
+                  pageStackState, pageSwitcherState,
+                  TopAppBarDefaults.topAppBarColors(), WindowInsets(0)
+               )
+
+               PageTransition(
+                  transitionState,
+                  targetState = pageStackState.pageStack
+               ) {
+                  PageContentFooter(
+                     savedPageState = it.head, pageStackState,
+                     pageSwitcherState,
+                     PageStackColors(
+                        background = Color.Transparent,
+                        content = Color.Black,
+                        activationAnimColor = Color.DarkGray,
+                        footer = Color.Transparent,
+                        footerContent = Color.Black,
+                     ),
+                     WindowInsets(0)
+                  )
+               }
             }
          }
       }

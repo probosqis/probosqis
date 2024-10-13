@@ -16,12 +16,14 @@
 
 package com.wcaokaze.probosqis.app
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
@@ -40,9 +42,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.koin.compose.KoinIsolatedContext
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import java.io.IOException
+import kotlin.test.AfterTest
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertIs
@@ -54,36 +59,51 @@ class ProbosqisComposeTest {
    @get:Rule
    val rule = createComposeRule()
 
-   private val emptyPageDeckModule = module {
-      single { CombinedPageSwitcherState(allPageComposables = emptyList()) }
+   @AfterTest
+   fun after() {
+      stopKoin()
+   }
 
-      single {
-         PageStateStore(
-            allPageStateFactories = emptyList(),
-            appCoroutineScope = mockk()
-         )
+   @Composable
+   private fun KoinIsolatedContext(
+      content: @Composable () -> Unit
+   ) {
+      val koinApplication = remember {
+         koinApplication {
+            modules(
+               module {
+                  single { CombinedPageSwitcherState(allPageComposables = emptyList()) }
+
+                  single {
+                     MultiColumnPageDeckState(
+                        WritableCache(PageDeck()),
+                        pageStackRepository = mockk()
+                     )
+                  }
+
+                  single {
+                     SingleColumnPageDeckState(
+                        WritableCache(PageDeck()),
+                        pageStackRepository = mockk()
+                     )
+                  }
+
+                  single {
+                     PErrorListState(
+                        errorListCache = WritableCache(emptyList()),
+                        itemComposables = emptyList()
+                     )
+                  }
+               }
+            )
+         }
       }
 
-      single {
-         MultiColumnPageDeckState(
-            WritableCache(PageDeck()),
-            pageStackRepository = mockk()
-         )
+      LaunchedEffect(Unit) {
+         startKoin(koinApplication)
       }
 
-      single {
-         SingleColumnPageDeckState(
-            WritableCache(PageDeck()),
-            pageStackRepository = mockk()
-         )
-      }
-
-      single {
-         PErrorListState(
-            errorListCache = WritableCache(emptyList()),
-            itemComposables = emptyList()
-         )
-      }
+      KoinIsolatedContext(koinApplication, content)
    }
 
    @Test
@@ -140,7 +160,7 @@ class ProbosqisComposeTest {
       val probosqisState = ProbosqisState()
 
       rule.setContent {
-         KoinIsolatedContext(koinApplication { modules(emptyPageDeckModule) }) {
+         KoinIsolatedContext {
             SingleColumnProbosqis(probosqisState)
          }
       }
@@ -155,7 +175,7 @@ class ProbosqisComposeTest {
       val probosqisState = ProbosqisState()
 
       rule.setContent {
-         KoinIsolatedContext(koinApplication { modules(emptyPageDeckModule) }) {
+         KoinIsolatedContext {
             MultiColumnProbosqis(probosqisState)
          }
       }
@@ -172,7 +192,7 @@ class ProbosqisComposeTest {
       var isMultiColumn by mutableStateOf(false)
 
       rule.setContent {
-         KoinIsolatedContext(koinApplication { modules(emptyPageDeckModule) }) {
+         KoinIsolatedContext {
             if (isMultiColumn) {
                MultiColumnProbosqis(probosqisState)
             } else {
