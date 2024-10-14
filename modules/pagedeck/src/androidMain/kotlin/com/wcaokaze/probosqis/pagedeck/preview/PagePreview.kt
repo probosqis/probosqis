@@ -28,6 +28,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -79,18 +80,23 @@ fun <P : Page, S : PageState> PagePreview(
       )
    }
 
+   val coroutineScope = rememberCoroutineScope()
+
    val pageStackState = remember {
       PPageStackState(
          pageStackId = pageStackCache.value.id,
          pageStackCache,
-         pageDeckState
+         pageDeckState,
+         allPageStateFactories = listOf(pageComposable.pageStateFactory),
+         coroutineScope
       )
    }
 
    val stateSaver = rememberPreviewStateSaver {}
 
    val pageState = remember {
-      pageComposable.pageStateFactory.pageStateFactory(page, savedPageState.id, stateSaver)
+      pageComposable.pageStateFactory
+         .createPageState(page, savedPageState.id, coroutineScope, stateSaver)
    }
 
    Surface(

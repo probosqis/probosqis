@@ -55,11 +55,13 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageStackState
 import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.PageSwitcher
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 
@@ -75,22 +77,45 @@ data class PageStackColors(
 )
 
 @Stable
-class PPageStackState
-   internal constructor(
-      val pageStackId: PageStack.Id,
-      pageStackCache: WritableCache<PageStack>,
-      val pageDeckState: PageDeckState
-   )
-   : KoinComponent
-{
-   internal val rawState = PageStackState(
-      pageStackCache,
-      allPageStateFactories = get<CombinedPageSwitcherState>()
-         .allPageComposables.map { it.pageStateFactory },
-      coroutineScope = get()
-   )
+class PPageStackState : KoinComponent {
+   val pageStackId: PageStack.Id
+   val pageDeckState: PageDeckState
+   internal val rawState: PageStackState
 
-   internal val pageStack: PageStack by rawState::pageStack
+   internal constructor(
+      pageStackId: PageStack.Id,
+      pageStackCache: WritableCache<PageStack>,
+      pageDeckState: PageDeckState
+   ) {
+      this.pageStackId = pageStackId
+      this.pageDeckState = pageDeckState
+      rawState = PageStackState(
+         pageStackCache,
+         allPageStateFactories = get<CombinedPageSwitcherState>()
+            .allPageComposables.map { it.pageStateFactory },
+         coroutineScope = get()
+      )
+   }
+
+   internal constructor(
+      pageStackId: PageStack.Id,
+      pageStackCache: WritableCache<PageStack>,
+      pageDeckState: PageDeckState,
+      allPageStateFactories: List<PageStateFactory<*, *>>,
+      coroutineScope: CoroutineScope
+   ) {
+      this.pageStackId = pageStackId
+      this.pageDeckState = pageDeckState
+      rawState = PageStackState(
+         pageStackCache,
+         allPageStateFactories,
+         coroutineScope
+      )
+   }
+
+   internal val pageStack: PageStack
+      get() = rawState.pageStack
+
    internal val multiColumnActivationAnimState = MultiColumnPageStackActivationAnimState()
 
    private val activationBackgroundAlphaAnim = Animatable(0.0f)

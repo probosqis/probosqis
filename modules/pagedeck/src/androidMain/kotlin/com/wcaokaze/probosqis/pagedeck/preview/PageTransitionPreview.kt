@@ -93,14 +93,6 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       )
    }
 
-   val pageStackState = remember {
-      PPageStackState(
-         pageStackId = pageStackCache.value.id,
-         pageStackCache,
-         deckState
-      )
-   }
-
    val parentPageStateFactory = remember {
       parentPageComposable.pageStateFactory.copy(
          pageStateFactory = { page, _, _ ->
@@ -127,6 +119,17 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
             parentPageComposable.copy(pageStateFactory = parentPageStateFactory),
             childPageComposable .copy(pageStateFactory = childPageStateFactory),
          )
+      )
+   }
+
+   val pageStackState = remember {
+      PPageStackState(
+         pageStackId = pageStackCache.value.id,
+         pageStackCache,
+         deckState,
+         allPageStateFactories = pageComposableSwitcher
+            .allPageComposables.map { it.pageStateFactory },
+         coroutineScope
       )
    }
 
