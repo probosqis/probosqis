@@ -83,7 +83,6 @@ fun MultiColumnProbosqis(
          MultiColumnPageDeck(
             pageDeckState,
             pageSwitcherState = koinInject(),
-            pageStateStore = koinInject(),
             pageStackCount,
             colorScheme.activePageStackAppBar,
             colorScheme.inactivePageStackAppBar,

@@ -29,7 +29,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.pagedeck.PageStackState
+import com.wcaokaze.probosqis.pagedeck.PPageStackState
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -43,7 +43,7 @@ private fun throwUninitializedException(): Nothing
 @Stable
 abstract class PPageState : PageState(), KoinComponent {
    private val errorListState: PErrorListState by inject()
-   private var pageStackStateRc = RC<PageStackState>()
+   private var pageStackStateRc = RC<PPageStackState>()
 
    private var _pageId: PageId? = null
    internal var pageId: PageId
@@ -84,7 +84,7 @@ abstract class PPageState : PageState(), KoinComponent {
    }
 
    @Composable
-   internal fun inject(pageStackState: PageStackState) {
+   internal fun inject(pageStackState: PPageStackState) {
       DisposableEffect(pageStackState) {
          pageStackStateRc.set(pageStackState)
 

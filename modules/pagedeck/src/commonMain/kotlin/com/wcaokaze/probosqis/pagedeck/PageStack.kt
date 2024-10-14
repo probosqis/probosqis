@@ -53,15 +53,17 @@ import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageComposable
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStackState
 import com.wcaokaze.probosqis.capsiqum.page.PageState
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.PageSwitcher
-import com.wcaokaze.probosqis.capsiqum.page.PageSwitcherState
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.panoptiqon.compose.asState
-import com.wcaokaze.probosqis.panoptiqon.update
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 private val pageFooterHeight = 48.dp
 
@@ -75,12 +77,45 @@ data class PageStackColors(
 )
 
 @Stable
-class PageStackState internal constructor(
-   val pageStackId: PageStack.Id,
-   internal val pageStackCache: WritableCache<PageStack>,
+class PPageStackState : KoinComponent {
+   val pageStackId: PageStack.Id
    val pageDeckState: PageDeckState
-) {
-   internal val pageStack: PageStack by pageStackCache.asState()
+   internal val rawState: PageStackState
+
+   internal constructor(
+      pageStackId: PageStack.Id,
+      pageStackCache: WritableCache<PageStack>,
+      pageDeckState: PageDeckState
+   ) {
+      this.pageStackId = pageStackId
+      this.pageDeckState = pageDeckState
+      rawState = PageStackState(
+         pageStackCache,
+         allPageStateFactories = get<CombinedPageSwitcherState>()
+            .allPageComposables.map { it.pageStateFactory },
+         coroutineScope = get()
+      )
+   }
+
+   internal constructor(
+      pageStackId: PageStack.Id,
+      pageStackCache: WritableCache<PageStack>,
+      pageDeckState: PageDeckState,
+      allPageStateFactories: List<PageStateFactory<*, *>>,
+      coroutineScope: CoroutineScope
+   ) {
+      this.pageStackId = pageStackId
+      this.pageDeckState = pageDeckState
+      rawState = PageStackState(
+         pageStackCache,
+         allPageStateFactories,
+         coroutineScope
+      )
+   }
+
+   internal val pageStack: PageStack
+      get() = rawState.pageStack
+
    internal val multiColumnActivationAnimState = MultiColumnPageStackActivationAnimState()
 
    private val activationBackgroundAlphaAnim = Animatable(0.0f)
@@ -97,25 +132,23 @@ class PageStackState internal constructor(
    }
 
    fun startPage(page: Page) {
-      pageStackCache.update {
-         it.added(
-            SavedPageState(
-               PageId(),
-               page
-            )
+      rawState.pageStack = rawState.pageStack.added(
+         SavedPageState(
+            PageId(),
+            page
          )
-      }
+      )
    }
 
    fun finishPage() {
-      val tail = pageStackCache.value.tailOrNull()
+      val tail = rawState.pageStack.tailOrNull()
 
       if (tail == null) {
          removeFromDeck()
          return
       }
 
-      pageStackCache.value = tail
+      rawState.pageStack = tail
    }
 
    fun addColumn(page: Page) {
@@ -159,7 +192,7 @@ internal enum class FooterPaddingType {
 
 private fun <P : Page, S : PageState> extractPageComposable(
    combined: CombinedPageComposable<P, S>,
-   pageStackState: State<PageStackState>,
+   pageStackState: State<PPageStackState>,
    colors: State<PageStackColors>,
    windowInsets: State<WindowInsets>,
    horizontalContentPadding: State<Dp>,
@@ -182,9 +215,8 @@ private fun <P : Page, S : PageState> extractPageComposable(
 @Composable
 internal fun PageContentFooter(
    savedPageState: SavedPageState,
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    pageSwitcher: CombinedPageSwitcherState,
-   pageStateStore: PageStateStore,
    colors: PageStackColors,
    windowInsets: WindowInsets,
    horizontalContentPadding: Dp = 0.dp,
@@ -198,20 +230,19 @@ internal fun PageContentFooter(
    val updatedFooterStartPaddingType   = rememberUpdatedState(footerStartPaddingType)
    val updatedFooterEndPaddingType     = rememberUpdatedState(footerEndPaddingType)
 
-   val switcherState = remember(pageSwitcher, pageStateStore) {
-      PageSwitcherState(
-         pageSwitcher.allPageComposables.map {
+   val pageComposables = remember(pageSwitcher) {
+      pageSwitcher.allPageComposables
+         .map {
             extractPageComposable(
                it, updatedPageStackState,
                updatedColors, updatedWindowInsets, updatedHorizontalContentPadding,
                updatedFooterStartPaddingType, updatedFooterEndPaddingType
             )
-         },
-         pageStateStore
-      )
+         }
+         .toImmutableList()
    }
 
-   PageSwitcher(switcherState, savedPageState)
+   PageSwitcher(pageStackState.rawState, pageComposables, savedPageState)
 }
 
 @Composable
@@ -219,7 +250,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
    combined: CombinedPageComposable<P, S>,
    page: P,
    pageState: S,
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    colors: PageStackColors,
    windowInsets: WindowInsets,
    horizontalContentPadding: Dp,
@@ -278,7 +309,7 @@ private fun <P : Page, S : PageState> PageContentFooter(
 
 @Composable
 private fun PageContentBackground(
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    colors: PageStackColors,
    modifier: Modifier = Modifier
 ) {
@@ -291,10 +322,10 @@ private fun PageContentBackground(
 
 @Composable
 internal fun <P : Page, S : PageState> PageContent(
-   contentComposable: @Composable (P, S, PageStackState, WindowInsets) -> Unit,
+   contentComposable: @Composable (P, S, PPageStackState, WindowInsets) -> Unit,
    page: P,
    pageState: S,
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    isFooterShown: Boolean,
    contentColor: Color,
    windowInsets: WindowInsets,
@@ -320,10 +351,10 @@ internal fun <P : Page, S : PageState> PageContent(
 
 @Composable
 internal fun <P : Page, S : PageState> PageFooter(
-   footerComposable: @Composable (P, S, PageStackState) -> Unit,
+   footerComposable: @Composable (P, S, PPageStackState) -> Unit,
    page: P,
    pageState: S,
-   pageStackState: PageStackState,
+   pageStackState: PPageStackState,
    backgroundColor: Color,
    contentColor: Color,
    windowInsets: WindowInsets,

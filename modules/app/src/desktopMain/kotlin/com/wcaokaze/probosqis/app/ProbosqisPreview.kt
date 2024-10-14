@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.page.PPageSwitcherState
@@ -35,11 +34,11 @@ import com.wcaokaze.probosqis.testpages.TestPage
 import com.wcaokaze.probosqis.testpages.testPageComposable
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CoroutineScope
 import org.koin.compose.KoinIsolatedContext
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
-import kotlin.coroutines.EmptyCoroutineContext
 
 private val allPageComposables = persistentListOf(
    testPageComposable,
@@ -47,13 +46,6 @@ private val allPageComposables = persistentListOf(
 
 private val koinModule = module {
    single { PPageSwitcherState(allPageComposables) }
-
-   single {
-      PageStateStore(
-         allPageStateFactories = allPageComposables.map { it.pageStateFactory },
-         appCoroutineScope = CoroutineScope(EmptyCoroutineContext)
-      )
-   }
 
    factory {
       val children = List(4) { pageStackId ->
@@ -96,10 +88,27 @@ private val koinModule = module {
    }
 }
 
+@Composable
+private fun KoinIsolatedContext(content: @Composable () -> Unit) {
+   val koinApplication = koinApplication {
+      modules(koinModule)
+   }
+
+   remember { // LaunchedEffectではstartKoinが初回コンポジションに間に合わないのでrememberで代用する
+      stopKoin() // 他のプレビューによって起動済みのKoinを一旦停止する
+      startKoin(koinApplication)
+   }
+
+   KoinIsolatedContext(
+      koinApplication,
+      content
+   )
+}
+
 @Preview
 @Composable
 private fun ProbosqisPreview() {
-   KoinIsolatedContext(koinApplication { modules(koinModule) }) {
+   KoinIsolatedContext {
       ProbosqisTheme {
          MultiColumnProbosqis(
             remember { ProbosqisState() }

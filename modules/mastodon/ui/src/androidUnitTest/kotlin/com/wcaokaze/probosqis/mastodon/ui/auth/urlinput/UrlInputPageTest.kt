@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import com.wcaokaze.probosqis.capsiqum.page.test.buildTestStateSaver
+import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestStateSaver
 import org.junit.Rule
 import org.junit.runner.RunWith
@@ -37,7 +37,9 @@ class UrlInputPageTest {
    fun textField_focused_afterPageStarted() {
       rule.setContent {
          val page = UrlInputPage()
-         val state = UrlInputPageState(rememberTestStateSaver())
+         val stateSaver = rememberTestStateSaver()
+         val state = urlInputPageComposable.pageStateFactory
+            .rememberTestPageState(page, stateSaver = stateSaver)
 
          urlInputPageComposable.contentComposable(
             page, state, WindowInsets(0)
@@ -54,7 +56,9 @@ class UrlInputPageTest {
 
       rule.setContent {
          val page = UrlInputPage()
-         state = UrlInputPageState(rememberTestStateSaver())
+         val stateSaver = rememberTestStateSaver()
+         state = urlInputPageComposable.pageStateFactory
+            .rememberTestPageState(page, stateSaver = stateSaver)
 
          urlInputPageComposable.contentComposable(
             page, state, WindowInsets(0)
