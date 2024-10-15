@@ -90,8 +90,8 @@ class CombinedPageComposableTest {
    private class PageA : Page()
    private class PageB : Page()
 
-   private class PageAState : PageState()
-   private class PageBState : PageState()
+   private class PageAState : PageState<PageA>()
+   private class PageBState : PageState<PageB>()
 
    @Test
    fun pageComposableCalled() {
@@ -105,7 +105,7 @@ class CombinedPageComposableTest {
       var pageBFooterComposed = false
 
       val pageAComposable = CombinedPageComposable<PageA, PageAState>(
-         PageStateFactory { _, _, _ -> PageAState() },
+         PageStateFactory { _, _ -> PageAState() },
          content = { _, _, _, _ ->
             DisposableEffect(Unit) {
                pageAContentComposed = true
@@ -143,7 +143,7 @@ class CombinedPageComposableTest {
       )
 
       val pageBComposable = CombinedPageComposable<PageB, PageBState>(
-         PageStateFactory { _, _, _ -> PageBState() },
+         PageStateFactory { _, _ -> PageBState() },
          content = { _, _, _, _ ->
             DisposableEffect(Unit) {
                pageBContentComposed = true
@@ -288,7 +288,7 @@ class CombinedPageComposableTest {
       var footerArgumentPageStackState:        PPageStackState? = null
 
       val pageComposable = CombinedPageComposable<PageA, PageAState>(
-         PageStateFactory { _, _, _ -> PageAState() },
+         PageStateFactory { _, _ -> PageAState() },
          content = { page, pageState, pageStackState, _ ->
             contentArgumentPage = page
             contentArgumentPageState = pageState

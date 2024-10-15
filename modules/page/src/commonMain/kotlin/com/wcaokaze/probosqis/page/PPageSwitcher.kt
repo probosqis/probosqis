@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.page
 
-import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 
@@ -26,26 +25,13 @@ fun PPageSwitcherState(
    allPageComposables.map { it.asCombinedPageComposable() }
 )
 
-private fun <P : PPage, S : PPageState>
-      PageStateFactory<P, S>.asCombinedPageStateFactory(): PageStateFactory<P, S>
-{
-   return copy(
-      pageStateFactory = { page, pageId, stateSaver ->
-         pageStateFactory(page, pageId, stateSaver).also {
-            it.page = page
-            it.pageId = pageId
-         }
-      }
-   )
-}
-
-internal fun <P : PPage, S : PPageState>
+internal fun <P : PPage, S : PPageState<P>>
       PPageComposable<P, S>.asCombinedPageComposable(): CombinedPageComposable<P, S>
 {
    return CombinedPageComposable(
       pageClass,
       pageStateClass,
-      pageStateFactory = pageStateFactory.asCombinedPageStateFactory(),
+      pageStateFactory,
       contentComposable = { page, pageState, pageStackState, windowInsets ->
          pageState.inject(pageStackState)
          contentComposable(page, pageState, windowInsets)

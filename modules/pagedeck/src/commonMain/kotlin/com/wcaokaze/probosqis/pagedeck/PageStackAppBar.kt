@@ -42,7 +42,7 @@ import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.collections.immutable.toImmutableList
 
 @ExperimentalMaterial3Api
-private fun <P : Page, S : PageState> extractPageComposable(
+private fun <P : Page, S : PageState<P>> extractPageComposable(
    combined: CombinedPageComposable<P, S>,
    pageStackState: State<PPageStackState>,
    colors: State<TopAppBarColors>,
@@ -95,7 +95,7 @@ internal fun PageStackAppBar(
 
 @ExperimentalMaterial3Api
 @Composable
-internal fun <P : Page, S : PageState> PageStackAppBar(
+internal fun <P : Page, S : PageState<P>> PageStackAppBar(
    combined: CombinedPageComposable<P, S>,
    page: P,
    pageState: S,

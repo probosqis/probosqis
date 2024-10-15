@@ -103,10 +103,10 @@ class MultiColumnDeckTest {
    }
 
    private class PageImpl(val i: Int) : Page()
-   private class PageStateImpl : PageState()
+   private class PageStateImpl : PageState<PageImpl>()
 
    private val pageComposable = CombinedPageComposable<PageImpl, PageStateImpl>(
-      PageStateFactory { _, _, _ -> PageStateImpl() },
+      PageStateFactory { _, _ -> PageStateImpl() },
       content = { page, _, pageStackState, _ ->
          Column {
             Text("${page.i}")

@@ -41,7 +41,7 @@ import org.koin.core.component.inject
 class MastodonTestPage : PPage()
 
 @Stable
-class MastodonTestPageState : PPageState() {
+class MastodonTestPageState : PPageState<MastodonTestPage>() {
    private val appRepository: AppRepository by inject()
 
    val snackbarHostState = SnackbarHostState()
@@ -54,7 +54,7 @@ class MastodonTestPageState : PPageState() {
 }
 
 val mastodonTestPageComposable = PPageComposable<MastodonTestPage, MastodonTestPageState>(
-   PageStateFactory { _, _, _ -> MastodonTestPageState() },
+   PageStateFactory { _, _ -> MastodonTestPageState() },
    content = { _, state, _ ->
       MastodonTestPage(state)
    },

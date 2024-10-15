@@ -50,7 +50,7 @@ import com.wcaokaze.probosqis.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
 @Composable
-fun <P : Page, S : PageState> PagePreview(
+fun <P : Page, S : PageState<P>> PagePreview(
    page: P,
    pageComposable: CombinedPageComposable<P, S>,
    windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)

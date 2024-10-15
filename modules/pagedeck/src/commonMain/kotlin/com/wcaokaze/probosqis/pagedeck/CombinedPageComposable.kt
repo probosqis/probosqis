@@ -27,7 +27,7 @@ import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionSpec
 import kotlinx.collections.immutable.ImmutableMap
 import kotlin.reflect.KClass
 
-inline fun <reified P : Page, reified S : PageState> CombinedPageComposable(
+inline fun <reified P : Page, reified S : PageState<P>> CombinedPageComposable(
    pageStateFactory: PageStateFactory<P, S>,
    noinline content: @Composable (P, S, PPageStackState, WindowInsets) -> Unit,
    noinline header: @Composable (P, S, PPageStackState) -> Unit,
@@ -50,7 +50,7 @@ inline fun <reified P : Page, reified S : PageState> CombinedPageComposable(
 )
 
 @Stable
-data class CombinedPageComposable<P : Page, S : PageState>(
+data class CombinedPageComposable<P : Page, S : PageState<P>>(
    val pageClass: KClass<P>,
    val pageStateClass: KClass<S>,
    val pageStateFactory: PageStateFactory<P, S>,

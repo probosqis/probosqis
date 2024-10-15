@@ -47,10 +47,10 @@ import kotlinx.serialization.Serializable
 class TestPage(val i: Int) : PPage()
 
 @Stable
-class TestPageState : PPageState()
+class TestPageState : PPageState<TestPage>()
 
 val testPageComposable = PPageComposable<TestPage, TestPageState>(
-   PageStateFactory { _, _, _ -> TestPageState() },
+   PageStateFactory { _, _ -> TestPageState() },
    content = { page, pageState, windowInsets ->
       Column(
          Modifier

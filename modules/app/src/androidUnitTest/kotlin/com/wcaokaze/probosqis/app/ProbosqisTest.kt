@@ -78,11 +78,11 @@ class ProbosqisTest {
    val rule = createComposeRule()
 
    private class PageImpl(val i: Int) : Page()
-   private class PageStateImpl : PageState()
+   private class PageStateImpl : PageState<PageImpl>()
 
    private val allPageComposables = listOf(
       CombinedPageComposable<PageImpl, PageStateImpl>(
-         PageStateFactory { _, _, _ -> PageStateImpl() },
+         PageStateFactory { _, _ -> PageStateImpl() },
          content = { page, _, _, _ ->
             Text(
                "content${page.i}",

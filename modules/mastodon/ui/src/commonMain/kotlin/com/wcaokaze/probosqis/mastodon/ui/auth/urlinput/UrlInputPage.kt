@@ -57,19 +57,19 @@ import kotlinx.serialization.builtins.serializer
 class UrlInputPage : PPage()
 
 @Stable
-class UrlInputPageState(stateSaver: StateSaver) : PPageState() {
-   var hasKeyboardShown by stateSaver.save(
+class UrlInputPageState : PPageState<UrlInputPage>() {
+   var hasKeyboardShown by save(
       "has_keyboard_shown", Boolean.serializer(),
       init = { false }, recover = { true }
    )
 
-   var inputUrl: TextFieldValue by stateSaver.save("inputUrl", TextFieldValue.Saver) {
+   var inputUrl: TextFieldValue by save("inputUrl", TextFieldValue.Saver) {
       TextFieldValue("https://mastodon.social/", selection = TextRange(8, 24))
    }
 }
 
 val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
-   PageStateFactory { _, _, stateSaver -> UrlInputPageState(stateSaver) },
+   PageStateFactory { _, _ -> UrlInputPageState() },
    header = { _, _ ->
       Text(
          Strings.Mastodon.authUrlInput.appBar,

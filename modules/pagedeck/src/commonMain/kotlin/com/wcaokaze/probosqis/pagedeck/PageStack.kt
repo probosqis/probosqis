@@ -190,7 +190,7 @@ internal enum class FooterPaddingType {
    Content, // 内部のComposableのみ。背景色には適用されない
 }
 
-private fun <P : Page, S : PageState> extractPageComposable(
+private fun <P : Page, S : PageState<P>> extractPageComposable(
    combined: CombinedPageComposable<P, S>,
    pageStackState: State<PPageStackState>,
    colors: State<PageStackColors>,
@@ -246,7 +246,7 @@ internal fun PageContentFooter(
 }
 
 @Composable
-private fun <P : Page, S : PageState> PageContentFooter(
+private fun <P : Page, S : PageState<P>> PageContentFooter(
    combined: CombinedPageComposable<P, S>,
    page: P,
    pageState: S,
@@ -321,7 +321,7 @@ private fun PageContentBackground(
 }
 
 @Composable
-internal fun <P : Page, S : PageState> PageContent(
+internal fun <P : Page, S : PageState<P>> PageContent(
    contentComposable: @Composable (P, S, PPageStackState, WindowInsets) -> Unit,
    page: P,
    pageState: S,
@@ -350,7 +350,7 @@ internal fun <P : Page, S : PageState> PageContent(
 }
 
 @Composable
-internal fun <P : Page, S : PageState> PageFooter(
+internal fun <P : Page, S : PageState<P>> PageFooter(
    footerComposable: @Composable (P, S, PPageStackState) -> Unit,
    page: P,
    pageState: S,
