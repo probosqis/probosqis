@@ -28,7 +28,9 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorListState
+import com.wcaokaze.probosqis.ext.kotlin.annotation.UsingAppScope
 import com.wcaokaze.probosqis.pagedeck.PPageStackState
+import kotlinx.coroutines.CoroutineScope
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -43,6 +45,9 @@ private fun throwUninitializedException(): Nothing
 abstract class PPageState<out P : PPage> : PageState<P>(), KoinComponent {
    private val errorListState: PErrorListState by inject()
    private var pageStackStateRc = RC<PPageStackState>()
+
+   @UsingAppScope
+   val appScope: CoroutineScope by inject()
 
    fun startPage(page: PPage) {
       pageStackStateRc.get().startPage(page)
