@@ -42,15 +42,22 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
+import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.resources.Strings
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
+import org.koin.core.component.inject
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage")
@@ -58,6 +65,8 @@ class UrlInputPage : PPage()
 
 @Stable
 class UrlInputPageState : PPageState<UrlInputPage>() {
+   private val appRepository: AppRepository by inject()
+
    var hasKeyboardShown by save(
       "has_keyboard_shown", Boolean.serializer(),
       init = { false }, recover = { true }
@@ -65,6 +74,15 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
 
    var inputUrl: TextFieldValue by save("inputUrl", TextFieldValue.Saver) {
       TextFieldValue("https://mastodon.social/", selection = TextRange(8, 24))
+   }
+
+   fun getAuthorizeUrl(): Deferred<Result<String>> {
+      return pageStateScope.async(Dispatchers.IO) {
+         runCatching {
+            val instanceBaseUrl = inputUrl.text
+            appRepository.getAuthorizeUrl(instanceBaseUrl)
+         }
+      }
    }
 }
 
@@ -121,8 +139,19 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
                .focusRequester(focusRequester)
          )
 
+         val browserLauncher = LocalBrowserLauncher.current
+
          Button(
-            onClick = {},
+            onClick = {
+               // Composableが非表示になってもPageStateが生きているのであれば
+               // 続行すべき処理なのでpageStateScopeでlaunchする
+               state.pageStateScope.launch {
+                  val authorizeUrl = state.getAuthorizeUrl().await()
+                     .getOrThrow() // TODO
+
+                  browserLauncher.launchBrowser(authorizeUrl)
+               }
+            },
             shape = ButtonDefaults.filledTonalShape,
             colors = ButtonDefaults.filledTonalButtonColors(),
             elevation = ButtonDefaults.filledTonalButtonElevation(),

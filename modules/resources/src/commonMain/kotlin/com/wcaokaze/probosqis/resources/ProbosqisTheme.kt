@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
+import com.wcaokaze.probosqis.ext.compose.rememberBrowserLauncher
 
 @Composable
 fun ProbosqisTheme(
@@ -27,6 +29,7 @@ fun ProbosqisTheme(
 ) {
    CompositionLocalProvider(
       LocalLanguage provides language(),
+      LocalBrowserLauncher provides rememberBrowserLauncher(),
    ) {
       MaterialTheme(colorScheme()) {
          content()
