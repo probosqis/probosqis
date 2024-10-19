@@ -20,7 +20,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -40,6 +42,7 @@ import org.koin.core.context.stopKoin
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.Semaphore
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -159,5 +162,51 @@ class UrlInputPageTest {
          verify { appRepository.getAuthorizeUrl("https://example.wcaokaze.com/") }
          verify { browserLauncher.launchBrowser("https://auth.wcaokaze.com/") }
       }
+   }
+
+   @Test
+   fun goButton_disabled_whileGettingAuthUrl() {
+      lateinit var state: UrlInputPageState
+
+      val semaphore = Semaphore(1)
+
+      val appRepository = mockk<AppRepository> {
+         every { getAuthorizeUrl(any<String>()) } answers {
+            semaphore.acquire()
+            "https://auth.wcaokaze.com/"
+         }
+      }
+
+      val browserLauncher = mockk<BrowserLauncher> {
+         every { launchBrowser(any()) } returns Unit
+      }
+
+      rule.setContent {
+         val page = UrlInputPage()
+         state = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
+
+         UrlInputPage(
+            state,
+            browserLauncher = browserLauncher,
+            appRepository = appRepository
+         )
+      }
+
+      rule.runOnIdle {
+         state.inputUrl = TextFieldValue("https://example.wcaokaze.com/")
+         semaphore.acquire()
+      }
+
+      rule.onNodeWithText("GO").performClick()
+
+      rule.onNodeWithText("GO").assertIsNotEnabled()
+      rule.onNodeWithText("https://example.wcaokaze.com/").assertIsNotEnabled()
+
+      rule.runOnIdle {
+         semaphore.release()
+      }
+
+      rule.onNodeWithText("GO").assertIsEnabled()
+      rule.onNodeWithText("https://example.wcaokaze.com/").assertIsEnabled()
    }
 }
