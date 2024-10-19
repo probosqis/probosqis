@@ -157,7 +157,7 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
       ) {
          Text(
             Strings.Mastodon.authUrlInput.description,
-            modifier = Modifier.padding(vertical = 8.dp)
+            modifier = Modifier.padding(8.dp)
          )
 
          Spacer(modifier = Modifier.height(24.dp))
@@ -206,7 +206,9 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
 
          Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.align(Alignment.End)
+            modifier = Modifier
+               .align(Alignment.End)
+               .padding(horizontal = 8.dp)
          ) {
             if (state.isLoading) {
                CircularProgressIndicator(
