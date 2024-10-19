@@ -28,6 +28,7 @@ interface MastodonStrings {
       val description: String,
       val serverUrlTextFieldLabel: String,
       val startAuthButton: String,
+      val serverUrlGettingError: String,
    )
 
    val authUrlInput: AuthUrlInput
@@ -43,6 +44,7 @@ val Strings.Companion.Mastodon: MastodonStrings
             description = "Add an existing account to $appName.",
             serverUrlTextFieldLabel = "Server URL",
             startAuthButton = "GO",
+            serverUrlGettingError = "Cannot connect to server.",
          )
       }
 
@@ -52,6 +54,7 @@ val Strings.Companion.Mastodon: MastodonStrings
             description = "作成済みのアカウントを${appName}に追加します",
             serverUrlTextFieldLabel = "サーバーURL",
             startAuthButton = "GO",
+            serverUrlGettingError = "サーバーに接続できません",
          )
       }
    }

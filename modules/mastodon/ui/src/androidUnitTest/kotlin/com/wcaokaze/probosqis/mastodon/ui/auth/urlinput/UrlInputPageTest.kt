@@ -25,8 +25,10 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.input.TextFieldValue
+import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
 import com.wcaokaze.probosqis.ext.compose.BrowserLauncher
 import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
@@ -42,12 +44,15 @@ import org.koin.core.context.stopKoin
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
+import java.io.IOException
 import java.util.concurrent.Semaphore
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class UrlInputPageTest {
    @get:Rule
    val rule = createComposeRule()
@@ -208,5 +213,77 @@ class UrlInputPageTest {
 
       rule.onNodeWithText("GO").assertIsEnabled()
       rule.onNodeWithText("https://example.wcaokaze.com/").assertIsEnabled()
+   }
+
+   @Test
+   fun screenshot_usual() {
+      rule.setContent {
+         val page = UrlInputPage()
+         val state = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
+
+         UrlInputPage(state)
+      }
+
+      rule.onRoot().captureRoboImage("urlInputPage/usual.png")
+   }
+
+   @Test
+   fun screenshot_loading() {
+      val semaphore = Semaphore(1)
+
+      val appRepository = mockk<AppRepository> {
+         every { getAuthorizeUrl(any<String>()) } answers {
+            semaphore.acquire()
+            "https://auth.wcaokaze.com/"
+         }
+      }
+
+      val browserLauncher = mockk<BrowserLauncher> {
+         every { launchBrowser(any()) } returns Unit
+      }
+
+      rule.setContent {
+         val page = UrlInputPage()
+         val state = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
+
+         UrlInputPage(
+            state,
+            browserLauncher = browserLauncher,
+            appRepository = appRepository
+         )
+      }
+
+      rule.runOnIdle {
+         semaphore.acquire()
+      }
+
+      rule.onNodeWithText("GO").performClick()
+
+      rule.onRoot().captureRoboImage("urlInputPage/loading.png")
+
+      rule.runOnIdle {
+         semaphore.release()
+      }
+   }
+
+   @Test
+   fun screenshot_error() {
+      val appRepository = mockk<AppRepository> {
+         every { getAuthorizeUrl(any<String>()) } throws IOException()
+      }
+
+      rule.setContent {
+         val page = UrlInputPage()
+         val state = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
+
+         UrlInputPage(
+            state,
+            appRepository = appRepository
+         )
+      }
+
+      rule.onNodeWithText("GO").performClick()
+
+      rule.onRoot().captureRoboImage("urlInputPage/error.png")
    }
 }

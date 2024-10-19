@@ -26,9 +26,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -56,6 +59,7 @@ import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.resources.Strings
+import com.wcaokaze.probosqis.resources.icons.Error
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -81,6 +85,10 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
 
    val isLoading: Boolean by derivedStateOf {
       authorizeUrlLoadState is LoadState.Loading
+   }
+
+   val isError: Boolean by derivedStateOf {
+      authorizeUrlLoadState is LoadState.Error
    }
 
    var hasKeyboardShown by save(
@@ -152,7 +160,7 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
             modifier = Modifier.padding(vertical = 8.dp)
          )
 
-         Spacer(modifier = Modifier.height(16.dp))
+         Spacer(modifier = Modifier.height(24.dp))
 
          OutlinedTextField(
             state.inputUrl,
@@ -167,8 +175,29 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
                Text("https://mastodon.social/")
             },
             singleLine = true,
+            supportingText = {
+               Row(
+                  verticalAlignment = Alignment.CenterVertically,
+                  modifier = if (state.isError) {
+                     Modifier
+                  } else {
+                     Modifier.alpha(0.0f)
+                  }
+               ) {
+                  Icon(
+                     Icons.Default.Error,
+                     contentDescription = null,
+                     modifier = Modifier.size(16.dp)
+                  )
+
+                  Text(
+                     Strings.Mastodon.authUrlInput.serverUrlGettingError,
+                     modifier = Modifier.padding(horizontal = 4.dp)
+                  )
+               }
+            },
+            isError = state.isError,
             modifier = Modifier
-               .padding(vertical = 8.dp)
                .fillMaxWidth()
                .focusRequester(focusRequester)
          )
@@ -194,7 +223,7 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
                   // 続行すべき処理なのでpageStateScopeでlaunchする
                   state.pageStateScope.launch {
                      val authorizeUrl = state.getAuthorizeUrl().await()
-                        .getOrThrow() // TODO
+                        .getOrElse { return@launch }
 
                      browserLauncher.launchBrowser(authorizeUrl)
                   }
