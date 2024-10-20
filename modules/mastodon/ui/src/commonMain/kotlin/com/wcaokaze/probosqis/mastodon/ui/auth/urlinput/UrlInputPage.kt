@@ -33,12 +33,14 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -150,97 +152,133 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
          }
       }
 
-      Column(
-         modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-      ) {
-         Text(
-            Strings.Mastodon.authUrlInput.description,
-            modifier = Modifier.padding(8.dp)
-         )
+      val browserLauncher by rememberUpdatedState(LocalBrowserLauncher.current)
 
-         Spacer(modifier = Modifier.height(24.dp))
+      fun launchBrowserForAuthorize() {
+         // Composableが非表示になってもPageStateが生きているのであれば
+         // 続行すべき処理なのでpageStateScopeでlaunchする
+         state.pageStateScope.launch {
+            val authorizeUrl = state.getAuthorizeUrl().await()
+               .getOrElse { return@launch }
 
-         OutlinedTextField(
-            state.inputUrl,
-            onValueChange = { newValue ->
-               state.inputUrl = newValue
-            },
-            enabled = !state.isLoading,
-            label = {
-               Text(Strings.Mastodon.authUrlInput.serverUrlTextFieldLabel)
-            },
-            placeholder = {
-               Text("https://mastodon.social/")
-            },
-            singleLine = true,
-            supportingText = {
-               Row(
-                  verticalAlignment = Alignment.CenterVertically,
-                  modifier = if (state.isError) {
-                     Modifier
-                  } else {
-                     Modifier.alpha(0.0f)
-                  }
-               ) {
-                  Icon(
-                     Icons.Default.Error,
-                     contentDescription = null,
-                     modifier = Modifier.size(16.dp)
-                  )
-
-                  Text(
-                     Strings.Mastodon.authUrlInput.serverUrlGettingError,
-                     modifier = Modifier.padding(horizontal = 4.dp)
-                  )
-               }
-            },
-            isError = state.isError,
-            modifier = Modifier
-               .fillMaxWidth()
-               .focusRequester(focusRequester)
-         )
-
-         val browserLauncher = LocalBrowserLauncher.current
-
-         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-               .align(Alignment.End)
-               .padding(horizontal = 8.dp)
-         ) {
-            if (state.isLoading) {
-               CircularProgressIndicator(
-                  strokeWidth = 2.dp,
-                  modifier = Modifier.size(16.dp)
-               )
-
-               Spacer(Modifier.width(16.dp))
-            }
-
-            Button(
-               onClick = {
-                  // Composableが非表示になってもPageStateが生きているのであれば
-                  // 続行すべき処理なのでpageStateScopeでlaunchする
-                  state.pageStateScope.launch {
-                     val authorizeUrl = state.getAuthorizeUrl().await()
-                        .getOrElse { return@launch }
-
-                     browserLauncher.launchBrowser(authorizeUrl)
-                  }
-               },
-               enabled = !state.isLoading,
-               shape = ButtonDefaults.filledTonalShape,
-               colors = ButtonDefaults.filledTonalButtonColors(),
-               elevation = ButtonDefaults.filledTonalButtonElevation()
-            ) {
-               Text(Strings.Mastodon.authUrlInput.startAuthButton)
-            }
+            browserLauncher.launchBrowser(authorizeUrl)
          }
       }
+
+      UrlInputPageContent(
+         state.inputUrl,
+         state.isLoading,
+         state.isError,
+         onInputUrlChange = { newValue ->
+            state.inputUrl = newValue
+         },
+         onGoButtonClick = {
+            launchBrowserForAuthorize()
+         },
+         focusRequester
+      )
    },
    footer = null,
    pageTransitions = {
    }
 )
+
+@Composable
+private fun UrlInputPageContent(
+   inputUrl: TextFieldValue,
+   isLoading: Boolean,
+   isError: Boolean,
+   onInputUrlChange: (TextFieldValue) -> Unit,
+   onGoButtonClick: () -> Unit,
+   focusRequester: FocusRequester
+) {
+   Column(
+      modifier = Modifier
+         .verticalScroll(rememberScrollState())
+         .padding(16.dp)
+   ) {
+      Text(
+         Strings.Mastodon.authUrlInput.description,
+         modifier = Modifier.padding(8.dp)
+      )
+
+      Spacer(Modifier.height(24.dp))
+
+      UrlTextField(
+         inputUrl, onInputUrlChange, isLoading, isError, focusRequester
+      )
+
+      Row(
+         verticalAlignment = Alignment.CenterVertically,
+         modifier = Modifier
+            .align(Alignment.End)
+            .padding(horizontal = 8.dp)
+      ) {
+         if (isLoading) {
+            CircularProgressIndicator(
+               strokeWidth = 2.dp,
+               modifier = Modifier.size(16.dp)
+            )
+
+            Spacer(Modifier.width(16.dp))
+         }
+
+         Button(
+            onClick = onGoButtonClick,
+            enabled = !isLoading,
+            shape = ButtonDefaults.filledTonalShape,
+            colors = ButtonDefaults.filledTonalButtonColors(),
+            elevation = ButtonDefaults.filledTonalButtonElevation()
+         ) {
+            Text(Strings.Mastodon.authUrlInput.startAuthButton)
+         }
+      }
+   }
+}
+
+@Composable
+private fun UrlTextField(
+   inputUrl: TextFieldValue,
+   onInputUrlChange: (TextFieldValue) -> Unit,
+   isLoading: Boolean,
+   isError: Boolean,
+   focusRequester: FocusRequester,
+) {
+   OutlinedTextField(
+      inputUrl,
+      onValueChange = onInputUrlChange,
+      enabled = !isLoading,
+      label = {
+         Text(Strings.Mastodon.authUrlInput.serverUrlTextFieldLabel)
+      },
+      placeholder = {
+         Text("https://mastodon.social/")
+      },
+      singleLine = true,
+      supportingText = {
+         Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = if (isError) {
+               Modifier
+            } else {
+               Modifier.alpha(0.0f)
+            }
+         ) {
+            Icon(
+               Icons.Default.Error,
+               contentDescription = null,
+               modifier = Modifier.size(16.dp)
+            )
+
+            Text(
+               Strings.Mastodon.authUrlInput.serverUrlGettingError,
+               modifier = Modifier.padding(horizontal = 4.dp)
+            )
+         }
+      },
+      isError = isError,
+      modifier = Modifier
+         .fillMaxWidth()
+         .focusRequester(focusRequester)
+   )
+}
