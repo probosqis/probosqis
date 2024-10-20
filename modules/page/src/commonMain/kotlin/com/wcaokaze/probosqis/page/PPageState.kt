@@ -46,31 +46,33 @@ abstract class PPageState<out P : PPage> : PageState<P>(), KoinComponent {
    private val errorListState: PErrorListState by inject()
    private var pageStackStateRc = RC<PPageStackState>()
 
-   @UsingAppScope
-   val appScope: CoroutineScope by inject()
+   private var impl: Interface = object : Interface {
+      @UsingAppScope
+      override val appScope: CoroutineScope by inject()
 
-   fun startPage(page: PPage) {
-      pageStackStateRc.get().startPage(page)
-   }
+      override fun startPage(page: PPage) {
+         pageStackStateRc.get().startPage(page)
+      }
 
-   fun finishPage() {
-      pageStackStateRc.get().finishPage()
-   }
+      override fun finishPage() {
+         pageStackStateRc.get().finishPage()
+      }
 
-   fun addColumn(page: PPage) {
-      pageStackStateRc.get().addColumn(page)
-   }
+      override fun addColumn(page: PPage) {
+         pageStackStateRc.get().addColumn(page)
+      }
 
-   fun addColumn(pageStack: PageStack) {
-      pageStackStateRc.get().addColumn(pageStack)
-   }
+      override fun addColumn(pageStack: PageStack) {
+         pageStackStateRc.get().addColumn(pageStack)
+      }
 
-   fun removeFromDeck() {
-      pageStackStateRc.get().removeFromDeck()
-   }
+      override fun removeFromDeck() {
+         pageStackStateRc.get().removeFromDeck()
+      }
 
-   fun raiseError(error: PError) {
-      errorListState.raise(error, raiserPageId = pageId)
+      override fun raiseError(error: PError) {
+         errorListState.raise(error, raiserPageId = pageId)
+      }
    }
 
    @Composable
@@ -82,6 +84,48 @@ abstract class PPageState<out P : PPage> : PageState<P>(), KoinComponent {
             pageStackStateRc.release()
          }
       }
+   }
+
+   @VisibleForTesting
+   fun injectTestable(implementation: Interface) {
+      impl = implementation
+   }
+
+   fun startPage(page: PPage) {
+      impl.startPage(page)
+   }
+
+   fun finishPage() {
+      impl.finishPage()
+   }
+
+   fun addColumn(page: PPage) {
+      impl.addColumn(page)
+   }
+
+   fun addColumn(pageStack: PageStack) {
+      impl.addColumn(pageStack)
+   }
+
+   fun removeFromDeck() {
+      impl.removeFromDeck()
+   }
+
+   fun raiseError(error: PError) {
+      impl.raiseError(error)
+   }
+
+   interface Interface {
+      @UsingAppScope
+      val appScope: CoroutineScope
+
+      fun startPage(page: PPage)
+      fun finishPage()
+      fun addColumn(page: PPage)
+      fun addColumn(pageStack: PageStack)
+      fun removeFromDeck()
+
+      fun raiseError(error: PError)
    }
 
    @VisibleForTesting
