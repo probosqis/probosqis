@@ -58,6 +58,7 @@ class MainApplication : Application() {
       testPageComposable,
       testTimelinePageComposable,
       testNotePageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.callbackWaiterPageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.urlInputPageComposable,
       mastodonTestPageComposable,
    )
@@ -66,6 +67,7 @@ class MainApplication : Application() {
       pageSerializer<TestPage>(),
       pageSerializer<TestTimelinePage>(),
       pageSerializer<TestNotePage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage>(),
       pageSerializer<MastodonTestPage>(),
    )

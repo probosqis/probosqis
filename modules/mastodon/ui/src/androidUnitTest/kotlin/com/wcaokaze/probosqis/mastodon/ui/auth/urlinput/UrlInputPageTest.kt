@@ -33,6 +33,8 @@ import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
 import com.wcaokaze.probosqis.ext.compose.BrowserLauncher
 import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage
+import com.wcaokaze.probosqis.page.PPageState
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -60,6 +62,16 @@ class UrlInputPageTest {
    @AfterTest
    fun afterTest() {
       stopKoin()
+   }
+
+   @Composable
+   private fun rememberPageState(
+      page: UrlInputPage = UrlInputPage(),
+      pageStateBase: PPageState.Interface = mockk()
+   ): UrlInputPageState {
+      val pageState = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
+      pageState.injectTestable(pageStateBase)
+      return pageState
    }
 
    @Composable
@@ -96,9 +108,7 @@ class UrlInputPageTest {
    @Test
    fun textField_focused_afterPageStarted() {
       rule.setContent {
-         val page = UrlInputPage()
-         val state = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
-
+         val state = rememberPageState()
          UrlInputPage(state)
       }
 
@@ -111,9 +121,7 @@ class UrlInputPageTest {
       lateinit var state: UrlInputPageState
 
       rule.setContent {
-         val page = UrlInputPage()
-         state = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
-
+         state = rememberPageState()
          UrlInputPage(state)
       }
 
@@ -135,7 +143,7 @@ class UrlInputPageTest {
    }
 
    @Test
-   fun goButton_repositoryAndBrowserLaunchedCalled() {
+   fun goButton_repositoryCalled() {
       lateinit var state: UrlInputPageState
 
       val appRepository = mockk<AppRepository> {
@@ -146,9 +154,13 @@ class UrlInputPageTest {
          every { launchBrowser(any()) } returns Unit
       }
 
+      val pageState = mockk<PPageState.Interface> {
+         every { finishPage() } returns Unit
+         every { startPage(any()) } returns Unit
+      }
+
       rule.setContent {
-         val page = UrlInputPage()
-         state = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
+         state = rememberPageState(pageStateBase = pageState)
 
          UrlInputPage(
             state,
@@ -165,7 +177,42 @@ class UrlInputPageTest {
 
       rule.runOnIdle {
          verify { appRepository.getAuthorizeUrl("https://example.wcaokaze.com/") }
+      }
+   }
+
+   @Test
+   fun goButton_browserLaunchedAndPageFinished() {
+      lateinit var state: UrlInputPageState
+
+      val appRepository = mockk<AppRepository> {
+         every { getAuthorizeUrl(any<String>()) } returns "https://auth.wcaokaze.com/"
+      }
+
+      val browserLauncher = mockk<BrowserLauncher> {
+         every { launchBrowser(any()) } returns Unit
+      }
+
+      val pageState = mockk<PPageState.Interface> {
+         every { finishPage() } returns Unit
+         every { startPage(any()) } returns Unit
+      }
+
+      rule.setContent {
+         state = rememberPageState(pageStateBase = pageState)
+
+         UrlInputPage(
+            state,
+            browserLauncher = browserLauncher,
+            appRepository = appRepository
+         )
+      }
+
+      rule.onNodeWithText("GO").performClick()
+
+      rule.runOnIdle {
          verify { browserLauncher.launchBrowser("https://auth.wcaokaze.com/") }
+         verify { pageState.finishPage() }
+         verify { pageState.startPage(ofType<CallbackWaiterPage>()) }
       }
    }
 
@@ -186,9 +233,13 @@ class UrlInputPageTest {
          every { launchBrowser(any()) } returns Unit
       }
 
+      val pageState = mockk<PPageState.Interface> {
+         every { finishPage() } returns Unit
+         every { startPage(any()) } returns Unit
+      }
+
       rule.setContent {
-         val page = UrlInputPage()
-         state = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
+         state = rememberPageState(pageStateBase = pageState)
 
          UrlInputPage(
             state,
@@ -218,9 +269,7 @@ class UrlInputPageTest {
    @Test
    fun screenshot_usual() {
       rule.setContent {
-         val page = UrlInputPage()
-         val state = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
-
+         val state = rememberPageState()
          UrlInputPage(state)
       }
 
@@ -242,9 +291,13 @@ class UrlInputPageTest {
          every { launchBrowser(any()) } returns Unit
       }
 
+      val pageState = mockk<PPageState.Interface> {
+         every { finishPage() } returns Unit
+         every { startPage(any()) } returns Unit
+      }
+
       rule.setContent {
-         val page = UrlInputPage()
-         val state = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
+         val state = rememberPageState(pageStateBase = pageState)
 
          UrlInputPage(
             state,
@@ -273,8 +326,7 @@ class UrlInputPageTest {
       }
 
       rule.setContent {
-         val page = UrlInputPage()
-         val state = urlInputPageComposable.pageStateFactory.rememberTestPageState(page)
+         val state = rememberPageState()
 
          UrlInputPage(
             state,

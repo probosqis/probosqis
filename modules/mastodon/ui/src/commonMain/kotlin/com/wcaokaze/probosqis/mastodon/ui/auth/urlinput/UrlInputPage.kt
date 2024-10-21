@@ -62,6 +62,7 @@ import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
+import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
@@ -167,6 +168,9 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
                .getOrElse { return@launch }
 
             browserLauncher.launchBrowser(authorizeUrl)
+
+            state.finishPage()
+            state.startPage(CallbackWaiterPage())
          }
       }
 

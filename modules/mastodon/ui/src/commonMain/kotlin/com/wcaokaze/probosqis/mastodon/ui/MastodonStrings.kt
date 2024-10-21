@@ -30,8 +30,13 @@ interface MastodonStrings {
       val startAuthButton: String,
       val serverUrlGettingError: String,
    )
+   class CallbackWaiter(
+      val appBar: String,
+      val message: String,
+   )
 
    val authUrlInput: AuthUrlInput
+   val callbackWaiter: CallbackWaiter
 }
 
 val Strings.Companion.Mastodon: MastodonStrings
@@ -46,6 +51,10 @@ val Strings.Companion.Mastodon: MastodonStrings
             startAuthButton = "GO",
             serverUrlGettingError = "Cannot connect to server.",
          )
+         override val callbackWaiter = MastodonStrings.CallbackWaiter(
+            appBar = "Add an account",
+            message = "Wait…",
+         )
       }
 
       Strings.Language.JAPANESE -> object : MastodonStrings {
@@ -55,6 +64,10 @@ val Strings.Companion.Mastodon: MastodonStrings
             serverUrlTextFieldLabel = "サーバーURL",
             startAuthButton = "GO",
             serverUrlGettingError = "サーバーに接続できません",
+         )
+         override val callbackWaiter = MastodonStrings.CallbackWaiter(
+            appBar = "アカウントを追加",
+            message = "お待ちください…",
          )
       }
    }
