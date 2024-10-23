@@ -113,6 +113,9 @@ class PPageStackState : KoinComponent {
       )
    }
 
+   val forefrontPageState: PageState<*>?
+      get() = rawState.getPageStateIfAlreadyInstantiated(rawState.pageStack.head)
+
    internal val pageStack: PageStack
       get() = rawState.pageStack
 
