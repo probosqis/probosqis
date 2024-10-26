@@ -21,7 +21,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
@@ -40,7 +43,6 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorItemComposable
@@ -60,10 +62,13 @@ import kotlinx.collections.immutable.persistentMapOf
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.koin.compose.KoinIsolatedContext
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.GraphicsMode
+import kotlin.test.AfterTest
 import kotlin.test.Test
 
 @RunWith(RobolectricTestRunner::class)
@@ -73,11 +78,11 @@ class ProbosqisTest {
    val rule = createComposeRule()
 
    private class PageImpl(val i: Int) : Page()
-   private class PageStateImpl : PageState()
+   private class PageStateImpl : PageState<PageImpl>()
 
    private val allPageComposables = listOf(
       CombinedPageComposable<PageImpl, PageStateImpl>(
-         PageStateFactory { _, _, _ -> PageStateImpl() },
+         PageStateFactory { _, _ -> PageStateImpl() },
          content = { page, _, _, _ ->
             Text(
                "content${page.i}",
@@ -100,60 +105,74 @@ class ProbosqisTest {
       onClick = {}
    )
 
-   private fun koinApplication(
+   @AfterTest
+   fun after() {
+      stopKoin()
+   }
+
+   @Composable
+   private fun KoinIsolatedContext(
       pageStackCount: Int = 2,
       errorListState: PErrorListState = PErrorListState(
          errorListCache = WritableCache(emptyList()),
          itemComposables = emptyList()
-      )
-   ) = koinApplication {
-      val pageDeck = PageDeck(
-         children = List(pageStackCount) { i ->
-            val pageStack = PageStack(
-               PageStack.Id(i.toLong()),
-               SavedPageState(
-                  PageId(i.toLong()),
-                  PageImpl(i)
-               )
+      ),
+      content: @Composable () -> Unit
+   ) {
+      val coroutineScope = rememberCoroutineScope()
+
+      val koinApplication = remember {
+         koinApplication {
+            val pageDeck = PageDeck(
+               children = List(pageStackCount) { i ->
+                  val pageStack = PageStack(
+                     PageStack.Id(i.toLong()),
+                     SavedPageState(
+                        PageId(i.toLong()),
+                        PageImpl(i)
+                     )
+                  )
+
+                  Deck.Card(
+                     LazyPageStackState(
+                        pageStack.id, WritableCache(pageStack),
+                        initialVisibility = true
+                     )
+                  )
+               }
             )
 
-            Deck.Card(
-               LazyPageStackState(
-                  pageStack.id, WritableCache(pageStack),
-                  initialVisibility = true
-               )
+            modules(
+               module {
+                  single { coroutineScope }
+
+                  single { CombinedPageSwitcherState(allPageComposables) }
+
+                  single {
+                     MultiColumnPageDeckState(
+                        WritableCache(pageDeck),
+                        pageStackRepository = mockk()
+                     )
+                  }
+
+                  single {
+                     SingleColumnPageDeckState(
+                        WritableCache(pageDeck),
+                        pageStackRepository = mockk()
+                     )
+                  }
+
+                  single { errorListState }
+               }
             )
          }
-      )
+      }
 
-      modules(
-         module {
-            single { CombinedPageSwitcherState(allPageComposables) }
+      LaunchedEffect(Unit) {
+         startKoin(koinApplication)
+      }
 
-            single {
-               PageStateStore(
-                  allPageStateFactories = allPageComposables.map { it.pageStateFactory },
-                  appCoroutineScope = mockk()
-               )
-            }
-
-            single {
-               MultiColumnPageDeckState(
-                  WritableCache(pageDeck),
-                  pageStackRepository = mockk()
-               )
-            }
-
-            single {
-               SingleColumnPageDeckState(
-                  WritableCache(pageDeck),
-                  pageStackRepository = mockk()
-               )
-            }
-
-            single { errorListState }
-         }
-      )
+      KoinIsolatedContext(koinApplication, content)
    }
 
    @Test
@@ -161,7 +180,7 @@ class ProbosqisTest {
       val probosqisState = ProbosqisState()
 
       rule.setContent {
-         KoinIsolatedContext(koinApplication()) {
+         KoinIsolatedContext {
             Box(
                Modifier
                   .requiredWidth(60.dp)
@@ -188,7 +207,7 @@ class ProbosqisTest {
 
       rule.setContent {
          KoinIsolatedContext(
-            koinApplication(errorListState = errorListState)
+            errorListState = errorListState
          ) {
             val probosqisState = remember { ProbosqisState() }
             MultiColumnProbosqis(probosqisState)
@@ -222,7 +241,7 @@ class ProbosqisTest {
 
       rule.setContent {
          KoinIsolatedContext(
-            koinApplication(errorListState = errorListState)
+            errorListState = errorListState
          ) {
             val probosqisState = remember { ProbosqisState() }
             SingleColumnProbosqis(probosqisState)
@@ -258,7 +277,7 @@ class ProbosqisTest {
 
       rule.setContent {
          KoinIsolatedContext(
-            koinApplication(errorListState = errorListState)
+            errorListState = errorListState
          ) {
             topAppBarText = Strings.App.topAppBar
 
@@ -311,7 +330,7 @@ class ProbosqisTest {
 
       rule.setContent {
          KoinIsolatedContext(
-            koinApplication(errorListState = errorListState)
+            errorListState = errorListState
          ) {
             topAppBarText = Strings.App.topAppBar
             errorActionButtonContentDescription =

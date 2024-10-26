@@ -29,7 +29,10 @@ import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
-import com.wcaokaze.probosqis.page.PPageStateStore
+import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.repository.DesktopAppRepository
+import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
+import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
 import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
@@ -62,12 +65,18 @@ object Main {
       testPageComposable,
       testTimelinePageComposable,
       testNotePageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.callbackWaiterPageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.urlInputPageComposable,
+      mastodonTestPageComposable,
    )
 
    private val allPageSerializers = persistentListOf(
       pageSerializer<TestPage>(),
       pageSerializer<TestTimelinePage>(),
       pageSerializer<TestNotePage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage>(),
+      pageSerializer<MastodonTestPage>(),
    )
 
    private val allErrorItemComposables = persistentListOf(
@@ -82,13 +91,6 @@ object Main {
 
    private val koinModule = module {
       single { PPageSwitcherState(allPageComposables) }
-
-      single {
-         PPageStateStore(
-            allPageComposables,
-            appCoroutineScope = get()
-         )
-      }
 
       factory {
          val pageDeckCache = loadPageDeckOrDefault(
@@ -132,6 +134,8 @@ object Main {
             probosqisDataDir
          )
       }
+
+      single<AppRepository> { DesktopAppRepository(probosqisDataDir) }
    }
 
    @JvmStatic

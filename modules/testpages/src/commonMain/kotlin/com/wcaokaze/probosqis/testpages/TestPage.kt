@@ -31,6 +31,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorItemComposable
+import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
@@ -46,10 +47,10 @@ import kotlinx.serialization.Serializable
 class TestPage(val i: Int) : PPage()
 
 @Stable
-class TestPageState : PPageState()
+class TestPageState : PPageState<TestPage>()
 
 val testPageComposable = PPageComposable<TestPage, TestPageState>(
-   PageStateFactory { _, _, _ -> TestPageState() },
+   PageStateFactory { _, _ -> TestPageState() },
    content = { page, pageState, windowInsets ->
       Column(
          Modifier
@@ -92,6 +93,14 @@ val testPageComposable = PPageComposable<TestPage, TestPageState>(
             }
          ) {
             Text("Raise an error")
+         }
+
+         Button(
+            onClick = {
+               pageState.startPage(UrlInputPage())
+            }
+         ) {
+            Text("Start Mastodon Test")
          }
       }
    },

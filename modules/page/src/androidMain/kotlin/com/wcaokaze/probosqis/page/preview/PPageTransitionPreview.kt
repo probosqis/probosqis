@@ -18,8 +18,6 @@ package com.wcaokaze.probosqis.page.preview
 
 import androidx.compose.runtime.Composable
 import com.wcaokaze.probosqis.capsiqum.page.PageId
-import com.wcaokaze.probosqis.capsiqum.page.PageState
-import com.wcaokaze.probosqis.capsiqum.page.preview.StateSaverBuilder
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
@@ -27,22 +25,24 @@ import com.wcaokaze.probosqis.page.asCombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.preview.PageTransitionPreview
 
 @Composable
-fun <P : PPage, C : PPage, PS : PPageState, CS : PPageState> PPageTransitionPreview(
-   parentPage: P,
-   childPage:  C,
-   parentPageComposable: PPageComposable<P, PS>,
-   childPageComposable:  PPageComposable<C, CS>,
-   parentPageStateSaver: StateSaverBuilder.() -> Unit = {},
-   childPageStateSaver:  StateSaverBuilder.() -> Unit = {},
-   parentPageState: (P, PageId, PageState.StateSaver) -> PS = parentPageComposable.pageStateFactory.pageStateFactory,
-   childPageState:  (C, PageId, PageState.StateSaver) -> CS = childPageComposable .pageStateFactory.pageStateFactory,
-   parentPageStateModification: PS.() -> Unit = {},
-   childPageStateModification:  CS.() -> Unit = {},
-) {
+fun <P : PPage, C : PPage, PS : PPageState<P>, CS : PPageState<C>>
+    PPageTransitionPreview(
+      parentPage: P,
+      childPage:  C,
+      parentPageComposable: PPageComposable<P, PS>,
+      childPageComposable:  PPageComposable<C, CS>,
+      parentPageState: (P, PageId) -> PS
+         = parentPageComposable.pageStateFactory.pageStateFactory,
+      childPageState:  (C, PageId) -> CS
+         = childPageComposable .pageStateFactory.pageStateFactory,
+      parentPageStateModification: PS.() -> Unit = {},
+      childPageStateModification:  CS.() -> Unit = {},
+   )
+{
    PageTransitionPreview(
       parentPage, childPage,
       parentPageComposable.asCombinedPageComposable(), childPageComposable.asCombinedPageComposable(),
-      parentPageStateSaver, childPageStateSaver, parentPageState, childPageState,
+      parentPageState, childPageState,
       parentPageStateModification, childPageStateModification
    )
 }

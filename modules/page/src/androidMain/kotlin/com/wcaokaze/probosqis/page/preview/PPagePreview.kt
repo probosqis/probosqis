@@ -25,7 +25,7 @@ import com.wcaokaze.probosqis.page.asCombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.preview.PagePreview
 
 @Composable
-fun <P : PPage, S : PPageState> PPagePreview(
+fun <P : PPage, S : PPageState<P>> PPagePreview(
    page: P,
    pageComposable: PPageComposable<P, S>,
    windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)

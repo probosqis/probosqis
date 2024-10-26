@@ -16,13 +16,29 @@
 members = [
     "modules/app",
     "modules/ext/kotlinTest",
+    "modules/ext/panoptiqon",
+    "modules/mastodon/entity",
+    "modules/mastodon/repository",
     "modules/mastodon/webapi",
     "modules/panoptiqon/panoptiqon",
 ]
 resolver = "2"
 
 [workspace.dependencies]
+anyhow = "1.0.86"
+chrono = { version = "0.4.38", features = ["serde"] }
+serde = { version = "1.0.208", features = ["derive"] }
+
 jni = "0.21.1"
+
+url = { version = "2.5.2", features = ["serde"] }
+reqwest.version = "0.12.7"
+reqwest.default-features = false
+reqwest.features = ["rustls-tls", "charset", "http2", "blocking", "json"]
+
 ext-kotlintest = { path = "modules/ext/kotlinTest" }
+ext_panoptiqon = { path = "modules/ext/panoptiqon" }
 panoptiqon = { path = "modules/panoptiqon/panoptiqon" }
+mastodon_entity = { path = "modules/mastodon/entity" }
+mastodon_repository = { path = "modules/mastodon/repository" }
 mastodon_webapi = { path = "modules/mastodon/webapi" }

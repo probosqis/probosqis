@@ -31,18 +31,15 @@ import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
-import com.wcaokaze.probosqis.capsiqum.page.preview.StateSaverBuilder
-import com.wcaokaze.probosqis.capsiqum.page.preview.buildPreviewStateSaver
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionPreview
 import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.pagedeck.PPageStackState
 import com.wcaokaze.probosqis.pagedeck.PageContentFooter
 import com.wcaokaze.probosqis.pagedeck.PageStackColors
-import com.wcaokaze.probosqis.pagedeck.PageStackState
 import com.wcaokaze.probosqis.pagedeck.PageTransitionStateImpl
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
@@ -52,15 +49,13 @@ enum class PageTransitionPreviewValue {
 }
 
 @Composable
-fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
+fun <P : Page, C : Page, PS : PageState<P>, CS : PageState<C>> PageTransitionPreview(
    parentPage: P,
    childPage:  C,
    parentPageComposable: CombinedPageComposable<P, PS>,
    childPageComposable:  CombinedPageComposable<C, CS>,
-   parentPageStateSaver: StateSaverBuilder.() -> Unit = {},
-   childPageStateSaver:  StateSaverBuilder.() -> Unit = {},
-   parentPageState: (P, PageId, PageState.StateSaver) -> PS = parentPageComposable.pageStateFactory.pageStateFactory,
-   childPageState:  (C, PageId, PageState.StateSaver) -> CS = childPageComposable .pageStateFactory.pageStateFactory,
+   parentPageState: (P, PageId) -> PS = parentPageComposable.pageStateFactory.pageStateFactory,
+   childPageState:  (C, PageId) -> CS = childPageComposable .pageStateFactory.pageStateFactory,
    parentPageStateModification: PS.() -> Unit = {},
    childPageStateModification:  CS.() -> Unit = {},
 ) {
@@ -94,19 +89,10 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       )
    }
 
-   val pageStackState = remember {
-      PageStackState(
-         pageStackId = pageStackCache.value.id,
-         pageStackCache,
-         deckState
-      )
-   }
-
    val parentPageStateFactory = remember {
       parentPageComposable.pageStateFactory.copy(
-         pageStateFactory = { page, _, _ ->
-            val stateSaver = buildPreviewStateSaver(parentPageStateSaver, coroutineScope)
-            parentPageState(page, parentSavedPageState.id, stateSaver)
+         pageStateFactory = { page, _ ->
+            parentPageState(page, parentSavedPageState.id)
                .apply(parentPageStateModification)
          }
       )
@@ -114,9 +100,8 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
 
    val childPageStateFactory = remember {
       childPageComposable.pageStateFactory.copy(
-         pageStateFactory = { page, _, _ ->
-            val stateSaver = buildPreviewStateSaver(childPageStateSaver, coroutineScope)
-            childPageState(page, childSavedPageState.id, stateSaver)
+         pageStateFactory = { page, _ ->
+            childPageState(page, childSavedPageState.id)
                .apply(childPageStateModification)
          }
       )
@@ -131,12 +116,13 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       )
    }
 
-   val pageStateStore = remember {
-      PageStateStore(
-         listOf(
-            parentPageStateFactory,
-            childPageStateFactory,
-         ),
+   val pageStackState = remember {
+      PPageStackState(
+         pageStackId = pageStackCache.value.id,
+         pageStackCache,
+         deckState,
+         allPageStateFactories = pageComposableSwitcher
+            .allPageComposables.map { it.pageStateFactory },
          coroutineScope
       )
    }
@@ -161,7 +147,7 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       pageStateTransition
    ) { pageStack ->
       PageContentFooter(
-         pageStack.head, pageStackState, pageComposableSwitcher, pageStateStore,
+         pageStack.head, pageStackState, pageComposableSwitcher,
          PageStackColors(
             background = MaterialTheme.colorScheme.surface,
             content = MaterialTheme.colorScheme.onSurface,

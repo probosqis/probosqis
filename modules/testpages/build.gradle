@@ -33,6 +33,7 @@ kotlin {
    sourceSets {
       commonMain.dependencies {
          implementation project(':modules:page')
+         implementation project(':modules:mastodon:ui')
       }
    }
 }

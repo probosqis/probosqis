@@ -39,7 +39,7 @@ fun PErrorActionButton(
             .onGloballyPositioned { state.buttonBounds = it.boundsInRoot() }
       ) {
          Icon(
-            Icons.Default.Error,
+            Icons.Outlined.Error,
             contentDescription = Strings.PError.pErrorActionButtonContentDescription
          )
       }
