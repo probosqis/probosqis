@@ -108,7 +108,10 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
       TextFieldValue("https://mastodon.social/", selection = TextRange(8, 24))
    }
 
-   fun getAuthorizeUrl(): Deferred<Result<String>> {
+   /**
+    * @return (authorizeUrl, instanceBaseUrl)
+    */
+   fun getAuthorizeUrl(): Deferred<Result<Pair<String, String>>> {
       if (authorizeUrlLoadState is LoadState.Loading) {
          val e = IllegalStateException(
             "attempt to get authorize url but an old job is running yet."
@@ -126,7 +129,7 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
                appRepository.getAuthorizeUrl(instanceBaseUrl)
             }
             authorizeUrlLoadState = LoadState.Success(Unit)
-            Result.success(authorizeUrl)
+            Result.success(Pair(authorizeUrl, instanceBaseUrl))
          } catch (e: Exception) {
             authorizeUrlLoadState = LoadState.Error(e)
             Result.failure(e)
@@ -164,13 +167,13 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
          // Composableが非表示になってもPageStateが生きているのであれば
          // 続行すべき処理なのでpageStateScopeでlaunchする
          state.pageStateScope.launch {
-            val authorizeUrl = state.getAuthorizeUrl().await()
+            val (authorizeUrl, instanceBaseUrl) = state.getAuthorizeUrl().await()
                .getOrElse { return@launch }
 
             browserLauncher.launchBrowser(authorizeUrl)
 
             state.finishPage()
-            state.startPage(CallbackWaiterPage())
+            state.startPage(CallbackWaiterPage(instanceBaseUrl))
          }
       }
 

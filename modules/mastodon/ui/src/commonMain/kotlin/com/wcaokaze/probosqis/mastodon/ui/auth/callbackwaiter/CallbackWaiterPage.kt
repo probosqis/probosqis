@@ -27,20 +27,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.resources.Strings
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.koin.core.component.inject
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage")
-class CallbackWaiterPage : PPage()
+class CallbackWaiterPage(
+   val instanceBaseUrl: String
+) : PPage()
 
 @Stable
-class CallbackWaiterPageState : PPageState<CallbackWaiterPage>()
+class CallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
+   private val appRepository: AppRepository by inject()
+
+   fun saveAuthorizedAccountByCode(code: String) {
+      pageStateScope.launch {
+         val application = appRepository.loadAppCache(page.instanceBaseUrl)
+         val token = appRepository.getToken(application.value, code)
+         println("AOEU: token: $token")
+      }
+   }
+}
 
 val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, CallbackWaiterPageState>(
    PageStateFactory { _, _ -> CallbackWaiterPageState() },

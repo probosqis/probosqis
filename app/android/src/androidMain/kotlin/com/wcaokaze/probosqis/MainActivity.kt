@@ -33,7 +33,6 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
@@ -42,17 +41,15 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import com.wcaokaze.probosqis.app.MultiColumnProbosqis
 import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.SingleColumnProbosqis
-import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.app.allVisiblePageStates
+import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackProcessor
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
-   private val appRepository: AppRepository by inject()
+   private val probosqisState = ProbosqisState()
 
    override fun onCreate(savedInstanceState: Bundle?) {
       initializeEdgeToEdge()
@@ -60,8 +57,6 @@ class MainActivity : ComponentActivity() {
 
       setContent {
          ProbosqisTheme {
-            val probosqisState = remember { ProbosqisState() }
-
             BackHandler {
                probosqisState.pageDeckState.activePageStackState.finishPage()
             }
@@ -83,12 +78,7 @@ class MainActivity : ComponentActivity() {
    override fun onNewIntent(intent: Intent?) {
       super.onNewIntent(intent)
 
-      lifecycleScope.launch {
-         val code = intent?.data?.getQueryParameter("code")!!
-         val application = appRepository.loadAppCache("https://pawoo.net/")
-         val token = appRepository.getToken(application.value, code)
-         println("token: $token")
-      }
+      CallbackProcessor.onNewIntent(intent, probosqisState.allVisiblePageStates)
    }
 
    @Composable
