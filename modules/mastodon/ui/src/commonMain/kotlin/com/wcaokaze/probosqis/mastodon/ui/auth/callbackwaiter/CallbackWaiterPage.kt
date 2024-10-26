@@ -23,10 +23,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPage
@@ -48,11 +53,13 @@ class CallbackWaiterPage(
 class CallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
    private val appRepository: AppRepository by inject()
 
+   var token by mutableStateOf<Token?>(null)
+      private set
+
    fun saveAuthorizedAccountByCode(code: String) {
       pageStateScope.launch {
          val application = appRepository.loadAppCache(page.instanceBaseUrl)
-         val token = appRepository.getToken(application.value, code)
-         println("AOEU: token: $token")
+         token = appRepository.getToken(application.value, code)
       }
    }
 }
@@ -66,16 +73,45 @@ val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, CallbackW
          overflow = TextOverflow.Ellipsis
       )
    },
-   content = { _, _, windowInsets ->
+   content = { _, state, windowInsets ->
       Box(
          modifier = Modifier
             .verticalScroll(rememberScrollState())
             .windowInsetsPadding(windowInsets)
       ) {
-         Text(
-            Strings.Mastodon.callbackWaiter.message,
-            modifier = Modifier.padding(16.dp)
-         )
+         val token = state.token
+         if (token == null) {
+            Text(
+               Strings.Mastodon.callbackWaiter.message,
+               modifier = Modifier.padding(16.dp)
+            )
+         } else {
+            val format = remember(token) {
+               buildString {
+                  append("instance url: ")
+                  append(token.instanceBaseUrl)
+                  appendLine()
+                  append("token type: ")
+                  append(token.tokenType)
+                  appendLine()
+                  append("scope: ")
+                  append(token.scope)
+                  appendLine()
+                  append("created at: ")
+                  append(token.createdAt)
+                  appendLine()
+                  append("access token: ")
+                  repeat(token.accessToken.length) {
+                     append("x")
+                  }
+               }
+            }
+
+            Text(
+               format,
+               modifier = Modifier.padding(16.dp)
+            )
+         }
       }
    },
    footer = null,
