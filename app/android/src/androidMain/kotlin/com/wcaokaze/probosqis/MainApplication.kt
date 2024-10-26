@@ -23,7 +23,10 @@ import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
-import com.wcaokaze.probosqis.page.PPageStateStore
+import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
+import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
+import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
 import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
@@ -47,31 +50,38 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 
 class MainApplication : Application() {
+   init {
+      System.loadLibrary("app")
+   }
+
    private val allPageComposables = persistentListOf(
       testPageComposable,
       testTimelinePageComposable,
       testNotePageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.callbackWaiterPageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.urlInputPageComposable,
+      mastodonTestPageComposable,
    )
 
    private val allPageSerializers = persistentListOf(
       pageSerializer<TestPage>(),
       pageSerializer<TestTimelinePage>(),
       pageSerializer<TestNotePage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage>(),
+      pageSerializer<MastodonTestPage>(),
    )
 
    private val allErrorItemComposables = persistentListOf(
       testErrorComposable,
    )
 
+   private val allErrorSerializers = persistentListOf(
+      errorSerializer<TestError>(),
+   )
+
    private val koinModule = module {
       single { PPageSwitcherState(allPageComposables) }
-
-      single {
-         PPageStateStore(
-            allPageComposables,
-            appCoroutineScope = get()
-         )
-      }
 
       factory {
          val pageDeckCache = loadPageDeckOrDefault(
@@ -111,12 +121,12 @@ class MainApplication : Application() {
       single<PErrorListRepository> {
          AndroidPErrorListRepository(
             context = get(),
-            allErrorSerializers = listOf(
-               errorSerializer<TestError>(),
-            ),
+            allErrorSerializers,
             allPageSerializers
          )
       }
+
+      single<AppRepository> { AndroidAppRepository(context = get()) }
    }
 
    private val appKoinModule = module {

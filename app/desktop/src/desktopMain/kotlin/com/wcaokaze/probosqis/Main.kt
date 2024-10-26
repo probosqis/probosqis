@@ -29,7 +29,10 @@ import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
-import com.wcaokaze.probosqis.page.PPageStateStore
+import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.repository.DesktopAppRepository
+import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
+import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
 import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
@@ -53,102 +56,126 @@ import org.koin.compose.KoinApplication
 import org.koin.dsl.module
 import java.io.File
 
-private val allPageComposables = persistentListOf(
-   testPageComposable,
-   testTimelinePageComposable,
-   testNotePageComposable,
-)
-
-private val allPageSerializers = persistentListOf(
-   pageSerializer<TestPage>(),
-   pageSerializer<TestTimelinePage>(),
-   pageSerializer<TestNotePage>(),
-)
-
-private val allErrorItemComposables = persistentListOf(
-   testErrorComposable,
-)
-
-private val probosqisDataDir = File(System.getProperty("user.home"), ".probosqisData")
-
-private val koinModule = module {
-   single { PPageSwitcherState(allPageComposables) }
-
-   single {
-      PPageStateStore(
-         allPageComposables,
-         appCoroutineScope = get()
-      )
+object Main {
+   init {
+      loadNativeLib()
    }
 
-   factory {
-      val pageDeckCache = loadPageDeckOrDefault(
-         pageDeckRepository = get(),
-         pageStackRepository = get()
-      )
+   private val allPageComposables = persistentListOf(
+      testPageComposable,
+      testTimelinePageComposable,
+      testNotePageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.callbackWaiterPageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.urlInputPageComposable,
+      mastodonTestPageComposable,
+   )
 
-      MultiColumnPageDeckState(pageDeckCache, pageStackRepository = get())
+   private val allPageSerializers = persistentListOf(
+      pageSerializer<TestPage>(),
+      pageSerializer<TestTimelinePage>(),
+      pageSerializer<TestNotePage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage>(),
+      pageSerializer<MastodonTestPage>(),
+   )
+
+   private val allErrorItemComposables = persistentListOf(
+      testErrorComposable,
+   )
+
+   private val allErrorSerializers = listOf(
+      errorSerializer<TestError>(),
+   )
+
+   private val probosqisDataDir = File(System.getProperty("user.home"), ".probosqisData")
+
+   private val koinModule = module {
+      single { PPageSwitcherState(allPageComposables) }
+
+      factory {
+         val pageDeckCache = loadPageDeckOrDefault(
+            pageDeckRepository = get(),
+            pageStackRepository = get()
+         )
+
+         MultiColumnPageDeckState(pageDeckCache, pageStackRepository = get())
+      }
+
+      factory {
+         val pageDeckCache = loadPageDeckOrDefault(
+            pageDeckRepository = get(),
+            pageStackRepository = get()
+         )
+
+         SingleColumnPageDeckState(pageDeckCache, pageStackRepository = get())
+      }
+
+      single {
+         PErrorListState(
+            loadErrorListOrDefault(errorListRepository = get()),
+            allErrorItemComposables
+         )
+      }
    }
 
-   factory {
-      val pageDeckCache = loadPageDeckOrDefault(
-         pageDeckRepository = get(),
-         pageStackRepository = get()
-      )
+   private val repositoriesKoinModule = module {
+      single<PageDeckRepository> {
+         DesktopPageDeckRepository(pageStackRepository = get(), probosqisDataDir)
+      }
 
-      SingleColumnPageDeckState(pageDeckCache, pageStackRepository = get())
+      single<PageStackRepository> {
+         DesktopPageStackRepository(allPageSerializers, probosqisDataDir)
+      }
+
+      single<PErrorListRepository> {
+         DesktopPErrorListRepository(
+            allErrorSerializers,
+            allPageSerializers,
+            probosqisDataDir
+         )
+      }
+
+      single<AppRepository> { DesktopAppRepository(probosqisDataDir) }
    }
 
-   single {
-      PErrorListState(
-         loadErrorListOrDefault(errorListRepository = get()),
-         allErrorItemComposables
-      )
-   }
-}
+   @JvmStatic
+   fun main(vararg args: String) {
+      application {
+         val appCoroutineScope = rememberCoroutineScope()
 
-private val repositoriesKoinModule = module {
-   single<PageDeckRepository> {
-      DesktopPageDeckRepository(pageStackRepository = get(), probosqisDataDir)
-   }
+         KoinApplication(
+            application = {
+               val appKoinModule = module {
+                  single { appCoroutineScope }
+               }
 
-   single<PageStackRepository> {
-      DesktopPageStackRepository(allPageSerializers, probosqisDataDir)
-   }
-
-   single<PErrorListRepository> {
-      DesktopPErrorListRepository(
-         allErrorSerializers = listOf(
-            errorSerializer<TestError>(),
-         ),
-         allPageSerializers,
-         probosqisDataDir
-      )
-   }
-}
-
-fun main() {
-   application {
-      val appCoroutineScope = rememberCoroutineScope()
-
-      KoinApplication(
-         application = {
-            val appKoinModule = module {
-               single { appCoroutineScope }
+               modules(koinModule, repositoriesKoinModule, appKoinModule)
             }
-
-            modules(koinModule, repositoriesKoinModule, appKoinModule)
-         }
-      ) {
-         ProbosqisTheme {
-            Window(
-               title = Strings.App.topAppBar,
-               onCloseRequest = { exitApplication() }
-            ) {
-               val probosqisState = remember { ProbosqisState() }
-               MultiColumnProbosqis(probosqisState)
+         ) {
+            ProbosqisTheme {
+               Window(
+                  title = Strings.App.topAppBar,
+                  onCloseRequest = { exitApplication() }
+               ) {
+                  val probosqisState = remember { ProbosqisState() }
+                  MultiColumnProbosqis(probosqisState)
+               }
             }
          }
+      }
+   }
+
+   private fun loadNativeLib() {
+      val osName = System.getProperty("os.name").lowercase()
+      when {
+         osName.startsWith("linux") -> {
+            val lib = File(
+               System.getProperty("user.dir").split('/').dropLast(2).joinToString("/"),
+               "target/debug/libapp.so"
+            )
+            System.load(lib.absolutePath)
+         }
+         else -> throw IllegalStateException()
       }
    }
 }

@@ -83,7 +83,6 @@ fun MultiColumnProbosqis(
          MultiColumnPageDeck(
             pageDeckState,
             pageSwitcherState = koinInject(),
-            pageStateStore = koinInject(),
             pageStackCount,
             colorScheme.activePageStackAppBar,
             colorScheme.inactivePageStackAppBar,
@@ -100,11 +99,11 @@ fun MultiColumnProbosqis(
       PErrorList(
          errorListState,
          colorScheme.errorListColors,
-         onRequestNavigateToPage = { pageId, pageClone ->
+         onRequestNavigateToPage = { pageId, fallbackPage ->
             coroutineScope.launch {
                state.pageDeckState.navigateToPage(
                   pageId,
-                  fallbackPage = { pageClone }
+                  fallbackPage
                )
             }
          }

@@ -100,7 +100,7 @@ internal fun PErrorListItem(
    state: PErrorListState,
    raisedError: RaisedError,
    backgroundColor: Color,
-   onRequestNavigateToPage: (PageId, Page) -> Unit,
+   onRequestNavigateToPage: (PageId, () -> Page) -> Unit,
 ) {
    val itemComposable = state.getComposableFor(raisedError.error) ?: TODO()
 
@@ -113,7 +113,7 @@ internal fun PErrorListItem(
             override fun navigateToPage() {
                onRequestNavigateToPage(
                   raisedError.raiserPageId,
-                  raisedError.raiserPageClone
+                  raisedError.error::restorePage
                )
             }
          }

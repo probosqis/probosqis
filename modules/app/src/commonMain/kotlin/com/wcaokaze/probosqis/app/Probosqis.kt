@@ -19,6 +19,7 @@ package com.wcaokaze.probosqis.app
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.RaisedError
+import com.wcaokaze.probosqis.pagedeck.PageDeck
 import com.wcaokaze.probosqis.pagedeck.PageDeckState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
@@ -32,6 +33,12 @@ class ProbosqisState {
       }
       internal set(value) {
          _pageDeckState = value
+      }
+
+   val pageDecks: Sequence<PageDeck>
+      get() {
+         val deck = _pageDeckState?.deck ?: return emptySequence()
+         return sequenceOf(deck)
       }
 }
 

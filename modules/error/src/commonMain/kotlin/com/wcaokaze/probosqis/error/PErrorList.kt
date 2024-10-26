@@ -99,8 +99,7 @@ data class PErrorListColors(
 class RaisedError(
    val id: Id,
    val error: PError,
-   val raiserPageId: PageId,
-   val raiserPageClone: Page
+   val raiserPageId: PageId
 ) {
    @Serializable
    @JvmInline
@@ -151,19 +150,17 @@ class PErrorListState(
    internal fun raise(
       id: RaisedError.Id,
       error: PError,
-      raiserPageId: PageId,
-      raiserPageClone: Page
+      raiserPageId: PageId
    ) {
-      errors += RaisedError(id, error, raiserPageId, raiserPageClone)
+      errors += RaisedError(id, error, raiserPageId)
       raisedTime = Clock.System.now()
    }
 
-   fun raise(error: PError, raiserPageId: PageId, raiserPageClone: Page) {
+   fun raise(error: PError, raiserPageId: PageId) {
       raise(
          id = RaisedError.Id(Clock.System.now().toEpochMilliseconds()),
          error,
-         raiserPageId,
-         raiserPageClone
+         raiserPageId
       )
    }
 
@@ -189,7 +186,7 @@ internal expect fun DismissHandler(onDismissRequest: () -> Unit)
 fun PErrorList(
    state: PErrorListState,
    colors: PErrorListColors,
-   onRequestNavigateToPage: (PageId, Page) -> Unit,
+   onRequestNavigateToPage: (PageId, () -> Page) -> Unit,
    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    Layout(
@@ -260,7 +257,7 @@ private fun <T> animSpec(easing: Easing = LinearEasing)
 private fun PErrorListSheet(
    state: PErrorListState,
    colors: PErrorListColors,
-   onRequestNavigateToPage: (PageId, Page) -> Unit,
+   onRequestNavigateToPage: (PageId, () -> Page) -> Unit,
    modifier: Modifier = Modifier
 ) {
    val transition = updateTransition(state.isShown)
@@ -326,7 +323,7 @@ private fun AnimatedContentScope.PErrorListHeader(
    ) {
       CompositionLocalProvider(LocalContentColor provides contentColor) {
          val hiddenIconOffset = with (LocalDensity.current) {
-            val hiddenIconPadding = (headerHeight - Icons.Default.Error.defaultWidth) / 2
+            val hiddenIconPadding = (headerHeight - Icons.Outlined.Error.defaultWidth) / 2
             (hiddenIconPadding - iconHorizontalPadding).roundToPx()
          }
 
@@ -337,7 +334,7 @@ private fun AnimatedContentScope.PErrorListHeader(
 
          @OptIn(ExperimentalAnimationApi::class)
          Icon(
-            Icons.Default.Error,
+            Icons.Outlined.Error,
             contentDescription = null,
             modifier = Modifier
                .align(Alignment.CenterStart)
@@ -356,7 +353,7 @@ private fun PErrorListContent(
    state: PErrorListState,
    itemBackgroundColor: Color,
    contentColor: Color,
-   onRequestNavigateToPage: (PageId, Page) -> Unit
+   onRequestNavigateToPage: (PageId, () -> Page) -> Unit
 ) {
    CompositionLocalProvider(LocalContentColor provides contentColor) {
       val errors = state.errors

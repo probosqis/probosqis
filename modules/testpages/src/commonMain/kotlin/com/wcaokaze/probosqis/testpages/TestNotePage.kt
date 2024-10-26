@@ -50,15 +50,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.testpages.TestNotePage")
-class TestNotePage(val i: Int) : PPage() {
-   override fun clone() = this
-}
+class TestNotePage(val i: Int) : PPage()
 
 @Stable
-class TestNotePageState : PPageState()
+class TestNotePageState : PPageState<TestNotePage>()
 
 val testNotePageComposable = PPageComposable<TestNotePage, TestNotePageState>(
-   PageStateFactory { _, _, _ -> TestNotePageState() },
+   PageStateFactory { _, _ -> TestNotePageState() },
    content = { page, _, windowInsets ->
       Note(page.i, windowInsets, Modifier.fillMaxSize())
    },

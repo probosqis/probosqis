@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,11 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.rust.android
    alias libs.plugins.kotlinx.serialization
    alias libs.plugins.android.application
    alias libs.plugins.compose.jb
+   alias libs.plugins.compose.compiler
    alias libs.plugins.roborazzi
 }
 
@@ -26,6 +28,8 @@ apply from: rootProject.file('gradle/setupModule.gradle')
 
 android {
    namespace 'com.wcaokaze.probosqis'
+   ndkVersion libs.versions.android.ndk.get()
+
    sourceSets.main {
       manifest.srcFile 'src/androidMain/AndroidManifest.xml'
       kotlin.srcDirs = ['src/androidMain/kotlin']
@@ -51,8 +55,11 @@ android {
 kotlin {
    sourceSets {
       androidMain.dependencies {
+         implementation libs.androidx.compose.material3.window.size
+
          implementation project(':panoptiqon')
          implementation project(':panoptiqon-compose')
+
          implementation project(':capsiqum-page')
          implementation project(':capsiqum-deck')
          implementation project(':capsiqum-transition')
@@ -60,9 +67,30 @@ kotlin {
          implementation project(':modules:error')
          implementation project(':modules:page')
          implementation project(':modules:pagedeck')
+
          implementation project(':modules:testpages')
+
+         implementation project(':modules:mastodon:ui')
+         implementation project(':modules:mastodon:entity')
+         implementation project(':modules:mastodon:repository')
+
          implementation project(':modules:resources')
-         implementation libs.androidx.compose.material3.window.size
       }
+   }
+}
+
+cargo {
+   module = '../..'
+   libname = 'app'
+   rustupChannel = 'nightly'
+   targets = ['arm', 'arm64', 'x86', 'x86_64']
+   features {
+      defaultAnd('jvm')
+   }
+}
+
+tasks.configureEach { task ->
+   if (task.name.contains('javaPreCompile')) {
+      task.dependsOn 'cargoBuild'
    }
 }

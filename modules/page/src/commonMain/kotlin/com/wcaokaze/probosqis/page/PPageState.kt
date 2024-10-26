@@ -24,12 +24,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.pagedeck.PageStackState
+import com.wcaokaze.probosqis.ext.kotlin.annotation.UsingAppScope
+import com.wcaokaze.probosqis.pagedeck.PPageStackState
+import kotlinx.coroutines.CoroutineScope
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -41,54 +42,41 @@ private fun throwUninitializedException(): Nothing
       )
 
 @Stable
-abstract class PPageState : PageState(), KoinComponent {
+abstract class PPageState<out P : PPage> : PageState<P>(), KoinComponent {
    private val errorListState: PErrorListState by inject()
-   private var pageStackStateRc = RC<PageStackState>()
+   private var pageStackStateRc = RC<PPageStackState>()
 
-   private var _pageId: PageId? = null
-   internal var pageId: PageId
-      get() = _pageId ?: throwUninitializedException()
-      set(value) {
-         _pageId = value
+   private var impl: Interface = object : Interface {
+      @UsingAppScope
+      override val appScope: CoroutineScope by inject()
+
+      override fun startPage(page: PPage) {
+         pageStackStateRc.get().startPage(page)
       }
 
-   private var _page: PPage? = null
-   internal var page: PPage
-      get() = _page ?: throwUninitializedException()
-      set(value) {
-         _page = value
+      override fun finishPage() {
+         pageStackStateRc.get().finishPage()
       }
 
-   fun startPage(page: PPage) {
-      pageStackStateRc.get().startPage(page)
-   }
+      override fun addColumn(page: PPage) {
+         pageStackStateRc.get().addColumn(page)
+      }
 
-   fun finishPage() {
-      pageStackStateRc.get().finishPage()
-   }
+      override fun addColumn(pageStack: PageStack) {
+         pageStackStateRc.get().addColumn(pageStack)
+      }
 
-   fun addColumn(page: PPage) {
-      pageStackStateRc.get().addColumn(page)
-   }
+      override fun removeFromDeck() {
+         pageStackStateRc.get().removeFromDeck()
+      }
 
-   fun addColumn(pageStack: PageStack) {
-      pageStackStateRc.get().addColumn(pageStack)
-   }
-
-   fun removeFromDeck() {
-      pageStackStateRc.get().removeFromDeck()
-   }
-
-   fun raiseError(error: PError) {
-      errorListState.raise(
-         error,
-         raiserPageId = pageId,
-         raiserPageClone = page.clone()
-      )
+      override fun raiseError(error: PError) {
+         errorListState.raise(error, raiserPageId = pageId)
+      }
    }
 
    @Composable
-   internal fun inject(pageStackState: PageStackState) {
+   internal fun inject(pageStackState: PPageStackState) {
       DisposableEffect(pageStackState) {
          pageStackStateRc.set(pageStackState)
 
@@ -96,6 +84,48 @@ abstract class PPageState : PageState(), KoinComponent {
             pageStackStateRc.release()
          }
       }
+   }
+
+   @VisibleForTesting
+   fun injectTestable(implementation: Interface) {
+      impl = implementation
+   }
+
+   fun startPage(page: PPage) {
+      impl.startPage(page)
+   }
+
+   fun finishPage() {
+      impl.finishPage()
+   }
+
+   fun addColumn(page: PPage) {
+      impl.addColumn(page)
+   }
+
+   fun addColumn(pageStack: PageStack) {
+      impl.addColumn(pageStack)
+   }
+
+   fun removeFromDeck() {
+      impl.removeFromDeck()
+   }
+
+   fun raiseError(error: PError) {
+      impl.raiseError(error)
+   }
+
+   interface Interface {
+      @UsingAppScope
+      val appScope: CoroutineScope
+
+      fun startPage(page: PPage)
+      fun finishPage()
+      fun addColumn(page: PPage)
+      fun addColumn(pageStack: PageStack)
+      fun removeFromDeck()
+
+      fun raiseError(error: PError)
    }
 
    @VisibleForTesting

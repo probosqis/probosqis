@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.pagedeck
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -55,21 +56,24 @@ class LazyPageStackState(
    internal val pageStackCache: WritableCache<PageStack>,
    initialVisibility: Boolean
 ) {
-   private var pageStackState: PageStackState? = null
+   private var pageStackState: PPageStackState? = null
+
+   @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+   val pageStack get() = pageStackCache.value
 
    var _isVisible = mutableStateOf(initialVisibility)
    var isVisible by _isVisible
 
-   fun get(deckState: PageDeckState): PageStackState {
+   fun get(deckState: PageDeckState): PPageStackState {
       var s = pageStackState
       if (s != null) { return s }
 
-      s = PageStackState(id, pageStackCache, deckState)
+      s = PPageStackState(id, pageStackCache, deckState)
       pageStackState = s
       return s
    }
 
-   fun getIfInitialized(): PageStackState? = pageStackState
+   fun getIfInitialized(): PPageStackState? = pageStackState
 }
 
 internal val CARD_ANIM_DURATION = 200.milliseconds
@@ -110,7 +114,7 @@ sealed class PageDeckState(
       this.coroutineScope = coroutineScope
    }
 
-   val activePageStackState: PageStackState get() {
+   val activePageStackState: PPageStackState get() {
       val lazy = deck[activeCardIndex].content
       return lazy.get(this)
    }

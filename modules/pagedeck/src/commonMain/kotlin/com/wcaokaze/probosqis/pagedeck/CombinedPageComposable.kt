@@ -27,14 +27,14 @@ import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionSpec
 import kotlinx.collections.immutable.ImmutableMap
 import kotlin.reflect.KClass
 
-inline fun <reified P : Page, reified S : PageState> CombinedPageComposable(
+inline fun <reified P : Page, reified S : PageState<P>> CombinedPageComposable(
    pageStateFactory: PageStateFactory<P, S>,
-   noinline content: @Composable (P, S, PageStackState, WindowInsets) -> Unit,
-   noinline header: @Composable (P, S, PageStackState) -> Unit,
+   noinline content: @Composable (P, S, PPageStackState, WindowInsets) -> Unit,
+   noinline header: @Composable (P, S, PPageStackState) -> Unit,
    // 本来nullableである必要はないがデフォルト引数でreified型引数のPとSを使えないため
    // headerActionsが空の状態をnullでも表せるようにする
-   noinline headerActions: (@Composable RowScope.(P, S, PageStackState) -> Unit)? = null,
-   noinline footer: (@Composable (P, S, PageStackState) -> Unit)?,
+   noinline headerActions: (@Composable RowScope.(P, S, PPageStackState) -> Unit)? = null,
+   noinline footer: (@Composable (P, S, PPageStackState) -> Unit)?,
    outgoingTransitions: ImmutableMap<KClass<out Page>, PageTransitionSpec>,
    incomingTransitions: ImmutableMap<KClass<out Page>, PageTransitionSpec>
 ) = CombinedPageComposable(
@@ -50,14 +50,14 @@ inline fun <reified P : Page, reified S : PageState> CombinedPageComposable(
 )
 
 @Stable
-data class CombinedPageComposable<P : Page, S : PageState>(
+data class CombinedPageComposable<P : Page, S : PageState<P>>(
    val pageClass: KClass<P>,
    val pageStateClass: KClass<S>,
    val pageStateFactory: PageStateFactory<P, S>,
-   val contentComposable: @Composable (P, S, PageStackState, WindowInsets) -> Unit,
-   val headerComposable: @Composable (P, S, PageStackState) -> Unit,
-   val headerActionsComposable: (@Composable RowScope.(P, S, PageStackState) -> Unit)?,
-   val footerComposable: (@Composable (P, S, PageStackState) -> Unit)?,
+   val contentComposable: @Composable (P, S, PPageStackState, WindowInsets) -> Unit,
+   val headerComposable: @Composable (P, S, PPageStackState) -> Unit,
+   val headerActionsComposable: (@Composable RowScope.(P, S, PPageStackState) -> Unit)?,
+   val footerComposable: (@Composable (P, S, PPageStackState) -> Unit)?,
    val outgoingTransitions: ImmutableMap<KClass<out Page>, PageTransitionSpec>,
    val incomingTransitions: ImmutableMap<KClass<out Page>, PageTransitionSpec>
 )

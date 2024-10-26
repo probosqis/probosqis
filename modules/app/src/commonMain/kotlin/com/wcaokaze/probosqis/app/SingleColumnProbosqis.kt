@@ -60,11 +60,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.error.PErrorActionButton
 import com.wcaokaze.probosqis.error.PErrorList
 import com.wcaokaze.probosqis.error.PErrorListState
@@ -99,7 +97,6 @@ fun SingleColumnProbosqis(
    Box {
       val errorListState: PErrorListState = koinInject()
       val pageSwitcherState: CombinedPageSwitcherState = koinInject()
-      val pageStateStore: PageStateStore = koinInject()
 
       Column(
          modifier = Modifier
@@ -113,7 +110,6 @@ fun SingleColumnProbosqis(
             errorListState,
             pageDeckState,
             pageSwitcherState,
-            pageStateStore,
             backgroundColor = colorScheme.appBar,
             windowInsets = safeDrawingWindowInsets
                .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
@@ -128,7 +124,6 @@ fun SingleColumnProbosqis(
          SingleColumnPageDeck(
             pageDeckState,
             pageSwitcherState,
-            pageStateStore,
             colorScheme.pageStack,
             windowInsets = safeDrawingWindowInsets
                .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
@@ -142,11 +137,11 @@ fun SingleColumnProbosqis(
       PErrorList(
          errorListState,
          colorScheme.errorListColors,
-         onRequestNavigateToPage = { pageId, pageClone ->
+         onRequestNavigateToPage = { pageId, fallbackPage ->
             coroutineScope.launch {
                state.pageDeckState.navigateToPage(
                   pageId,
-                  fallbackPage = { pageClone }
+                  fallbackPage
                )
             }
          }
@@ -161,7 +156,6 @@ private fun AppBar(
    errorListState: PErrorListState,
    deckState: SingleColumnPageDeckState,
    pageSwitcherState: CombinedPageSwitcherState,
-   pageStateStore: PageStateStore,
    backgroundColor: Color,
    windowInsets: WindowInsets,
    onErrorButtonClick: () -> Unit
@@ -233,7 +227,6 @@ private fun AppBar(
       SingleColumnPageDeckAppBar(
          deckState,
          pageSwitcherState,
-         pageStateStore,
          windowInsets = windowInsets.only(WindowInsetsSides.Horizontal)
       )
    }

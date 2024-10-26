@@ -40,6 +40,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
@@ -54,6 +55,7 @@ import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.page.Page
@@ -62,6 +64,7 @@ import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.junit.Rule
 import org.junit.runner.RunWith
@@ -72,6 +75,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -83,7 +87,20 @@ class PErrorListTest {
 
    private val ViewConfiguration.errorItemTouchSlop get() = touchSlop * 1.25f
 
-   private data class ErrorImpl(val i: Int) : PError()
+   private val SemanticsNodeInteraction.dpPositionInRoot: DpOffset
+      get() {
+         val node = fetchSemanticsNode()
+         return with (node.layoutInfo.density) {
+            DpOffset(
+               node.positionInRoot.x.toDp(),
+               node.positionInRoot.y.toDp()
+            )
+         }
+      }
+
+   private data class ErrorImpl(val i: Int) : PError() {
+      override fun restorePage() = fail()
+   }
 
    private val errorItemComposableImpl = PErrorItemComposable<ErrorImpl>(
       composable = { error ->
@@ -92,10 +109,8 @@ class PErrorListTest {
             modifier = Modifier.fillMaxWidth().height(48.dp)
          )
       },
-      onClick = { navigateToPage() }
+      onClick = { fail() }
    )
-
-   private object DummyPage : Page()
 
    private fun RaisedError(
       id: Long,
@@ -104,8 +119,7 @@ class PErrorListTest {
    ) = RaisedError(
       RaisedError.Id(id),
       error,
-      raiserPageId,
-      raiserPageClone = DummyPage
+      raiserPageId
    )
 
    private fun createRaisedErrorList(errorCount: Int): List<RaisedError> {
@@ -121,7 +135,7 @@ class PErrorListTest {
    @Composable
    private fun PErrorList(
       state: PErrorListState,
-      onRequestNavigateToPage: (PageId, Page) -> Unit = { _, _ -> fail() },
+      onRequestNavigateToPage: (PageId, () -> Page) -> Unit = { _, _ -> fail() },
       windowInsets: WindowInsets = WindowInsets(0)
    ) {
       PErrorList(
@@ -154,11 +168,7 @@ class PErrorListTest {
 
       rule.onNodeWithContentDescription("Errors").assertDoesNotExist()
 
-      state.raise(
-         ErrorImpl(0),
-         raiserPageId = PageId(0L),
-         raiserPageClone = DummyPage
-      )
+      state.raise(ErrorImpl(0), raiserPageId = PageId(0L))
 
       rule.onNodeWithContentDescription("Errors").assertExists()
    }
@@ -425,12 +435,7 @@ class PErrorListTest {
          cache.value
       )
 
-      state.raise(
-         RaisedError.Id(1L),
-         ErrorImpl(1),
-         raiserPageId = PageId(1L),
-         raiserPageClone = DummyPage
-      )
+      state.raise(RaisedError.Id(1L), ErrorImpl(1), raiserPageId = PageId(1L))
 
       assertContentEquals(
          listOf(
@@ -548,6 +553,8 @@ class PErrorListTest {
       }
 
       state.show()
+      rule.waitForIdle()
+      rule.mainClock.autoAdvance = false
 
       rule.onNodeWithText("Error message 0")
          .assertLeftPositionInRootIsEqualTo(32.dp)
@@ -560,14 +567,13 @@ class PErrorListTest {
          )
       }
 
-      rule.onNodeWithText("Error message 0")
-         .fetchSemanticsNode()
-         .let {
-            with (it.layoutInfo.density) {
-               // スワイプが終わる位置はx = 0だがFlingによってさらに16dpくらいは動く
-               assertTrue(it.positionInRoot.x < (0 - 16).dp.toPx())
-            }
-         }
+      rule.waitUntil {
+         rule.waitForIdle()
+         rule.mainClock.advanceTimeByFrame()
+
+         // スワイプが終わる位置はx = 0だがFlingによってさらに16dpくらいは動く
+         rule.onNodeWithText("Error message 0").dpPositionInRoot.x > (-16).dp
+      }
 
       rule.onNodeWithText("Error message 1")
          .assertLeftPositionInRootIsEqualTo(32.dp)
@@ -580,13 +586,12 @@ class PErrorListTest {
          )
       }
 
-      rule.onNodeWithText("Error message 1")
-         .fetchSemanticsNode()
-         .let {
-            with (it.layoutInfo.density) {
-               assertTrue(it.positionInRoot.x > (96 + 16).dp.toPx())
-            }
-         }
+      rule.waitUntil {
+         rule.waitForIdle()
+         rule.mainClock.advanceTimeByFrame()
+
+         rule.onNodeWithText("Error message 1").dpPositionInRoot.x < (64 + 16).dp
+      }
    }
 
    @Test
@@ -631,7 +636,9 @@ class PErrorListTest {
    fun errorItemComposable_touchChildren() {
       val buttonTag = "button"
       var isButtonClicked by mutableStateOf(false)
-      class ButtonError : PError()
+      class ButtonError : PError() {
+         override fun restorePage() = fail()
+      }
       val buttonErrorComposable = PErrorItemComposable<ButtonError>(
          composable = {
             Button(
@@ -646,7 +653,9 @@ class PErrorListTest {
 
       val sliderTag = "slider"
       var sliderValue by mutableStateOf(0.0f)
-      class SliderError : PError()
+      class SliderError : PError() {
+         override fun restorePage() = fail()
+      }
       val sliderErrorComposable = PErrorItemComposable<SliderError>(
          composable = {
             Slider(
@@ -709,7 +718,14 @@ class PErrorListTest {
       val errorList = createRaisedErrorList(2)
       val state = PErrorListState(
          WritableCache(errorList),
-         itemComposables = listOf(errorItemComposableImpl)
+         itemComposables = listOf(
+            PErrorItemComposable<ErrorImpl>(
+               composable = { error ->
+                  Text("Error message ${error.i}")
+               },
+               onClick = { navigateToPage() }
+            )
+         )
       )
 
       rule.setContent {
@@ -743,23 +759,28 @@ class PErrorListTest {
    @Test
    fun errorItemComposableScope_navigateToPage() {
       class RaiserPage : Page()
+      class Error(val raiserPage: RaiserPage) : PError() {
+         override fun restorePage() = raiserPage
+      }
+      val errorComposable = PErrorItemComposable<Error>(
+         composable = {
+            Text("Error message")
+         },
+         onClick = { navigateToPage() }
+      )
 
-      val raiserPageClone = RaiserPage()
+      val raiserPage = RaiserPage()
       val errorList = listOf(
-         RaisedError(
-            RaisedError.Id(0L),
-            ErrorImpl(0),
-            raiserPageId = PageId(42L),
-            raiserPageClone
-         )
+         RaisedError(0L, Error(raiserPage), raiserPageId = PageId(42L))
       )
       val state = PErrorListState(
          WritableCache(errorList),
-         itemComposables = listOf(errorItemComposableImpl)
+         itemComposables = listOf(errorComposable)
       )
 
-      val spyRequestNavigateToPage: (PageId, Page) -> Unit = mockk {
-         every { this@mockk.invoke(any(), any()) } returns Unit
+      val fallbackPageSlot = slot<() -> Page>()
+      val spyRequestNavigateToPage: (PageId, () -> Page) -> Unit = mockk {
+         every { this@mockk.invoke(any(), capture(fallbackPageSlot)) } returns Unit
       }
 
       rule.setContent {
@@ -776,10 +797,11 @@ class PErrorListTest {
 
       state.show()
 
-      rule.onNodeWithText("Error message 0").performClick()
+      rule.onNodeWithText("Error message").performClick()
 
       rule.runOnIdle {
-         verify { spyRequestNavigateToPage(PageId(42L), raiserPageClone) }
+         verify { spyRequestNavigateToPage(PageId(42L), any()) }
+         assertSame(raiserPage, fallbackPageSlot.captured.invoke())
       }
    }
 
@@ -1113,9 +1135,6 @@ class PErrorListTest {
       }
       rule.onNodeWithContentDescription("Dismiss").performMouseInput {
          click()
-      }
-      rule.onNodeWithText("Error message 1").performMouseInput {
-         exit()
       }
 
       rule.runOnIdle {

@@ -76,24 +76,25 @@ import kotlin.math.pow
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.testpages.TestTimelinePage")
-class TestTimelinePage : PPage() {
-   override fun clone() = this
-}
+class TestTimelinePage : PPage()
 
 @Stable
-class TestTimelinePageState(stateSaver: StateSaver) : PPageState() {
-   val lazyListState by stateSaver
-      .save("lazyListState", LazyListState.Saver) { LazyListState() }
+class TestTimelinePageState : PPageState<TestTimelinePage>() {
+   val lazyListState by save(
+      "lazyListState", LazyListState.Saver
+   ) { LazyListState() }
 
-   var notes: List<Int> by stateSaver
-      .save("notes", ListSerializer(Int.serializer())) { (0..200).toList() }
+   var notes: List<Int> by save(
+      "notes", ListSerializer(Int.serializer())
+   ) { (0..200).toList() }
 
-   var clickedNoteIndex: Int? by stateSaver
-      .save("clickedNoteIndex", Int.serializer().nullable) { null }
+   var clickedNoteIndex: Int? by save(
+      "clickedNoteIndex", Int.serializer().nullable
+   ) { null }
 }
 
 val testTimelinePageComposable = PPageComposable<TestTimelinePage, TestTimelinePageState>(
-   PageStateFactory { _, _, stateSaver -> TestTimelinePageState(stateSaver) },
+   PageStateFactory { _, _ -> TestTimelinePageState() },
    content = { _, pageState, windowInsets ->
       TestTimeline(pageState, windowInsets)
    },

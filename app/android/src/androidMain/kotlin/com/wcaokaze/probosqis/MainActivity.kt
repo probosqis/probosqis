@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -32,7 +33,6 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
@@ -44,17 +44,19 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.MultiColumnProbosqis
 import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.SingleColumnProbosqis
+import com.wcaokaze.probosqis.app.allVisiblePageStates
+import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackProcessor
 import com.wcaokaze.probosqis.resources.ProbosqisTheme
 
 class MainActivity : ComponentActivity() {
+   private val probosqisState = ProbosqisState()
+
    override fun onCreate(savedInstanceState: Bundle?) {
       initializeEdgeToEdge()
       super.onCreate(savedInstanceState)
 
       setContent {
          ProbosqisTheme {
-            val probosqisState = remember { ProbosqisState() }
-
             BackHandler {
                probosqisState.pageDeckState.activePageStackState.finishPage()
             }
@@ -71,6 +73,12 @@ class MainActivity : ComponentActivity() {
             }
          }
       }
+   }
+
+   override fun onNewIntent(intent: Intent?) {
+      super.onNewIntent(intent)
+
+      CallbackProcessor.onNewIntent(intent, probosqisState.allVisiblePageStates)
    }
 
    @Composable

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -117,6 +117,11 @@ kotlin {
                implementation libs.androidx.activity.compose
                implementation compose.uiTooling
                implementation compose.preview
+
+               // 1.5以前ではLocalSoftwareKeyboardControllerがobjectだったが
+               // 1.6以降トップレベルプロパティに変更された。
+               // これが原因でクラスパスを1.5で通してコンパイルするとNoClassDefFoundErrorが発生する
+               implementation "androidx.compose.ui:ui:1.6.0"
             }
 
             androidUnitTest.dependencies {
@@ -165,8 +170,10 @@ if (isAndroidModule) {
          targetSdk 34
       }
 
-      buildFeatures {
-         compose true
+      if (isComposeModule) {
+         buildFeatures {
+            compose true
+         }
       }
 
       compileOptions {

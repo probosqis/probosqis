@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,14 @@ plugins {
    alias libs.plugins.kotlin.multiplatform
    alias libs.plugins.kotlinx.serialization
    alias libs.plugins.compose.jb
+   alias libs.plugins.compose.compiler
 }
 
 apply from: rootProject.file('gradle/setupModule.gradle')
 
 compose.desktop {
    application {
-      mainClass = "com.wcaokaze.probosqis.MainKt"
+      mainClass = "com.wcaokaze.probosqis.Main"
    }
 }
 
@@ -32,8 +33,10 @@ kotlin {
    sourceSets {
       desktopMain.dependencies {
          implementation compose.desktop.linux_x64
+
          implementation project(':panoptiqon')
          implementation project(':panoptiqon-compose')
+
          implementation project(':capsiqum-page')
          implementation project(':capsiqum-deck')
          implementation project(':capsiqum-transition')
@@ -41,8 +44,42 @@ kotlin {
          implementation project(':modules:error')
          implementation project(':modules:page')
          implementation project(':modules:pagedeck')
+
          implementation project(':modules:testpages')
+
+         implementation project(':modules:mastodon:ui')
+         implementation project(':modules:mastodon:repository')
+
          implementation project(':modules:resources')
       }
+   }
+}
+
+tasks.register('cargoBuild', Exec) {
+   workingDir rootProject.projectDir
+
+   def args = ['+nightly', 'build', '--features', 'jvm']
+   if (isXterm()) {
+      args += '--color=always'
+   }
+   commandLine('cargo', *args)
+}
+
+tasks.register('cargoTest', Exec) {
+   workingDir rootProject.projectDir
+
+   def args = ['+nightly', 'test']
+   if (isXterm()) {
+      args += '--color=always'
+   }
+   commandLine('cargo', *args)
+}
+
+tasks.configureEach { task ->
+   if (task.name.contains('compileKotlinDesktop')) {
+      task.dependsOn 'cargoBuild'
+   }
+   if (task.name.contains('desktopTestClasses')) {
+      task.dependsOn 'cargoTest'
    }
 }
