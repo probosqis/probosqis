@@ -50,6 +50,7 @@ import org.robolectric.annotation.GraphicsMode
 import java.io.IOException
 import java.util.concurrent.Semaphore
 import kotlin.test.AfterTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -266,6 +267,7 @@ class UrlInputPageTest {
       rule.onNodeWithText("https://example.wcaokaze.com/").assertIsEnabled()
    }
 
+   @Ignore("https://github.com/probosqis/probosqis/issues/82")
    @Test
    fun screenshot_usual() {
       rule.setContent {
@@ -276,6 +278,7 @@ class UrlInputPageTest {
       rule.onRoot().captureRoboImage("urlInputPage/usual.png")
    }
 
+   @Ignore("https://github.com/probosqis/probosqis/issues/82")
    @Test
    fun screenshot_loading() {
       val semaphore = Semaphore(1)
@@ -319,6 +322,7 @@ class UrlInputPageTest {
       }
    }
 
+   @Ignore("https://github.com/probosqis/probosqis/issues/82")
    @Test
    fun screenshot_error() {
       val appRepository = mockk<AppRepository> {
