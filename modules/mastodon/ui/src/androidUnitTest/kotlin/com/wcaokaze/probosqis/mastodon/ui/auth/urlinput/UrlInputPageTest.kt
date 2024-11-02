@@ -51,7 +51,6 @@ import java.io.IOException
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.test.AfterTest
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -264,7 +263,6 @@ class UrlInputPageTest {
       rule.onNodeWithText("https://example.wcaokaze.com/").assertIsEnabled()
    }
 
-   @Ignore("https://github.com/probosqis/probosqis/issues/82")
    @Test
    fun screenshot_usual() {
       rule.setContent {
@@ -275,7 +273,6 @@ class UrlInputPageTest {
       rule.onRoot().captureRoboImage("urlInputPage/usual.png")
    }
 
-   @Ignore("https://github.com/probosqis/probosqis/issues/82")
    @Test
    fun screenshot_loading() {
       val lock = ReentrantLock()
@@ -313,7 +310,6 @@ class UrlInputPageTest {
       }
    }
 
-   @Ignore("https://github.com/probosqis/probosqis/issues/82")
    @Test
    fun screenshot_error() {
       val lock = ReentrantLock()
