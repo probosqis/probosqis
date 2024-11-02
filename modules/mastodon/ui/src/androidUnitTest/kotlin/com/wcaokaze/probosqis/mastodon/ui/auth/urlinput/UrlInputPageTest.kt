@@ -48,9 +48,9 @@ import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.GraphicsMode
 import java.io.IOException
-import java.util.concurrent.Semaphore
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.test.AfterTest
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -221,12 +221,13 @@ class UrlInputPageTest {
    fun goButton_disabled_whileGettingAuthUrl() {
       lateinit var state: UrlInputPageState
 
-      val semaphore = Semaphore(1)
+      val lock = ReentrantLock()
 
       val appRepository = mockk<AppRepository> {
          every { getAuthorizeUrl(any<String>()) } answers {
-            semaphore.acquire()
-            "https://auth.wcaokaze.com/"
+            lock.withLock {
+               "https://auth.wcaokaze.com/"
+            }
          }
       }
 
@@ -249,25 +250,19 @@ class UrlInputPageTest {
          )
       }
 
-      rule.runOnIdle {
+      lock.withLock {
          state.inputUrl = TextFieldValue("https://example.wcaokaze.com/")
-         semaphore.acquire()
-      }
 
-      rule.onNodeWithText("GO").performClick()
+         rule.onNodeWithText("GO").performClick()
 
-      rule.onNodeWithText("GO").assertIsNotEnabled()
-      rule.onNodeWithText("https://example.wcaokaze.com/").assertIsNotEnabled()
-
-      rule.runOnIdle {
-         semaphore.release()
+         rule.onNodeWithText("GO").assertIsNotEnabled()
+         rule.onNodeWithText("https://example.wcaokaze.com/").assertIsNotEnabled()
       }
 
       rule.onNodeWithText("GO").assertIsEnabled()
       rule.onNodeWithText("https://example.wcaokaze.com/").assertIsEnabled()
    }
 
-   @Ignore("https://github.com/probosqis/probosqis/issues/82")
    @Test
    fun screenshot_usual() {
       rule.setContent {
@@ -278,15 +273,15 @@ class UrlInputPageTest {
       rule.onRoot().captureRoboImage("urlInputPage/usual.png")
    }
 
-   @Ignore("https://github.com/probosqis/probosqis/issues/82")
    @Test
    fun screenshot_loading() {
-      val semaphore = Semaphore(1)
+      val lock = ReentrantLock()
 
       val appRepository = mockk<AppRepository> {
          every { getAuthorizeUrl(any<String>()) } answers {
-            semaphore.acquire()
-            "https://auth.wcaokaze.com/"
+            lock.withLock {
+               "https://auth.wcaokaze.com/"
+            }
          }
       }
 
@@ -309,24 +304,22 @@ class UrlInputPageTest {
          )
       }
 
-      rule.runOnIdle {
-         semaphore.acquire()
-      }
-
-      rule.onNodeWithText("GO").performClick()
-
-      rule.onRoot().captureRoboImage("urlInputPage/loading.png")
-
-      rule.runOnIdle {
-         semaphore.release()
+      lock.withLock {
+         rule.onNodeWithText("GO").performClick()
+         rule.onRoot().captureRoboImage("urlInputPage/loading.png")
       }
    }
 
-   @Ignore("https://github.com/probosqis/probosqis/issues/82")
    @Test
    fun screenshot_error() {
+      val lock = ReentrantLock()
+
       val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<String>()) } throws IOException()
+         every { getAuthorizeUrl(any<String>()) } answers {
+            lock.withLock {
+               throw IOException()
+            }
+         }
       }
 
       rule.setContent {
@@ -338,7 +331,10 @@ class UrlInputPageTest {
          )
       }
 
-      rule.onNodeWithText("GO").performClick()
+      lock.withLock {
+         rule.onNodeWithText("GO").performClick()
+         rule.waitForIdle()
+      }
 
       rule.onRoot().captureRoboImage("urlInputPage/error.png")
    }
