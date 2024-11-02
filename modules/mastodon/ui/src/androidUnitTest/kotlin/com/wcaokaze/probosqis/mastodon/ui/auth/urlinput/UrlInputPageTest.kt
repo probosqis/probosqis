@@ -337,6 +337,7 @@ class UrlInputPageTest {
 
       lock.withLock {
          rule.onNodeWithText("GO").performClick()
+         rule.waitForIdle()
       }
 
       rule.onRoot().captureRoboImage("urlInputPage/error.png")
