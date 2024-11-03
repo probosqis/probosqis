@@ -22,14 +22,13 @@ mod jvm {
    use jni::objects::{JObject, JString, JThrowable};
    use url::Url;
 
+   use ext_reqwest::CLIENT;
    use mastodon_entity::application::Application;
    use mastodon_entity::token::Token;
    use mastodon_webapi::api::{apps, oauth};
    use mastodon_webapi::entity::application::Application as ApiApplication;
    use mastodon_webapi::entity::token::Token as ApiToken;
    use panoptiqon::convert_java::ConvertJava;
-
-   use crate::CLIENT;
 
    fn throw_io_exception(env: &mut JNIEnv) {
       let exception = JThrowable::from(

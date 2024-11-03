@@ -180,6 +180,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ext_reqwest"
+version = "0.0.0"
+dependencies = [
+ "reqwest",
+ "serde",
+ "url",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -506,6 +515,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "ext_reqwest",
  "jni",
  "mastodon_entity",
  "mastodon_webapi",

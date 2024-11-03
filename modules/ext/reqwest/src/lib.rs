@@ -13,5 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use std::cell::LazyCell;
 
-mod app_repository;
+use reqwest::blocking::Client;
+
+pub const CLIENT: LazyCell<Client> = LazyCell::new(
+   || Client::builder().build().unwrap()
+);

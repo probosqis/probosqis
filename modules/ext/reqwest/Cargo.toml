@@ -13,26 +13,11 @@
 # limitations under the License.
 
 [package]
-name = "mastodon_repository"
+name = "ext_reqwest"
 edition = "2021"
 
-[lib]
-path = "src/rust/lib.rs"
-
-[features]
-jvm = ["dep:jni", "panoptiqon/jvm"]
-jni-test = ["jvm", "panoptiqon/jni-test"]
-
 [dependencies]
-anyhow.workspace = true
-chrono.workspace = true
-jni = { workspace = true, optional = true }
+serde.workspace = true
 
 url.workspace = true
 reqwest.workspace = true
-ext_reqwest.workspace = true
-
-panoptiqon.workspace = true
-
-mastodon_entity.workspace = true
-mastodon_webapi.workspace = true

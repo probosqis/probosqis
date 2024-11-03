@@ -17,6 +17,7 @@ members = [
     "modules/app",
     "modules/ext/kotlinTest",
     "modules/ext/panoptiqon",
+    "modules/ext/reqwest",
     "modules/mastodon/entity",
     "modules/mastodon/repository",
     "modules/mastodon/webapi",
@@ -39,6 +40,7 @@ reqwest.features = ["rustls-tls", "charset", "http2", "blocking", "json"]
 
 ext-kotlintest = { path = "modules/ext/kotlinTest" }
 ext_panoptiqon = { path = "modules/ext/panoptiqon" }
+ext_reqwest = { path = "modules/ext/reqwest" }
 panoptiqon = { path = "modules/panoptiqon/panoptiqon" }
 mastodon_entity = { path = "modules/mastodon/entity" }
 mastodon_repository = { path = "modules/mastodon/repository" }
