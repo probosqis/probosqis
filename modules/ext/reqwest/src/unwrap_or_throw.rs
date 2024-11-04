@@ -30,10 +30,15 @@ pub trait UnwrapOrThrow {
 
 fn throw_exception<'local, 'other_local>(
    env: &mut JNIEnv<'local>,
-   class: impl Desc<'local, JClass<'other_local>>
+   class: impl Desc<'local, JClass<'other_local>>,
+   err: impl ToString
 ) {
+   let message = env.new_string(err.to_string()).unwrap();
    let exception = JThrowable::from(
-      env.new_object(class, "()V", &[]).unwrap()
+      env.new_object(
+         class, "(Ljava/lang/String;)V",
+         &[(&message).into()]
+      ).unwrap()
    );
    env.throw(exception).unwrap();
 }
@@ -47,8 +52,8 @@ impl<'result_local, E> UnwrapOrThrow for Result<JObject<'result_local>, E>
       self,
       env: &mut JNIEnv<'local>
    ) -> JObject<'result_local> {
-      self.unwrap_or_else(|_| {
-         throw_exception(env, "java/io/IOException");
+      self.unwrap_or_else(|e| {
+         throw_exception(env, "java/io/IOException", e);
          JObject::null()
       })
    }
@@ -63,8 +68,8 @@ impl<'result_local, E> UnwrapOrThrow for Result<JString<'result_local>, E>
       self,
       env: &mut JNIEnv<'local>
    ) -> JString<'result_local> {
-      self.unwrap_or_else(|_| {
-         throw_exception(env, "java/io/IOException");
+      self.unwrap_or_else(|e| {
+         throw_exception(env, "java/io/IOException", e);
          JObject::null().into()
       })
    }
