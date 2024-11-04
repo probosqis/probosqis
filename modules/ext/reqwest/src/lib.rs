@@ -17,6 +17,9 @@ use std::cell::LazyCell;
 
 use reqwest::blocking::Client;
 
+#[cfg(feature="jvm")]
+pub mod unwrap_or_throw;
+
 pub const CLIENT: LazyCell<Client> = LazyCell::new(
    || Client::builder().build().unwrap()
 );

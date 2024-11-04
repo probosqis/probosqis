@@ -16,8 +16,13 @@
 name = "ext_reqwest"
 edition = "2021"
 
+[features]
+jvm = ["dep:jni"]
+jni-test = ["jvm"]
+
 [dependencies]
 serde.workspace = true
+jni = { workspace = true, optional = true }
 
 url.workspace = true
 reqwest.workspace = true
