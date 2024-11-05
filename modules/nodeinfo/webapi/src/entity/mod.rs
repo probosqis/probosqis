@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-pub mod api;
-pub mod entity;
+pub mod node_info;
+pub mod resource_descriptor;

@@ -13,6 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use serde::Deserialize;
 
-pub mod api;
-pub mod entity;
+#[derive(Deserialize)]
+pub struct ResourceDescriptor {
+   pub links: Vec<Link>,
+}
+
+#[derive(Deserialize)]
+pub struct Link {
+   pub rel: String,
+   pub href: String,
+}
