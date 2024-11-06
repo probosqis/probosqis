@@ -183,6 +183,7 @@ dependencies = [
 name = "ext_reqwest"
 version = "0.0.0"
 dependencies = [
+ "jni",
  "reqwest",
  "serde",
  "url",
@@ -565,6 +566,18 @@ dependencies = [
  "libc",
  "wasi",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "nodeinfo_entity"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "ext_panoptiqon",
+ "jni",
+ "panoptiqon",
+ "serde",
+ "url",
 ]
 
 [[package]]
