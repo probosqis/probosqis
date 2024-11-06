@@ -14,4 +14,12 @@
  * limitations under the License.
  */
 
-pub mod fediverse_software;
+package com.wcaokaze.probosqis.nodeinfo.entity
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+sealed class FediverseSoftware {
+   @Serializable
+   data class Unsupported(val name: String, val version: String) : FediverseSoftware()
+}
