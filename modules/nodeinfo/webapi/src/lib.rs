@@ -14,4 +14,5 @@
  * limitations under the License.
  */
 
-mod app_repository;
+pub mod api;
+pub mod entity;

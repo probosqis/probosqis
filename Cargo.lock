@@ -43,6 +43,8 @@ name = "app"
 version = "0.0.0"
 dependencies = [
  "mastodon_repository",
+ "nodeinfo_entity",
+ "nodeinfo_repository",
 ]
 
 [[package]]
@@ -177,6 +179,16 @@ dependencies = [
  "jni",
  "panoptiqon",
  "serde",
+]
+
+[[package]]
+name = "ext_reqwest"
+version = "0.0.0"
+dependencies = [
+ "jni",
+ "reqwest",
+ "serde",
+ "url",
 ]
 
 [[package]]
@@ -506,6 +518,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "ext_reqwest",
  "jni",
  "mastodon_entity",
  "mastodon_webapi",
@@ -555,6 +568,43 @@ dependencies = [
  "libc",
  "wasi",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "nodeinfo_entity"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "ext_panoptiqon",
+ "jni",
+ "panoptiqon",
+ "serde",
+ "url",
+]
+
+[[package]]
+name = "nodeinfo_repository"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "ext_reqwest",
+ "jni",
+ "nodeinfo_entity",
+ "nodeinfo_webapi",
+ "panoptiqon",
+ "reqwest",
+ "url",
+]
+
+[[package]]
+name = "nodeinfo_webapi"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "reqwest",
+ "serde",
+ "url",
 ]
 
 [[package]]

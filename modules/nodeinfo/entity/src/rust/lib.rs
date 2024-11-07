@@ -14,4 +14,4 @@
  * limitations under the License.
  */
 
-mod app_repository;
+pub mod fediverse_software;

@@ -14,4 +14,9 @@
  * limitations under the License.
  */
 
-mod app_repository;
+plugins {
+   alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
+}
+
+apply from: rootProject.file('gradle/setupModule.gradle')

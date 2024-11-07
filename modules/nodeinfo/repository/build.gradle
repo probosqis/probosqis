@@ -14,4 +14,23 @@
  * limitations under the License.
  */
 
-mod app_repository;
+plugins {
+   alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.android.library
+}
+
+apply from: rootProject.file('gradle/setupModule.gradle')
+
+android {
+   namespace 'com.wcaokaze.probosqis.nodeinfo.repository'
+}
+
+kotlin {
+   sourceSets {
+      commonMain.dependencies {
+         implementation project(':panoptiqon')
+         implementation project(':modules:nodeinfo:entity')
+      }
+   }
+}

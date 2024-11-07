@@ -14,4 +14,4 @@
  * limitations under the License.
  */
 
-mod app_repository;
+pub mod node_info;

@@ -13,5 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use serde::Deserialize;
 
-mod app_repository;
+#[derive(Deserialize)]
+pub struct NodeInfo {
+   pub software: Software,
+}
+
+#[derive(Deserialize)]
+pub struct Software {
+   pub name: String,
+   pub version: String,
+}

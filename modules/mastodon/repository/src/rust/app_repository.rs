@@ -19,24 +19,17 @@ mod jvm {
    use anyhow::Result;
    use chrono::DateTime;
    use jni::JNIEnv;
-   use jni::objects::{JObject, JString, JThrowable};
+   use jni::objects::{JObject, JString};
    use url::Url;
 
+   use ext_reqwest::CLIENT;
+   use ext_reqwest::unwrap_or_throw::UnwrapOrThrow;
    use mastodon_entity::application::Application;
    use mastodon_entity::token::Token;
    use mastodon_webapi::api::{apps, oauth};
    use mastodon_webapi::entity::application::Application as ApiApplication;
    use mastodon_webapi::entity::token::Token as ApiToken;
    use panoptiqon::convert_java::ConvertJava;
-
-   use crate::CLIENT;
-
-   fn throw_io_exception(env: &mut JNIEnv) {
-      let exception = JThrowable::from(
-         env.new_object("java/io/IOException", "()V", &[]).unwrap()
-      );
-      env.throw(exception).unwrap();
-   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_postApp<'local>(
@@ -45,10 +38,7 @@ mod jvm {
       instance_base_url: JString<'local>
    ) -> JObject<'local> {
       post_app(&mut env, instance_base_url)
-         .unwrap_or_else(|_| {
-            throw_io_exception(&mut env);
-            JObject::null()
-         })
+         .unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
@@ -58,10 +48,7 @@ mod jvm {
       instance_base_url: JString<'local>
    ) -> JObject<'local> {
       post_app(&mut env, instance_base_url)
-         .unwrap_or_else(|_| {
-            throw_io_exception(&mut env);
-            JObject::null()
-         })
+         .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn post_app<'local>(
@@ -94,10 +81,7 @@ mod jvm {
       client_id: JString<'local>
    ) -> JString<'local> {
       get_authorize_url(&mut env, instance_base_url, client_id)
-         .unwrap_or_else(|_| {
-            throw_io_exception(&mut env);
-            JObject::null().into()
-         })
+         .unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
@@ -108,10 +92,7 @@ mod jvm {
       client_id: JString<'local>
    ) -> JString<'local> {
       get_authorize_url(&mut env, instance_base_url, client_id)
-         .unwrap_or_else(|_| {
-            throw_io_exception(&mut env);
-            JObject::null().into()
-         })
+         .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_authorize_url<'local>(
@@ -148,10 +129,7 @@ mod jvm {
       client_secret: JString<'local>
    ) -> JObject<'local> {
       get_token(&mut env, instance_base_url, code, client_id, client_secret)
-         .unwrap_or_else(|_| {
-            throw_io_exception(&mut env);
-            JObject::null()
-         })
+         .unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
@@ -164,10 +142,7 @@ mod jvm {
       client_secret: JString<'local>
    ) -> JObject<'local> {
       get_token(&mut env, instance_base_url, code, client_id, client_secret)
-         .unwrap_or_else(|_| {
-            throw_io_exception(&mut env);
-            JObject::null()
-         })
+         .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_token<'local>(

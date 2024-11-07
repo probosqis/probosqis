@@ -14,4 +14,10 @@
  * limitations under the License.
  */
 
-mod app_repository;
+package com.wcaokaze.probosqis.nodeinfo.repository
+
+import com.wcaokaze.probosqis.nodeinfo.entity.FediverseSoftware
+
+class AndroidNodeInfoRepository : NodeInfoRepository {
+   external override fun getServerSoftware(serverUrl: String): FediverseSoftware
+}

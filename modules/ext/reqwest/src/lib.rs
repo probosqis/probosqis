@@ -13,5 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use std::cell::LazyCell;
 
-mod app_repository;
+use reqwest::blocking::Client;
+
+#[cfg(feature="jvm")]
+pub mod unwrap_or_throw;
+
+pub const CLIENT: LazyCell<Client> = LazyCell::new(
+   || Client::builder().build().unwrap()
+);

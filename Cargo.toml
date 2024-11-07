@@ -17,9 +17,13 @@ members = [
     "modules/app",
     "modules/ext/kotlinTest",
     "modules/ext/panoptiqon",
+    "modules/ext/reqwest",
     "modules/mastodon/entity",
     "modules/mastodon/repository",
     "modules/mastodon/webapi",
+    "modules/nodeinfo/entity",
+    "modules/nodeinfo/repository",
+    "modules/nodeinfo/webapi",
     "modules/panoptiqon/panoptiqon",
 ]
 resolver = "2"
@@ -38,7 +42,11 @@ reqwest.features = ["rustls-tls", "charset", "http2", "blocking", "json"]
 
 ext-kotlintest = { path = "modules/ext/kotlinTest" }
 ext_panoptiqon = { path = "modules/ext/panoptiqon" }
+ext_reqwest = { path = "modules/ext/reqwest" }
 panoptiqon = { path = "modules/panoptiqon/panoptiqon" }
 mastodon_entity = { path = "modules/mastodon/entity" }
 mastodon_repository = { path = "modules/mastodon/repository" }
 mastodon_webapi = { path = "modules/mastodon/webapi" }
+nodeinfo_entity = { path = "modules/nodeinfo/entity" }
+nodeinfo_repository = { path = "modules/nodeinfo/repository" }
+nodeinfo_webapi = { path = "modules/nodeinfo/webapi" }
