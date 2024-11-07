@@ -14,4 +14,10 @@
  * limitations under the License.
  */
 
-mod node_info_repository;
+package com.wcaokaze.probosqis.nodeinfo.repository
+
+import com.wcaokaze.probosqis.nodeinfo.entity.FediverseSoftware
+
+interface NodeInfoRepository {
+   fun getServerSoftware(serverUrl: String): FediverseSoftware
+}
