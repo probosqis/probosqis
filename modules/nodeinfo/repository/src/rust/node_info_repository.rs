@@ -23,11 +23,10 @@ mod jvm {
 
    use ext_reqwest::CLIENT;
    use ext_reqwest::unwrap_or_throw::UnwrapOrThrow;
-   use nodeinfo_entity::fediverse_software::FediverseSoftware;
+   use nodeinfo_entity::fediverse_software;
    use nodeinfo_webapi::api::node_info;
    use nodeinfo_webapi::entity::node_info::{NodeInfo, Software};
    use nodeinfo_webapi::entity::resource_descriptor::ResourceDescriptor;
-   use panoptiqon::convert_java::ConvertJava;
 
    const REL_MAPPING: [(&str, &str); 4] = [
       ("http://nodeinfo.diaspora.software/ns/schema/1.0", "1.0"),
@@ -73,9 +72,8 @@ mod jvm {
          software: Software { name, version }
       } = node_info::get_node_info(&CLIENT, node_info_url, version)?;
 
-      let fediverse_software = FediverseSoftware { name, version };
-
-      Ok(fediverse_software.clone_into_java(env))
+      let jvm_instance = fediverse_software::instantiate_unsupported(env, &name, &version);
+      Ok(jvm_instance)
    }
 
    fn get_node_info_url(
