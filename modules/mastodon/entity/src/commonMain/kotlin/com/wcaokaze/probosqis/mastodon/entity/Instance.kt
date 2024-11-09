@@ -14,6 +14,25 @@
  * limitations under the License.
  */
 
-pub mod application;
-pub mod instance;
-pub mod token;
+package com.wcaokaze.probosqis.mastodon.entity
+
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Instance(
+   val url: String,
+   val version: String,
+   val versionCheckedTime: Instant,
+) {
+   constructor(
+      url: String,
+      version: String,
+      versionCheckedTime: Long,
+   ) : this(
+      url, version, Instant.fromEpochMilliseconds(versionCheckedTime),
+   )
+
+   val versionCheckedTimeEpochMillis: Long
+      get() = versionCheckedTime.toEpochMilliseconds()
+}
