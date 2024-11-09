@@ -19,27 +19,23 @@ use {
    jni::JNIEnv,
    jni::objects::JObject,
    jni::sys::jvalue,
-   panoptiqon::convert_java::ConvertJava,
 };
 
 #[cfg(feature="jvm")]
-const HELPER_UNSUPPORTED: ConvertJavaHelper<2> = ConvertJavaHelper::new(
+const HELPER_UNSUPPORTED: ConvertJavaHelper<0> = ConvertJavaHelper::new(
    "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported",
    "(Ljava/lang/String;Ljava/lang/String;)V",
-   [
-      ("getName",    "Ljava/lang/String;"),
-      ("getVersion", "Ljava/lang/String;"),
-   ]
+   []
 );
 
 #[cfg(feature="jvm")]
 pub fn instantiate_unsupported<'local>(
    env: &mut JNIEnv<'local>,
-   name: &String,
-   version: &String
+   name: &str,
+   version: &str
 ) -> JObject<'local> {
-   let name    = name   .clone_into_java(env);
-   let version = version.clone_into_java(env);
+   let name    = env.new_string(name)   .unwrap();
+   let version = env.new_string(version).unwrap();
 
    let args = [
       jvalue { l: name   .into_raw() },
