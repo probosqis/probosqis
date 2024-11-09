@@ -69,11 +69,19 @@ mod jvm {
          .ok_or(anyhow!("cannot detect NodeInfo URL"))?;
 
       let NodeInfo {
-         software: Software { name, version }
+         software: Software { mut name, version }
       } = node_info::get_node_info(&CLIENT, node_info_url, version)?;
 
-      let jvm_instance = fediverse_software::instantiate_unsupported(env, &name, &version);
-      Ok(jvm_instance)
+      name.make_ascii_lowercase();
+
+      if name == "mastodon" {
+         let jvm_instance = fediverse_software::instantiate_mastodon(
+            env, server_url.as_str(), &version);
+         Ok(jvm_instance)
+      } else {
+         let jvm_instance = fediverse_software::instantiate_unsupported(env, &name, &version);
+         Ok(jvm_instance)
+      }
    }
 
    fn get_node_info_url(

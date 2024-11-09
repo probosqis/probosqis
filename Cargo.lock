@@ -577,6 +577,7 @@ dependencies = [
  "chrono",
  "ext_panoptiqon",
  "jni",
+ "mastodon_entity",
  "panoptiqon",
  "serde",
  "url",

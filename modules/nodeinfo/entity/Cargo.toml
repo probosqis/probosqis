@@ -32,3 +32,5 @@ url.workspace = true
 
 panoptiqon.workspace = true
 ext_panoptiqon.workspace = true
+
+mastodon_entity.workspace = true

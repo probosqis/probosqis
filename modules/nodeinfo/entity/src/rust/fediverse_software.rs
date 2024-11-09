@@ -29,6 +29,13 @@ const HELPER_UNSUPPORTED: ConvertJavaHelper<0> = ConvertJavaHelper::new(
 );
 
 #[cfg(feature="jvm")]
+const HELPER_MASTODON: ConvertJavaHelper<0> = ConvertJavaHelper::new(
+   "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon",
+   "(Ljava/lang/String;Ljava/lang/String;)V",
+   []
+);
+
+#[cfg(feature="jvm")]
 pub fn instantiate_unsupported<'local>(
    env: &mut JNIEnv<'local>,
    name: &str,
@@ -43,4 +50,21 @@ pub fn instantiate_unsupported<'local>(
    ];
 
    HELPER_UNSUPPORTED.clone_into_java(env, &args)
+}
+
+#[cfg(feature="jvm")]
+pub fn instantiate_mastodon<'local>(
+   env: &mut JNIEnv<'local>,
+   instance_base_url: &str,
+   version: &str
+) -> JObject<'local> {
+   let instance_base_url = env.new_string(instance_base_url).unwrap();
+   let version           = env.new_string(version)          .unwrap();
+
+   let args = [
+      jvalue { l: instance_base_url.into_raw() },
+      jvalue { l: version          .into_raw() },
+   ];
+
+   HELPER_MASTODON.clone_into_java(env, &args)
 }

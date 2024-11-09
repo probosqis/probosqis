@@ -16,10 +16,25 @@
 
 package com.wcaokaze.probosqis.nodeinfo.entity
 
+import com.wcaokaze.probosqis.mastodon.entity.Instance
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
 @Serializable
 sealed class FediverseSoftware {
    @Serializable
    data class Unsupported(val name: String, val version: String) : FediverseSoftware()
+
+   @Serializable
+   data class Mastodon(val instance: Instance) : FediverseSoftware() {
+      constructor(
+         instanceBaseUrl: String,
+         version: String
+      ) : this(
+         Instance(
+            instanceBaseUrl, version,
+            versionCheckedTime = Clock.System.now()
+         )
+      )
+   }
 }
