@@ -47,6 +47,8 @@ kotlin {
 
          implementation project(':modules:testpages')
 
+         implementation project(':modules:nodeinfo:repository')
+
          implementation project(':modules:mastodon:ui')
          implementation project(':modules:mastodon:repository')
 

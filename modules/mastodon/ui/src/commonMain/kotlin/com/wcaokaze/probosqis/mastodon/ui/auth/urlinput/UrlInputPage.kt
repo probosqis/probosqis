@@ -63,6 +63,8 @@ import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage
+import com.wcaokaze.probosqis.nodeinfo.entity.FediverseSoftware
+import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
@@ -87,6 +89,7 @@ class UrlInputPage : PPage()
 @Stable
 class UrlInputPageState : PPageState<UrlInputPage>() {
    private val appRepository: AppRepository by inject()
+   private val nodeInfoRepository: NodeInfoRepository by inject()
 
    private var authorizeUrlLoadState: LoadState<Unit>
        by mutableStateOf(LoadState.Success(Unit))
@@ -126,7 +129,14 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
          try {
             val instanceBaseUrl = inputUrl.text
             val authorizeUrl = withContext(Dispatchers.IO) {
-               appRepository.getAuthorizeUrl(instanceBaseUrl)
+               val software = nodeInfoRepository.getServerSoftware(instanceBaseUrl)
+
+               when (software) {
+                  is FediverseSoftware.Mastodon -> {
+                     appRepository.getAuthorizeUrl(software.instance.url)
+                  }
+                  is FediverseSoftware.Unsupported -> TODO()
+               }
             }
             authorizeUrlLoadState = LoadState.Success(Unit)
             Result.success(Pair(authorizeUrl, instanceBaseUrl))

@@ -33,6 +33,8 @@ import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAppRepository
 import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
 import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
+import com.wcaokaze.probosqis.nodeinfo.repository.DesktopNodeInfoRepository
+import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
@@ -136,6 +138,7 @@ object Main {
       }
 
       single<AppRepository> { DesktopAppRepository(probosqisDataDir) }
+      single<NodeInfoRepository> { DesktopNodeInfoRepository() }
    }
 
    @JvmStatic

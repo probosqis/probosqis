@@ -15,4 +15,5 @@
  */
 
 pub use mastodon_repository;
+pub use nodeinfo_repository;
 

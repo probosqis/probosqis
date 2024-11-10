@@ -43,7 +43,6 @@ name = "app"
 version = "0.0.0"
 dependencies = [
  "mastodon_repository",
- "nodeinfo_entity",
  "nodeinfo_repository",
 ]
 

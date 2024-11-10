@@ -27,6 +27,8 @@ import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
 import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
+import com.wcaokaze.probosqis.nodeinfo.repository.AndroidNodeInfoRepository
+import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
@@ -127,6 +129,7 @@ class MainApplication : Application() {
       }
 
       single<AppRepository> { AndroidAppRepository(context = get()) }
+      single<NodeInfoRepository> { AndroidNodeInfoRepository() }
    }
 
    private val appKoinModule = module {
