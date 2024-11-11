@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.mastodon.repository
 
 import com.wcaokaze.probosqis.mastodon.entity.Application
+import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import java.io.IOException
@@ -25,7 +26,7 @@ interface AppRepository {
    /**
     * @throws IOException
     */
-   fun createApp(instanceBaseUrl: String): Cache<Application>
+   fun createApp(instance: Instance): Cache<Application>
 
    /**
     * @throws IOException
@@ -40,11 +41,11 @@ interface AppRepository {
    /**
     * @throws IOException
     */
-   fun getAuthorizeUrl(instanceBaseUrl: String): String {
+   fun getAuthorizeUrl(instance: Instance): String {
       val appCache = try {
-         loadAppCache(instanceBaseUrl)
+         loadAppCache(instance.url)
       } catch (_: Exception) {
-         createApp(instanceBaseUrl)
+         createApp(instance)
       }
 
       return getAuthorizeUrl(appCache.value)

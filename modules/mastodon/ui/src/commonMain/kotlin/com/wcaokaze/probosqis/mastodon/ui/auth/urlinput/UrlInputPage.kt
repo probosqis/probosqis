@@ -128,7 +128,7 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
 
                when (software) {
                   is FediverseSoftware.Mastodon -> {
-                     appRepository.getAuthorizeUrl(software.instance.url)
+                     appRepository.getAuthorizeUrl(software.instance)
                   }
                   is FediverseSoftware.Unsupported -> {
                      throw UnsupportedServerSoftwareException(software)

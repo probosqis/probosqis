@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.mastodon.repository
 
 import android.content.Context
 import com.wcaokaze.probosqis.mastodon.entity.Application
+import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
@@ -32,10 +33,10 @@ class AndroidAppRepository(context: Context) : AppRepository {
    private val dir = File(context.filesDir, "fFDFXHfgze7i3Ihs")
 
    @TemporaryCacheApi
-   override fun createApp(instanceBaseUrl: String): Cache<Application> {
-      val application = postApp(instanceBaseUrl)
+   override fun createApp(instance: Instance): Cache<Application> {
+      val application = postApp(instance.url)
 
-      val fileName = URLEncoder.encode(instanceBaseUrl, "UTF-8")
+      val fileName = URLEncoder.encode(instance.url, "UTF-8")
       val file = File(dir, fileName)
       return saveCache(application, file, Json).asCache()
    }
