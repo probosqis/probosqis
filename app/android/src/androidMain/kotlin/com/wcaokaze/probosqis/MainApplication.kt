@@ -25,8 +25,6 @@ import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
-import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
-import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
 import com.wcaokaze.probosqis.nodeinfo.repository.AndroidNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.page.PPageSwitcherState
@@ -62,7 +60,6 @@ class MainApplication : Application() {
       testNotePageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.callbackWaiterPageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.urlInputPageComposable,
-      mastodonTestPageComposable,
    )
 
    private val allPageSerializers = persistentListOf(
@@ -71,7 +68,6 @@ class MainApplication : Application() {
       pageSerializer<TestNotePage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage>(),
-      pageSerializer<MastodonTestPage>(),
    )
 
    private val allErrorItemComposables = persistentListOf(
