@@ -368,4 +368,9 @@ class UrlInputPageTest {
 
       rule.onRoot().captureRoboImage("urlInputPage/error.png")
    }
+
+   @Ignore("https://github.com/probosqis/probosqis/issues/82")
+   @Test
+   fun screenshot_error_unsupportedServerSoftware() {
+   }
 }

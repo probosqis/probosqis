@@ -39,7 +39,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -86,21 +85,17 @@ import org.koin.core.component.inject
 @SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage")
 class UrlInputPage : PPage()
 
+private class UnsupportedServerSoftwareException(
+   val software: FediverseSoftware.Unsupported
+) : Exception()
+
 @Stable
 class UrlInputPageState : PPageState<UrlInputPage>() {
    private val appRepository: AppRepository by inject()
    private val nodeInfoRepository: NodeInfoRepository by inject()
 
-   private var authorizeUrlLoadState: LoadState<Unit>
-       by mutableStateOf(LoadState.Success(Unit))
-
-   val isLoading: Boolean by derivedStateOf {
-      authorizeUrlLoadState is LoadState.Loading
-   }
-
-   val isError: Boolean by derivedStateOf {
-      authorizeUrlLoadState is LoadState.Error
-   }
+   var authorizeUrlLoadState: LoadState<Unit> by mutableStateOf(LoadState.Success(Unit))
+      private set
 
    var hasKeyboardShown by save(
       "has_keyboard_shown", Boolean.serializer(),
@@ -135,7 +130,9 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
                   is FediverseSoftware.Mastodon -> {
                      appRepository.getAuthorizeUrl(software.instance.url)
                   }
-                  is FediverseSoftware.Unsupported -> TODO()
+                  is FediverseSoftware.Unsupported -> {
+                     throw UnsupportedServerSoftwareException(software)
+                  }
                }
             }
             authorizeUrlLoadState = LoadState.Success(Unit)
@@ -189,8 +186,7 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
 
       UrlInputPageContent(
          state.inputUrl,
-         state.isLoading,
-         state.isError,
+         state.authorizeUrlLoadState,
          onInputUrlChange = { newValue ->
             state.inputUrl = newValue
          },
@@ -211,8 +207,7 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
 @Composable
 private fun UrlInputPageContent(
    inputUrl: TextFieldValue,
-   isLoading: Boolean,
-   isError: Boolean,
+   authorizeUrlLoadState: LoadState<Unit>,
    onInputUrlChange: (TextFieldValue) -> Unit,
    onUrlTextFieldKeyboardActionGo: KeyboardActionScope.() -> Unit,
    onGoButtonClick: () -> Unit,
@@ -231,7 +226,7 @@ private fun UrlInputPageContent(
       Spacer(Modifier.height(24.dp))
 
       UrlTextField(
-         inputUrl, onInputUrlChange, isLoading, isError,
+         inputUrl, authorizeUrlLoadState, onInputUrlChange,
          onUrlTextFieldKeyboardActionGo, focusRequester
       )
 
@@ -241,6 +236,8 @@ private fun UrlInputPageContent(
             .align(Alignment.End)
             .padding(horizontal = 8.dp)
       ) {
+         val isLoading = authorizeUrlLoadState is LoadState.Loading
+
          if (isLoading) {
             CircularProgressIndicator(
                strokeWidth = 2.dp,
@@ -266,16 +263,28 @@ private fun UrlInputPageContent(
 @Composable
 private fun UrlTextField(
    inputUrl: TextFieldValue,
+   authorizeUrlLoadState: LoadState<Unit>,
    onInputUrlChange: (TextFieldValue) -> Unit,
-   isLoading: Boolean,
-   isError: Boolean,
    onKeyboardActionGo: KeyboardActionScope.() -> Unit,
    focusRequester: FocusRequester,
 ) {
+   val errorMessage = if (authorizeUrlLoadState !is LoadState.Error) {
+      null
+   } else {
+      val exception = authorizeUrlLoadState.exception
+      if (exception is UnsupportedServerSoftwareException) {
+         Strings.Mastodon.authUrlInput.unsupportedServerSoftwareError(
+            exception.software.name
+         )
+      } else {
+         Strings.Mastodon.authUrlInput.serverUrlGettingError
+      }
+   }
+
    OutlinedTextField(
       inputUrl,
       onValueChange = onInputUrlChange,
-      enabled = !isLoading,
+      enabled = authorizeUrlLoadState !is LoadState.Loading,
       label = {
          Text(Strings.Mastodon.authUrlInput.serverUrlTextFieldLabel)
       },
@@ -286,7 +295,7 @@ private fun UrlTextField(
       supportingText = {
          Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = if (isError) {
+            modifier = if (errorMessage != null) {
                Modifier
             } else {
                Modifier.alpha(0.0f)
@@ -299,12 +308,12 @@ private fun UrlTextField(
             )
 
             Text(
-               Strings.Mastodon.authUrlInput.serverUrlGettingError,
+               errorMessage ?: "",
                modifier = Modifier.padding(horizontal = 4.dp)
             )
          }
       },
-      isError = isError,
+      isError = authorizeUrlLoadState is LoadState.Error,
       keyboardOptions = KeyboardOptions(
          keyboardType = KeyboardType.Uri,
          imeAction = ImeAction.Go,
