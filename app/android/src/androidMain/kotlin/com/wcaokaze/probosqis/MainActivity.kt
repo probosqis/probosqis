@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis
 
 import android.content.Intent
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -36,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
@@ -80,92 +82,99 @@ class MainActivity : ComponentActivity() {
 
       CallbackProcessor.onNewIntent(intent, probosqisState.allVisiblePageStates)
    }
+}
 
-   @Composable
-   private fun NavigationBarController() {
-      val colorScheme = MaterialTheme.colorScheme
-      val navigationBarsInsets = WindowInsets.navigationBars
-      val density = LocalDensity.current
-      val layoutDirection = LocalLayoutDirection.current
+private val lightNavigationBarBackground = Color.White
+private val darkNavigationBarBackground = Color(0x1B, 0x1B, 0x1B)
 
+private fun ComponentActivity.initializeEdgeToEdge() {
+   val lightScrim = lightNavigationBarBackground.copy(alpha = 0.9f)
+   val darkScrim = darkNavigationBarBackground.copy(alpha = 0.5f)
+
+   enableEdgeToEdge(
+      navigationBarStyle = if (resources.isDarkTheme()) {
+         SystemBarStyle.dark(darkScrim.toArgb())
+      } else {
+         SystemBarStyle.light(lightScrim.toArgb(), darkScrim.toArgb())
+      }
+   )
+}
+
+private fun Resources.isDarkTheme(): Boolean {
+   return configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+       Configuration.UI_MODE_NIGHT_YES
+}
+
+@Composable
+private fun NavigationBarController() {
+   val colorScheme = MaterialTheme.colorScheme
+   val navigationBarsInsets = WindowInsets.navigationBars
+   val density = LocalDensity.current
+   val layoutDirection = LocalLayoutDirection.current
+
+   val activity = LocalContext.current as? ComponentActivity
+
+   if (activity != null) {
       @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-      val windowSizeClass = calculateWindowSizeClass(activity = this)
+      val windowSizeClass = calculateWindowSizeClass(activity)
 
       LaunchedEffect(
-         colorScheme, navigationBarsInsets, density, layoutDirection,
+         activity, colorScheme, navigationBarsInsets, density, layoutDirection,
          windowSizeClass
       ) {
-         updateSystemBarColors(colorScheme, windowSizeClass.widthSizeClass,
-            navigationBarsInsets, density, layoutDirection)
+         activity.updateSystemBarColors(
+            colorScheme, windowSizeClass.widthSizeClass, navigationBarsInsets,
+            density, layoutDirection
+         )
       }
    }
+}
 
-   private fun isDarkTheme() = (
-         resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-      ) == Configuration.UI_MODE_NIGHT_YES
+private fun ComponentActivity.updateSystemBarColors(
+   colorScheme: ColorScheme,
+   windowWidthClass: WindowWidthSizeClass,
+   navigationBarsInsets: WindowInsets,
+   density: Density,
+   layoutDirection: LayoutDirection
+) {
+   val lightNavigationBarScrim: Color
+   val darkNavigationBarScrim:  Color
 
-   private val lightNavigationBarBackground = Color.White
-   private val darkNavigationBarBackground = Color(0x1B, 0x1B, 0x1B)
+   val isNavigationBarBottom
+       =  navigationBarsInsets.getBottom(density)                  >  0
+       && navigationBarsInsets.getLeft  (density, layoutDirection) <= 0
+       && navigationBarsInsets.getTop   (density)                  <= 0
+       && navigationBarsInsets.getRight (density, layoutDirection) <= 0
 
-   private fun initializeEdgeToEdge() {
-      val lightScrim = lightNavigationBarBackground.copy(alpha = 0.9f)
-      val darkScrim = darkNavigationBarBackground.copy(alpha = 0.5f)
+   // ナビゲーションバーが十分に薄いときtrue
+   // 具体的にはジェスチャーナビゲーションのときtrue、2ボタン、3ボタンのときfalse
+   val isNavigationBarThin
+       = navigationBarsInsets.getBottom(density) <= with (density) { 32.dp.toPx() }
 
-      enableEdgeToEdge(
-         navigationBarStyle = if (isDarkTheme()) {
-            SystemBarStyle.dark(darkScrim.toArgb())
-         } else {
-            SystemBarStyle.light(lightScrim.toArgb(), darkScrim.toArgb())
-         }
-      )
+   val isSingleColumn = windowWidthClass <= WindowWidthSizeClass.Medium
+
+   val shouldTransparentNavigationBar
+       = isNavigationBarBottom && (isNavigationBarThin || isSingleColumn)
+
+   if (shouldTransparentNavigationBar) {
+      lightNavigationBarScrim = Color.Transparent
+      darkNavigationBarScrim  = Color.Transparent
+   } else {
+      lightNavigationBarScrim = lightNavigationBarBackground.copy(alpha = 0.9f)
+         .compositeOver(colorScheme.primaryContainer)
+         .copy(alpha = 0.9f)
+
+      darkNavigationBarScrim = darkNavigationBarBackground.copy(alpha = 0.9f)
+         .compositeOver(colorScheme.primaryContainer)
+         .copy(alpha = 0.8f)
    }
 
-   private fun updateSystemBarColors(
-      colorScheme: ColorScheme,
-      windowWidthClass: WindowWidthSizeClass,
-      navigationBarsInsets: WindowInsets,
-      density: Density,
-      layoutDirection: LayoutDirection
-   ) {
-      val lightNavigationBarScrim: Color
-      val darkNavigationBarScrim:  Color
-
-      val isNavigationBarBottom
-            =  navigationBarsInsets.getBottom(density)                  >  0
-            && navigationBarsInsets.getLeft  (density, layoutDirection) <= 0
-            && navigationBarsInsets.getTop   (density)                  <= 0
-            && navigationBarsInsets.getRight (density, layoutDirection) <= 0
-
-      // ナビゲーションバーが十分に薄いときtrue
-      // 具体的にはジェスチャーナビゲーションのときtrue、2ボタン、3ボタンのときfalse
-      val isNavigationBarThin
-            = navigationBarsInsets.getBottom(density) <= with (density) { 32.dp.toPx() }
-
-      val isSingleColumn = windowWidthClass <= WindowWidthSizeClass.Medium
-
-      val shouldTransparentNavigationBar
-            = isNavigationBarBottom && (isNavigationBarThin || isSingleColumn)
-
-      if (shouldTransparentNavigationBar) {
-         lightNavigationBarScrim = Color.Transparent
-         darkNavigationBarScrim  = Color.Transparent
+   enableEdgeToEdge(
+      navigationBarStyle = if (resources.isDarkTheme()) {
+         SystemBarStyle.dark(darkNavigationBarScrim.toArgb())
       } else {
-         lightNavigationBarScrim = lightNavigationBarBackground.copy(alpha = 0.9f)
-            .compositeOver(colorScheme.primaryContainer)
-            .copy(alpha = 0.9f)
-
-         darkNavigationBarScrim = darkNavigationBarBackground.copy(alpha = 0.9f)
-            .compositeOver(colorScheme.primaryContainer)
-            .copy(alpha = 0.8f)
+         SystemBarStyle.light(
+            lightNavigationBarScrim.toArgb(), darkNavigationBarScrim.toArgb())
       }
-
-      enableEdgeToEdge(
-         navigationBarStyle = if (isDarkTheme()) {
-            SystemBarStyle.dark(darkNavigationBarScrim.toArgb())
-         } else {
-            SystemBarStyle.light(
-               lightNavigationBarScrim.toArgb(), darkNavigationBarScrim.toArgb())
-         }
-      )
-   }
+   )
 }
