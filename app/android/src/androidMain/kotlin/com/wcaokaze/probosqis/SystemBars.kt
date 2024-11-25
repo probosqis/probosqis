@@ -30,8 +30,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
@@ -84,48 +82,49 @@ internal fun NavigationBarController() {
       @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
       val windowSizeClass = calculateWindowSizeClass(activity)
 
-      val navigationBarStyle by remember {
-         derivedStateOf {
-            val windowWidthClass = windowSizeClass.widthSizeClass
-            val resources = activity.resources
+      val navigationBarStyle = remember(
+         colorScheme, navigationBarsInsets, density, layoutDirection, activity,
+         windowSizeClass
+      ) {
+         val windowWidthClass = windowSizeClass.widthSizeClass
+         val resources = activity.resources
 
-            val lightNavigationBarScrim: Color
-            val darkNavigationBarScrim: Color
+         val lightNavigationBarScrim: Color
+         val darkNavigationBarScrim: Color
 
-            val isNavigationBarBottom
-                =  navigationBarsInsets.getBottom(density)                  >  0
-                && navigationBarsInsets.getLeft  (density, layoutDirection) <= 0
-                && navigationBarsInsets.getTop   (density)                  <= 0
-                && navigationBarsInsets.getRight (density, layoutDirection) <= 0
+         val isNavigationBarBottom
+             =  navigationBarsInsets.getBottom(density)                  >  0
+             && navigationBarsInsets.getLeft  (density, layoutDirection) <= 0
+             && navigationBarsInsets.getTop   (density)                  <= 0
+             && navigationBarsInsets.getRight (density, layoutDirection) <= 0
 
-            // ナビゲーションバーが十分に薄いときtrue
-            // 具体的にはジェスチャーナビゲーションのときtrue、2ボタン、3ボタンのときfalse
-            val isNavigationBarThin
-                = navigationBarsInsets.getBottom(density) <= with (density) { 32.dp.toPx() }
+         // ナビゲーションバーが十分に薄いときtrue
+         // 具体的にはジェスチャーナビゲーションのときtrue、2ボタン、3ボタンのときfalse
+         val isNavigationBarThin
+             = navigationBarsInsets.getBottom(density) <= with (density) { 32.dp.toPx() }
 
-            val isSingleColumn = windowWidthClass <= WindowWidthSizeClass.Medium
+         val isSingleColumn = windowWidthClass <= WindowWidthSizeClass.Medium
 
-            val shouldTransparentNavigationBar
-                = isNavigationBarBottom && (isNavigationBarThin || isSingleColumn)
+         val shouldTransparentNavigationBar
+             = isNavigationBarBottom && (isNavigationBarThin || isSingleColumn)
 
-            if (shouldTransparentNavigationBar) {
-               lightNavigationBarScrim = Color.Transparent
-               darkNavigationBarScrim  = Color.Transparent
-            } else {
-               lightNavigationBarScrim = lightNavigationBarBackground.copy(alpha = 0.9f)
-                  .compositeOver(colorScheme.primaryContainer)
-                  .copy(alpha = 0.9f)
+         if (shouldTransparentNavigationBar) {
+            lightNavigationBarScrim = Color.Transparent
+            darkNavigationBarScrim  = Color.Transparent
+         } else {
+            lightNavigationBarScrim = lightNavigationBarBackground.copy(alpha = 0.9f)
+               .compositeOver(colorScheme.primaryContainer)
+               .copy(alpha = 0.9f)
 
-               darkNavigationBarScrim = darkNavigationBarBackground.copy(alpha = 0.9f)
-                  .compositeOver(colorScheme.primaryContainer)
-                  .copy(alpha = 0.8f)
-            }
+            darkNavigationBarScrim = darkNavigationBarBackground.copy(alpha = 0.9f)
+               .compositeOver(colorScheme.primaryContainer)
+               .copy(alpha = 0.8f)
+         }
 
-            if (resources.isDarkTheme()) {
-               NavigationBarStyle.DarkTheme(darkNavigationBarScrim)
-            } else {
-               NavigationBarStyle.LightTheme(lightNavigationBarScrim, darkNavigationBarScrim)
-            }
+         if (resources.isDarkTheme()) {
+            NavigationBarStyle.DarkTheme(darkNavigationBarScrim)
+         } else {
+            NavigationBarStyle.LightTheme(lightNavigationBarScrim, darkNavigationBarScrim)
          }
       }
 
