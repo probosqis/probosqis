@@ -21,6 +21,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -44,15 +45,17 @@ class MainActivity : ComponentActivity() {
                probosqisState.pageDeckState.activePageStackState.finishPage()
             }
 
-            NavigationBarController()
+            Box {
+               @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+               val windowSizeClass = calculateWindowSizeClass(activity = this@MainActivity)
 
-            @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-            val windowSizeClass = calculateWindowSizeClass(activity = this)
+               if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
+                  MultiColumnProbosqis(probosqisState)
+               } else {
+                  SingleColumnProbosqis(probosqisState)
+               }
 
-            if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
-               MultiColumnProbosqis(probosqisState)
-            } else {
-               SingleColumnProbosqis(probosqisState)
+               NavigationBarScrim()
             }
          }
       }
