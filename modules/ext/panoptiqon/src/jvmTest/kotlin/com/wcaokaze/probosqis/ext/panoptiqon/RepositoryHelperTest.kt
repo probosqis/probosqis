@@ -14,7 +14,32 @@
  * limitations under the License.
  */
 
-#[cfg(feature="jvm")]
-pub mod convert_java_helper;
+package com.wcaokaze.probosqis.ext.panoptiqon
 
-pub mod repository_holder;
+import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
+import kotlin.concurrent.thread
+import kotlin.test.Test
+
+class RepositoryHolderTest {
+   init {
+      loadNativeLib()
+   }
+
+   @Test
+   external fun initializeRepositoryByReading()
+
+   @Test
+   external fun initializeRepositoryByWriting()
+
+   @Test
+   fun readWriteLock() {
+      thread {
+         `readWriteLock$thread2`()
+      }
+
+      `readWriteLock$thread1`()
+   }
+
+   private external fun `readWriteLock$thread1`()
+   private external fun `readWriteLock$thread2`()
+}

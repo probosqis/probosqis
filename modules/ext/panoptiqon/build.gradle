@@ -25,6 +25,7 @@ kotlin {
    sourceSets {
       commonTest.dependencies {
          implementation project(':modules:ext:kotlinTest')
+         implementation project(':panoptiqon')
       }
    }
 }
