@@ -16,11 +16,12 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
+import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Application(
-   val instanceBaseUrl: String,
+   val instance: Cache<Instance>,
    val name: String,
    val website: String?,
    val clientId: String?,

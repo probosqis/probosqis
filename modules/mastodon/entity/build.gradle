@@ -20,3 +20,11 @@ plugins {
 }
 
 apply from: rootProject.file('gradle/setupModule.gradle')
+
+kotlin {
+   sourceSets {
+      commonMain.dependencies {
+         implementation project(':panoptiqon')
+      }
+   }
+}

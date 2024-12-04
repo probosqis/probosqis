@@ -15,7 +15,6 @@
  */
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
-use url::Url;
 
 #[cfg(feature="jvm")]
 use {
@@ -25,10 +24,13 @@ use {
    jni::sys::jvalue,
    panoptiqon::convert_java::ConvertJava,
 };
+use panoptiqon::cache::Cache;
+
+use crate::instance::Instance;
 
 #[derive(Deserialize)]
 pub struct Token {
-   pub instance_base_url: Url,
+   pub instance: Cache<Instance>,
    pub access_token: String,
    pub token_type: String,
    pub scope: String,
@@ -38,9 +40,9 @@ pub struct Token {
 #[cfg(feature="jvm")]
 const HELPER: ConvertJavaHelper<5> = ConvertJavaHelper::new(
    "com/wcaokaze/probosqis/mastodon/entity/Token",
-   "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V",
+   "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V",
    [
-      ("getInstanceBaseUrl",      "Ljava/lang/String;"),
+      ("getInstance",             "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
       ("getAccessToken",          "Ljava/lang/String;"),
       ("getTokenType",            "Ljava/lang/String;"),
       ("getScope",                "Ljava/lang/String;"),
@@ -51,14 +53,14 @@ const HELPER: ConvertJavaHelper<5> = ConvertJavaHelper::new(
 #[cfg(feature="jvm")]
 impl ConvertJava for Token {
    fn clone_into_java<'local>(&self, env: &mut JNIEnv<'local>) -> JObject<'local> {
-      let instance_base_url       = self.instance_base_url.to_string().clone_into_java(env);
+      let instance                = self.instance                     .clone_into_java(env);
       let access_token            = self.access_token                 .clone_into_java(env);
       let token_type              = self.token_type                   .clone_into_java(env);
       let scope                   = self.scope                        .clone_into_java(env);
       let created_at_epoch_millis = self.created_at.timestamp_millis();
 
       let args = [
-         jvalue { l: instance_base_url.into_raw() },
+         jvalue { l: instance         .into_raw() },
          jvalue { l: access_token     .into_raw() },
          jvalue { l: token_type       .into_raw() },
          jvalue { l: scope            .into_raw() },
@@ -76,10 +78,10 @@ impl ConvertJava for Token {
       let created_at_epoch_millis = HELPER.get(env, &java_object, 4).j().unwrap();
 
       Token {
-         instance_base_url: String::clone_from_java(env, &instance_base_url).parse().unwrap(),
-         access_token:      String::clone_from_java(env, &access_token),
-         token_type:        String::clone_from_java(env, &token_type),
-         scope:             String::clone_from_java(env, &scope),
+         instance:     Cache::<Instance>::clone_from_java(env, &instance_base_url),
+         access_token: String           ::clone_from_java(env, &access_token),
+         token_type:   String           ::clone_from_java(env, &token_type),
+         scope:        String           ::clone_from_java(env, &scope),
          created_at: DateTime::from_timestamp_millis(created_at_epoch_millis).unwrap(),
       }
    }

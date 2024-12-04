@@ -34,14 +34,14 @@ class AndroidAppRepository(context: Context) : AppRepository {
 
    @TemporaryCacheApi
    override fun createApp(instance: Instance): Cache<Application> {
-      val application = postApp(instance.url)
+      val application = postApp(instance)
 
       val fileName = URLEncoder.encode(instance.url, "UTF-8")
       val file = File(dir, fileName)
       return saveCache(application, file, Json).asCache()
    }
 
-   external fun postApp(instanceBaseUrl: String): Application
+   private external fun postApp(instance: Instance): Application
 
    @TemporaryCacheApi
    override fun loadAppCache(instanceBaseUrl: String): Cache<Application> {
@@ -52,24 +52,24 @@ class AndroidAppRepository(context: Context) : AppRepository {
 
    override fun getAuthorizeUrl(application: Application): String {
       return getAuthorizeUrl(
-         application.instanceBaseUrl,
+         application.instance,
          application.clientId ?: throw IOException()
       )
    }
 
-   external fun getAuthorizeUrl(instanceBaseUrl: String, clientId: String): String
+   private external fun getAuthorizeUrl(instance: Cache<Instance>, clientId: String): String
 
    override fun getToken(application: Application, code: String): Token {
       return getToken(
-         application.instanceBaseUrl,
+         application.instance,
          code,
          application.clientId     ?: throw IOException(),
          application.clientSecret ?: throw IOException()
       )
    }
 
-   external fun getToken(
-      instanceBaseUrl: String,
+   private external fun getToken(
+      instance: Cache<Instance>,
       code: String,
       clientId: String,
       clientSecret: String
