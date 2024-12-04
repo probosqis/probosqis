@@ -13,6 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use std::clone::Clone;
 
-pub(crate) mod cache;
-mod app_repository;
+use url::Url;
+
+use ext_panoptiqon::repository_holder::RepositoryHolder;
+use mastodon_entity::instance::Instance;
+
+static INSTANCE_REPO: RepositoryHolder<Url, Instance>
+   = RepositoryHolder::new(|i| i.url.clone());
+
+pub fn instance_repo() -> &'static RepositoryHolder<Url, Instance> {
+   &INSTANCE_REPO
+}
