@@ -24,6 +24,8 @@ import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
 import com.wcaokaze.probosqis.panoptiqon.loadCache
 import com.wcaokaze.probosqis.panoptiqon.saveCache
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 import java.io.File
 import java.io.IOException
 import java.net.URLEncoder
@@ -38,13 +40,19 @@ class DesktopAppRepository(directory: File) : AppRepository {
          }
       }
 
+   private val json = Json {
+      serializersModule = SerializersModule {
+         contextual(InstanceCacheSerializer())
+      }
+   }
+
    @TemporaryCacheApi
    override fun createApp(instance: Instance): Cache<Application> {
       val application = postApp(instance)
 
       val fileName = URLEncoder.encode(instance.url, "UTF-8")
       val file = File(dir, fileName)
-      return saveCache(application, file, Json).asCache()
+      return saveCache(application, file, json).asCache()
    }
 
    private external fun postApp(instance: Instance): Application
@@ -53,7 +61,7 @@ class DesktopAppRepository(directory: File) : AppRepository {
    override fun loadAppCache(instanceBaseUrl: String): Cache<Application> {
       val fileName = URLEncoder.encode(instanceBaseUrl, "UTF-8")
       val file = File(dir, fileName)
-      return loadCache<Application>(file, Json).asCache()
+      return loadCache<Application>(file, json).asCache()
    }
 
    override fun getAuthorizeUrl(application: Application): String {

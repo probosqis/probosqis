@@ -17,10 +17,12 @@
 package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Application(
+   @Contextual
    val instance: Cache<Instance>,
    val name: String,
    val website: String?,
