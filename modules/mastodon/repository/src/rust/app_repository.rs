@@ -103,7 +103,7 @@ mod jvm {
       instance: JObject<'local>,
       client_id: JString<'local>
    ) -> Result<JString<'local>> {
-      let instance_cache = Cache::<Instance>::clone_from_java(env, &instance);
+      let instance_cache = get_instance_cache_from_java(env, &instance)?;
       let client_id: String = env.get_string(&client_id)?.into();
 
       let authorize_url = oauth::get_authorize_url(
@@ -153,7 +153,7 @@ mod jvm {
       client_id: JString<'local>,
       client_secret: JString<'local>
    ) -> Result<JObject<'local>> {
-      let instance_cache = Cache::<Instance>::clone_from_java(env, &instance);
+      let instance_cache = get_instance_cache_from_java(env, &instance)?;
 
       let code: String = env.get_string(&code)?.into();
       let client_id: String = env.get_string(&client_id)?.into();
@@ -176,5 +176,23 @@ mod jvm {
       };
 
       Ok(token.clone_into_java(env))
+   }
+
+   fn get_instance_cache_from_java<'local>(
+      env: &mut JNIEnv<'local>,
+      java_instance: &JObject<'local>,
+   ) -> Result<Cache<Instance>> {
+      if env.is_instance_of(
+            &java_instance, "com/wcaokaze/probosqis/panoptiqon/RepositoryCache")?
+      {
+         Ok(Cache::<Instance>::clone_from_java(env, &java_instance))
+      } else {
+         let instance_java_instance = env
+            .call_method(&java_instance, "getValue", "()Ljava/lang/Object;", &[])?.l()?;
+         let instance = Instance::clone_from_java(env, &instance_java_instance);
+
+         let mut repo = cache::instance_repo().write(env)?;
+         Ok(repo.save(instance))
+      }
    }
 }
