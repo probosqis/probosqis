@@ -25,6 +25,8 @@ import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
 import com.wcaokaze.probosqis.panoptiqon.loadCache
 import com.wcaokaze.probosqis.panoptiqon.saveCache
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 import java.io.File
 import java.io.IOException
 import java.net.URLEncoder
@@ -32,44 +34,50 @@ import java.net.URLEncoder
 class AndroidAppRepository(context: Context) : AppRepository {
    private val dir = File(context.filesDir, "fFDFXHfgze7i3Ihs")
 
+   private val json = Json {
+      serializersModule = SerializersModule {
+         contextual(InstanceCacheSerializer())
+      }
+   }
+
    @TemporaryCacheApi
    override fun createApp(instance: Instance): Cache<Application> {
-      val application = postApp(instance.url)
+      val application = postApp(instance)
 
       val fileName = URLEncoder.encode(instance.url, "UTF-8")
       val file = File(dir, fileName)
-      return saveCache(application, file, Json).asCache()
+      return saveCache(application, file, json).asCache()
    }
 
-   external fun postApp(instanceBaseUrl: String): Application
+   private external fun postApp(instance: Instance): Application
 
    @TemporaryCacheApi
    override fun loadAppCache(instanceBaseUrl: String): Cache<Application> {
       val fileName = URLEncoder.encode(instanceBaseUrl, "UTF-8")
       val file = File(dir, fileName)
-      return loadCache<Application>(file, Json).asCache()
+      return loadCache<Application>(file, json).asCache()
    }
 
    override fun getAuthorizeUrl(application: Application): String {
       return getAuthorizeUrl(
-         application.instanceBaseUrl,
+         application.instance,
          application.clientId ?: throw IOException()
       )
    }
 
-   external fun getAuthorizeUrl(instanceBaseUrl: String, clientId: String): String
+   private external fun getAuthorizeUrl(instance: Cache<Instance>, clientId: String): String
 
    override fun getToken(application: Application, code: String): Token {
       return getToken(
-         application.instanceBaseUrl,
+         application.instance,
          code,
          application.clientId     ?: throw IOException(),
          application.clientSecret ?: throw IOException()
       )
    }
 
-   external fun getToken(
-      instanceBaseUrl: String,
+   private external fun getToken(
+      instance: Cache<Instance>,
       code: String,
       clientId: String,
       clientSecret: String

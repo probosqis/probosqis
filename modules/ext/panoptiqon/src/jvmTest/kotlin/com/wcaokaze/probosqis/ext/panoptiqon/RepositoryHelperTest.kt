@@ -14,5 +14,32 @@
  * limitations under the License.
  */
 
-pub(crate) mod cache;
-mod app_repository;
+package com.wcaokaze.probosqis.ext.panoptiqon
+
+import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
+import kotlin.concurrent.thread
+import kotlin.test.Test
+
+class RepositoryHolderTest {
+   init {
+      loadNativeLib()
+   }
+
+   @Test
+   external fun initializeRepositoryByReading()
+
+   @Test
+   external fun initializeRepositoryByWriting()
+
+   @Test
+   fun readWriteLock() {
+      thread {
+         `readWriteLock$thread2`()
+      }
+
+      `readWriteLock$thread1`()
+   }
+
+   private external fun `readWriteLock$thread1`()
+   private external fun `readWriteLock$thread2`()
+}
