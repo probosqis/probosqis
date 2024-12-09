@@ -58,7 +58,7 @@ mod jvm {
    ) -> Result<JObject<'local>> {
       let instance = Instance::clone_from_java(env, &instance);
 
-      let ApiApplication { name, website, client_id, client_secret } = apps::post_apps(
+      let ApiApplication { name, website, client_id, client_secret } = apps::post_apps_v0(
          &CLIENT, &instance.url,
          /* client_name = */ "Probosqis",
          /* redirect_uris = */ "https://probosqis.wcaokaze.com/auth/callback",
