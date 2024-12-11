@@ -46,6 +46,20 @@ impl<K, T, S> LazyInitRepository<K, T, S>
       matches!(self, LazyInitRepository::Repository(_))
    }
 
+   #[cfg(not(feature="jvm"))]
+   fn initialize(&mut self)
+      where K: Hash + Eq
+   {
+      if self.is_initialized() { return; }
+
+      let LazyInitRepository::None(key)
+         = mem::replace(self, LazyInitRepository::Initializing)
+         else { return; };
+
+      let repository = Repository::new(key);
+      *self = LazyInitRepository::Repository(repository);
+   }
+
    #[cfg(feature="jvm")]
    fn initialize(
       &mut self,
@@ -127,6 +141,26 @@ impl<K, T, S> RepositoryHolder<K, T, S>
       }
    }
 
+   #[cfg(not(feature="jvm"))]
+   pub fn read(&self) -> Result<RepositoryReadGuard<K, T, S>, PoisonError<()>> {
+      let lock = self.lock.read().map_err(|_| PoisonError::new(()))?;
+
+      if lock.is_initialized() {
+         let repository_guard = RepositoryReadGuard {
+            lock_guard: lock
+         };
+         return Ok(repository_guard);
+      }
+
+      drop(lock);
+
+      let mut lock = self.lock.write().map_err(|_| PoisonError::new(()))?;
+      lock.initialize();
+      drop(lock);
+
+      self.read()
+   }
+
    #[cfg(feature="jvm")]
    pub fn read(
       &self,
@@ -150,6 +184,21 @@ impl<K, T, S> RepositoryHolder<K, T, S>
       drop(lock);
 
       self.read(env)
+   }
+
+   #[cfg(not(feature="jvm"))]
+   pub fn write(&self) -> Result<RepositoryWriteGuard<K, T, S>, PoisonError<()>> {
+      let mut lock = self.lock.write().map_err(|_| PoisonError::new(()))?;
+
+      if !lock.is_initialized() {
+         lock.initialize();
+      }
+
+      let repository_guard = RepositoryWriteGuard {
+         lock_guard: lock
+      };
+
+      Ok(repository_guard)
    }
 
    #[cfg(feature="jvm")]
