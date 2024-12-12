@@ -13,6 +13,67 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use anyhow::Result;
+use ext_reqwest::CLIENT;
+use mastodon_entity::application::Application;
+use mastodon_entity::instance::Instance;
+use mastodon_webapi::api::apps;
+use mastodon_webapi::entity::application::Application as ApiApplication;
+
+use crate::cache;
+
+#[cfg(not(feature="jvm"))]
+use std::marker::PhantomData;
+
+#[cfg(feature="jvm")]
+use jni::JNIEnv;
+
+struct AppRepository<'jni> {
+   #[cfg(not(feature="jvm"))]
+   env: PhantomData<&'jni ()>,
+   #[cfg(feature="jvm")]
+   env: JNIEnv<'jni>
+}
+
+impl AppRepository<'_> {
+   #[cfg(not(feature="jvm"))]
+   fn new() -> AppRepository<'static> {
+      AppRepository {
+         env: PhantomData
+      }
+   }
+
+   #[cfg(feature="jvm")]
+   fn new<'jni>(env: &JNIEnv<'jni>) -> AppRepository<'jni> {
+      AppRepository {
+         env: unsafe { env.unsafe_clone() }
+      }
+   }
+
+   fn post_app(
+      &mut self,
+      instance: Instance
+   ) -> Result<Application> {
+      let ApiApplication { name, website, client_id, client_secret } = apps::post_apps_v0(
+         &CLIENT, &instance.url,
+         /* client_name = */ "Probosqis",
+         /* redirect_uris = */ "https://probosqis.wcaokaze.com/auth/callback",
+         /* scopes = */ Some("read write push"),
+         /* website = */ None
+      )?;
+
+      let instance_cache = cache::instance_repo()
+         .write(#[cfg(feature="jvm")] &mut self.env)?
+         .save(instance);
+
+      let application = Application {
+         instance: instance_cache,
+         name, website, client_id, client_secret
+      };
+
+      Ok(application)
+   }
+}
 
 #[cfg(feature="jvm")]
 mod jvm {
@@ -23,15 +84,14 @@ mod jvm {
 
    use ext_reqwest::CLIENT;
    use ext_reqwest::unwrap_or_throw::UnwrapOrThrow;
-   use mastodon_entity::application::Application;
    use mastodon_entity::instance::Instance;
    use mastodon_entity::token::Token;
-   use mastodon_webapi::api::{apps, oauth};
-   use mastodon_webapi::entity::application::Application as ApiApplication;
+   use mastodon_webapi::api::oauth;
    use mastodon_webapi::entity::token::Token as ApiToken;
    use panoptiqon::cache::Cache;
    use panoptiqon::convert_java::ConvertJava;
 
+   use crate::app_repository::AppRepository;
    use crate::cache;
 
    #[no_mangle]
@@ -56,23 +116,10 @@ mod jvm {
       env: &mut JNIEnv<'local>,
       instance: JObject<'local>
    ) -> Result<JObject<'local>> {
+      let mut app_repository = AppRepository::new(env);
+
       let instance = Instance::clone_from_java(env, &instance);
-
-      let ApiApplication { name, website, client_id, client_secret } = apps::post_apps_v0(
-         &CLIENT, &instance.url,
-         /* client_name = */ "Probosqis",
-         /* redirect_uris = */ "https://probosqis.wcaokaze.com/auth/callback",
-         /* scopes = */ Some("read write push"),
-         /* website = */ None
-      )?;
-
-      let instance_cache = cache::instance_repo().write(env).unwrap().save(instance);
-
-      let application = Application {
-         instance: instance_cache,
-         name, website, client_id, client_secret
-      };
-
+      let application = app_repository.post_app(instance)?;
       Ok(application.clone_into_java(env))
    }
 
