@@ -17,7 +17,6 @@ use anyhow::Result;
 use ext_reqwest::CLIENT;
 use mastodon_entity::application::Application;
 use mastodon_entity::instance::Instance;
-use mastodon_webapi::api::apps;
 use mastodon_webapi::entity::application::Application as ApiApplication;
 
 use crate::cache;
@@ -27,6 +26,70 @@ use std::marker::PhantomData;
 
 #[cfg(feature="jvm")]
 use jni::JNIEnv;
+
+#[cfg(not(any(test, feature="jni-test")))]
+use mastodon_webapi::api::apps;
+
+#[cfg(any(test, feature="jni-test"))]
+mod apps {
+   use std::cell::RefCell;
+
+   use anyhow::Result;
+   use reqwest::blocking::Client;
+   use url::Url;
+
+   use mastodon_webapi::entity::application::Application as ApiApplication;
+
+   thread_local! {
+      static POST_APPS_V0: RefCell<Box<dyn Fn(&Client, &Url, &str, &str, Option<&str>, Option<&str>) -> Result<ApiApplication>>>
+         = RefCell::new(Box::new(|_, _, _, _, _, _| panic!()));
+
+      static POST_APPS_V4_3_0: RefCell<Box<dyn Fn(&Client, &Url, &str, &[&str], Option<&str>, Option<&str>) -> Result<ApiApplication>>>
+         = RefCell::new(Box::new(|_, _, _, _, _, _| panic!()));
+   }
+
+   pub fn post_apps_v0(
+      client: &Client,
+      instance_base_url: &Url,
+      client_name: &str,
+      redirect_uris: &str,
+      scopes: Option<&str>,
+      website: Option<&str>
+   ) -> Result<ApiApplication> {
+      POST_APPS_V0.with(|f| {
+         let f = f.borrow();
+         f(client, instance_base_url, client_name, redirect_uris, scopes, website)
+      })
+   }
+
+   pub fn post_apps_v4_3_0(
+      client: &Client,
+      instance_base_url: &Url,
+      client_name: &str,
+      redirect_uris: &[&str],
+      scopes: Option<&str>,
+      website: Option<&str>
+   ) -> Result<ApiApplication> {
+      POST_APPS_V4_3_0.with(|f| {
+         let f = f.borrow();
+         f(client, instance_base_url, client_name, redirect_uris, scopes, website)
+      })
+   }
+
+   #[allow(dead_code)]
+   pub fn inject_post_apps_v0(
+      post_app_v0: impl Fn(&Client, &Url, &str, &str, Option<&str>, Option<&str>) -> Result<ApiApplication> + 'static
+   ) {
+      POST_APPS_V0.set(Box::new(post_app_v0));
+   }
+
+   #[allow(dead_code)]
+   pub fn inject_post_apps_v4_3_0(
+      post_app_v4_3_0: impl Fn(&Client, &Url, &str, &[&str], Option<&str>, Option<&str>) -> Result<ApiApplication> + 'static
+   ) {
+      POST_APPS_V4_3_0.set(Box::new(post_app_v4_3_0));
+   }
+}
 
 struct AppRepository<'jni> {
    #[cfg(not(feature="jvm"))]
