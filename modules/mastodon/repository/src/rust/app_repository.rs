@@ -13,6 +13,148 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use anyhow::Result;
+use ext_reqwest::CLIENT;
+use mastodon_entity::application::Application;
+use mastodon_entity::instance::Instance;
+use mastodon_webapi::entity::application::Application as ApiApplication;
+use semver::Version;
+
+use crate::cache;
+
+#[cfg(not(feature="jvm"))]
+use std::marker::PhantomData;
+
+#[cfg(feature="jvm")]
+use jni::JNIEnv;
+
+#[cfg(not(any(test, feature="jni-test")))]
+use mastodon_webapi::api::apps;
+
+#[cfg(any(test, feature="jni-test"))]
+mod apps {
+   use std::cell::RefCell;
+
+   use anyhow::Result;
+   use reqwest::blocking::Client;
+   use url::Url;
+
+   use mastodon_webapi::entity::application::Application as ApiApplication;
+
+   thread_local! {
+      static POST_APPS_V0: RefCell<Box<dyn Fn(&Client, &Url, &str, &str, Option<&str>, Option<&str>) -> Result<ApiApplication>>>
+         = RefCell::new(Box::new(|_, _, _, _, _, _| panic!()));
+
+      static POST_APPS_V4_3_0: RefCell<Box<dyn Fn(&Client, &Url, &str, &[&str], Option<&str>, Option<&str>) -> Result<ApiApplication>>>
+         = RefCell::new(Box::new(|_, _, _, _, _, _| panic!()));
+   }
+
+   pub fn post_apps_v0(
+      client: &Client,
+      instance_base_url: &Url,
+      client_name: &str,
+      redirect_uris: &str,
+      scopes: Option<&str>,
+      website: Option<&str>
+   ) -> Result<ApiApplication> {
+      POST_APPS_V0.with(|f| {
+         let f = f.borrow();
+         f(client, instance_base_url, client_name, redirect_uris, scopes, website)
+      })
+   }
+
+   pub fn post_apps_v4_3_0(
+      client: &Client,
+      instance_base_url: &Url,
+      client_name: &str,
+      redirect_uris: &[&str],
+      scopes: Option<&str>,
+      website: Option<&str>
+   ) -> Result<ApiApplication> {
+      POST_APPS_V4_3_0.with(|f| {
+         let f = f.borrow();
+         f(client, instance_base_url, client_name, redirect_uris, scopes, website)
+      })
+   }
+
+   #[allow(dead_code)]
+   pub fn inject_post_apps_v0(
+      post_app_v0: impl Fn(&Client, &Url, &str, &str, Option<&str>, Option<&str>) -> Result<ApiApplication> + 'static
+   ) {
+      POST_APPS_V0.set(Box::new(post_app_v0));
+   }
+
+   #[allow(dead_code)]
+   pub fn inject_post_apps_v4_3_0(
+      post_app_v4_3_0: impl Fn(&Client, &Url, &str, &[&str], Option<&str>, Option<&str>) -> Result<ApiApplication> + 'static
+   ) {
+      POST_APPS_V4_3_0.set(Box::new(post_app_v4_3_0));
+   }
+}
+
+struct AppRepository<'jni> {
+   #[cfg(not(feature="jvm"))]
+   env: PhantomData<&'jni ()>,
+   #[cfg(feature="jvm")]
+   env: JNIEnv<'jni>
+}
+
+impl AppRepository<'_> {
+   #[cfg(not(feature="jvm"))]
+   fn new() -> AppRepository<'static> {
+      AppRepository {
+         env: PhantomData
+      }
+   }
+
+   #[cfg(feature="jvm")]
+   fn new<'jni>(env: &JNIEnv<'jni>) -> AppRepository<'jni> {
+      AppRepository {
+         env: unsafe { env.unsafe_clone() }
+      }
+   }
+
+   fn post_app(
+      &mut self,
+      instance: Instance
+   ) -> Result<Application> {
+      let instance_version = Version::parse(&instance.version)
+         .unwrap_or(Version::new(0, 0, 0));
+
+      let ApiApplication {
+         name, website, client_id, client_secret
+      } = if instance_version < Version::new(4, 3, 0) {
+         apps::post_apps_v0(
+            &CLIENT, &instance.url,
+            /* client_name = */ "Probosqis",
+            /* redirect_uris = */ "https://probosqis.wcaokaze.com/auth/callback",
+            /* scopes = */ Some("read write push"),
+            /* website = */ None
+         )?
+      } else {
+         apps::post_apps_v4_3_0(
+            &CLIENT, &instance.url,
+            /* client_name = */ "Probosqis",
+            /* redirect_uris = */ &[
+               "https://probosqis.wcaokaze.com/auth/callback"
+            ],
+            /* scopes = */ Some("read write push"),
+            /* website = */ None
+         )?
+      };
+
+      let instance_cache = cache::instance_repo()
+         .write(#[cfg(feature="jvm")] &mut self.env)?
+         .save(instance);
+
+      let application = Application {
+         instance: instance_cache,
+         name, website, client_id, client_secret
+      };
+
+      Ok(application)
+   }
+}
 
 #[cfg(feature="jvm")]
 mod jvm {
@@ -20,56 +162,45 @@ mod jvm {
    use chrono::DateTime;
    use jni::JNIEnv;
    use jni::objects::{JObject, JString};
-   use url::Url;
 
    use ext_reqwest::CLIENT;
    use ext_reqwest::unwrap_or_throw::UnwrapOrThrow;
-   use mastodon_entity::application::Application;
+   use mastodon_entity::instance::Instance;
    use mastodon_entity::token::Token;
-   use mastodon_webapi::api::{apps, oauth};
-   use mastodon_webapi::entity::application::Application as ApiApplication;
+   use mastodon_webapi::api::oauth;
    use mastodon_webapi::entity::token::Token as ApiToken;
+   use panoptiqon::cache::Cache;
    use panoptiqon::convert_java::ConvertJava;
+
+   use crate::app_repository::AppRepository;
+   use crate::cache;
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_postApp<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance_base_url: JString<'local>
+      instance: JObject<'local>
    ) -> JObject<'local> {
-      post_app(&mut env, instance_base_url)
-         .unwrap_or_throw_io_exception(&mut env)
+      post_app(&mut env, instance).unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_postApp<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance_base_url: JString<'local>
+      instance: JObject<'local>
    ) -> JObject<'local> {
-      post_app(&mut env, instance_base_url)
-         .unwrap_or_throw_io_exception(&mut env)
+      post_app(&mut env, instance).unwrap_or_throw_io_exception(&mut env)
    }
 
    fn post_app<'local>(
       env: &mut JNIEnv<'local>,
-      instance_base_url: JString<'local>
+      instance: JObject<'local>
    ) -> Result<JObject<'local>> {
-      let instance_base_url: String = env.get_string(&instance_base_url)?.into();
-      let instance_base_url: Url = instance_base_url.parse()?;
+      let mut app_repository = AppRepository::new(env);
 
-      let ApiApplication { name, website, client_id, client_secret } = apps::post_apps(
-         &CLIENT, &instance_base_url,
-         /* client_name = */ "Probosqis",
-         /* redirect_uris = */ "https://probosqis.wcaokaze.com/auth/callback",
-         /* scopes = */ Some("read write push"),
-         /* website = */ None
-      )?;
-
-      let application = Application {
-         instance_base_url, name, website, client_id, client_secret
-      };
-
+      let instance = Instance::clone_from_java(env, &instance);
+      let application = app_repository.post_app(instance)?;
       Ok(application.clone_into_java(env))
    }
 
@@ -77,10 +208,10 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getAuthorizeUrl<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance_base_url: JString<'local>,
+      instance: JObject<'local>,
       client_id: JString<'local>
    ) -> JString<'local> {
-      get_authorize_url(&mut env, instance_base_url, client_id)
+      get_authorize_url(&mut env, instance, client_id)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -88,25 +219,23 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_getAuthorizeUrl<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance_base_url: JString<'local>,
+      instance: JObject<'local>,
       client_id: JString<'local>
    ) -> JString<'local> {
-      get_authorize_url(&mut env, instance_base_url, client_id)
+      get_authorize_url(&mut env, instance, client_id)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_authorize_url<'local>(
       env: &mut JNIEnv<'local>,
-      instance_base_url: JString<'local>,
+      instance: JObject<'local>,
       client_id: JString<'local>
    ) -> Result<JString<'local>> {
-      let instance_base_url: String = env.get_string(&instance_base_url)?.into();
-      let instance_base_url: Url = instance_base_url.parse()?;
-
+      let instance_cache = get_instance_cache_from_java(env, &instance)?;
       let client_id: String = env.get_string(&client_id)?.into();
 
       let authorize_url = oauth::get_authorize_url(
-         &instance_base_url,
+         /* instance_base_url = */ &instance_cache.lock().unwrap().url,
          /* response_type = */ "code",
          /* client_id = */ &client_id,
          /* redirect_uri = */ "https://probosqis.wcaokaze.com/auth/callback",
@@ -123,12 +252,12 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getToken<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance_base_url: JString<'local>,
+      instance: JObject<'local>,
       code: JString<'local>,
       client_id: JString<'local>,
       client_secret: JString<'local>
    ) -> JObject<'local> {
-      get_token(&mut env, instance_base_url, code, client_id, client_secret)
+      get_token(&mut env, instance, code, client_id, client_secret)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -136,31 +265,31 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_getToken<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance_base_url: JString<'local>,
+      instance: JObject<'local>,
       code: JString<'local>,
       client_id: JString<'local>,
       client_secret: JString<'local>
    ) -> JObject<'local> {
-      get_token(&mut env, instance_base_url, code, client_id, client_secret)
+      get_token(&mut env, instance, code, client_id, client_secret)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_token<'local>(
       env: &mut JNIEnv<'local>,
-      instance_base_url: JString<'local>,
+      instance: JObject<'local>,
       code: JString<'local>,
       client_id: JString<'local>,
       client_secret: JString<'local>
    ) -> Result<JObject<'local>> {
-      let instance_base_url: String = env.get_string(&instance_base_url)?.into();
-      let instance_base_url: Url = instance_base_url.parse()?;
+      let instance_cache = get_instance_cache_from_java(env, &instance)?;
 
       let code: String = env.get_string(&code)?.into();
       let client_id: String = env.get_string(&client_id)?.into();
       let client_secret: String = env.get_string(&client_secret)?.into();
 
       let ApiToken { access_token, token_type, scope, created_at } = oauth::post_token(
-         &CLIENT, &instance_base_url,
+         &CLIENT,
+         /* instance_base_url */ &instance_cache.lock().unwrap().url,
          /* grant_type = */ "authorization_code",
          /* code = */ Some(&code),
          /* client_id = */ &client_id,
@@ -170,10 +299,129 @@ mod jvm {
       )?;
 
       let token = Token {
-         instance_base_url, access_token, token_type, scope,
+         instance: instance_cache, access_token, token_type, scope,
          created_at: DateTime::from_timestamp(created_at, 0).unwrap()
       };
 
       Ok(token.clone_into_java(env))
+   }
+
+   fn get_instance_cache_from_java<'local>(
+      env: &mut JNIEnv<'local>,
+      java_instance: &JObject<'local>,
+   ) -> Result<Cache<Instance>> {
+      if env.is_instance_of(
+            &java_instance, "com/wcaokaze/probosqis/panoptiqon/RepositoryCache")?
+      {
+         Ok(Cache::<Instance>::clone_from_java(env, &java_instance))
+      } else {
+         let instance_java_instance = env
+            .call_method(&java_instance, "getValue", "()Ljava/lang/Object;", &[])?.l()?;
+         let instance = Instance::clone_from_java(env, &instance_java_instance);
+
+         let mut repo = cache::instance_repo().write(env)?;
+         Ok(repo.save(instance))
+      }
+   }
+}
+
+#[cfg(test)]
+mod test {
+   use std::sync::{Arc, Mutex};
+   use chrono::DateTime;
+   use url::Url;
+   use mastodon_entity::instance::Instance;
+   use mastodon_webapi::entity::application::Application;
+   use super::apps;
+   use super::AppRepository;
+
+   fn dummy_application() -> Application {
+      Application {
+         name: "app name".to_string(),
+         website: None,
+         client_id: None,
+         client_secret: None
+      }
+   }
+
+   #[test]
+   fn switch_function_by_instance_version() {
+      let mut repository = AppRepository::new();
+
+      let v0_called     = Arc::new(Mutex::new(false));
+      let v4_3_0_called = Arc::new(Mutex::new(false));
+
+      {
+         let v0_called = v0_called.clone();
+         apps::inject_post_apps_v0(move |_, _, _, _, _, _| {
+            *v0_called.lock().unwrap() = true;
+            Ok(dummy_application())
+         });
+      }
+
+      {
+         let v4_3_0_called = v4_3_0_called.clone();
+         apps::inject_post_apps_v4_3_0(move |_, _, _, _, _, _| {
+            *v4_3_0_called.lock().unwrap() = true;
+            Ok(dummy_application())
+         });
+      }
+
+      let instance = |version: &'static str| Instance {
+         url: Url::parse("https://example.com/").unwrap(),
+         version: version.to_string(),
+         version_checked_time: DateTime::UNIX_EPOCH
+      };
+
+      {
+         let _application = repository.post_app(instance("4.1.0"));
+         assert_eq!(true,  *v0_called    .lock().unwrap());
+         assert_eq!(false, *v4_3_0_called.lock().unwrap());
+      }
+
+      *v0_called    .lock().unwrap() = false;
+      *v4_3_0_called.lock().unwrap() = false;
+
+      {
+         let _application = repository.post_app(instance("4.2.0"));
+         assert_eq!(true,  *v0_called    .lock().unwrap());
+         assert_eq!(false, *v4_3_0_called.lock().unwrap());
+      }
+
+      *v0_called    .lock().unwrap() = false;
+      *v4_3_0_called.lock().unwrap() = false;
+
+      {
+         let _application = repository.post_app(instance("4.2.9"));
+         assert_eq!(true,  *v0_called    .lock().unwrap());
+         assert_eq!(false, *v4_3_0_called.lock().unwrap());
+      }
+
+      *v0_called    .lock().unwrap() = false;
+      *v4_3_0_called.lock().unwrap() = false;
+
+      {
+         let _application = repository.post_app(instance("4.3.0"));
+         assert_eq!(false, *v0_called    .lock().unwrap());
+         assert_eq!(true,  *v4_3_0_called.lock().unwrap());
+      }
+
+      *v0_called    .lock().unwrap() = false;
+      *v4_3_0_called.lock().unwrap() = false;
+
+      {
+         let _application = repository.post_app(instance("4.3.1"));
+         assert_eq!(false, *v0_called    .lock().unwrap());
+         assert_eq!(true,  *v4_3_0_called.lock().unwrap());
+      }
+
+      *v0_called    .lock().unwrap() = false;
+      *v4_3_0_called.lock().unwrap() = false;
+
+      {
+         let _application = repository.post_app(instance("4.4.0"));
+         assert_eq!(false, *v0_called    .lock().unwrap());
+         assert_eq!(true,  *v4_3_0_called.lock().unwrap());
+      }
    }
 }

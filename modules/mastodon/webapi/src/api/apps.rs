@@ -22,7 +22,7 @@ use url::Url;
 use crate::entity::application::Application;
 
 /// since mastodon 0.0.0
-pub fn post_apps(
+pub fn post_apps_v0(
    client: &Client,
    instance_base_url: &Url,
    client_name: &str,
@@ -40,6 +40,42 @@ pub fn post_apps(
    }
    if let Some(website) = website {
       form.insert("website", website);
+   }
+
+   let application = client
+      .post(url)
+      .form(&form)
+      .send()?
+      .json()?;
+
+   Ok(application)
+}
+
+/// since mastodon 4.3.0
+///
+/// redirect_urisが配列を受け付けるように変更されたもの
+pub fn post_apps_v4_3_0(
+   client: &Client,
+   instance_base_url: &Url,
+   client_name: &str,
+   redirect_uris: &[&str],
+   scopes: Option<&str>,
+   website: Option<&str>
+) -> Result<Application> {
+   let url = instance_base_url.join("api/v1/apps")?;
+
+   let mut form = Vec::new();
+   form.push(("client_name", client_name));
+
+   for u in redirect_uris {
+      form.push(("redirect_uris[]", u));
+   }
+
+   if let Some(scopes) = scopes {
+      form.push(("scopes", scopes));
+   }
+   if let Some(website) = website {
+      form.push(("website", website));
    }
 
    let application = client

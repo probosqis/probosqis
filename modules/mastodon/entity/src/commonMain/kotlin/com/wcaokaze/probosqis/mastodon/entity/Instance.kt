@@ -14,11 +14,25 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.mastodon.ui
+package com.wcaokaze.probosqis.mastodon.entity
 
-import androidx.compose.runtime.Composable
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 
-@Composable
-internal actual fun getBrowserLauncher(): BrowserLauncher {
-   TODO()
+@Serializable
+data class Instance(
+   val url: String,
+   val version: String,
+   val versionCheckedTime: Instant,
+) {
+   constructor(
+      url: String,
+      version: String,
+      versionCheckedTime: Long,
+   ) : this(
+      url, version, Instant.fromEpochMilliseconds(versionCheckedTime),
+   )
+
+   val versionCheckedTimeEpochMillis: Long
+      get() = versionCheckedTime.toEpochMilliseconds()
 }

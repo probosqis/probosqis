@@ -14,4 +14,6 @@
  * limitations under the License.
  */
 
+pub use mastodon_entity;
+
 pub mod fediverse_software;

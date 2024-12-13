@@ -18,18 +18,22 @@ package com.wcaokaze.probosqis.mastodon.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.resources.LocalLanguage
 import com.wcaokaze.probosqis.resources.Strings
 import com.wcaokaze.probosqis.resources.appName
 
 interface MastodonStrings {
-   class AuthUrlInput(
-      val appBar: String,
-      val description: String,
-      val serverUrlTextFieldLabel: String,
-      val startAuthButton: String,
-      val serverUrlGettingError: String,
-   )
+   interface AuthUrlInput {
+      val appBar: String
+      val description: String
+      val serverUrlTextFieldLabel: String
+      val startAuthButton: String
+      val serverUrlGettingError: String
+
+      @Stable
+      fun unsupportedServerSoftwareError(softwareName: String): String
+   }
    class CallbackWaiter(
       val appBar: String,
       val message: String,
@@ -44,13 +48,17 @@ val Strings.Companion.Mastodon: MastodonStrings
    @ReadOnlyComposable
    get() = when (LocalLanguage.current) {
       Strings.Language.ENGLISH -> object : MastodonStrings {
-         override val authUrlInput = MastodonStrings.AuthUrlInput(
-            appBar = "Add an account",
-            description = "Add an existing account to $appName.",
-            serverUrlTextFieldLabel = "Server URL",
-            startAuthButton = "GO",
-            serverUrlGettingError = "Cannot connect to server.",
-         )
+         override val authUrlInput = object : MastodonStrings.AuthUrlInput {
+            override val appBar = "Add an account"
+            override val description = "Add an existing account to $appName."
+            override val serverUrlTextFieldLabel = "Server URL"
+            override val startAuthButton = "GO"
+            override val serverUrlGettingError = "Cannot connect to server."
+
+            override fun unsupportedServerSoftwareError(softwareName: String)
+               = "Unsupported server: $softwareName"
+         }
+
          override val callbackWaiter = MastodonStrings.CallbackWaiter(
             appBar = "Add an account",
             message = "Wait…",
@@ -58,13 +66,17 @@ val Strings.Companion.Mastodon: MastodonStrings
       }
 
       Strings.Language.JAPANESE -> object : MastodonStrings {
-         override val authUrlInput = MastodonStrings.AuthUrlInput(
-            appBar = "アカウントを追加",
-            description = "作成済みのアカウントを${appName}に追加します",
-            serverUrlTextFieldLabel = "サーバーURL",
-            startAuthButton = "GO",
-            serverUrlGettingError = "サーバーに接続できません",
-         )
+         override val authUrlInput = object : MastodonStrings.AuthUrlInput {
+            override val appBar = "アカウントを追加"
+            override val description = "作成済みのアカウントを${appName}に追加します"
+            override val serverUrlTextFieldLabel = "サーバーURL"
+            override val startAuthButton = "GO"
+            override val serverUrlGettingError = "サーバーに接続できません"
+
+            override fun unsupportedServerSoftwareError(softwareName: String)
+                = "サポートされていないサーバーです: $softwareName"
+         }
+
          override val callbackWaiter = MastodonStrings.CallbackWaiter(
             appBar = "アカウントを追加",
             message = "お待ちください…",

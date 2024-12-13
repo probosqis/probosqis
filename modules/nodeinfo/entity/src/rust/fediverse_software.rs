@@ -13,54 +13,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use serde::Deserialize;
-
 #[cfg(feature="jvm")]
 use {
    ext_panoptiqon::convert_java_helper::ConvertJavaHelper,
    jni::JNIEnv,
    jni::objects::JObject,
    jni::sys::jvalue,
-   panoptiqon::convert_java::ConvertJava,
 };
 
-#[derive(Deserialize)]
-pub struct FediverseSoftware {
-   pub name: String,
-   pub version: String,
-}
-
 #[cfg(feature="jvm")]
-const HELPER_UNSUPPORTED: ConvertJavaHelper<2> = ConvertJavaHelper::new(
+const HELPER_UNSUPPORTED: ConvertJavaHelper<0> = ConvertJavaHelper::new(
    "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported",
    "(Ljava/lang/String;Ljava/lang/String;)V",
-   [
-      ("getName",    "Ljava/lang/String;"),
-      ("getVersion", "Ljava/lang/String;"),
-   ]
+   []
 );
 
 #[cfg(feature="jvm")]
-impl ConvertJava for FediverseSoftware {
-   fn clone_into_java<'local>(&self, env: &mut JNIEnv<'local>) -> JObject<'local> {
-      let name    = self.name.clone_into_java(env);
-      let version = self.version.clone_into_java(env);
+const HELPER_MASTODON: ConvertJavaHelper<0> = ConvertJavaHelper::new(
+   "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon",
+   "(Ljava/lang/String;Ljava/lang/String;)V",
+   []
+);
 
-      let args = [
-         jvalue { l: name   .into_raw() },
-         jvalue { l: version.into_raw() },
-      ];
+#[cfg(feature="jvm")]
+pub fn instantiate_unsupported<'local>(
+   env: &mut JNIEnv<'local>,
+   name: &str,
+   version: &str
+) -> JObject<'local> {
+   let name    = env.new_string(name)   .unwrap();
+   let version = env.new_string(version).unwrap();
 
-      HELPER_UNSUPPORTED.clone_into_java(env, &args)
-   }
+   let args = [
+      jvalue { l: name   .into_raw() },
+      jvalue { l: version.into_raw() },
+   ];
 
-   fn clone_from_java(env: &mut JNIEnv, java_object: &JObject) -> Self {
-      let name    = HELPER_UNSUPPORTED.get(env, &java_object, 0).l().unwrap();
-      let version = HELPER_UNSUPPORTED.get(env, &java_object, 1).l().unwrap();
+   HELPER_UNSUPPORTED.clone_into_java(env, &args)
+}
 
-      FediverseSoftware {
-         name:    String::clone_from_java(env, &name),
-         version: String::clone_from_java(env, &version),
-      }
-   }
+#[cfg(feature="jvm")]
+pub fn instantiate_mastodon<'local>(
+   env: &mut JNIEnv<'local>,
+   instance_base_url: &str,
+   version: &str
+) -> JObject<'local> {
+   let instance_base_url = env.new_string(instance_base_url).unwrap();
+   let version           = env.new_string(version)          .unwrap();
+
+   let args = [
+      jvalue { l: instance_base_url.into_raw() },
+      jvalue { l: version          .into_raw() },
+   ];
+
+   HELPER_MASTODON.clone_into_java(env, &args)
 }

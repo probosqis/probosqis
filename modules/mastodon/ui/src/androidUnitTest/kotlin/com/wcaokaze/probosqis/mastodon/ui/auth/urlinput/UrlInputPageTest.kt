@@ -32,12 +32,16 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
 import com.wcaokaze.probosqis.ext.compose.BrowserLauncher
 import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
+import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage
+import com.wcaokaze.probosqis.nodeinfo.entity.FediverseSoftware
+import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.page.PPageState
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.datetime.Instant
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.koin.compose.KoinIsolatedContext
@@ -80,12 +84,14 @@ class UrlInputPageTest {
    private fun UrlInputPage(
       pageState: UrlInputPageState,
       browserLauncher: BrowserLauncher = mockk(),
+      nodeInfoRepository: NodeInfoRepository = mockk(),
       appRepository: AppRepository = mockk(),
    ) {
       val koinApplication = remember {
          koinApplication {
             modules(
                module {
+                  single { nodeInfoRepository }
                   single { appRepository }
                }
             )
@@ -148,8 +154,20 @@ class UrlInputPageTest {
    fun goButton_repositoryCalled() {
       lateinit var state: UrlInputPageState
 
+      val nodeInfoRepository = mockk<NodeInfoRepository> {
+         every { getServerSoftware(any()) } answers {
+            FediverseSoftware.Mastodon(
+               Instance(
+                  url = firstArg(),
+                  version = "1.0.0",
+                  versionCheckedTime = Instant.fromEpochMilliseconds(0L),
+               )
+            )
+         }
+      }
+
       val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<String>()) } returns "https://auth.wcaokaze.com/"
+         every { getAuthorizeUrl(any<Instance>()) } returns "https://auth.wcaokaze.com/"
       }
 
       val browserLauncher = mockk<BrowserLauncher> {
@@ -167,6 +185,7 @@ class UrlInputPageTest {
          UrlInputPage(
             state,
             browserLauncher = browserLauncher,
+            nodeInfoRepository = nodeInfoRepository,
             appRepository = appRepository
          )
       }
@@ -178,7 +197,17 @@ class UrlInputPageTest {
       rule.onNodeWithText("GO").performClick()
 
       rule.runOnIdle {
-         verify { appRepository.getAuthorizeUrl("https://example.wcaokaze.com/") }
+         verify { nodeInfoRepository.getServerSoftware("https://example.wcaokaze.com/") }
+
+         verify {
+            appRepository.getAuthorizeUrl(
+               Instance(
+                  url = "https://example.wcaokaze.com/",
+                  version = "1.0.0",
+                  versionCheckedTime = Instant.fromEpochMilliseconds(0L),
+               )
+            )
+         }
       }
    }
 
@@ -186,8 +215,20 @@ class UrlInputPageTest {
    fun goButton_browserLaunchedAndPageFinished() {
       lateinit var state: UrlInputPageState
 
+      val nodeInfoRepository = mockk<NodeInfoRepository> {
+         every { getServerSoftware(any()) } answers {
+            FediverseSoftware.Mastodon(
+               Instance(
+                  url = firstArg(),
+                  version = "1.0.0",
+                  versionCheckedTime = Instant.fromEpochMilliseconds(0L),
+               )
+            )
+         }
+      }
+
       val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<String>()) } returns "https://auth.wcaokaze.com/"
+         every { getAuthorizeUrl(any<Instance>()) } returns "https://auth.wcaokaze.com/"
       }
 
       val browserLauncher = mockk<BrowserLauncher> {
@@ -205,6 +246,7 @@ class UrlInputPageTest {
          UrlInputPage(
             state,
             browserLauncher = browserLauncher,
+            nodeInfoRepository = nodeInfoRepository,
             appRepository = appRepository
          )
       }
@@ -224,8 +266,20 @@ class UrlInputPageTest {
 
       val lock = ReentrantLock()
 
+      val nodeInfoRepository = mockk<NodeInfoRepository> {
+         every { getServerSoftware(any()) } answers {
+            FediverseSoftware.Mastodon(
+               Instance(
+                  url = firstArg(),
+                  version = "1.0.0",
+                  versionCheckedTime = Instant.fromEpochMilliseconds(0L),
+               )
+            )
+         }
+      }
+
       val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<String>()) } answers {
+         every { getAuthorizeUrl(any<Instance>()) } answers {
             lock.withLock {
                "https://auth.wcaokaze.com/"
             }
@@ -247,6 +301,7 @@ class UrlInputPageTest {
          UrlInputPage(
             state,
             browserLauncher = browserLauncher,
+            nodeInfoRepository = nodeInfoRepository,
             appRepository = appRepository
          )
       }
@@ -281,7 +336,7 @@ class UrlInputPageTest {
       val lock = ReentrantLock()
 
       val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<String>()) } answers {
+         every { getAuthorizeUrl(any<Instance>()) } answers {
             lock.withLock {
                "https://auth.wcaokaze.com/"
             }
@@ -319,7 +374,7 @@ class UrlInputPageTest {
       val lock = ReentrantLock()
 
       val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<String>()) } answers {
+         every { getAuthorizeUrl(any<Instance>()) } answers {
             lock.withLock {
                throw IOException()
             }
@@ -341,5 +396,10 @@ class UrlInputPageTest {
       }
 
       rule.onRoot().captureRoboImage("urlInputPage/error.png")
+   }
+
+   @Ignore("https://github.com/probosqis/probosqis/issues/82")
+   @Test
+   fun screenshot_error_unsupportedServerSoftware() {
    }
 }

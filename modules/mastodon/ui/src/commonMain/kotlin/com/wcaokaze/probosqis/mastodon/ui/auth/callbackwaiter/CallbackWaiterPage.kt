@@ -89,7 +89,7 @@ val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, CallbackW
             val format = remember(token) {
                buildString {
                   append("instance url: ")
-                  append(token.instanceBaseUrl)
+                  append(token.instance.value.url)
                   appendLine()
                   append("token type: ")
                   append(token.tokenType)

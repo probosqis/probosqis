@@ -16,25 +16,26 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
+import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Token(
-   val instanceBaseUrl: String,
+   val instance: Cache<Instance>,
    val accessToken: String,
    val tokenType: String,
    val scope: String,
    val createdAt: Instant,
 ) {
    constructor(
-      instanceBaseUrl: String,
+      instance: Cache<Instance>,
       accessToken: String,
       tokenType: String,
       scope: String,
       createdAtEpochMillis: Long,
    ) : this(
-      instanceBaseUrl, accessToken, tokenType, scope,
+      instance, accessToken, tokenType, scope,
       Instant.fromEpochMilliseconds(createdAtEpochMillis)
    )
 

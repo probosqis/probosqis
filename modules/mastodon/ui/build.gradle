@@ -33,6 +33,8 @@ kotlin {
    sourceSets {
       commonMain.dependencies {
          implementation project(':modules:page')
+         implementation project(':modules:nodeinfo:entity')
+         implementation project(':modules:nodeinfo:repository')
          implementation project(':modules:mastodon:entity')
          implementation project(':modules:mastodon:repository')
       }

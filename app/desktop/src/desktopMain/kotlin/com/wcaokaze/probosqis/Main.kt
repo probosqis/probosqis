@@ -31,8 +31,8 @@ import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAppRepository
-import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
-import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
+import com.wcaokaze.probosqis.nodeinfo.repository.DesktopNodeInfoRepository
+import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
@@ -67,7 +67,6 @@ object Main {
       testNotePageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.callbackWaiterPageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.urlInputPageComposable,
-      mastodonTestPageComposable,
    )
 
    private val allPageSerializers = persistentListOf(
@@ -76,7 +75,6 @@ object Main {
       pageSerializer<TestNotePage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage>(),
-      pageSerializer<MastodonTestPage>(),
    )
 
    private val allErrorItemComposables = persistentListOf(
@@ -136,6 +134,7 @@ object Main {
       }
 
       single<AppRepository> { DesktopAppRepository(probosqisDataDir) }
+      single<NodeInfoRepository> { DesktopNodeInfoRepository() }
    }
 
    @JvmStatic

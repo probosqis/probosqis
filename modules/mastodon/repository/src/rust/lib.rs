@@ -14,4 +14,5 @@
  * limitations under the License.
  */
 
+pub(crate) mod cache;
 mod app_repository;

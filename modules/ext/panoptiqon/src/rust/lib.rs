@@ -16,3 +16,5 @@
 
 #[cfg(feature="jvm")]
 pub mod convert_java_helper;
+
+pub mod repository_holder;

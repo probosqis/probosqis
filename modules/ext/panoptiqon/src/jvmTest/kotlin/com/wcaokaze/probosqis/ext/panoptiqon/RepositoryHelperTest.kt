@@ -14,13 +14,32 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.mastodon.ui
+package com.wcaokaze.probosqis.ext.panoptiqon
 
-import androidx.compose.runtime.Composable
+import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
+import kotlin.concurrent.thread
+import kotlin.test.Test
 
-@Composable
-internal expect fun getBrowserLauncher(): BrowserLauncher
+class RepositoryHolderTest {
+   init {
+      loadNativeLib()
+   }
 
-internal interface BrowserLauncher {
-   fun launchBrowser(url: String)
+   @Test
+   external fun initializeRepositoryByReading()
+
+   @Test
+   external fun initializeRepositoryByWriting()
+
+   @Test
+   fun readWriteLock() {
+      thread {
+         `readWriteLock$thread2`()
+      }
+
+      `readWriteLock$thread1`()
+   }
+
+   private external fun `readWriteLock$thread1`()
+   private external fun `readWriteLock$thread2`()
 }
