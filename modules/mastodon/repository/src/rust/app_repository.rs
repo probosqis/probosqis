@@ -18,6 +18,7 @@ use ext_reqwest::CLIENT;
 use mastodon_entity::application::Application;
 use mastodon_entity::instance::Instance;
 use mastodon_webapi::entity::application::Application as ApiApplication;
+use semver::Version;
 
 use crate::cache;
 
@@ -117,13 +118,30 @@ impl AppRepository<'_> {
       &mut self,
       instance: Instance
    ) -> Result<Application> {
-      let ApiApplication { name, website, client_id, client_secret } = apps::post_apps_v0(
-         &CLIENT, &instance.url,
-         /* client_name = */ "Probosqis",
-         /* redirect_uris = */ "https://probosqis.wcaokaze.com/auth/callback",
-         /* scopes = */ Some("read write push"),
-         /* website = */ None
-      )?;
+      let instance_version = Version::parse(&instance.version)
+         .unwrap_or(Version::new(0, 0, 0));
+
+      let ApiApplication {
+         name, website, client_id, client_secret
+      } = if instance_version < Version::new(4, 3, 0) {
+         apps::post_apps_v0(
+            &CLIENT, &instance.url,
+            /* client_name = */ "Probosqis",
+            /* redirect_uris = */ "https://probosqis.wcaokaze.com/auth/callback",
+            /* scopes = */ Some("read write push"),
+            /* website = */ None
+         )?
+      } else {
+         apps::post_apps_v4_3_0(
+            &CLIENT, &instance.url,
+            /* client_name = */ "Probosqis",
+            /* redirect_uris = */ &[
+               "https://probosqis.wcaokaze.com/auth/callback"
+            ],
+            /* scopes = */ Some("read write push"),
+            /* website = */ None
+         )?
+      };
 
       let instance_cache = cache::instance_repo()
          .write(#[cfg(feature="jvm")] &mut self.env)?
@@ -303,6 +321,107 @@ mod jvm {
 
          let mut repo = cache::instance_repo().write(env)?;
          Ok(repo.save(instance))
+      }
+   }
+}
+
+#[cfg(test)]
+mod test {
+   use std::sync::{Arc, Mutex};
+   use chrono::DateTime;
+   use url::Url;
+   use mastodon_entity::instance::Instance;
+   use mastodon_webapi::entity::application::Application;
+   use super::apps;
+   use super::AppRepository;
+
+   fn dummy_application() -> Application {
+      Application {
+         name: "app name".to_string(),
+         website: None,
+         client_id: None,
+         client_secret: None
+      }
+   }
+
+   #[test]
+   fn switch_function_by_instance_version() {
+      let mut repository = AppRepository::new();
+
+      let v0_called     = Arc::new(Mutex::new(false));
+      let v4_3_0_called = Arc::new(Mutex::new(false));
+
+      {
+         let v0_called = v0_called.clone();
+         apps::inject_post_apps_v0(move |_, _, _, _, _, _| {
+            *v0_called.lock().unwrap() = true;
+            Ok(dummy_application())
+         });
+      }
+
+      {
+         let v4_3_0_called = v4_3_0_called.clone();
+         apps::inject_post_apps_v4_3_0(move |_, _, _, _, _, _| {
+            *v4_3_0_called.lock().unwrap() = true;
+            Ok(dummy_application())
+         });
+      }
+
+      let instance = |version: &'static str| Instance {
+         url: Url::parse("https://example.com/").unwrap(),
+         version: version.to_string(),
+         version_checked_time: DateTime::UNIX_EPOCH
+      };
+
+      {
+         let _application = repository.post_app(instance("4.1.0"));
+         assert_eq!(true,  *v0_called    .lock().unwrap());
+         assert_eq!(false, *v4_3_0_called.lock().unwrap());
+      }
+
+      *v0_called    .lock().unwrap() = false;
+      *v4_3_0_called.lock().unwrap() = false;
+
+      {
+         let _application = repository.post_app(instance("4.2.0"));
+         assert_eq!(true,  *v0_called    .lock().unwrap());
+         assert_eq!(false, *v4_3_0_called.lock().unwrap());
+      }
+
+      *v0_called    .lock().unwrap() = false;
+      *v4_3_0_called.lock().unwrap() = false;
+
+      {
+         let _application = repository.post_app(instance("4.2.9"));
+         assert_eq!(true,  *v0_called    .lock().unwrap());
+         assert_eq!(false, *v4_3_0_called.lock().unwrap());
+      }
+
+      *v0_called    .lock().unwrap() = false;
+      *v4_3_0_called.lock().unwrap() = false;
+
+      {
+         let _application = repository.post_app(instance("4.3.0"));
+         assert_eq!(false, *v0_called    .lock().unwrap());
+         assert_eq!(true,  *v4_3_0_called.lock().unwrap());
+      }
+
+      *v0_called    .lock().unwrap() = false;
+      *v4_3_0_called.lock().unwrap() = false;
+
+      {
+         let _application = repository.post_app(instance("4.3.1"));
+         assert_eq!(false, *v0_called    .lock().unwrap());
+         assert_eq!(true,  *v4_3_0_called.lock().unwrap());
+      }
+
+      *v0_called    .lock().unwrap() = false;
+      *v4_3_0_called.lock().unwrap() = false;
+
+      {
+         let _application = repository.post_app(instance("4.4.0"));
+         assert_eq!(false, *v0_called    .lock().unwrap());
+         assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
    }
 }
