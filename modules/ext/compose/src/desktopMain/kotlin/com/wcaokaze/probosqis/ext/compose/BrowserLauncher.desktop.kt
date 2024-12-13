@@ -17,8 +17,21 @@
 package com.wcaokaze.probosqis.ext.compose
 
 import androidx.compose.runtime.Composable
+import java.awt.Desktop
+import java.net.URI
 
 @Composable
 actual fun rememberBrowserLauncher(): BrowserLauncher {
-   TODO()
+   return object : BrowserLauncher {
+      fun canLaunchBrowser(): Boolean {
+         return Desktop.isDesktopSupported()
+             && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)
+      }
+
+      override fun launchBrowser(url: String) {
+         if (!canLaunchBrowser()) { TODO() }
+
+         Desktop.getDesktop().browse(URI(url))
+      }
+   }
 }
