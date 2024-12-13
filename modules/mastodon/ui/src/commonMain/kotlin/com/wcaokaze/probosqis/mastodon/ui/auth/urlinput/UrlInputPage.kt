@@ -122,13 +122,13 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
 
       return pageStateScope.async {
          try {
-            val instanceBaseUrl = inputUrl.text
-            val authorizeUrl = withContext(Dispatchers.IO) {
-               val software = nodeInfoRepository.getServerSoftware(instanceBaseUrl)
+            val result = withContext(Dispatchers.IO) {
+               val software = nodeInfoRepository.getServerSoftware(inputUrl.text)
 
                when (software) {
                   is FediverseSoftware.Mastodon -> {
-                     appRepository.getAuthorizeUrl(software.instance)
+                     val authorizeUrl = appRepository.getAuthorizeUrl(software.instance)
+                     Pair(authorizeUrl, software.instance.url)
                   }
                   is FediverseSoftware.Unsupported -> {
                      throw UnsupportedServerSoftwareException(software)
@@ -136,7 +136,7 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
                }
             }
             authorizeUrlLoadState = LoadState.Success(Unit)
-            Result.success(Pair(authorizeUrl, instanceBaseUrl))
+            Result.success(result)
          } catch (e: Exception) {
             authorizeUrlLoadState = LoadState.Error(e)
             Result.failure(e)
