@@ -31,11 +31,12 @@ resolver = "2"
 [workspace.dependencies]
 anyhow = "1.0.86"
 chrono = { version = "0.4.38", features = ["serde"] }
-serde = { version = "1.0.208", features = ["derive"] }
+serde = { version = "1.0.215", features = ["derive"] }
 
 jni = "0.21.1"
 
 url = { version = "2.5.2", features = ["serde"] }
+semver = "1.0.23"
 reqwest.version = "0.12.7"
 reqwest.default-features = false
 reqwest.features = ["rustls-tls", "charset", "http2", "blocking", "json"]

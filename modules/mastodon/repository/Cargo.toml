@@ -29,6 +29,7 @@ chrono.workspace = true
 jni = { workspace = true, optional = true }
 
 url.workspace = true
+semver.workspace = true
 reqwest.workspace = true
 ext_reqwest.workspace = true
 
