@@ -59,7 +59,7 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
    PageStateFactory { _, _ -> CallbackWaiterPageState() },
    header = { _, _ ->
       Text(
-         Strings.Mastodon.callbackWaiter.appBar,
+         Strings.Mastodon.callbackWaiter.android.appBar,
          maxLines = 1,
          overflow = TextOverflow.Ellipsis
       )
@@ -73,7 +73,7 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
          val token = state.token
          if (token == null) {
             Text(
-               Strings.Mastodon.callbackWaiter.message,
+               Strings.Mastodon.callbackWaiter.android.message,
                modifier = Modifier.padding(16.dp)
             )
          } else {

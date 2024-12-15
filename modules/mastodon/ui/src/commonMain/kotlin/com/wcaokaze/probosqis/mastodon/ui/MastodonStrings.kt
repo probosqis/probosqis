@@ -34,10 +34,23 @@ interface MastodonStrings {
       @Stable
       fun unsupportedServerSoftwareError(softwareName: String): String
    }
+
    class CallbackWaiter(
-      val appBar: String,
-      val message: String,
-   )
+      val android: Android,
+      val desktop: Desktop,
+   ) {
+      class Android(
+         val appBar: String,
+         val message: String,
+      )
+
+      class Desktop(
+         val appBar: String,
+         val message: String,
+         val authorizationCodeInputFieldLabel: String,
+         val verifyButton: String,
+      )
+   }
 
    val authUrlInput: AuthUrlInput
    val callbackWaiter: CallbackWaiter
@@ -60,8 +73,16 @@ val Strings.Companion.Mastodon: MastodonStrings
          }
 
          override val callbackWaiter = MastodonStrings.CallbackWaiter(
-            appBar = "Add an account",
-            message = "Wait…",
+            MastodonStrings.CallbackWaiter.Android(
+               appBar = "Add an account",
+               message = "Wait…",
+            ),
+            MastodonStrings.CallbackWaiter.Desktop(
+               appBar = "Add an account",
+               message = "Please authorize $appName to access your account. And paste the authorization code.",
+               authorizationCodeInputFieldLabel = "Authorization Code",
+               verifyButton = "Verify the Code",
+            ),
          )
       }
 
@@ -78,8 +99,16 @@ val Strings.Companion.Mastodon: MastodonStrings
          }
 
          override val callbackWaiter = MastodonStrings.CallbackWaiter(
-            appBar = "アカウントを追加",
-            message = "お待ちください…",
+            MastodonStrings.CallbackWaiter.Android(
+               appBar = "アカウントを追加",
+               message = "お待ちください…",
+            ),
+            MastodonStrings.CallbackWaiter.Desktop(
+               appBar = "アカウントを追加",
+               message = "${appName}からのアカウントへのアクセスを許可し、発行された認証コードを貼り付けてください。",
+               authorizationCodeInputFieldLabel = "認証コード",
+               verifyButton = "確認",
+            ),
          )
       }
    }

@@ -56,6 +56,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
@@ -220,6 +221,7 @@ private fun UrlInputPageContent(
    ) {
       Text(
          Strings.Mastodon.authUrlInput.description,
+         fontSize = 15.sp,
          modifier = Modifier.padding(8.dp)
       )
 
