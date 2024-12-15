@@ -56,6 +56,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
@@ -122,13 +123,13 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
 
       return pageStateScope.async {
          try {
-            val instanceBaseUrl = inputUrl.text
-            val authorizeUrl = withContext(Dispatchers.IO) {
-               val software = nodeInfoRepository.getServerSoftware(instanceBaseUrl)
+            val result = withContext(Dispatchers.IO) {
+               val software = nodeInfoRepository.getServerSoftware(inputUrl.text)
 
                when (software) {
                   is FediverseSoftware.Mastodon -> {
-                     appRepository.getAuthorizeUrl(software.instance)
+                     val authorizeUrl = appRepository.getAuthorizeUrl(software.instance)
+                     Pair(authorizeUrl, software.instance.url)
                   }
                   is FediverseSoftware.Unsupported -> {
                      throw UnsupportedServerSoftwareException(software)
@@ -136,7 +137,7 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
                }
             }
             authorizeUrlLoadState = LoadState.Success(Unit)
-            Result.success(Pair(authorizeUrl, instanceBaseUrl))
+            Result.success(result)
          } catch (e: Exception) {
             authorizeUrlLoadState = LoadState.Error(e)
             Result.failure(e)
@@ -220,6 +221,7 @@ private fun UrlInputPageContent(
    ) {
       Text(
          Strings.Mastodon.authUrlInput.description,
+         fontSize = 15.sp,
          modifier = Modifier.padding(8.dp)
       )
 

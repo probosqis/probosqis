@@ -100,6 +100,9 @@ struct AppRepository<'jni> {
 }
 
 impl AppRepository<'_> {
+   const ANDROID_REDIRECT_URI: &'static str = "https://probosqis.wcaokaze.com/auth/callback";
+   const DESKTOP_REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
+
    #[cfg(not(feature="jvm"))]
    fn new() -> AppRepository<'static> {
       AppRepository {
@@ -116,7 +119,8 @@ impl AppRepository<'_> {
 
    fn post_app(
       &mut self,
-      instance: Instance
+      instance: Instance,
+      redirect_uri: &str
    ) -> Result<Application> {
       let instance_version = Version::parse(&instance.version)
          .unwrap_or(Version::new(0, 0, 0));
@@ -127,7 +131,7 @@ impl AppRepository<'_> {
          apps::post_apps_v0(
             &CLIENT, &instance.url,
             /* client_name = */ "Probosqis",
-            /* redirect_uris = */ "https://probosqis.wcaokaze.com/auth/callback",
+            /* redirect_uris = */ redirect_uri,
             /* scopes = */ Some("read write push"),
             /* website = */ None
          )?
@@ -136,7 +140,8 @@ impl AppRepository<'_> {
             &CLIENT, &instance.url,
             /* client_name = */ "Probosqis",
             /* redirect_uris = */ &[
-               "https://probosqis.wcaokaze.com/auth/callback"
+               Self::ANDROID_REDIRECT_URI,
+               Self::DESKTOP_REDIRECT_URI,
             ],
             /* scopes = */ Some("read write push"),
             /* website = */ None
@@ -181,7 +186,8 @@ mod jvm {
       _obj: JObject<'local>,
       instance: JObject<'local>
    ) -> JObject<'local> {
-      post_app(&mut env, instance).unwrap_or_throw_io_exception(&mut env)
+      post_app(&mut env, instance, AppRepository::DESKTOP_REDIRECT_URI)
+         .unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
@@ -190,17 +196,19 @@ mod jvm {
       _obj: JObject<'local>,
       instance: JObject<'local>
    ) -> JObject<'local> {
-      post_app(&mut env, instance).unwrap_or_throw_io_exception(&mut env)
+      post_app(&mut env, instance, AppRepository::ANDROID_REDIRECT_URI)
+         .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn post_app<'local>(
       env: &mut JNIEnv<'local>,
-      instance: JObject<'local>
+      instance: JObject<'local>,
+      redirect_uri: &str
    ) -> Result<JObject<'local>> {
       let mut app_repository = AppRepository::new(env);
 
       let instance = Instance::clone_from_java(env, &instance);
-      let application = app_repository.post_app(instance)?;
+      let application = app_repository.post_app(instance, redirect_uri)?;
       Ok(application.clone_into_java(env))
    }
 
@@ -211,7 +219,7 @@ mod jvm {
       instance: JObject<'local>,
       client_id: JString<'local>
    ) -> JString<'local> {
-      get_authorize_url(&mut env, instance, client_id)
+      get_authorize_url(&mut env, instance, client_id, AppRepository::DESKTOP_REDIRECT_URI)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -222,14 +230,15 @@ mod jvm {
       instance: JObject<'local>,
       client_id: JString<'local>
    ) -> JString<'local> {
-      get_authorize_url(&mut env, instance, client_id)
+      get_authorize_url(&mut env, instance, client_id, AppRepository::ANDROID_REDIRECT_URI)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_authorize_url<'local>(
       env: &mut JNIEnv<'local>,
       instance: JObject<'local>,
-      client_id: JString<'local>
+      client_id: JString<'local>,
+      redirect_uri: &str
    ) -> Result<JString<'local>> {
       let instance_cache = get_instance_cache_from_java(env, &instance)?;
       let client_id: String = env.get_string(&client_id)?.into();
@@ -238,7 +247,7 @@ mod jvm {
          /* instance_base_url = */ &instance_cache.lock().unwrap().url,
          /* response_type = */ "code",
          /* client_id = */ &client_id,
-         /* redirect_uri = */ "https://probosqis.wcaokaze.com/auth/callback",
+         redirect_uri,
          /* scope = */ Some("read write push"),
          /* force_login = */ None,
          /* lang = */ None
@@ -257,7 +266,7 @@ mod jvm {
       client_id: JString<'local>,
       client_secret: JString<'local>
    ) -> JObject<'local> {
-      get_token(&mut env, instance, code, client_id, client_secret)
+      get_token(&mut env, instance, code, client_id, client_secret, AppRepository::DESKTOP_REDIRECT_URI)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -270,7 +279,7 @@ mod jvm {
       client_id: JString<'local>,
       client_secret: JString<'local>
    ) -> JObject<'local> {
-      get_token(&mut env, instance, code, client_id, client_secret)
+      get_token(&mut env, instance, code, client_id, client_secret, AppRepository::ANDROID_REDIRECT_URI)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -279,7 +288,8 @@ mod jvm {
       instance: JObject<'local>,
       code: JString<'local>,
       client_id: JString<'local>,
-      client_secret: JString<'local>
+      client_secret: JString<'local>,
+      redirect_uri: &str
    ) -> Result<JObject<'local>> {
       let instance_cache = get_instance_cache_from_java(env, &instance)?;
 
@@ -294,7 +304,7 @@ mod jvm {
          /* code = */ Some(&code),
          /* client_id = */ &client_id,
          /* client_secret = */ &client_secret,
-         /* redirect_uri = */ "https://probosqis.wcaokaze.com/auth/callback",
+         redirect_uri,
          /* scope = */ Some("read write push")
       )?;
 
@@ -374,7 +384,8 @@ mod test {
       };
 
       {
-         let _application = repository.post_app(instance("4.1.0"));
+         let _application = repository
+            .post_app(instance("4.1.0"), AppRepository::ANDROID_REDIRECT_URI);
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
       }
@@ -383,7 +394,8 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository.post_app(instance("4.2.0"));
+         let _application = repository
+            .post_app(instance("4.2.0"), AppRepository::ANDROID_REDIRECT_URI);
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
       }
@@ -392,7 +404,8 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository.post_app(instance("4.2.9"));
+         let _application = repository
+            .post_app(instance("4.2.9"), AppRepository::ANDROID_REDIRECT_URI);
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
       }
@@ -401,7 +414,8 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository.post_app(instance("4.3.0"));
+         let _application = repository
+            .post_app(instance("4.3.0"), AppRepository::ANDROID_REDIRECT_URI);
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
@@ -410,7 +424,8 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository.post_app(instance("4.3.1"));
+         let _application = repository
+            .post_app(instance("4.3.1"), AppRepository::ANDROID_REDIRECT_URI);
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
@@ -419,7 +434,8 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository.post_app(instance("4.4.0"));
+         let _application = repository
+            .post_app(instance("4.4.0"), AppRepository::ANDROID_REDIRECT_URI);
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
