@@ -17,11 +17,18 @@
 package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.wcaokaze.probosqis.mastodon.entity.Token
+import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.koin.core.component.inject
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage")
@@ -29,7 +36,21 @@ class CallbackWaiterPage(
    val instanceBaseUrl: String
 ) : PPage()
 
+abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
+   private val appRepository: AppRepository by inject()
+
+   var token by mutableStateOf<Token?>(null)
+      private set
+
+   fun saveAuthorizedAccountByCode(code: String) {
+      pageStateScope.launch {
+         val application = appRepository.loadAppCache(page.instanceBaseUrl)
+         token = appRepository.getToken(application.value, code)
+      }
+   }
+}
+
 @Stable
-expect class CallbackWaiterPageState : PPageState<CallbackWaiterPage>
+expect class CallbackWaiterPageState : AbstractCallbackWaiterPageState
 
 expect val callbackWaiterPageComposable: PPageComposable<CallbackWaiterPage, CallbackWaiterPageState>

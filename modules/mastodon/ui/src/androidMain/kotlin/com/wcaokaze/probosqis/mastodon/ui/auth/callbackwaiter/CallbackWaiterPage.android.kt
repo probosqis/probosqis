@@ -23,37 +23,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
-import com.wcaokaze.probosqis.mastodon.entity.Token
-import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.resources.Strings
-import kotlinx.coroutines.launch
-import org.koin.core.component.inject
 
 @Stable
-actual class CallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
-   private val appRepository: AppRepository by inject()
-
-   var token by mutableStateOf<Token?>(null)
-      private set
-
-   fun saveAuthorizedAccountByCode(code: String) {
-      pageStateScope.launch {
-         val application = appRepository.loadAppCache(page.instanceBaseUrl)
-         token = appRepository.getToken(application.value, code)
-      }
-   }
-}
+actual class CallbackWaiterPageState : AbstractCallbackWaiterPageState()
 
 actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, CallbackWaiterPageState>(
    PageStateFactory { _, _ -> CallbackWaiterPageState() },

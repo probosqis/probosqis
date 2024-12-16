@@ -36,7 +36,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,24 +50,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
-import com.wcaokaze.probosqis.mastodon.entity.Token
-import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.serialization.builtins.serializer
-import org.koin.core.component.inject
 
 @Stable
-actual class CallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
-   private val appRepository: AppRepository by inject()
-
-   var token by mutableStateOf<Token?>(null)
-      private set
-
+actual class CallbackWaiterPageState : AbstractCallbackWaiterPageState() {
    var hasKeyboardShown by save(
       "has_keyboard_shown", Boolean.serializer(),
       init = { false }, recover = { true }
@@ -78,12 +67,8 @@ actual class CallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
       TextFieldValue()
    }
 
-   fun saveAuthorizedAccountByCode() {
-      pageStateScope.launch {
-         val code = inputCode.text
-         val application = appRepository.loadAppCache(page.instanceBaseUrl)
-         token = appRepository.getToken(application.value, code)
-      }
+   fun saveAuthorizedAccount() {
+      saveAuthorizedAccountByCode(inputCode.text)
    }
 }
 
@@ -124,10 +109,10 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                   state.inputCode = newValue
                },
                onAuthorizationCodeTextFieldKeyboardActionGo = {
-                  state.saveAuthorizedAccountByCode()
+                  state.saveAuthorizedAccount()
                },
                onVerifyButtonClick = {
-                  state.saveAuthorizedAccountByCode()
+                  state.saveAuthorizedAccount()
                },
                focusRequester
             )
