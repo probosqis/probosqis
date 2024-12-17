@@ -19,7 +19,9 @@ package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -149,6 +151,28 @@ class CallbackWaiterPageTest {
       }
 
       rule.onNode(hasSetTextAction()).assertIsFocused()
+   }
+
+   @Test
+   fun verifyButton_disabledUnlessCodeInput() {
+      lateinit var state: CallbackWaiterPageState
+
+      rule.setContent {
+         state = rememberPageState()
+         CallbackWaiterPage(state)
+      }
+
+      rule.runOnIdle {
+         state.inputCode = TextFieldValue("")
+      }
+
+      rule.onNodeWithText("Verify the Code").assertIsNotEnabled()
+
+      rule.runOnIdle {
+         state.inputCode = TextFieldValue("a")
+      }
+
+      rule.onNodeWithText("Verify the Code").assertIsEnabled()
    }
 
    @Test
