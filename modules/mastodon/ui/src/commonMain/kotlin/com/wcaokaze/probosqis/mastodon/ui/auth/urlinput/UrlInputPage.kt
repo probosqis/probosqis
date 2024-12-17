@@ -180,7 +180,6 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
 
             browserLauncher.launchBrowser(authorizeUrl)
 
-            state.finishPage()
             state.startPage(CallbackWaiterPage(instanceBaseUrl))
          }
       }

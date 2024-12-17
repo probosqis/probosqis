@@ -39,7 +39,9 @@ import com.wcaokaze.probosqis.nodeinfo.entity.FediverseSoftware
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.page.PPageState
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 import kotlinx.datetime.Instant
 import org.junit.Rule
@@ -171,12 +173,11 @@ class UrlInputPageTest {
       }
 
       val browserLauncher = mockk<BrowserLauncher> {
-         every { launchBrowser(any()) } returns Unit
+         every { launchBrowser(any()) } just runs
       }
 
       val pageState = mockk<PPageState.Interface> {
-         every { finishPage() } returns Unit
-         every { startPage(any()) } returns Unit
+         every { startPage(any()) } just runs
       }
 
       rule.setContent {
@@ -232,12 +233,11 @@ class UrlInputPageTest {
       }
 
       val browserLauncher = mockk<BrowserLauncher> {
-         every { launchBrowser(any()) } returns Unit
+         every { launchBrowser(any()) } just runs
       }
 
       val pageState = mockk<PPageState.Interface> {
-         every { finishPage() } returns Unit
-         every { startPage(any()) } returns Unit
+         every { startPage(any()) } just runs
       }
 
       rule.setContent {
@@ -255,7 +255,6 @@ class UrlInputPageTest {
 
       rule.runOnIdle {
          verify { browserLauncher.launchBrowser("https://auth.wcaokaze.com/") }
-         verify { pageState.finishPage() }
          verify { pageState.startPage(ofType<CallbackWaiterPage>()) }
       }
    }
@@ -287,12 +286,11 @@ class UrlInputPageTest {
       }
 
       val browserLauncher = mockk<BrowserLauncher> {
-         every { launchBrowser(any()) } returns Unit
+         every { launchBrowser(any()) } just runs
       }
 
       val pageState = mockk<PPageState.Interface> {
-         every { finishPage() } returns Unit
-         every { startPage(any()) } returns Unit
+         every { startPage(any()) } just runs
       }
 
       rule.setContent {
@@ -344,12 +342,11 @@ class UrlInputPageTest {
       }
 
       val browserLauncher = mockk<BrowserLauncher> {
-         every { launchBrowser(any()) } returns Unit
+         every { launchBrowser(any()) } just runs
       }
 
       val pageState = mockk<PPageState.Interface> {
-         every { finishPage() } returns Unit
-         every { startPage(any()) } returns Unit
+         every { startPage(any()) } just runs
       }
 
       rule.setContent {

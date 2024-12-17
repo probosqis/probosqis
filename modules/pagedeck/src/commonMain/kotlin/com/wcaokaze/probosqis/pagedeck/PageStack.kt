@@ -116,8 +116,9 @@ class PPageStackState : KoinComponent {
    val forefrontPageState: PageState<*>?
       get() = rawState.getPageStateIfAlreadyInstantiated(rawState.pageStack.head)
 
-   internal val pageStack: PageStack
+   var pageStack: PageStack
       get() = rawState.pageStack
+      set(value) { rawState.pageStack = value }
 
    internal val multiColumnActivationAnimState = MultiColumnPageStackActivationAnimState()
 

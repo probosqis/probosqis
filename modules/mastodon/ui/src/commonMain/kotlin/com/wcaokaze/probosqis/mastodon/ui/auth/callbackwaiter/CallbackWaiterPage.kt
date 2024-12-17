@@ -22,13 +22,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage")
@@ -46,7 +49,32 @@ abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>(
       pageStateScope.launch {
          val application = appRepository.loadAppCache(page.instanceBaseUrl)
          token = appRepository.getToken(application.value, code)
+
+         delay(3.seconds)
+
+         finishAuthPages()
       }
+   }
+
+   private fun finishAuthPages() {
+      var pageStack = pageStack.tailOrNull()
+      if (pageStack == null) {
+         removeFromDeck()
+         return
+      }
+
+      if (pageStack.head.page !is UrlInputPage) {
+         this.pageStack = pageStack
+         return
+      }
+
+      pageStack = pageStack.tailOrNull()
+      if (pageStack == null) {
+         removeFromDeck()
+         return
+      }
+
+      this.pageStack =  pageStack
    }
 }
 
