@@ -20,6 +20,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
@@ -42,13 +43,21 @@ class CallbackWaiterPage(
 abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
    private val appRepository: AppRepository by inject()
 
-   var token by mutableStateOf<Token?>(null)
-      private set
+   var tokenLoadState: LoadState<Token?> by mutableStateOf(LoadState.Success(null))
 
    fun saveAuthorizedAccountByCode(code: String) {
+      if (tokenLoadState is LoadState.Loading) { return }
+
+      tokenLoadState = LoadState.Loading
+
       pageStateScope.launch {
-         val application = appRepository.loadAppCache(page.instanceBaseUrl)
-         token = appRepository.getToken(application.value, code)
+         tokenLoadState = try {
+            val application = appRepository.loadAppCache(page.instanceBaseUrl)
+            val token = appRepository.getToken(application.value, code)
+            LoadState.Success(token)
+         } catch (e: Exception) {
+            LoadState.Error(e)
+         }
 
          delay(3.seconds)
 

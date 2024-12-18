@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.resources.Strings
@@ -50,38 +51,44 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
             .verticalScroll(rememberScrollState())
             .windowInsetsPadding(windowInsets)
       ) {
-         val token = state.token
-         if (token == null) {
-            Text(
-               Strings.Mastodon.callbackWaiter.android.message,
-               modifier = Modifier.padding(16.dp)
-            )
-         } else {
-            val format = remember(token) {
-               buildString {
-                  append("instance url: ")
-                  append(token.instance.value.url)
-                  appendLine()
-                  append("token type: ")
-                  append(token.tokenType)
-                  appendLine()
-                  append("scope: ")
-                  append(token.scope)
-                  appendLine()
-                  append("created at: ")
-                  append(token.createdAt)
-                  appendLine()
-                  append("access token: ")
-                  repeat(token.accessToken.length) {
-                     append("x")
+         when (val tokenLoadState = state.tokenLoadState) {
+            is LoadState.Success -> {
+               val token = tokenLoadState.data
+               if (token == null) {
+                  Text(
+                     Strings.Mastodon.callbackWaiter.android.message,
+                     modifier = Modifier.padding(16.dp)
+                  )
+               } else {
+                  val format = remember(token) {
+                     buildString {
+                        append("instance url: ")
+                        append(token.instance.value.url)
+                        appendLine()
+                        append("token type: ")
+                        append(token.tokenType)
+                        appendLine()
+                        append("scope: ")
+                        append(token.scope)
+                        appendLine()
+                        append("created at: ")
+                        append(token.createdAt)
+                        appendLine()
+                        append("access token: ")
+                        repeat(token.accessToken.length) {
+                           append("x")
+                        }
+                     }
                   }
+
+                  Text(
+                     format,
+                     modifier = Modifier.padding(16.dp)
+                  )
                }
             }
-
-            Text(
-               format,
-               modifier = Modifier.padding(16.dp)
-            )
+            is LoadState.Loading -> {}
+            is LoadState.Error -> {}
          }
       }
    },
