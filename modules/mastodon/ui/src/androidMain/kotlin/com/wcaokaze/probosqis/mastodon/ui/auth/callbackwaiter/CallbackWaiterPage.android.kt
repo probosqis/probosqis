@@ -52,11 +52,17 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
             .windowInsetsPadding(windowInsets)
       ) {
          when (val tokenLoadState = state.tokenLoadState) {
+            is LoadState.Loading -> {
+               Text(
+                  Strings.Mastodon.callbackWaiter.android.tokenLoadingMessage,
+                  modifier = Modifier.padding(16.dp)
+               )
+            }
             is LoadState.Success -> {
                val token = tokenLoadState.data
                if (token == null) {
                   Text(
-                     Strings.Mastodon.callbackWaiter.android.message,
+                     Strings.Mastodon.callbackWaiter.android.initialMessage,
                      modifier = Modifier.padding(16.dp)
                   )
                } else {
@@ -87,7 +93,6 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                   )
                }
             }
-            is LoadState.Loading -> {}
             is LoadState.Error -> {}
          }
       }
