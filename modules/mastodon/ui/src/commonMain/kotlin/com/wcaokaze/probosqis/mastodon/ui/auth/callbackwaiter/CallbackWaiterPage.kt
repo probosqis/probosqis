@@ -51,12 +51,13 @@ abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>(
       tokenLoadState = LoadState.Loading
 
       pageStateScope.launch {
-         tokenLoadState = try {
+         try {
             val application = appRepository.loadAppCache(page.instanceBaseUrl)
             val token = appRepository.getToken(application.value, code)
-            LoadState.Success(token)
+            tokenLoadState = LoadState.Success(token)
          } catch (e: Exception) {
-            LoadState.Error(e)
+            tokenLoadState = LoadState.Error(e)
+            return@launch
          }
 
          delay(3.seconds)

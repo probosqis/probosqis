@@ -54,6 +54,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
+import java.io.IOException
 import java.time.Month
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -379,6 +380,44 @@ class CallbackWaiterPageTest {
          verify {
             pageState.removeFromDeck()
          }
+      }
+   }
+
+   @Test
+   fun doesntFinishPage_ifTokenCannotVerified() {
+      lateinit var state: CallbackWaiterPageState
+
+      val appRepository = mockk<AppRepository> {
+         every { loadAppCache(any()) } answers {
+            val application = application(instanceBaseUrl = firstArg())
+            Cache(application)
+         }
+
+         every { getToken(any(), any()) } throws IOException()
+      }
+
+      val page = CallbackWaiterPage("https://mastodon.social/")
+
+      val pageState = mockk<PPageState.Interface> {
+         every { pageStack } returns pageStack(page)
+         every { pageStack = any() } just runs
+         every { removeFromDeck() } just runs
+      }
+
+      rule.setContent {
+         state = rememberPageState(page, pageState)
+         CallbackWaiterPage(state, appRepository)
+      }
+
+      rule.runOnIdle {
+         state.inputCode = TextFieldValue("abcdefghijklmnopqrstuvwxyz0123456789")
+      }
+
+      rule.onNodeWithText("Verify the Code").performClick()
+
+      rule.runOnIdle {
+         verify(exactly = 0) { pageState.pageStack = any() }
+         verify(exactly = 0) { pageState.removeFromDeck() }
       }
    }
 }
