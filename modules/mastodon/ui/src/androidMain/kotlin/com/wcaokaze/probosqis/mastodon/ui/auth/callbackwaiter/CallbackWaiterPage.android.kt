@@ -17,21 +17,29 @@
 package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.resources.Strings
+import com.wcaokaze.probosqis.resources.icons.Error
 
 @Stable
 actual class CallbackWaiterPageState : AbstractCallbackWaiterPageState()
@@ -58,11 +66,32 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                   modifier = Modifier.padding(16.dp)
                )
             }
+            is LoadState.Error -> {
+               Row(
+                  modifier = Modifier.padding(16.dp)
+               ) {
+                  Icon(
+                     Icons.Outlined.Error,
+                     contentDescription = null,
+                     modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .size(20.dp)
+                  )
+
+                  Spacer(Modifier.width(8.dp))
+
+                  Text(
+                     Strings.Mastodon.callbackWaiter.android.errorMessage,
+                     fontSize = 15.sp
+                  )
+               }
+            }
             is LoadState.Success -> {
                val token = tokenLoadState.data
                if (token == null) {
                   Text(
                      Strings.Mastodon.callbackWaiter.android.initialMessage,
+                     fontSize = 15.sp,
                      modifier = Modifier.padding(16.dp)
                   )
                } else {
@@ -89,11 +118,11 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
 
                   Text(
                      format,
+                     fontSize = 15.sp,
                      modifier = Modifier.padding(16.dp)
                   )
                }
             }
-            is LoadState.Error -> {}
          }
       }
    },
