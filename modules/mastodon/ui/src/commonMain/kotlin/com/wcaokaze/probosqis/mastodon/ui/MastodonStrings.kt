@@ -51,6 +51,7 @@ interface MastodonStrings {
          val message: String,
          val authorizationCodeInputFieldLabel: String,
          val verifyButton: String,
+         val errorMessage: String,
       )
    }
 
@@ -86,6 +87,7 @@ val Strings.Companion.Mastodon: MastodonStrings
                message = "Please authorize $appName to access your account. And paste the authorization code.",
                authorizationCodeInputFieldLabel = "Authorization Code",
                verifyButton = "Verify the Code",
+               errorMessage = "Cannot verify your account. Please try again.",
             ),
          )
       }
@@ -114,6 +116,7 @@ val Strings.Companion.Mastodon: MastodonStrings
                message = "${appName}からのアカウントへのアクセスを許可し、発行された認証コードを貼り付けてください。",
                authorizationCodeInputFieldLabel = "認証コード",
                verifyButton = "確認",
+               errorMessage = "認証に失敗しました。もう一度お試しください。",
             ),
          )
       }
