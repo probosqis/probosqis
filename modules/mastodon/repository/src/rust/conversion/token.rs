@@ -13,7 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use anyhow::Result;
+use chrono::DateTime;
+use mastodon_entity::instance::Instance;
+use mastodon_entity::token::Token;
+use mastodon_webapi::entity::token::Token as ApiToken;
+use panoptiqon::cache::Cache;
 
-pub(crate) mod cache;
-pub(crate) mod conversion;
-mod app_repository;
+pub fn from_api(
+   entity: ApiToken,
+   instance_cache: Cache<Instance>
+) -> Result<Token> {
+   let ApiToken { access_token, token_type, scope, created_at } = entity;
+
+   let token = Token {
+      instance: instance_cache, access_token, token_type, scope,
+      created_at: DateTime::from_timestamp(created_at, 0).unwrap()
+   };
+
+   Ok(token)
+}
