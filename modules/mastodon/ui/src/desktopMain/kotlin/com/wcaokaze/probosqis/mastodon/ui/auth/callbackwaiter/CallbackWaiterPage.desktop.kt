@@ -36,7 +36,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,24 +50,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
-import com.wcaokaze.probosqis.mastodon.entity.Token
-import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.serialization.builtins.serializer
-import org.koin.core.component.inject
 
 @Stable
-actual class CallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
-   private val appRepository: AppRepository by inject()
-
-   var token by mutableStateOf<Token?>(null)
-      private set
-
+actual class CallbackWaiterPageState : AbstractCallbackWaiterPageState() {
    var hasKeyboardShown by save(
       "has_keyboard_shown", Boolean.serializer(),
       init = { false }, recover = { true }
@@ -78,12 +68,8 @@ actual class CallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
       TextFieldValue()
    }
 
-   fun saveAuthorizedAccountByCode() {
-      pageStateScope.launch {
-         val code = inputCode.text
-         val application = appRepository.loadAppCache(page.instanceBaseUrl)
-         token = appRepository.getToken(application.value, code)
-      }
+   fun saveAuthorizedAccount() {
+      saveAuthorizedAccountByCode(inputCode.text)
    }
 }
 
@@ -116,47 +102,53 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
             .verticalScroll(rememberScrollState())
             .windowInsetsPadding(windowInsets)
       ) {
-         val token = state.token
-         if (token == null) {
-            CallbackWaiterPageContent(
-               state.inputCode,
-               onInputCodeChange = { newValue ->
-                  state.inputCode = newValue
-               },
-               onAuthorizationCodeTextFieldKeyboardActionGo = {
-                  state.saveAuthorizedAccountByCode()
-               },
-               onVerifyButtonClick = {
-                  state.saveAuthorizedAccountByCode()
-               },
-               focusRequester
-            )
-         } else {
-            val format = remember(token) {
-               buildString {
-                  append("instance url: ")
-                  append(token.instance.value.url)
-                  appendLine()
-                  append("token type: ")
-                  append(token.tokenType)
-                  appendLine()
-                  append("scope: ")
-                  append(token.scope)
-                  appendLine()
-                  append("created at: ")
-                  append(token.createdAt)
-                  appendLine()
-                  append("access token: ")
-                  repeat(token.accessToken.length) {
-                     append("x")
+         when (val tokenLoadState = state.tokenLoadState) {
+            is LoadState.Success -> {
+               val token = tokenLoadState.data
+               if (token == null) {
+                  CallbackWaiterPageContent(
+                     state.inputCode,
+                     onInputCodeChange = { newValue ->
+                        state.inputCode = newValue
+                     },
+                     onAuthorizationCodeTextFieldKeyboardActionGo = {
+                        state.saveAuthorizedAccount()
+                     },
+                     onVerifyButtonClick = {
+                        state.saveAuthorizedAccount()
+                     },
+                     focusRequester
+                  )
+               } else {
+                  val format = remember(token) {
+                     buildString {
+                        append("instance url: ")
+                        append(token.instance.value.url)
+                        appendLine()
+                        append("token type: ")
+                        append(token.tokenType)
+                        appendLine()
+                        append("scope: ")
+                        append(token.scope)
+                        appendLine()
+                        append("created at: ")
+                        append(token.createdAt)
+                        appendLine()
+                        append("access token: ")
+                        repeat(token.accessToken.length) {
+                           append("x")
+                        }
+                     }
                   }
+
+                  Text(
+                     format,
+                     modifier = Modifier.padding(16.dp)
+                  )
                }
             }
-
-            Text(
-               format,
-               modifier = Modifier.padding(16.dp)
-            )
+            is LoadState.Loading -> {}
+            is LoadState.Error -> {}
          }
       }
    },

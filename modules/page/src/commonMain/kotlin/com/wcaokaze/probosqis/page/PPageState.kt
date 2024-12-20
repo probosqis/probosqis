@@ -50,6 +50,10 @@ abstract class PPageState<out P : PPage> : PageState<P>(), KoinComponent {
       @UsingAppScope
       override val appScope: CoroutineScope by inject()
 
+      override var pageStack: PageStack
+         get() = pageStackStateRc.get().pageStack
+         set(value) { pageStackStateRc.get().pageStack = value }
+
       override fun startPage(page: PPage) {
          pageStackStateRc.get().startPage(page)
       }
@@ -91,6 +95,10 @@ abstract class PPageState<out P : PPage> : PageState<P>(), KoinComponent {
       impl = implementation
    }
 
+   var pageStack: PageStack
+      get() = impl.pageStack
+      set(value) { impl.pageStack = value }
+
    fun startPage(page: PPage) {
       impl.startPage(page)
    }
@@ -118,6 +126,8 @@ abstract class PPageState<out P : PPage> : PageState<P>(), KoinComponent {
    interface Interface {
       @UsingAppScope
       val appScope: CoroutineScope
+
+      var pageStack: PageStack
 
       fun startPage(page: PPage)
       fun finishPage()
