@@ -19,7 +19,7 @@ use std::ops::Deref;
 use std::sync::RwLock;
 
 use jni::JNIEnv;
-use jni::objects::{GlobalRef, JMethodID, JObject, JValueOwned};
+use jni::objects::{GlobalRef, JMethodID, JObject, JStaticMethodID, JValueOwned};
 use jni::signature::{ReturnType, TypeSignature};
 use jni::sys::jvalue;
 
@@ -28,7 +28,8 @@ pub struct ConvertJavaHelper<'a, const ARITY: usize>(
 );
 
 pub enum CloneIntoJava<'a> {
-   ViaConstructor(&'a str)
+   ViaConstructor(&'a str),
+   ViaStaticMethod(&'a str, &'a str)
 }
 
 enum ConvertJavaHelperInner<'a, const ARITY: usize> {
@@ -47,6 +48,10 @@ enum ConvertJavaHelperInner<'a, const ARITY: usize> {
 enum CloneIntoJavaJvmId {
    ViaConstructor {
       constructor_id: JMethodID
+   },
+   ViaStaticMethod {
+      method_id: JStaticMethodID,
+      return_type: ReturnType
    }
 }
 
@@ -80,6 +85,17 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
                .get_method_id(&class, "<init>", constructor_signature).unwrap();
 
             CloneIntoJavaJvmId::ViaConstructor { constructor_id }
+         },
+         CloneIntoJava::ViaStaticMethod(method_name, signature) => {
+            let method_id = env
+               .get_static_method_id(&class, method_name, signature).unwrap();
+
+            let type_signature = TypeSignature::from_str(signature).unwrap();
+
+            CloneIntoJavaJvmId::ViaStaticMethod {
+               method_id,
+               return_type: type_signature.ret
+            }
          }
       };
 
@@ -96,7 +112,7 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
    pub fn clone_into_java<'local>(
       &self,
       env: &mut JNIEnv<'local>,
-      constructor_args: &[jvalue],
+      args: &[jvalue],
    ) -> JObject<'local> {
       let lock = self.0.read().unwrap();
       match lock.deref() {
@@ -107,8 +123,13 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
          } => {
             match clone_into_java {
                CloneIntoJavaJvmId::ViaConstructor { constructor_id } => unsafe {
-                  env.new_object_unchecked(class, *constructor_id, constructor_args)
-                     .unwrap()
+                  env.new_object_unchecked(class, *constructor_id, args).unwrap()
+               },
+               CloneIntoJavaJvmId::ViaStaticMethod { method_id, return_type } => unsafe {
+                  env.call_static_method_unchecked(
+                        class, *method_id, return_type.clone(), args
+                     )
+                     .unwrap().l().unwrap()
                }
             }
          }
@@ -128,7 +149,7 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
                class, clone_into_java: clone_into_java_id, getter_ids
             };
             drop(lock);
-            self.clone_into_java(env, constructor_args)
+            self.clone_into_java(env, args)
          }
       }
    }
