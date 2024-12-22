@@ -27,28 +27,38 @@ pub struct ConvertJavaHelper<'a, const ARITY: usize>(
    RwLock<ConvertJavaHelperInner<'a, ARITY>>
 );
 
+pub enum CloneIntoJava<'a> {
+   ViaConstructor(&'a str)
+}
+
 enum ConvertJavaHelperInner<'a, const ARITY: usize> {
    SignatureStrs {
       class_fully_qualified_name: &'a str,
-      constructor_signature: &'a str,
+      clone_into_java: CloneIntoJava<'a>,
       getter_signatures: [(&'a str, &'a str); ARITY]
    },
    JvmIds {
       class: GlobalRef,
-      constructor_id: JMethodID,
+      clone_into_java: CloneIntoJavaJvmId,
       getter_ids: [(JMethodID, ReturnType); ARITY]
+   }
+}
+
+enum CloneIntoJavaJvmId {
+   ViaConstructor {
+      constructor_id: JMethodID
    }
 }
 
 impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
    pub const fn new(
       class_fully_qualified_name: &'a str,
-      constructor_signature: &'a str,
+      clone_into_java: CloneIntoJava<'a>,
       getter_signatures: [(&'a str, &'a str); ARITY]
    ) -> Self {
       let inner = ConvertJavaHelperInner::SignatureStrs {
          class_fully_qualified_name,
-         constructor_signature,
+         clone_into_java,
          getter_signatures
       };
       ConvertJavaHelper(RwLock::new(inner))
@@ -58,13 +68,20 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
       &self,
       env: &mut JNIEnv,
       class_fully_qualified_name: &str,
-      constructor_signature: &str,
+      clone_into_java: &CloneIntoJava,
       getter_signatures: &[(&str, &str); ARITY]
-   ) -> (GlobalRef, JMethodID, [(JMethodID, ReturnType); ARITY]) {
+   ) -> (GlobalRef, CloneIntoJavaJvmId, [(JMethodID, ReturnType); ARITY]) {
       let class = env.find_class(class_fully_qualified_name).unwrap();
       let class = env.new_global_ref(class).unwrap();
-      let constructor_id = env
-         .get_method_id(&class, "<init>", constructor_signature).unwrap();
+
+      let clone_into_java_id = match clone_into_java {
+         CloneIntoJava::ViaConstructor(constructor_signature) => {
+            let constructor_id = env
+               .get_method_id(&class, "<init>", constructor_signature).unwrap();
+
+            CloneIntoJavaJvmId::ViaConstructor { constructor_id }
+         }
+      };
 
       let getter_ids = getter_signatures.map(|(name, ty)| {
          let type_signature_str = format!("(){ty}");
@@ -73,7 +90,7 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
          (getter_id, type_signature.ret)
       });
 
-      (class, constructor_id, getter_ids)
+      (class, clone_into_java_id, getter_ids)
    }
 
    pub fn clone_into_java<'local>(
@@ -85,26 +102,30 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
       match lock.deref() {
          ConvertJavaHelperInner::JvmIds {
             class,
-            constructor_id,
+            clone_into_java,
             ..
-         } => unsafe {
-            env.new_object_unchecked(class, *constructor_id, constructor_args)
-               .unwrap()
+         } => {
+            match clone_into_java {
+               CloneIntoJavaJvmId::ViaConstructor { constructor_id } => unsafe {
+                  env.new_object_unchecked(class, *constructor_id, constructor_args)
+                     .unwrap()
+               }
+            }
          }
 
          ConvertJavaHelperInner::SignatureStrs {
             class_fully_qualified_name,
-            constructor_signature,
+            clone_into_java,
             getter_signatures
          } => {
-            let (class, constructor_id, getter_ids) = self.prepare_ids(
-               env, class_fully_qualified_name, constructor_signature,
+            let (class, clone_into_java_id, getter_ids) = self.prepare_ids(
+               env, class_fully_qualified_name, clone_into_java,
                getter_signatures
             );
             drop(lock);
             let mut lock = self.0.write().unwrap();
             *lock = ConvertJavaHelperInner::JvmIds {
-               class, constructor_id, getter_ids
+               class, clone_into_java: clone_into_java_id, getter_ids
             };
             drop(lock);
             self.clone_into_java(env, constructor_args)
@@ -133,17 +154,17 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
 
          ConvertJavaHelperInner::SignatureStrs {
             class_fully_qualified_name,
-            constructor_signature,
+            clone_into_java,
             getter_signatures
          } => {
-            let (class, constructor_id, getter_ids) = self.prepare_ids(
-               env, class_fully_qualified_name, constructor_signature,
+            let (class, clone_into_java_id, getter_ids) = self.prepare_ids(
+               env, class_fully_qualified_name, clone_into_java,
                getter_signatures
             );
             drop(lock);
             let mut lock = self.0.write().unwrap();
             *lock = ConvertJavaHelperInner::JvmIds {
-               class, constructor_id, getter_ids
+               class, clone_into_java: clone_into_java_id, getter_ids
             };
             drop(lock);
             self.get(env, instance, n)
@@ -161,13 +182,12 @@ mod jni_tests {
    use jni::sys::{JNI_FALSE, jvalue};
 
    use panoptiqon::convert_java::ConvertJava;
-
-   use super::{ConvertJavaHelper, ConvertJavaHelperInner};
+   use super::{CloneIntoJava, ConvertJavaHelper, ConvertJavaHelperInner};
 
    fn create_helper() -> ConvertJavaHelper<'static, 10> {
       ConvertJavaHelper::new(
          "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity",
-         "(ZBSIJFDCLjava/lang/String;[I)V",
+         CloneIntoJava::ViaConstructor("(ZBSIJFDCLjava/lang/String;[I)V"),
          [
             ("getZ", "Z"),
             ("getB", "B"),

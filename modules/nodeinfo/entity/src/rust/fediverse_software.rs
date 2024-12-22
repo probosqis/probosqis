@@ -15,6 +15,7 @@
  */
 #[cfg(feature="jvm")]
 use {
+   ext_panoptiqon::convert_java_helper::CloneIntoJava,
    ext_panoptiqon::convert_java_helper::ConvertJavaHelper,
    jni::JNIEnv,
    jni::objects::JObject,
@@ -22,16 +23,16 @@ use {
 };
 
 #[cfg(feature="jvm")]
-const HELPER_UNSUPPORTED: ConvertJavaHelper<0> = ConvertJavaHelper::new(
+static HELPER_UNSUPPORTED: ConvertJavaHelper<0> = ConvertJavaHelper::new(
    "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported",
-   "(Ljava/lang/String;Ljava/lang/String;)V",
+   CloneIntoJava::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;)V"),
    []
 );
 
 #[cfg(feature="jvm")]
-const HELPER_MASTODON: ConvertJavaHelper<0> = ConvertJavaHelper::new(
+static HELPER_MASTODON: ConvertJavaHelper<0> = ConvertJavaHelper::new(
    "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon",
-   "(Ljava/lang/String;Ljava/lang/String;)V",
+   CloneIntoJava::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;)V"),
    []
 );
 
