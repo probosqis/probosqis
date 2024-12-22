@@ -41,7 +41,9 @@ interface MastodonStrings {
    ) {
       class Android(
          val appBar: String,
-         val message: String,
+         val initialMessage: String,
+         val tokenLoadingMessage: String,
+         val errorMessage: String,
       )
 
       class Desktop(
@@ -49,6 +51,7 @@ interface MastodonStrings {
          val message: String,
          val authorizationCodeInputFieldLabel: String,
          val verifyButton: String,
+         val errorMessage: String,
       )
    }
 
@@ -75,13 +78,16 @@ val Strings.Companion.Mastodon: MastodonStrings
          override val callbackWaiter = MastodonStrings.CallbackWaiter(
             MastodonStrings.CallbackWaiter.Android(
                appBar = "Add an account",
-               message = "Wait…",
+               initialMessage = "Please authorize $appName to access your account on your browser app.",
+               tokenLoadingMessage = "Verifying your credential…",
+               errorMessage = "Unfortunately, $appName failed to verify your account. Please try again.",
             ),
             MastodonStrings.CallbackWaiter.Desktop(
                appBar = "Add an account",
                message = "Please authorize $appName to access your account. And paste the authorization code.",
                authorizationCodeInputFieldLabel = "Authorization Code",
                verifyButton = "Verify the Code",
+               errorMessage = "Cannot verify your account. Please try again.",
             ),
          )
       }
@@ -101,13 +107,16 @@ val Strings.Companion.Mastodon: MastodonStrings
          override val callbackWaiter = MastodonStrings.CallbackWaiter(
             MastodonStrings.CallbackWaiter.Android(
                appBar = "アカウントを追加",
-               message = "お待ちください…",
+               initialMessage = "ブラウザアプリで${appName}からのアカウントへのアクセスを許可してください。",
+               tokenLoadingMessage = "認証情報を確認しています…",
+               errorMessage = "認証に失敗しました。お手数ですが、もう一度お試しください。",
             ),
             MastodonStrings.CallbackWaiter.Desktop(
                appBar = "アカウントを追加",
                message = "${appName}からのアカウントへのアクセスを許可し、発行された認証コードを貼り付けてください。",
                authorizationCodeInputFieldLabel = "認証コード",
                verifyButton = "確認",
+               errorMessage = "認証に失敗しました。もう一度お試しください。",
             ),
          )
       }

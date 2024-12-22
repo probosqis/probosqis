@@ -18,29 +18,35 @@ package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -51,24 +57,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.mastodon.entity.Token
-import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.resources.Strings
+import com.wcaokaze.probosqis.resources.icons.Error
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.serialization.builtins.serializer
-import org.koin.core.component.inject
 
 @Stable
-actual class CallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
-   private val appRepository: AppRepository by inject()
-
-   var token by mutableStateOf<Token?>(null)
-      private set
-
+actual class CallbackWaiterPageState : AbstractCallbackWaiterPageState() {
    var hasKeyboardShown by save(
       "has_keyboard_shown", Boolean.serializer(),
       init = { false }, recover = { true }
@@ -78,12 +77,8 @@ actual class CallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
       TextFieldValue()
    }
 
-   fun saveAuthorizedAccountByCode() {
-      pageStateScope.launch {
-         val code = inputCode.text
-         val application = appRepository.loadAppCache(page.instanceBaseUrl)
-         token = appRepository.getToken(application.value, code)
-      }
+   fun saveAuthorizedAccount() {
+      saveAuthorizedAccountByCode(inputCode.text)
    }
 }
 
@@ -116,18 +111,19 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
             .verticalScroll(rememberScrollState())
             .windowInsetsPadding(windowInsets)
       ) {
-         val token = state.token
+         val token = (state.tokenLoadState as? LoadState.Success)?.data
          if (token == null) {
             CallbackWaiterPageContent(
                state.inputCode,
+               state.tokenLoadState,
                onInputCodeChange = { newValue ->
                   state.inputCode = newValue
                },
                onAuthorizationCodeTextFieldKeyboardActionGo = {
-                  state.saveAuthorizedAccountByCode()
+                  state.saveAuthorizedAccount()
                },
                onVerifyButtonClick = {
-                  state.saveAuthorizedAccountByCode()
+                  state.saveAuthorizedAccount()
                },
                focusRequester
             )
@@ -168,6 +164,7 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
 @Composable
 private fun CallbackWaiterPageContent(
    inputCode: TextFieldValue,
+   tokenLoadState: LoadState<Token?>,
    onInputCodeChange: (TextFieldValue) -> Unit,
    onAuthorizationCodeTextFieldKeyboardActionGo: KeyboardActionScope.() -> Unit,
    onVerifyButtonClick: () -> Unit,
@@ -186,21 +183,37 @@ private fun CallbackWaiterPageContent(
       Spacer(Modifier.height(24.dp))
 
       AuthorizationCodeInputField(
-         inputCode, onInputCodeChange,
-         onAuthorizationCodeTextFieldKeyboardActionGo, focusRequester
+         inputCode, showError = tokenLoadState is LoadState.Error,
+         onInputCodeChange, onAuthorizationCodeTextFieldKeyboardActionGo,
+         focusRequester
       )
 
-      Button(
-         onClick = onVerifyButtonClick,
-         enabled = inputCode.text.isNotEmpty(),
-         shape = ButtonDefaults.filledTonalShape,
-         colors = ButtonDefaults.filledTonalButtonColors(),
-         elevation = ButtonDefaults.filledTonalButtonElevation(),
+      Row(
+         verticalAlignment = Alignment.CenterVertically,
          modifier = Modifier
             .align(Alignment.End)
-            .padding(horizontal = 8.dp, vertical = 16.dp)
+            .padding(horizontal = 8.dp)
       ) {
-         Text(Strings.Mastodon.callbackWaiter.desktop.verifyButton)
+         val isLoading = tokenLoadState is LoadState.Loading
+
+         if (isLoading) {
+            CircularProgressIndicator(
+               strokeWidth = 2.dp,
+               modifier = Modifier.size(16.dp)
+            )
+
+            Spacer(Modifier.width(16.dp))
+         }
+
+         Button(
+            onClick = onVerifyButtonClick,
+            enabled = !isLoading && inputCode.text.isNotEmpty(),
+            shape = ButtonDefaults.filledTonalShape,
+            colors = ButtonDefaults.filledTonalButtonColors(),
+            elevation = ButtonDefaults.filledTonalButtonElevation()
+         ) {
+            Text(Strings.Mastodon.callbackWaiter.desktop.verifyButton)
+         }
       }
    }
 }
@@ -208,6 +221,7 @@ private fun CallbackWaiterPageContent(
 @Composable
 private fun AuthorizationCodeInputField(
    inputCode: TextFieldValue,
+   showError: Boolean,
    onInputCodeChange: (TextFieldValue) -> Unit,
    onKeyboardActionGo: KeyboardActionScope.() -> Unit,
    focusRequester: FocusRequester,
@@ -219,6 +233,24 @@ private fun AuthorizationCodeInputField(
          Text(Strings.Mastodon.callbackWaiter.desktop.authorizationCodeInputFieldLabel)
       },
       singleLine = true,
+      supportingText = {
+         Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = if (showError) { Modifier } else { Modifier.alpha(0.0f) }
+         ) {
+            Icon(
+               Icons.Default.Error,
+               contentDescription = null,
+               modifier = Modifier.size(16.dp)
+            )
+
+            Text(
+               Strings.Mastodon.callbackWaiter.desktop.errorMessage,
+               modifier = Modifier.padding(horizontal = 4.dp)
+            )
+         }
+      },
+      isError = showError,
       keyboardOptions = KeyboardOptions(
          keyboardType = KeyboardType.Uri,
          imeAction = ImeAction.Go,

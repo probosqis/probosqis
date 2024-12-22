@@ -17,11 +17,22 @@
 package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.wcaokaze.probosqis.ext.compose.LoadState
+import com.wcaokaze.probosqis.mastodon.entity.Token
+import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage")
@@ -29,7 +40,55 @@ class CallbackWaiterPage(
    val instanceBaseUrl: String
 ) : PPage()
 
+abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
+   private val appRepository: AppRepository by inject()
+
+   var tokenLoadState: LoadState<Token?> by mutableStateOf(LoadState.Success(null))
+
+   fun saveAuthorizedAccountByCode(code: String) {
+      if (tokenLoadState is LoadState.Loading) { return }
+
+      tokenLoadState = LoadState.Loading
+
+      pageStateScope.launch {
+         try {
+            val application = appRepository.loadAppCache(page.instanceBaseUrl)
+            val token = appRepository.getToken(application.value, code)
+            tokenLoadState = LoadState.Success(token)
+         } catch (e: Exception) {
+            tokenLoadState = LoadState.Error(e)
+            return@launch
+         }
+
+         delay(3.seconds)
+
+         finishAuthPages()
+      }
+   }
+
+   private fun finishAuthPages() {
+      var pageStack = pageStack.tailOrNull()
+      if (pageStack == null) {
+         removeFromDeck()
+         return
+      }
+
+      if (pageStack.head.page !is UrlInputPage) {
+         this.pageStack = pageStack
+         return
+      }
+
+      pageStack = pageStack.tailOrNull()
+      if (pageStack == null) {
+         removeFromDeck()
+         return
+      }
+
+      this.pageStack =  pageStack
+   }
+}
+
 @Stable
-expect class CallbackWaiterPageState : PPageState<CallbackWaiterPage>
+expect class CallbackWaiterPageState : AbstractCallbackWaiterPageState
 
 expect val callbackWaiterPageComposable: PPageComposable<CallbackWaiterPage, CallbackWaiterPageState>

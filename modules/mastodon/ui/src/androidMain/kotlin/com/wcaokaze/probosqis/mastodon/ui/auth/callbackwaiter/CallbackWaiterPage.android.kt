@@ -17,43 +17,32 @@
 package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
-import com.wcaokaze.probosqis.mastodon.entity.Token
-import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.resources.Strings
-import kotlinx.coroutines.launch
-import org.koin.core.component.inject
+import com.wcaokaze.probosqis.resources.icons.Error
 
 @Stable
-actual class CallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
-   private val appRepository: AppRepository by inject()
-
-   var token by mutableStateOf<Token?>(null)
-      private set
-
-   fun saveAuthorizedAccountByCode(code: String) {
-      pageStateScope.launch {
-         val application = appRepository.loadAppCache(page.instanceBaseUrl)
-         token = appRepository.getToken(application.value, code)
-      }
-   }
-}
+actual class CallbackWaiterPageState : AbstractCallbackWaiterPageState()
 
 actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, CallbackWaiterPageState>(
    PageStateFactory { _, _ -> CallbackWaiterPageState() },
@@ -70,38 +59,70 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
             .verticalScroll(rememberScrollState())
             .windowInsetsPadding(windowInsets)
       ) {
-         val token = state.token
-         if (token == null) {
-            Text(
-               Strings.Mastodon.callbackWaiter.android.message,
-               modifier = Modifier.padding(16.dp)
-            )
-         } else {
-            val format = remember(token) {
-               buildString {
-                  append("instance url: ")
-                  append(token.instance.value.url)
-                  appendLine()
-                  append("token type: ")
-                  append(token.tokenType)
-                  appendLine()
-                  append("scope: ")
-                  append(token.scope)
-                  appendLine()
-                  append("created at: ")
-                  append(token.createdAt)
-                  appendLine()
-                  append("access token: ")
-                  repeat(token.accessToken.length) {
-                     append("x")
-                  }
+         when (val tokenLoadState = state.tokenLoadState) {
+            is LoadState.Loading -> {
+               Text(
+                  Strings.Mastodon.callbackWaiter.android.tokenLoadingMessage,
+                  modifier = Modifier.padding(16.dp)
+               )
+            }
+            is LoadState.Error -> {
+               Row(
+                  modifier = Modifier.padding(16.dp)
+               ) {
+                  Icon(
+                     Icons.Outlined.Error,
+                     contentDescription = null,
+                     modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .size(20.dp)
+                  )
+
+                  Spacer(Modifier.width(8.dp))
+
+                  Text(
+                     Strings.Mastodon.callbackWaiter.android.errorMessage,
+                     fontSize = 15.sp
+                  )
                }
             }
+            is LoadState.Success -> {
+               val token = tokenLoadState.data
+               if (token == null) {
+                  Text(
+                     Strings.Mastodon.callbackWaiter.android.initialMessage,
+                     fontSize = 15.sp,
+                     modifier = Modifier.padding(16.dp)
+                  )
+               } else {
+                  val format = remember(token) {
+                     buildString {
+                        append("instance url: ")
+                        append(token.instance.value.url)
+                        appendLine()
+                        append("token type: ")
+                        append(token.tokenType)
+                        appendLine()
+                        append("scope: ")
+                        append(token.scope)
+                        appendLine()
+                        append("created at: ")
+                        append(token.createdAt)
+                        appendLine()
+                        append("access token: ")
+                        repeat(token.accessToken.length) {
+                           append("x")
+                        }
+                     }
+                  }
 
-            Text(
-               format,
-               modifier = Modifier.padding(16.dp)
-            )
+                  Text(
+                     format,
+                     fontSize = 15.sp,
+                     modifier = Modifier.padding(16.dp)
+                  )
+               }
+            }
          }
       }
    },
