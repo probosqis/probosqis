@@ -17,10 +17,10 @@ use anyhow::Result;
 use ext_reqwest::CLIENT;
 use mastodon_entity::application::Application;
 use mastodon_entity::instance::Instance;
-use mastodon_webapi::entity::application::Application as ApiApplication;
 use semver::Version;
 
 use crate::cache;
+use crate::conversion;
 
 #[cfg(not(feature="jvm"))]
 use std::marker::PhantomData;
@@ -125,9 +125,7 @@ impl AppRepository<'_> {
       let instance_version = Version::parse(&instance.version)
          .unwrap_or(Version::new(0, 0, 0));
 
-      let ApiApplication {
-         name, website, client_id, client_secret
-      } = if instance_version < Version::new(4, 3, 0) {
+      let api_application  = if instance_version < Version::new(4, 3, 0) {
          apps::post_apps_v0(
             &CLIENT, &instance.url,
             /* client_name = */ "Probosqis",
@@ -152,10 +150,8 @@ impl AppRepository<'_> {
          .write(#[cfg(feature="jvm")] &mut self.env)?
          .save(instance);
 
-      let application = Application {
-         instance: instance_cache,
-         name, website, client_id, client_secret
-      };
+      let application = conversion
+         ::application::from_api(api_application, instance_cache)?;
 
       Ok(application)
    }
@@ -164,21 +160,18 @@ impl AppRepository<'_> {
 #[cfg(feature="jvm")]
 mod jvm {
    use anyhow::Result;
-   use chrono::DateTime;
    use jni::JNIEnv;
    use jni::objects::{JObject, JString};
 
    use ext_reqwest::CLIENT;
    use ext_reqwest::unwrap_or_throw::UnwrapOrThrow;
    use mastodon_entity::instance::Instance;
-   use mastodon_entity::token::Token;
    use mastodon_webapi::api::oauth;
-   use mastodon_webapi::entity::token::Token as ApiToken;
    use panoptiqon::cache::Cache;
    use panoptiqon::convert_java::ConvertJava;
 
    use crate::app_repository::AppRepository;
-   use crate::cache;
+   use crate::{cache, conversion};
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_postApp<'local>(
@@ -297,7 +290,7 @@ mod jvm {
       let client_id: String = env.get_string(&client_id)?.into();
       let client_secret: String = env.get_string(&client_secret)?.into();
 
-      let ApiToken { access_token, token_type, scope, created_at } = oauth::post_token(
+      let api_token = oauth::post_token(
          &CLIENT,
          /* instance_base_url */ &instance_cache.lock().unwrap().url,
          /* grant_type = */ "authorization_code",
@@ -308,11 +301,7 @@ mod jvm {
          /* scope = */ Some("read write push")
       )?;
 
-      let token = Token {
-         instance: instance_cache, access_token, token_type, scope,
-         created_at: DateTime::from_timestamp(created_at, 0).unwrap()
-      };
-
+      let token = conversion::token::from_api(api_token, instance_cache)?;
       Ok(token.clone_into_java(env))
    }
 

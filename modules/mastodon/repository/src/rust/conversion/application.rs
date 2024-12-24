@@ -13,7 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use anyhow::Result;
+use mastodon_entity::application::Application;
+use mastodon_webapi::entity::application::Application as ApiApplication;
 
-pub(crate) mod cache;
-pub(crate) mod conversion;
-mod app_repository;
+use mastodon_entity::instance::Instance;
+use panoptiqon::cache::Cache;
+
+pub fn from_api(
+   entity: ApiApplication,
+   instance_cache: Cache<Instance>
+) -> Result<Application> {
+   let ApiApplication { name, website, client_id, client_secret } = entity;
+
+   let application = Application {
+      instance: instance_cache,
+      name, website, client_id, client_secret
+   };
+
+   Ok(application)
+}
