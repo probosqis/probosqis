@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 use serde::Deserialize;
+use panoptiqon::cache::Cache;
+
+use crate::instance::Instance;
 
 #[cfg(feature="jvm")]
 use {
+   ext_panoptiqon::convert_java_helper::CloneIntoJava,
    ext_panoptiqon::convert_java_helper::ConvertJavaHelper,
    jni::JNIEnv,
    jni::objects::JObject,
    jni::sys::jvalue,
    panoptiqon::convert_java::ConvertJava,
 };
-use panoptiqon::cache::Cache;
-
-use crate::instance::Instance;
 
 #[derive(Deserialize)]
 pub struct Application {
@@ -37,9 +38,11 @@ pub struct Application {
 }
 
 #[cfg(feature="jvm")]
-const HELPER: ConvertJavaHelper<5> = ConvertJavaHelper::new(
+static HELPER: ConvertJavaHelper<5> = ConvertJavaHelper::new(
    "com/wcaokaze/probosqis/mastodon/entity/Application",
-   "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
+   CloneIntoJava::ViaConstructor(
+      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
+   ),
    [
       ("getInstance",     "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
       ("getName",         "Ljava/lang/String;"),

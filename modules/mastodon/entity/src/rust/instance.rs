@@ -19,6 +19,7 @@ use url::Url;
 
 #[cfg(feature="jvm")]
 use {
+   ext_panoptiqon::convert_java_helper::CloneIntoJava,
    ext_panoptiqon::convert_java_helper::ConvertJavaHelper,
    jni::JNIEnv,
    jni::objects::JObject,
@@ -34,9 +35,9 @@ pub struct Instance {
 }
 
 #[cfg(feature="jvm")]
-const HELPER: ConvertJavaHelper<3> = ConvertJavaHelper::new(
+static HELPER: ConvertJavaHelper<3> = ConvertJavaHelper::new(
    "com/wcaokaze/probosqis/mastodon/entity/Instance",
-   "(Ljava/lang/String;Ljava/lang/String;J)V",
+   CloneIntoJava::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;J)V"),
    [
       ("getUrl",                           "Ljava/lang/String;"),
       ("getVersion",                       "Ljava/lang/String;"),

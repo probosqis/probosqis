@@ -18,6 +18,7 @@ use serde::Deserialize;
 
 #[cfg(feature="jvm")]
 use {
+   ext_panoptiqon::convert_java_helper::CloneIntoJava,
    ext_panoptiqon::convert_java_helper::ConvertJavaHelper,
    jni::JNIEnv,
    jni::objects::JObject,
@@ -38,9 +39,11 @@ pub struct Token {
 }
 
 #[cfg(feature="jvm")]
-const HELPER: ConvertJavaHelper<5> = ConvertJavaHelper::new(
+static HELPER: ConvertJavaHelper<5> = ConvertJavaHelper::new(
    "com/wcaokaze/probosqis/mastodon/entity/Token",
-   "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V",
+   CloneIntoJava::ViaConstructor(
+      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V"
+   ),
    [
       ("getInstance",             "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
       ("getAccessToken",          "Ljava/lang/String;"),
