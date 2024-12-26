@@ -18,3 +18,6 @@
 pub mod convert_java_helper;
 
 pub mod repository_holder;
+
+#[cfg(feature="jvm")]
+pub mod test_cache;

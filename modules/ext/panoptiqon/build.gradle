@@ -23,9 +23,15 @@ apply from: rootProject.file('gradle/setupModule.gradle')
 
 kotlin {
    sourceSets {
+      commonMain.dependencies {
+         final composeVersion = libs.versions.compose.jb.get()
+         implementation "org.jetbrains.compose.runtime:runtime:$composeVersion"
+
+         implementation project(':panoptiqon')
+      }
+
       commonTest.dependencies {
          implementation project(':modules:ext:kotlinTest')
-         implementation project(':panoptiqon')
       }
    }
 }
