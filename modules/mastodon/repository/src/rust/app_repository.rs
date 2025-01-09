@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,7 +146,7 @@ impl AppRepository<'_> {
          )?
       };
 
-      let instance_cache = cache::instance_repo()
+      let instance_cache = cache::instance::repo()
          .write(#[cfg(feature="jvm")] &mut self.env)?
          .save(instance);
 
@@ -318,7 +318,7 @@ mod jvm {
             .call_method(&java_instance, "getValue", "()Ljava/lang/Object;", &[])?.l()?;
          let instance = Instance::clone_from_java(env, &instance_java_instance);
 
-         let mut repo = cache::instance_repo().write(env)?;
+         let mut repo = cache::instance::repo().write(env)?;
          Ok(repo.save(instance))
       }
    }

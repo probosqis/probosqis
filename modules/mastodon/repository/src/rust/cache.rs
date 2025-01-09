@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use std::clone::Clone;
 
-use url::Url;
+pub mod instance {
+   use url::Url;
+   use ext_panoptiqon::repository_holder::RepositoryHolder;
+   use mastodon_entity::instance::Instance;
 
-use ext_panoptiqon::repository_holder::RepositoryHolder;
-use mastodon_entity::instance::Instance;
+   pub type Key = Url;
+   pub type Repository = panoptiqon::repository::Repository<Url, Instance>;
 
-static INSTANCE_REPO: RepositoryHolder<Url, Instance>
-   = RepositoryHolder::new(|i| i.url.clone());
+   static REPO: RepositoryHolder<Url, Instance> = RepositoryHolder::new(
+      |i| i.url.clone()
+   );
 
-pub fn instance_repo() -> &'static RepositoryHolder<Url, Instance> {
-   &INSTANCE_REPO
+   pub fn repo() -> &'static RepositoryHolder<Url, Instance> {
+      &REPO
+   }
 }
