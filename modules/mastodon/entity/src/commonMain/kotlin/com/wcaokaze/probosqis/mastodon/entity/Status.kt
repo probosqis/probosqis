@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
-}
+package com.wcaokaze.probosqis.mastodon.entity
 
-apply from: rootProject.file('gradle/setupModule.gradle')
-
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         implementation project(':panoptiqon')
-         implementation project(':modules:ext:panoptiqon')
+class Status {
+   enum class Visibility(val value: Int) {
+      PUBLIC  (0),
+      UNLISTED(1),
+      PRIVATE (2),
+      DIRECT  (3),
+      ;
+      companion object {
+         @JvmStatic
+         fun fromInt(value: Int) = entries.first { it.value == value }
       }
    }
 }

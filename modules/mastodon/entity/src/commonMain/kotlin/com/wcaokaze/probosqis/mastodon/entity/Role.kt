@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
-}
+package com.wcaokaze.probosqis.mastodon.entity
 
-apply from: rootProject.file('gradle/setupModule.gradle')
+import com.wcaokaze.probosqis.panoptiqon.Cache
 
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         implementation project(':panoptiqon')
-         implementation project(':modules:ext:panoptiqon')
-      }
-   }
+data class Role(
+   val instance: Cache<Instance>,
+   val id: Id?,
+   val name: String?,
+   val color: String?,
+   val permissions: String?,
+   val isHighlighted: Boolean?,
+) {
+   @JvmInline
+   value class Id(val value: String)
+
+   val rawId: String?
+      get() = id?.value
 }

@@ -25,6 +25,7 @@ jni-test = ["jvm", "panoptiqon/jni-test"]
 
 [dependencies]
 chrono.workspace = true
+isolang.workspace = true
 serde.workspace = true
 jni = { workspace = true, optional = true }
 
