@@ -237,7 +237,7 @@ mod jvm {
       let client_id: String = env.get_string(&client_id)?.into();
 
       let authorize_url = oauth::get_authorize_url(
-         /* instance_base_url = */ &instance_cache.lock().unwrap().url,
+         /* instance_base_url = */ &instance_cache.read().unwrap().url,
          /* response_type = */ "code",
          /* client_id = */ &client_id,
          redirect_uri,
@@ -292,7 +292,7 @@ mod jvm {
 
       let api_token = oauth::post_token(
          &CLIENT,
-         /* instance_base_url */ &instance_cache.lock().unwrap().url,
+         /* instance_base_url */ &instance_cache.read().unwrap().url,
          /* grant_type = */ "authorization_code",
          /* code = */ Some(&code),
          /* client_id = */ &client_id,
