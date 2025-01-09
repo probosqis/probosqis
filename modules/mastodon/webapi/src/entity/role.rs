@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use serde::Deserialize;
 
-pub mod accounts;
-pub mod apps;
-pub mod oauth;
+/// since mastodon 4.0.0
+#[derive(Deserialize)]
+pub struct Role {
+   pub id: Option<String>,
+   pub name: Option<String>,
+   pub color: Option<String>,
+   pub permissions: Option<String>,
+   pub highlighted: Option<bool>
+}

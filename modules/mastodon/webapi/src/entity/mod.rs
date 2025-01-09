@@ -14,5 +14,8 @@
  * limitations under the License.
  */
 
+pub mod account;
 pub mod application;
+pub mod custom_emoji;
+pub mod role;
 pub mod token;
