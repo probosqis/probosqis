@@ -23,11 +23,10 @@ use {
    ext_panoptiqon::convert_java_helper::ConvertJavaHelper,
    jni::JNIEnv,
    jni::objects::JObject,
-   jni::sys::jvalue,
    panoptiqon::convert_java::ConvertJava,
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
 pub struct Instance {
    pub url: Url,
    pub version: String,
@@ -48,6 +47,8 @@ static HELPER: ConvertJavaHelper<3> = ConvertJavaHelper::new(
 #[cfg(feature="jvm")]
 impl ConvertJava for Instance {
    fn clone_into_java<'local>(&self, env: &mut JNIEnv<'local>) -> JObject<'local> {
+      use jni::sys::jvalue;
+
       let url                               = self.url.to_string().clone_into_java(env);
       let version                           = self.version        .clone_into_java(env);
       let version_checked_time_epoch_millis = self.version_checked_time.timestamp_millis();
