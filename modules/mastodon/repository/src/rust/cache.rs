@@ -30,3 +30,20 @@ pub mod instance {
       &REPO
    }
 }
+
+pub mod account {
+   use url::Url;
+   use ext_panoptiqon::repository_holder::RepositoryHolder;
+   use mastodon_entity::account::{Account, AccountId};
+
+   pub type Key = (Url, AccountId);
+   pub type Repository = panoptiqon::repository::Repository<Key, Account>;
+
+   static REPO: RepositoryHolder<Key, Account> = RepositoryHolder::new(
+      |a| (a.instance.read().unwrap().url.clone(), a.id.clone())
+   );
+
+   pub fn repo() -> &'static RepositoryHolder<Key, Account> {
+      &REPO
+   }
+}
