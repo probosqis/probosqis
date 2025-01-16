@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.mastodon.repository
 
 import android.content.Context
 import com.wcaokaze.probosqis.mastodon.entity.Application
+import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Cache
@@ -82,4 +83,6 @@ class AndroidAppRepository(context: Context) : AppRepository {
       clientId: String,
       clientSecret: String
    ): Token
+
+   external override fun getCredentialAccount(token: Token): CredentialAccount
 }

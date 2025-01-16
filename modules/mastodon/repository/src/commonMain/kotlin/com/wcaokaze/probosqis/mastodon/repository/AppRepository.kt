@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.mastodon.repository
 
 import com.wcaokaze.probosqis.mastodon.entity.Application
+import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Cache
@@ -72,4 +73,9 @@ interface AppRepository {
     * @throws IOException
     */
    fun getToken(application: Application, code: String): Token
+
+   /**
+    * @throws IOException
+    */
+   fun getCredentialAccount(token: Token): CredentialAccount
 }

@@ -13,25 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use anyhow::Result;
-use ext_reqwest::CLIENT;
+
+use mastodon_entity::account::CredentialAccount;
 use mastodon_entity::application::Application;
 use mastodon_entity::instance::Instance;
-use semver::Version;
+use mastodon_entity::token::Token;
 
-use crate::cache;
-use crate::conversion;
-
-#[cfg(not(feature="jvm"))]
+#[cfg(not(feature = "jvm"))]
 use std::marker::PhantomData;
 
-#[cfg(feature="jvm")]
+#[cfg(feature = "jvm")]
 use jni::JNIEnv;
 
-#[cfg(not(any(test, feature="jni-test")))]
+#[cfg(not(any(test, feature = "jni-test")))]
 use mastodon_webapi::api::apps;
 
-#[cfg(any(test, feature="jni-test"))]
+#[cfg(any(test, feature = "jni-test"))]
 mod apps {
    use std::cell::RefCell;
 
@@ -93,9 +90,9 @@ mod apps {
 }
 
 struct AppRepository<'jni> {
-   #[cfg(not(feature="jvm"))]
+   #[cfg(not(feature = "jvm"))]
    env: PhantomData<&'jni ()>,
-   #[cfg(feature="jvm")]
+   #[cfg(feature = "jvm")]
    env: JNIEnv<'jni>
 }
 
@@ -103,14 +100,14 @@ impl AppRepository<'_> {
    const ANDROID_REDIRECT_URI: &'static str = "https://probosqis.wcaokaze.com/auth/callback";
    const DESKTOP_REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
 
-   #[cfg(not(feature="jvm"))]
+   #[cfg(not(feature = "jvm"))]
    fn new() -> AppRepository<'static> {
       AppRepository {
          env: PhantomData
       }
    }
 
-   #[cfg(feature="jvm")]
+   #[cfg(feature = "jvm")]
    fn new<'jni>(env: &JNIEnv<'jni>) -> AppRepository<'jni> {
       AppRepository {
          env: unsafe { env.unsafe_clone() }
@@ -121,7 +118,12 @@ impl AppRepository<'_> {
       &mut self,
       instance: Instance,
       redirect_uri: &str
-   ) -> Result<Application> {
+   ) -> anyhow::Result<Application> {
+      use ext_reqwest::CLIENT;
+      use semver::Version;
+      use crate::cache;
+      use crate::conversion;
+
       let instance_version = Version::parse(&instance.version)
          .unwrap_or(Version::new(0, 0, 0));
 
@@ -147,7 +149,7 @@ impl AppRepository<'_> {
       };
 
       let instance_cache = cache::instance::repo()
-         .write(#[cfg(feature="jvm")] &mut self.env)?
+         .write(#[cfg(feature = "jvm")] &mut self.env)?
          .save(instance);
 
       let application = conversion
@@ -155,20 +157,46 @@ impl AppRepository<'_> {
 
       Ok(application)
    }
+
+   fn get_credential_account(
+      &mut self,
+      token: &Token
+   ) -> anyhow::Result<CredentialAccount> {
+      use ext_reqwest::CLIENT;
+      use mastodon_webapi::api::accounts;
+      use crate::conversion;
+
+      let instance_lock = token.instance.read()
+         .map_err(|_| anyhow::format_err!("instance cache was poisoned"))?;
+
+      let api_credential_account = accounts::get_verify_credentials(
+         &CLIENT,
+         &instance_lock.url,
+         &token.access_token
+      )?;
+
+      let credential_account = conversion::account::credential_account_from_api(
+         #[cfg(feature = "jvm")] &mut self.env,
+         token.instance.clone(),
+         api_credential_account
+      )?;
+
+      Ok(credential_account)
+   }
 }
 
-#[cfg(feature="jvm")]
+#[cfg(feature = "jvm")]
 mod jvm {
-   use anyhow::Result;
    use jni::JNIEnv;
    use jni::objects::{JObject, JString};
 
    use ext_reqwest::CLIENT;
    use ext_reqwest::unwrap_or_throw::UnwrapOrThrow;
    use mastodon_entity::instance::Instance;
+   use mastodon_entity::token::Token;
    use mastodon_webapi::api::oauth;
    use panoptiqon::cache::Cache;
-   use panoptiqon::convert_java::ConvertJava;
+   use panoptiqon::convert_java::{CloneFromJava, CloneIntoJava};
 
    use crate::app_repository::AppRepository;
    use crate::{cache, conversion};
@@ -197,7 +225,7 @@ mod jvm {
       env: &mut JNIEnv<'local>,
       instance: JObject<'local>,
       redirect_uri: &str
-   ) -> Result<JObject<'local>> {
+   ) -> anyhow::Result<JObject<'local>> {
       let mut app_repository = AppRepository::new(env);
 
       let instance = Instance::clone_from_java(env, &instance);
@@ -232,7 +260,7 @@ mod jvm {
       instance: JObject<'local>,
       client_id: JString<'local>,
       redirect_uri: &str
-   ) -> Result<JString<'local>> {
+   ) -> anyhow::Result<JString<'local>> {
       let instance_cache = get_instance_cache_from_java(env, &instance)?;
       let client_id: String = env.get_string(&client_id)?.into();
 
@@ -283,7 +311,7 @@ mod jvm {
       client_id: JString<'local>,
       client_secret: JString<'local>,
       redirect_uri: &str
-   ) -> Result<JObject<'local>> {
+   ) -> anyhow::Result<JObject<'local>> {
       let instance_cache = get_instance_cache_from_java(env, &instance)?;
 
       let code: String = env.get_string(&code)?.into();
@@ -305,10 +333,41 @@ mod jvm {
       Ok(token.clone_into_java(env))
    }
 
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_getCredentialAccount<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      token: JObject<'local>
+   ) -> JObject<'local> {
+      get_credential_account(&mut env, token)
+         .unwrap_or_throw_io_exception(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getCredentialAccount<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      token: JObject<'local>
+   ) -> JObject<'local> {
+      get_credential_account(&mut env, token)
+         .unwrap_or_throw_io_exception(&mut env)
+   }
+
+   fn get_credential_account<'local>(
+      env: &mut JNIEnv<'local>,
+      token: JObject<'local>
+   ) -> anyhow::Result<JObject<'local>> {
+      let mut app_repository = AppRepository::new(env);
+
+      let token = Token::clone_from_java(env, &token);
+      let credential_account = app_repository.get_credential_account(&token)?;
+      Ok(credential_account.clone_into_java(env))
+   }
+
    fn get_instance_cache_from_java<'local>(
       env: &mut JNIEnv<'local>,
       java_instance: &JObject<'local>,
-   ) -> Result<Cache<Instance>> {
+   ) -> anyhow::Result<Cache<Instance>> {
       if env.is_instance_of(
             &java_instance, "com/wcaokaze/probosqis/panoptiqon/RepositoryCache")?
       {
@@ -326,10 +385,6 @@ mod jvm {
 
 #[cfg(test)]
 mod test {
-   use std::sync::{Arc, Mutex};
-   use chrono::DateTime;
-   use url::Url;
-   use mastodon_entity::instance::Instance;
    use mastodon_webapi::entity::application::Application;
    use super::apps;
    use super::AppRepository;
@@ -345,6 +400,11 @@ mod test {
 
    #[test]
    fn switch_function_by_instance_version() {
+      use std::sync::{Arc, Mutex};
+      use chrono::DateTime;
+      use mastodon_entity::instance::Instance;
+      use url::Url;
+
       let mut repository = AppRepository::new();
 
       let v0_called     = Arc::new(Mutex::new(false));
