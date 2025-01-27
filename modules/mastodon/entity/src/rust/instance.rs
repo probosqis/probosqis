@@ -20,6 +20,7 @@ use url::Url;
 
 #[cfg(feature = "jvm")]
 use {
+   ext_panoptiqon::convert_jvm_helper,
    ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
@@ -34,7 +35,7 @@ pub struct Instance {
 }
 
 #[cfg(feature = "jvm")]
-static HELPER: ConvertJniHelper<3> = ConvertJniHelper::new(
+static HELPER: ConvertJniHelper<3> = convert_jvm_helper!(
    "com/wcaokaze/probosqis/mastodon/entity/Instance",
    JvmInstantiationStrategy::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;J)V"),
    [

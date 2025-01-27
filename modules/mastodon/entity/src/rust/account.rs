@@ -25,6 +25,7 @@ use crate::status::StatusVisibility;
 
 #[cfg(feature = "jvm")]
 use {
+   ext_panoptiqon::convert_jvm_helper,
    ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
@@ -92,7 +93,7 @@ pub struct AccountProfileField {
 }
 
 #[cfg(feature = "jvm")]
-static ACCOUNT_HELPER: ConvertJniHelper<26> = ConvertJniHelper::new(
+static ACCOUNT_HELPER: ConvertJniHelper<26> = convert_jvm_helper!(
    "com/wcaokaze/probosqis/mastodon/entity/Account",
    JvmInstantiationStrategy::ViaConstructor(
       "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
@@ -346,7 +347,7 @@ impl<'local> CloneFromJvm<'local, JvmAccount<'local>> for Account {
 }
 
 #[cfg(feature = "jvm")]
-static CREDENTIAL_ACCOUNT_HELPER: ConvertJniHelper<8> = ConvertJniHelper::new(
+static CREDENTIAL_ACCOUNT_HELPER: ConvertJniHelper<8> = convert_jvm_helper!(
    "com/wcaokaze/probosqis/mastodon/entity/CredentialAccount",
    JvmInstantiationStrategy::ViaConstructor(
       "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
@@ -446,7 +447,7 @@ impl<'local> CloneFromJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
 }
 
 #[cfg(feature = "jvm")]
-static RELATIONAL_ACCOUNT_HELPER: ConvertJniHelper<2> = ConvertJniHelper::new(
+static RELATIONAL_ACCOUNT_HELPER: ConvertJniHelper<2> = convert_jvm_helper!(
    "com/wcaokaze/probosqis/mastodon/entity/RelationalAccount",
    JvmInstantiationStrategy::ViaConstructor(
       "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/Long;)V"
@@ -500,7 +501,7 @@ impl<'local> CloneFromJvm<'local, JvmRelationalAccount<'local>> for RelationalAc
 }
 
 #[cfg(feature = "jvm")]
-static ACCOUNT_PROFILE_FIELD_HELPER: ConvertJniHelper<3> = ConvertJniHelper::new(
+static ACCOUNT_PROFILE_FIELD_HELPER: ConvertJniHelper<3> = convert_jvm_helper!(
    "com/wcaokaze/probosqis/mastodon/entity/Account$ProfileField",
    JvmInstantiationStrategy::ViaConstructor(
       "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V"

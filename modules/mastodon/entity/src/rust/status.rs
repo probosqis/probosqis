@@ -19,6 +19,7 @@ use serde::Deserialize;
 #[cfg(feature = "jvm")]
 use {
    jni::JNIEnv,
+   ext_panoptiqon::convert_jvm_helper,
    ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    crate::jvm_types::JvmStatusVisibility,
@@ -33,7 +34,7 @@ pub enum StatusVisibility {
 }
 
 #[cfg(feature = "jvm")]
-static STATUS_VISIBILITY_HELPER: ConvertJniHelper<1> = ConvertJniHelper::new(
+static STATUS_VISIBILITY_HELPER: ConvertJniHelper<1> = convert_jvm_helper!(
    "com/wcaokaze/probosqis/mastodon/entity/Status$Visibility",
    JvmInstantiationStrategy::ViaStaticMethod(
       "fromInt", "(I)Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;"

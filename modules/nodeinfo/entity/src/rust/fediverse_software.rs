@@ -16,13 +16,14 @@
 
 #[cfg(feature = "jvm")]
 use {
+   ext_panoptiqon::convert_jvm_helper,
    ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
    jni::JNIEnv,
    crate::jvm_types::JvmFediverseSoftware,
 };
 
 #[cfg(feature = "jvm")]
-static HELPER_UNSUPPORTED: ConvertJniHelper<0> = ConvertJniHelper::new(
+static HELPER_UNSUPPORTED: ConvertJniHelper<0> = convert_jvm_helper!(
    "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported",
    JvmInstantiationStrategy::ViaConstructor(
       "(Ljava/lang/String;Ljava/lang/String;)V"
@@ -31,7 +32,7 @@ static HELPER_UNSUPPORTED: ConvertJniHelper<0> = ConvertJniHelper::new(
 );
 
 #[cfg(feature = "jvm")]
-static HELPER_MASTODON: ConvertJniHelper<0> = ConvertJniHelper::new(
+static HELPER_MASTODON: ConvertJniHelper<0> = convert_jvm_helper!(
    "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon",
    JvmInstantiationStrategy::ViaConstructor(
       "(Ljava/lang/String;Ljava/lang/String;)V"

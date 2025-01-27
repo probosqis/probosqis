@@ -24,6 +24,21 @@ use jni::objects::{GlobalRef, JMethodID, JObject, JStaticMethodID, JValueOwned};
 use jni::signature::{ReturnType, TypeSignature};
 use jni::sys::jvalue;
 
+#[macro_export]
+macro_rules! convert_jvm_helper {
+   (
+      $class_fully_qualified_name:literal,
+      $instantiation_strategy:expr,
+      $getter_signatures:expr
+   ) => {
+      $crate::convert_jvm_helper::ConvertJniHelper::new(
+         $class_fully_qualified_name,
+         $instantiation_strategy,
+         $getter_signatures
+      )
+   };
+}
+
 pub struct ConvertJniHelper<'a, const ARITY: usize>(
    RwLock<ConvertJniHelperInner<'a, ARITY>>
 );
@@ -207,7 +222,7 @@ mod jni_tests {
    use super::{JvmInstantiationStrategy, ConvertJniHelper, ConvertJniHelperInner};
 
    fn create_helper() -> ConvertJniHelper<'static, 10> {
-      ConvertJniHelper::new(
+      convert_jvm_helper!(
          "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity",
          JvmInstantiationStrategy::ViaConstructor("(ZBSIJFDCLjava/lang/String;[I)V"),
          [
