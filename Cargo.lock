@@ -531,6 +531,7 @@ dependencies = [
  "chrono",
  "ext_panoptiqon",
  "ext_reqwest",
+ "isolang",
  "jni",
  "mastodon_entity",
  "mastodon_webapi",
@@ -602,6 +603,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "ext_panoptiqon",
  "ext_reqwest",
  "jni",
  "nodeinfo_entity",

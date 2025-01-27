@@ -21,28 +21,35 @@ pub mod instance;
 pub mod role;
 pub mod status;
 pub mod token;
+mod cache;
+
+#[cfg(feature = "jvm")]
+pub mod jvm_types;
 
 #[cfg(feature="jni-test")]
 mod jni_tests {
    use jni::JNIEnv;
    use jni::objects::JObject;
-   use url::Url;
    use ext_panoptiqon::repository_holder::RepositoryHolder;
    use panoptiqon::cache::Cache;
+   use panoptiqon::jvm_types::JvmCache;
    use crate::account::{Account, AccountId};
    use crate::instance::Instance;
+   use crate::jvm_types::{
+      JvmAccount, JvmCustomEmoji, JvmInstance, JvmRole, JvmStatusVisibility,
+   };
 
-   const fn new_instance_repo() -> RepositoryHolder<Url, Instance> {
-      RepositoryHolder::new(|i| i.url.clone())
+   const fn new_instance_repo() -> RepositoryHolder<Instance> {
+      RepositoryHolder::new()
    }
 
-   const fn new_account_repo() -> RepositoryHolder<(Url, AccountId), Account> {
-      RepositoryHolder::new(|a| (a.instance.read().unwrap().url.clone(), a.id.clone()))
+   const fn new_account_repo() -> RepositoryHolder<Account> {
+      RepositoryHolder::new()
    }
 
    fn save_instance(
       env: &mut JNIEnv,
-      instance_repo: &RepositoryHolder<Url, Instance>
+      instance_repo: &RepositoryHolder<Instance>
    ) -> Cache<Instance> {
       use chrono::{TimeZone, Utc};
 
@@ -59,8 +66,8 @@ mod jni_tests {
 
    fn save_account(
       env: &mut JNIEnv,
-      account_repo: &RepositoryHolder<(Url, AccountId), Account>,
-      instance_repo: &RepositoryHolder<Url, Instance>
+      account_repo: &RepositoryHolder<Account>,
+      instance_repo: &RepositoryHolder<Instance>
    ) -> Cache<Account> {
       let account = Account {
          instance: save_instance(env, instance_repo),
@@ -97,45 +104,45 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static account_toRust_instance_repo: RepositoryHolder<Url, Instance> = new_instance_repo();
+   static account_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
 
    #[allow(non_upper_case_globals)]
-   static account_toRust_account_repo: RepositoryHolder<(Url, AccountId), Account> = new_account_repo();
+   static account_toRust_account_repo: RepositoryHolder<Account> = new_account_repo();
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_account_1toRust_00024createInstance<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1toRust_00024createInstance<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_instance(&mut env, &account_toRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_account_1toRust_00024createMovedTo<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1toRust_00024createMovedTo<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmAccount<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_account(&mut env, &account_toRust_account_repo, &account_toRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_account_1toRust_00024assert(
-      mut env: JNIEnv,
-      _obj: JObject,
-      account: JObject
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      account: JvmAccount<'local>
    ) {
       use chrono::{TimeZone, Utc};
-      use panoptiqon::convert_java::ConvertJava;
+      use panoptiqon::convert_jvm::CloneFromJvm;
       use crate::account::AccountProfileField;
       use crate::custom_emoji::CustomEmoji;
 
-      let account = Account::clone_from_java(&mut env, &account);
+      let account = Account::clone_from_jvm(&mut env, &account);
 
       let instance = save_instance(&mut env, &account_toRust_instance_repo);
 
@@ -218,18 +225,18 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static account_fromRust_instance_repo: RepositoryHolder<Url, Instance> = new_instance_repo();
+   static account_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
 
    #[allow(non_upper_case_globals)]
-   static account_fromRust_account_repo: RepositoryHolder<(Url, AccountId), Account> = new_account_repo();
+   static account_fromRust_account_repo: RepositoryHolder<Account> = new_account_repo();
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_account_1fromRust_00024createAccount<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1fromRust_00024createAccount<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
+   ) -> JvmAccount<'local> {
       use chrono::{TimeZone, Utc};
-      use panoptiqon::convert_java::ConvertJava;
+      use panoptiqon::convert_jvm::CloneIntoJvm;
       use crate::account::AccountProfileField;
       use crate::custom_emoji::CustomEmoji;
 
@@ -309,41 +316,41 @@ mod jni_tests {
          ),
       };
 
-      account.clone_into_java(&mut env)
+      account.clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_account_1fromRust_00024createInstance<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1fromRust_00024createInstance<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_instance(&mut env, &account_fromRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_account_1fromRust_00024createMovedTo<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1fromRust_00024createMovedTo<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmAccount<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_account(&mut env, &account_fromRust_account_repo, &account_fromRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_statusVisibility_1toRust_00024assert(
-      mut env: JNIEnv,
-      _obj: JObject,
-      status_visibility: JObject
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_statusVisibility_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      status_visibility: JvmStatusVisibility<'local>
    ) {
-      use panoptiqon::convert_java::ConvertJava;
+      use panoptiqon::convert_jvm::CloneFromJvm;
       use crate::status::StatusVisibility;
 
-      let status_visibility = StatusVisibility::clone_from_java(&mut env, &status_visibility);
+      let status_visibility = StatusVisibility::clone_from_jvm(&mut env, &status_visibility);
 
       assert_eq!(
          StatusVisibility::Unlisted,
@@ -352,41 +359,41 @@ mod jni_tests {
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_statusVisibility_1fromRust_00024createStatusVisibility<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_statusVisibility_1fromRust_00024createStatusVisibility<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmStatusVisibility<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
       use crate::status::StatusVisibility;
 
       let status_visibility = StatusVisibility::Unlisted;
-      status_visibility.clone_into_java(&mut env)
+      status_visibility.clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_toRust_instance_repo: RepositoryHolder<Url, Instance> = new_instance_repo();
+   static customEmoji_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_customEmoji_1toRust_00024createInstance<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1toRust_00024createInstance<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_instance(&mut env, &customEmoji_toRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_customEmoji_1toRust_00024assert(
-      mut env: JNIEnv,
-      _obj: JObject,
-      custom_emoji: JObject
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      custom_emoji: JvmCustomEmoji<'local>
    ) {
-      use panoptiqon::convert_java::ConvertJava;
+      use panoptiqon::convert_jvm::CloneFromJvm;
       use crate::custom_emoji::CustomEmoji;
 
-      let custom_emoji = CustomEmoji::clone_from_java(&mut env, &custom_emoji);
+      let custom_emoji = CustomEmoji::clone_from_jvm(&mut env, &custom_emoji);
 
       assert_eq!(
          CustomEmoji {
@@ -402,29 +409,29 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_nulls_toRust_instance_repo: RepositoryHolder<Url, Instance> = new_instance_repo();
+   static customEmoji_nulls_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_customEmoji_1nulls_1toRust_00024createInstance<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1nulls_1toRust_00024createInstance<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_instance(&mut env, &customEmoji_nulls_toRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_customEmoji_1nulls_1toRust_00024assert(
-      mut env: JNIEnv,
-      _obj: JObject,
-      custom_emoji: JObject
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1nulls_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      custom_emoji: JvmCustomEmoji<'local>
    ) {
-      use panoptiqon::convert_java::ConvertJava;
+      use panoptiqon::convert_jvm::CloneFromJvm;
       use crate::custom_emoji::CustomEmoji;
 
-      let custom_emoji = CustomEmoji::clone_from_java(&mut env, &custom_emoji);
+      let custom_emoji = CustomEmoji::clone_from_jvm(&mut env, &custom_emoji);
 
       assert_eq!(
          CustomEmoji {
@@ -440,14 +447,14 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_fromRust_instance_repo: RepositoryHolder<Url, Instance> = new_instance_repo();
+   static customEmoji_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_customEmoji_1fromRust_00024createCustomEmoji<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1fromRust_00024createCustomEmoji<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCustomEmoji<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
       use crate::custom_emoji::CustomEmoji;
 
       let custom_emoji = CustomEmoji {
@@ -459,29 +466,29 @@ mod jni_tests {
          category: Some("category".to_string()),
       };
 
-      custom_emoji.clone_into_java(&mut env)
+      custom_emoji.clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_customEmoji_1fromRust_00024createInstance<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1fromRust_00024createInstance<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_instance(&mut env, &customEmoji_fromRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_nulls_fromRust_instance_repo: RepositoryHolder<Url, Instance> = new_instance_repo();
+   static customEmoji_nulls_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_customEmoji_1nulls_1fromRust_00024createCustomEmoji<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1nulls_1fromRust_00024createCustomEmoji<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCustomEmoji<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
       use crate::custom_emoji::CustomEmoji;
 
       let custom_emoji = CustomEmoji {
@@ -493,44 +500,44 @@ mod jni_tests {
          category: None,
       };
 
-      custom_emoji.clone_into_java(&mut env)
+      custom_emoji.clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_customEmoji_1nulls_1fromRust_00024createInstance<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1nulls_1fromRust_00024createInstance<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_instance(&mut env, &customEmoji_nulls_fromRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
-   static role_toRust_instance_repo: RepositoryHolder<Url, Instance> = new_instance_repo();
+   static role_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_role_1toRust_00024createInstance<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1toRust_00024createInstance<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_instance(&mut env, &role_toRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_role_1toRust_00024assert(
-      mut env: JNIEnv,
-      _obj: JObject,
-      role: JObject
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      role: JvmRole<'local>
    ) {
-      use panoptiqon::convert_java::ConvertJava;
+      use panoptiqon::convert_jvm::CloneFromJvm;
       use crate::role::{Role, RoleId};
 
-      let role = Role::clone_from_java(&mut env, &role);
+      let role = Role::clone_from_jvm(&mut env, &role);
 
       assert_eq!(
          Role {
@@ -546,29 +553,29 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static role_nulls_toRust_instance_repo: RepositoryHolder<Url, Instance> = new_instance_repo();
+   static role_nulls_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_role_1nulls_1toRust_00024createInstance<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1nulls_1toRust_00024createInstance<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_instance(&mut env, &role_nulls_toRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_role_1nulls_1toRust_00024assert(
-      mut env: JNIEnv,
-      _obj: JObject,
-      role: JObject
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1nulls_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      role: JvmRole<'local>
    ) {
-      use panoptiqon::convert_java::ConvertJava;
+      use panoptiqon::convert_jvm::CloneFromJvm;
       use crate::role::Role;
 
-      let role = Role::clone_from_java(&mut env, &role);
+      let role = Role::clone_from_jvm(&mut env, &role);
 
       assert_eq!(
          Role {
@@ -584,14 +591,14 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static role_fromRust_instance_repo: RepositoryHolder<Url, Instance> = new_instance_repo();
+   static role_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_role_1fromRust_00024createRole<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1fromRust_00024createRole<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmRole<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
       use crate::role::{Role, RoleId};
 
       let role = Role {
@@ -603,29 +610,29 @@ mod jni_tests {
          is_highlighted: Some(true),
       };
 
-      role.clone_into_java(&mut env)
+      role.clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_role_1fromRust_00024createInstance<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1fromRust_00024createInstance<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_instance(&mut env, &role_fromRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
-   static role_nulls_fromRust_instance_repo: RepositoryHolder<Url, Instance> = new_instance_repo();
+   static role_nulls_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_role_1nulls_1fromRust_00024createRole<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1nulls_1fromRust_00024createRole<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmRole<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
       use crate::role::Role;
 
       let role = Role {
@@ -637,17 +644,17 @@ mod jni_tests {
          is_highlighted: None,
       };
 
-      role.clone_into_java(&mut env)
+      role.clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJavaTest_role_1nulls_1fromRust_00024createInstance<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1nulls_1fromRust_00024createInstance<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      use panoptiqon::convert_java::ConvertJava;
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
 
       save_instance(&mut env, &role_nulls_fromRust_instance_repo)
-         .clone_into_java(&mut env)
+         .clone_into_jvm(&mut env)
    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ class TestEntity(
    val arr: IntArray,
 )
 
-class ConvertJavaHelperTest {
+class ConvertJniHelperTest {
    init {
       loadNativeLib()
    }
@@ -43,7 +43,7 @@ class ConvertJavaHelperTest {
    external fun variantStrsOnInit()
 
    @Test
-   external fun variantJvmIdsAfterCloneIntoJava()
+   external fun variantJvmIdsAfterCloneIntoJvm()
 
    @Test
    fun variantJvmIdsAfterGet() {
@@ -54,8 +54,8 @@ class ConvertJavaHelperTest {
    external fun `variantJvmIdsAfterGet$assert`(entity: TestEntity)
 
    @Test
-   fun cloneIntoJava() {
-      val entity = `cloneIntoJava$createEntity`()
+   fun CloneIntoJvm() {
+      val entity = `CloneIntoJvm$createEntity`()
       assertEquals(false, entity.z)
       assertEquals(0, entity.b)
       assertEquals(1, entity.s)
@@ -68,10 +68,10 @@ class ConvertJavaHelperTest {
       assertContentEquals(intArrayOf(6, 7, 8, 9, 0), entity.arr)
    }
 
-   external fun `cloneIntoJava$createEntity`(): TestEntity
+   external fun `CloneIntoJvm$createEntity`(): TestEntity
 
    @Test
-   fun cloneFromJava() {
+   fun CloneFromJvm() {
       val entity = TestEntity(
          z = false,
          b = 0,
@@ -84,8 +84,8 @@ class ConvertJavaHelperTest {
          str = "9012345",
          arr = intArrayOf(6, 7, 8, 9, 0),
       )
-      `cloneFromJava$assert`(entity)
+      `CloneFromJvm$assert`(entity)
    }
 
-   external fun `cloneFromJava$assert`(entity: TestEntity)
+   external fun `CloneFromJvm$assert`(entity: TestEntity)
 }

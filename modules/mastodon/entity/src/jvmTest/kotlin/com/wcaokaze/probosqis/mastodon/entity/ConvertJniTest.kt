@@ -24,7 +24,7 @@ import kotlinx.datetime.toInstant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ConvertJavaTest {
+class ConvertJniTest {
    init {
       loadNativeLib()
    }

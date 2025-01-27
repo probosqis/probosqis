@@ -188,25 +188,23 @@ impl AppRepository<'_> {
 #[cfg(feature = "jvm")]
 mod jvm {
    use jni::JNIEnv;
-   use jni::objects::{JObject, JString};
-
-   use ext_reqwest::CLIENT;
-   use ext_reqwest::unwrap_or_throw::UnwrapOrThrow;
+   use jni::objects::JObject;
    use mastodon_entity::instance::Instance;
-   use mastodon_entity::token::Token;
-   use mastodon_webapi::api::oauth;
+   use mastodon_entity::jvm_types::{
+      JvmApplication, JvmCredentialAccount, JvmInstance, JvmToken,
+   };
    use panoptiqon::cache::Cache;
-   use panoptiqon::convert_java::{CloneFromJava, CloneIntoJava};
-
-   use crate::app_repository::AppRepository;
-   use crate::{cache, conversion};
+   use panoptiqon::jvm_types::{JvmCache, JvmString};
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_postApp<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JObject<'local>
-   ) -> JObject<'local> {
+      instance: JvmInstance<'local>
+   ) -> JvmApplication<'local> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+      use super::AppRepository;
+
       post_app(&mut env, instance, AppRepository::DESKTOP_REDIRECT_URI)
          .unwrap_or_throw_io_exception(&mut env)
    }
@@ -215,31 +213,40 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_postApp<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JObject<'local>
-   ) -> JObject<'local> {
+      instance: JvmInstance<'local>
+   ) -> JvmApplication<'local> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+      use super::AppRepository;
+
       post_app(&mut env, instance, AppRepository::ANDROID_REDIRECT_URI)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn post_app<'local>(
       env: &mut JNIEnv<'local>,
-      instance: JObject<'local>,
+      instance: JvmInstance<'local>,
       redirect_uri: &str
-   ) -> anyhow::Result<JObject<'local>> {
+   ) -> anyhow::Result<JvmApplication<'local>> {
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use super::AppRepository;
+
       let mut app_repository = AppRepository::new(env);
 
-      let instance = Instance::clone_from_java(env, &instance);
+      let instance = Instance::clone_from_jvm(env, &instance);
       let application = app_repository.post_app(instance, redirect_uri)?;
-      Ok(application.clone_into_java(env))
+      Ok(application.clone_into_jvm(env))
    }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getAuthorizeUrl<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JObject<'local>,
-      client_id: JString<'local>
-   ) -> JString<'local> {
+      instance: JvmCache<'local, JvmInstance<'local>>,
+      client_id: JvmString<'local>
+   ) -> JvmString<'local> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+      use super::AppRepository;
+
       get_authorize_url(&mut env, instance, client_id, AppRepository::DESKTOP_REDIRECT_URI)
          .unwrap_or_throw_io_exception(&mut env)
    }
@@ -248,21 +255,27 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_getAuthorizeUrl<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JObject<'local>,
-      client_id: JString<'local>
-   ) -> JString<'local> {
+      instance: JvmCache<'local, JvmInstance<'local>>,
+      client_id: JvmString<'local>
+   ) -> JvmString<'local> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+      use super::AppRepository;
+
       get_authorize_url(&mut env, instance, client_id, AppRepository::ANDROID_REDIRECT_URI)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_authorize_url<'local>(
       env: &mut JNIEnv<'local>,
-      instance: JObject<'local>,
-      client_id: JString<'local>,
+      instance: JvmCache<'local, JvmInstance<'local>>,
+      client_id: JvmString<'local>,
       redirect_uri: &str
-   ) -> anyhow::Result<JString<'local>> {
-      let instance_cache = get_instance_cache_from_java(env, &instance)?;
-      let client_id: String = env.get_string(&client_id)?.into();
+   ) -> anyhow::Result<JvmString<'local>> {
+      use mastodon_webapi::api::oauth;
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+
+      let instance_cache = get_instance_cache_from_jni(env, &instance)?;
+      let client_id = String::clone_from_jvm(env, &client_id);
 
       let authorize_url = oauth::get_authorize_url(
          /* instance_base_url = */ &instance_cache.read().unwrap().url,
@@ -274,7 +287,7 @@ mod jvm {
          /* lang = */ None
       )?;
 
-      let authorize_url = env.new_string(authorize_url.as_str())?;
+      let authorize_url = authorize_url.as_str().clone_into_jvm(env);
       Ok(authorize_url)
    }
 
@@ -282,11 +295,14 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getToken<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JObject<'local>,
-      code: JString<'local>,
-      client_id: JString<'local>,
-      client_secret: JString<'local>
-   ) -> JObject<'local> {
+      instance: JvmCache<'local, JvmInstance<'local>>,
+      code: JvmString<'local>,
+      client_id: JvmString<'local>,
+      client_secret: JvmString<'local>
+   ) -> JvmToken<'local> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+      use super::AppRepository;
+
       get_token(&mut env, instance, code, client_id, client_secret, AppRepository::DESKTOP_REDIRECT_URI)
          .unwrap_or_throw_io_exception(&mut env)
    }
@@ -295,28 +311,36 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_getToken<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JObject<'local>,
-      code: JString<'local>,
-      client_id: JString<'local>,
-      client_secret: JString<'local>
-   ) -> JObject<'local> {
+      instance: JvmCache<'local, JvmInstance<'local>>,
+      code: JvmString<'local>,
+      client_id: JvmString<'local>,
+      client_secret: JvmString<'local>
+   ) -> JvmToken<'local> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+      use super::AppRepository;
+
       get_token(&mut env, instance, code, client_id, client_secret, AppRepository::ANDROID_REDIRECT_URI)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_token<'local>(
       env: &mut JNIEnv<'local>,
-      instance: JObject<'local>,
-      code: JString<'local>,
-      client_id: JString<'local>,
-      client_secret: JString<'local>,
+      instance: JvmCache<'local, JvmInstance<'local>>,
+      code: JvmString<'local>,
+      client_id: JvmString<'local>,
+      client_secret: JvmString<'local>,
       redirect_uri: &str
-   ) -> anyhow::Result<JObject<'local>> {
-      let instance_cache = get_instance_cache_from_java(env, &instance)?;
+   ) -> anyhow::Result<JvmToken<'local>> {
+      use ext_reqwest::CLIENT;
+      use mastodon_webapi::api::oauth;
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use crate::conversion;
 
-      let code: String = env.get_string(&code)?.into();
-      let client_id: String = env.get_string(&client_id)?.into();
-      let client_secret: String = env.get_string(&client_secret)?.into();
+      let instance_cache = get_instance_cache_from_jni(env, &instance)?;
+
+      let code = String::clone_from_jvm(env, &code);
+      let client_id = String::clone_from_jvm(env, &client_id);
+      let client_secret = String::clone_from_jvm(env, &client_secret);
 
       let api_token = oauth::post_token(
          &CLIENT,
@@ -330,15 +354,17 @@ mod jvm {
       )?;
 
       let token = conversion::token::from_api(api_token, instance_cache)?;
-      Ok(token.clone_into_java(env))
+      Ok(token.clone_into_jvm(env))
    }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_getCredentialAccount<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      token: JObject<'local>
-   ) -> JObject<'local> {
+      token: JvmToken<'local>
+   ) -> JvmCredentialAccount<'local> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+
       get_credential_account(&mut env, token)
          .unwrap_or_throw_io_exception(&mut env)
    }
@@ -347,35 +373,53 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getCredentialAccount<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      token: JObject<'local>
-   ) -> JObject<'local> {
+      token: JvmToken<'local>
+   ) -> JvmCredentialAccount<'local> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+
       get_credential_account(&mut env, token)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_credential_account<'local>(
       env: &mut JNIEnv<'local>,
-      token: JObject<'local>
-   ) -> anyhow::Result<JObject<'local>> {
+      token: JvmToken<'local>
+   ) -> anyhow::Result<JvmCredentialAccount<'local>> {
+      use mastodon_entity::token::Token;
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use super::AppRepository;
+
       let mut app_repository = AppRepository::new(env);
 
-      let token = Token::clone_from_java(env, &token);
+      let token = Token::clone_from_jvm(env, &token);
       let credential_account = app_repository.get_credential_account(&token)?;
-      Ok(credential_account.clone_into_java(env))
+      Ok(credential_account.clone_into_jvm(env))
    }
 
-   fn get_instance_cache_from_java<'local>(
+   fn get_instance_cache_from_jni<'local>(
       env: &mut JNIEnv<'local>,
-      java_instance: &JObject<'local>,
+      java_instance: &JvmCache<'local, JvmInstance<'local>>,
    ) -> anyhow::Result<Cache<Instance>> {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use panoptiqon::jvm_type::JvmType;
+      use crate::cache;
+
       if env.is_instance_of(
-            &java_instance, "com/wcaokaze/probosqis/panoptiqon/RepositoryCache")?
-      {
-         Ok(Cache::<Instance>::clone_from_java(env, &java_instance))
+         java_instance.j_object(),
+         "com/wcaokaze/probosqis/panoptiqon/RepositoryCache"
+      )? {
+         Ok(Cache::<Instance>::clone_from_jvm(env, &java_instance))
       } else {
-         let instance_java_instance = env
-            .call_method(&java_instance, "getValue", "()Ljava/lang/Object;", &[])?.l()?;
-         let instance = Instance::clone_from_java(env, &instance_java_instance);
+         let instance_java_instance = env.call_method(
+            java_instance.j_object(),
+            "getValue", "()Ljava/lang/Object;", &[]
+         )?.l()?;
+
+         let jvm_instance = unsafe {
+            JvmInstance::from_j_object(instance_java_instance)
+         };
+
+         let instance = Instance::clone_from_jvm(env, &jvm_instance);
 
          let mut repo = cache::instance::repo().write(env)?;
          Ok(repo.save(instance))

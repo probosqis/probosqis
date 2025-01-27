@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,3 +17,6 @@
 pub use mastodon_entity;
 
 pub mod fediverse_software;
+
+#[cfg(feature = "jvm")]
+pub mod jvm_types;

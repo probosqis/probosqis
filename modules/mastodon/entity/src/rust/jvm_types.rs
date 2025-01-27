@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 wcaokaze
+ * Copyright 2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 
-pub mod repository_holder;
+#![cfg(feature = "jvm")]
 
-#[cfg(feature="jvm")]
-pub mod convert_jvm_helper;
+use panoptiqon::jvm_type;
 
-#[cfg(feature="jvm")]
-pub mod unwrap_or_throw;
+jvm_type! {
+   JvmApplication,
+   JvmToken,
+   JvmAccount,
+   JvmAccountId,
+   JvmCredentialAccount,
+   JvmRelationalAccount,
+   JvmAccountProfileField,
+   JvmStatusVisibility,
+   JvmInstance,
+   JvmCustomEmoji,
+   JvmRole,
+}

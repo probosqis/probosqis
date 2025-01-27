@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 use serde::Deserialize;
 
-#[cfg(feature="jvm")]
+#[cfg(feature = "jvm")]
 use {
    jni::JNIEnv,
-   jni::objects::JObject,
-   ext_panoptiqon::convert_java_helper::{CloneIntoJava, ConvertJavaHelper},
-   panoptiqon::convert_java::ConvertJava,
+   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
+   panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
+   crate::jvm_types::JvmStatusVisibility,
 };
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Deserialize)]
@@ -31,10 +32,10 @@ pub enum StatusVisibility {
    Direct   = 3,
 }
 
-#[cfg(feature="jvm")]
-static STATUS_VISIBILITY_HELPER: ConvertJavaHelper<1> = ConvertJavaHelper::new(
+#[cfg(feature = "jvm")]
+static STATUS_VISIBILITY_HELPER: ConvertJniHelper<1> = ConvertJniHelper::new(
    "com/wcaokaze/probosqis/mastodon/entity/Status$Visibility",
-   CloneIntoJava::ViaStaticMethod(
+   JvmInstantiationStrategy::ViaStaticMethod(
       "fromInt", "(I)Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;"
    ),
    [
@@ -42,21 +43,31 @@ static STATUS_VISIBILITY_HELPER: ConvertJavaHelper<1> = ConvertJavaHelper::new(
    ]
 );
 
-#[cfg(feature="jvm")]
-impl ConvertJava for StatusVisibility {
-   fn clone_into_java<'local>(&self, env: &mut JNIEnv<'local>) -> JObject<'local> {
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmStatusVisibility<'local>> for StatusVisibility {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmStatusVisibility<'local> {
       use jni::sys::jvalue;
+      use panoptiqon::jvm_type::JvmType;
 
       let visibility = *self as i32;
       let args = [
          jvalue { i: visibility },
       ];
 
-      STATUS_VISIBILITY_HELPER.clone_into_java(env, &args)
+      let j_object = STATUS_VISIBILITY_HELPER.clone_into_jvm(env, &args);
+      unsafe { JvmStatusVisibility::from_j_object(j_object) }
    }
+}
 
-   fn clone_from_java(env: &mut JNIEnv, java_object: &JObject) -> StatusVisibility {
-      let v = STATUS_VISIBILITY_HELPER.get(env, &java_object, 0).i().unwrap();
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmStatusVisibility<'local>> for StatusVisibility {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmStatusVisibility<'local>
+   ) -> StatusVisibility {
+      use panoptiqon::jvm_type::JvmType;
+
+      let v = STATUS_VISIBILITY_HELPER.get(env, jvm_instance.j_object(), 0).i().unwrap();
       match v {
          0 => StatusVisibility::Public,
          1 => StatusVisibility::Unlisted,

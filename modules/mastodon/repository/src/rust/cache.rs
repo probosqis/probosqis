@@ -15,35 +15,27 @@
  */
 
 pub mod instance {
-   use url::Url;
    use ext_panoptiqon::repository_holder::RepositoryHolder;
    use mastodon_entity::instance::Instance;
 
-   pub type Key = Url;
-   pub type Repository = panoptiqon::repository::Repository<Url, Instance>;
+   pub type Repository = panoptiqon::repository::Repository<Instance>;
 
-   static REPO: RepositoryHolder<Url, Instance> = RepositoryHolder::new(
-      |i| i.url.clone()
-   );
+   static REPO: RepositoryHolder<Instance> = RepositoryHolder::new();
 
-   pub fn repo() -> &'static RepositoryHolder<Url, Instance> {
+   pub fn repo() -> &'static RepositoryHolder<Instance> {
       &REPO
    }
 }
 
 pub mod account {
-   use url::Url;
    use ext_panoptiqon::repository_holder::RepositoryHolder;
-   use mastodon_entity::account::{Account, AccountId};
+   use mastodon_entity::account::Account;
 
-   pub type Key = (Url, AccountId);
-   pub type Repository = panoptiqon::repository::Repository<Key, Account>;
+   pub type Repository = panoptiqon::repository::Repository<Account>;
 
-   static REPO: RepositoryHolder<Key, Account> = RepositoryHolder::new(
-      |a| (a.instance.read().unwrap().url.clone(), a.id.clone())
-   );
+   static REPO: RepositoryHolder<Account> = RepositoryHolder::new();
 
-   pub fn repo() -> &'static RepositoryHolder<Key, Account> {
+   pub fn repo() -> &'static RepositoryHolder<Account> {
       &REPO
    }
 }

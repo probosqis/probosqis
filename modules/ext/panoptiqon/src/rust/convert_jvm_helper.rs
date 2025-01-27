@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #![cfg(feature="jvm")]
 
 use std::ops::Deref;
@@ -23,29 +24,29 @@ use jni::objects::{GlobalRef, JMethodID, JObject, JStaticMethodID, JValueOwned};
 use jni::signature::{ReturnType, TypeSignature};
 use jni::sys::jvalue;
 
-pub struct ConvertJavaHelper<'a, const ARITY: usize>(
-   RwLock<ConvertJavaHelperInner<'a, ARITY>>
+pub struct ConvertJniHelper<'a, const ARITY: usize>(
+   RwLock<ConvertJniHelperInner<'a, ARITY>>
 );
 
-pub enum CloneIntoJava<'a> {
+pub enum JvmInstantiationStrategy<'a> {
    ViaConstructor(&'a str),
    ViaStaticMethod(&'a str, &'a str)
 }
 
-enum ConvertJavaHelperInner<'a, const ARITY: usize> {
+enum ConvertJniHelperInner<'a, const ARITY: usize> {
    SignatureStrs {
       class_fully_qualified_name: &'a str,
-      clone_into_java: CloneIntoJava<'a>,
+      clone_into_jvm: JvmInstantiationStrategy<'a>,
       getter_signatures: [(&'a str, &'a str); ARITY]
    },
    JvmIds {
       class: GlobalRef,
-      clone_into_java: CloneIntoJavaJvmId,
+      clone_into_jvm: CloneIntoJvmJvmId,
       getter_ids: [(JMethodID, ReturnType); ARITY]
    }
 }
 
-enum CloneIntoJavaJvmId {
+enum CloneIntoJvmJvmId {
    ViaConstructor {
       constructor_id: JMethodID
    },
@@ -55,44 +56,44 @@ enum CloneIntoJavaJvmId {
    }
 }
 
-impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
+impl<'a, const ARITY: usize> ConvertJniHelper<'a, ARITY> {
    pub const fn new(
       class_fully_qualified_name: &'a str,
-      clone_into_java: CloneIntoJava<'a>,
+      clone_into_jvm: JvmInstantiationStrategy<'a>,
       getter_signatures: [(&'a str, &'a str); ARITY]
    ) -> Self {
-      let inner = ConvertJavaHelperInner::SignatureStrs {
+      let inner = ConvertJniHelperInner::SignatureStrs {
          class_fully_qualified_name,
-         clone_into_java,
+         clone_into_jvm,
          getter_signatures
       };
-      ConvertJavaHelper(RwLock::new(inner))
+      ConvertJniHelper(RwLock::new(inner))
    }
 
    fn prepare_ids(
       &self,
       env: &mut JNIEnv,
       class_fully_qualified_name: &str,
-      clone_into_java: &CloneIntoJava,
+      clone_into_jvm: &JvmInstantiationStrategy,
       getter_signatures: &[(&str, &str); ARITY]
-   ) -> (GlobalRef, CloneIntoJavaJvmId, [(JMethodID, ReturnType); ARITY]) {
+   ) -> (GlobalRef, CloneIntoJvmJvmId, [(JMethodID, ReturnType); ARITY]) {
       let class = env.find_class(class_fully_qualified_name).unwrap();
       let class = env.new_global_ref(class).unwrap();
 
-      let clone_into_java_id = match clone_into_java {
-         CloneIntoJava::ViaConstructor(constructor_signature) => {
+      let clone_into_jvm_id = match clone_into_jvm {
+         JvmInstantiationStrategy::ViaConstructor(constructor_signature) => {
             let constructor_id = env
                .get_method_id(&class, "<init>", constructor_signature).unwrap();
 
-            CloneIntoJavaJvmId::ViaConstructor { constructor_id }
+            CloneIntoJvmJvmId::ViaConstructor { constructor_id }
          },
-         CloneIntoJava::ViaStaticMethod(method_name, signature) => {
+         JvmInstantiationStrategy::ViaStaticMethod(method_name, signature) => {
             let method_id = env
                .get_static_method_id(&class, method_name, signature).unwrap();
 
             let type_signature = TypeSignature::from_str(signature).unwrap();
 
-            CloneIntoJavaJvmId::ViaStaticMethod {
+            CloneIntoJvmJvmId::ViaStaticMethod {
                method_id,
                return_type: type_signature.ret
             }
@@ -106,26 +107,26 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
          (getter_id, type_signature.ret)
       });
 
-      (class, clone_into_java_id, getter_ids)
+      (class, clone_into_jvm_id, getter_ids)
    }
 
-   pub fn clone_into_java<'local>(
+   pub fn clone_into_jvm<'local>(
       &self,
       env: &mut JNIEnv<'local>,
       args: &[jvalue],
    ) -> JObject<'local> {
       let lock = self.0.read().unwrap();
       match lock.deref() {
-         ConvertJavaHelperInner::JvmIds {
+         ConvertJniHelperInner::JvmIds {
             class,
-            clone_into_java,
+            clone_into_jvm,
             ..
          } => {
-            match clone_into_java {
-               CloneIntoJavaJvmId::ViaConstructor { constructor_id } => unsafe {
+            match clone_into_jvm {
+               CloneIntoJvmJvmId::ViaConstructor { constructor_id } => unsafe {
                   env.new_object_unchecked(class, *constructor_id, args).unwrap()
                },
-               CloneIntoJavaJvmId::ViaStaticMethod { method_id, return_type } => unsafe {
+               CloneIntoJvmJvmId::ViaStaticMethod { method_id, return_type } => unsafe {
                   env.call_static_method_unchecked(
                         class, *method_id, return_type.clone(), args
                      )
@@ -134,22 +135,22 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
             }
          }
 
-         ConvertJavaHelperInner::SignatureStrs {
+         ConvertJniHelperInner::SignatureStrs {
             class_fully_qualified_name,
-            clone_into_java,
+            clone_into_jvm,
             getter_signatures
          } => {
-            let (class, clone_into_java_id, getter_ids) = self.prepare_ids(
-               env, class_fully_qualified_name, clone_into_java,
+            let (class, clone_into_jvm_id, getter_ids) = self.prepare_ids(
+               env, class_fully_qualified_name, clone_into_jvm,
                getter_signatures
             );
             drop(lock);
             let mut lock = self.0.write().unwrap();
-            *lock = ConvertJavaHelperInner::JvmIds {
-               class, clone_into_java: clone_into_java_id, getter_ids
+            *lock = ConvertJniHelperInner::JvmIds {
+               class, clone_into_jvm: clone_into_jvm_id, getter_ids
             };
             drop(lock);
-            self.clone_into_java(env, args)
+            self.clone_into_jvm(env, args)
          }
       }
    }
@@ -162,7 +163,7 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
    ) -> JValueOwned<'local> {
       let lock = self.0.read().unwrap();
       match lock.deref() {
-         ConvertJavaHelperInner::JvmIds {
+         ConvertJniHelperInner::JvmIds {
             getter_ids,
             ..
          } => {
@@ -173,19 +174,19 @@ impl<'a, const ARITY: usize> ConvertJavaHelper<'a, ARITY> {
             }
          }
 
-         ConvertJavaHelperInner::SignatureStrs {
+         ConvertJniHelperInner::SignatureStrs {
             class_fully_qualified_name,
-            clone_into_java,
+            clone_into_jvm,
             getter_signatures
          } => {
-            let (class, clone_into_java_id, getter_ids) = self.prepare_ids(
-               env, class_fully_qualified_name, clone_into_java,
+            let (class, clone_into_jvm_id, getter_ids) = self.prepare_ids(
+               env, class_fully_qualified_name, clone_into_jvm,
                getter_signatures
             );
             drop(lock);
             let mut lock = self.0.write().unwrap();
-            *lock = ConvertJavaHelperInner::JvmIds {
-               class, clone_into_java: clone_into_java_id, getter_ids
+            *lock = ConvertJniHelperInner::JvmIds {
+               class, clone_into_jvm: clone_into_jvm_id, getter_ids
             };
             drop(lock);
             self.get(env, instance, n)
@@ -202,13 +203,13 @@ mod jni_tests {
    use jni::objects::{JIntArray, JObject};
    use jni::sys::{JNI_FALSE, jvalue};
 
-   use panoptiqon::convert_java::ConvertJava;
-   use super::{CloneIntoJava, ConvertJavaHelper, ConvertJavaHelperInner};
+   use panoptiqon::convert_jvm::CloneFromJvm;
+   use super::{JvmInstantiationStrategy, ConvertJniHelper, ConvertJniHelperInner};
 
-   fn create_helper() -> ConvertJavaHelper<'static, 10> {
-      ConvertJavaHelper::new(
+   fn create_helper() -> ConvertJniHelper<'static, 10> {
+      ConvertJniHelper::new(
          "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity",
-         CloneIntoJava::ViaConstructor("(ZBSIJFDCLjava/lang/String;[I)V"),
+         JvmInstantiationStrategy::ViaConstructor("(ZBSIJFDCLjava/lang/String;[I)V"),
          [
             ("getZ", "Z"),
             ("getB", "B"),
@@ -225,17 +226,17 @@ mod jni_tests {
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJavaHelperTest_variantStrsOnInit(
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantStrsOnInit(
       _env: JNIEnv,
       _obj: JObject
    ) {
       let helper = create_helper();
       let helper_inner= helper.0.read().unwrap();
-      assert!(matches!(helper_inner.deref(), &ConvertJavaHelperInner::SignatureStrs { .. }));
+      assert!(matches!(helper_inner.deref(), &ConvertJniHelperInner::SignatureStrs { .. }));
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJavaHelperTest_variantJvmIdsAfterCloneIntoJava(
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantJvmIdsAfterCloneIntoJvm(
       mut env: JNIEnv,
       _obj: JObject
    ) {
@@ -244,7 +245,7 @@ mod jni_tests {
       let l = env.new_string("").unwrap();
       let a = env.new_int_array(0).unwrap();
 
-      helper.clone_into_java(&mut env, &[
+      helper.clone_into_jvm(&mut env, &[
          jvalue { z: JNI_FALSE },
          jvalue { b: 0 },
          jvalue { s: 0 },
@@ -258,11 +259,11 @@ mod jni_tests {
       ]);
 
       let helper_inner= helper.0.read().unwrap();
-      assert!(matches!(helper_inner.deref(), &ConvertJavaHelperInner::JvmIds { .. }));
+      assert!(matches!(helper_inner.deref(), &ConvertJniHelperInner::JvmIds { .. }));
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJavaHelperTest_variantJvmIdsAfterGet_00024assert(
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantJvmIdsAfterGet_00024assert(
       mut env: JNIEnv,
       _obj: JObject,
       jvm_entity: JObject
@@ -272,11 +273,11 @@ mod jni_tests {
       helper.get(&mut env, &jvm_entity, 0);
 
       let helper_inner= helper.0.read().unwrap();
-      assert!(matches!(helper_inner.deref(), &ConvertJavaHelperInner::JvmIds { .. }));
+      assert!(matches!(helper_inner.deref(), &ConvertJniHelperInner::JvmIds { .. }));
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJavaHelperTest_cloneIntoJava_00024createEntity<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_CloneIntoJvm_00024createEntity<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
    ) -> JObject<'local> {
@@ -286,7 +287,7 @@ mod jni_tests {
       let a = env.new_int_array(5).unwrap();
       env.set_int_array_region(&a, 0, &[6, 7, 8, 9, 0]).unwrap();
 
-      helper.clone_into_java(&mut env, &[
+      helper.clone_into_jvm(&mut env, &[
          jvalue { z: JNI_FALSE },
          jvalue { b: 0 },
          jvalue { s: 1 },
@@ -301,7 +302,7 @@ mod jni_tests {
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJavaHelperTest_cloneFromJava_00024assert(
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_CloneFromJvm_00024assert(
       mut env: JNIEnv,
       _obj: JObject,
       jvm_entity: JObject
@@ -318,7 +319,7 @@ mod jni_tests {
       let c = helper.get(&mut env, &jvm_entity, 7).c().unwrap();
 
       let str = helper.get(&mut env, &jvm_entity, 8).l().unwrap();
-      let str = String::clone_from_java(&mut env, &str);
+      let str = unsafe { String::clone_from_j_object(&mut env, &str) };
 
       let arr = helper.get(&mut env, &jvm_entity, 9).l().unwrap();
       let mut buf = [0; 5];

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,59 +13,72 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#[cfg(feature="jvm")]
+
+#[cfg(feature = "jvm")]
 use {
-   ext_panoptiqon::convert_java_helper::CloneIntoJava,
-   ext_panoptiqon::convert_java_helper::ConvertJavaHelper,
+   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
    jni::JNIEnv,
-   jni::objects::JObject,
-   jni::sys::jvalue,
+   crate::jvm_types::JvmFediverseSoftware,
 };
 
-#[cfg(feature="jvm")]
-static HELPER_UNSUPPORTED: ConvertJavaHelper<0> = ConvertJavaHelper::new(
+#[cfg(feature = "jvm")]
+static HELPER_UNSUPPORTED: ConvertJniHelper<0> = ConvertJniHelper::new(
    "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported",
-   CloneIntoJava::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;)V"),
+   JvmInstantiationStrategy::ViaConstructor(
+      "(Ljava/lang/String;Ljava/lang/String;)V"
+   ),
    []
 );
 
-#[cfg(feature="jvm")]
-static HELPER_MASTODON: ConvertJavaHelper<0> = ConvertJavaHelper::new(
+#[cfg(feature = "jvm")]
+static HELPER_MASTODON: ConvertJniHelper<0> = ConvertJniHelper::new(
    "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon",
-   CloneIntoJava::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;)V"),
+   JvmInstantiationStrategy::ViaConstructor(
+      "(Ljava/lang/String;Ljava/lang/String;)V"
+   ),
    []
 );
 
-#[cfg(feature="jvm")]
+#[cfg(feature = "jvm")]
 pub fn instantiate_unsupported<'local>(
    env: &mut JNIEnv<'local>,
    name: &str,
    version: &str
-) -> JObject<'local> {
-   let name    = env.new_string(name)   .unwrap();
-   let version = env.new_string(version).unwrap();
+) -> JvmFediverseSoftware<'local> {
+   use jni::sys::jvalue;
+   use panoptiqon::convert_jvm::CloneIntoJvm;
+   use panoptiqon::jvm_type::JvmType;
+
+   let name = name.clone_into_jvm(env);
+   let version = version.clone_into_jvm(env);
 
    let args = [
-      jvalue { l: name   .into_raw() },
-      jvalue { l: version.into_raw() },
+      jvalue { l: name.j_string().as_raw() },
+      jvalue { l: version.j_string().as_raw() },
    ];
 
-   HELPER_UNSUPPORTED.clone_into_java(env, &args)
+   let j_object = HELPER_UNSUPPORTED.clone_into_jvm(env, &args);
+   unsafe { JvmFediverseSoftware::from_j_object(j_object) }
 }
 
-#[cfg(feature="jvm")]
+#[cfg(feature = "jvm")]
 pub fn instantiate_mastodon<'local>(
    env: &mut JNIEnv<'local>,
    instance_base_url: &str,
    version: &str
-) -> JObject<'local> {
-   let instance_base_url = env.new_string(instance_base_url).unwrap();
-   let version           = env.new_string(version)          .unwrap();
+) -> JvmFediverseSoftware<'local> {
+   use jni::sys::jvalue;
+   use panoptiqon::convert_jvm::CloneIntoJvm;
+   use panoptiqon::jvm_type::JvmType;
+
+   let instance_base_url = instance_base_url.clone_into_jvm(env);
+   let version = version.clone_into_jvm(env);
 
    let args = [
-      jvalue { l: instance_base_url.into_raw() },
-      jvalue { l: version          .into_raw() },
+      jvalue { l: instance_base_url.j_string().as_raw() },
+      jvalue { l: version.j_string().as_raw() },
    ];
 
-   HELPER_MASTODON.clone_into_java(env, &args)
+   let j_object = HELPER_MASTODON.clone_into_jvm(env, &args);
+   unsafe { JvmFediverseSoftware::from_j_object(j_object) }
 }
