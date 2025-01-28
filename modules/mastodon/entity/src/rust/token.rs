@@ -38,19 +38,21 @@ pub struct Token {
 }
 
 #[cfg(feature = "jvm")]
-static HELPER: ConvertJniHelper<5> = convert_jvm_helper!(
-   "com/wcaokaze/probosqis/mastodon/entity/Token",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V"
-   ),
-   [
-      ("getInstance",             "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getAccessToken",          "Ljava/lang/String;"),
-      ("getTokenType",            "Ljava/lang/String;"),
-      ("getScope",                "Ljava/lang/String;"),
-      ("getCreatedAtEpochMillis", "J"),
-   ]
-);
+convert_jvm_helper! {
+   static HELPER: ConvertJniHelper<5> = convert_jvm_helper!(
+      "com/wcaokaze/probosqis/mastodon/entity/Token",
+      JvmInstantiationStrategy::ViaConstructor(
+         "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V"
+      ),
+      [
+         ("getInstance",             "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
+         ("getAccessToken",          "Ljava/lang/String;"),
+         ("getTokenType",            "Ljava/lang/String;"),
+         ("getScope",                "Ljava/lang/String;"),
+         ("getCreatedAtEpochMillis", "J"),
+      ]
+   );
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmToken<'local>> for Token {

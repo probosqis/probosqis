@@ -17,28 +17,29 @@
 #[cfg(feature = "jvm")]
 use {
    ext_panoptiqon::convert_jvm_helper,
-   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
+   ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    jni::JNIEnv,
    crate::jvm_types::JvmFediverseSoftware,
 };
 
 #[cfg(feature = "jvm")]
-static HELPER_UNSUPPORTED: ConvertJniHelper<0> = convert_jvm_helper!(
-   "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Ljava/lang/String;Ljava/lang/String;)V"
-   ),
-   []
-);
+convert_jvm_helper! {
+   static HELPER_UNSUPPORTED: ConvertJniHelper<0> = convert_jvm_helper!(
+      "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported",
+      JvmInstantiationStrategy::ViaConstructor(
+         "(Ljava/lang/String;Ljava/lang/String;)V"
+      ),
+      []
+   );
 
-#[cfg(feature = "jvm")]
-static HELPER_MASTODON: ConvertJniHelper<0> = convert_jvm_helper!(
-   "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Ljava/lang/String;Ljava/lang/String;)V"
-   ),
-   []
-);
+   static HELPER_MASTODON: ConvertJniHelper<0> = convert_jvm_helper!(
+      "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon",
+      JvmInstantiationStrategy::ViaConstructor(
+         "(Ljava/lang/String;Ljava/lang/String;)V"
+      ),
+      []
+   );
+}
 
 #[cfg(feature = "jvm")]
 pub fn instantiate_unsupported<'local>(

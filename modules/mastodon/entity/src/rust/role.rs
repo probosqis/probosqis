@@ -42,25 +42,27 @@ pub struct Role {
 pub struct RoleId(pub String);
 
 #[cfg(feature = "jvm")]
-static HELPER: ConvertJniHelper<6> = convert_jvm_helper!(
-   "com/wcaokaze/probosqis/mastodon/entity/Role",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/Boolean;)V"
-   ),
-   [
-      ("getInstance", "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getRawId", "Ljava/lang/String;"),
-      ("getName", "Ljava/lang/String;"),
-      ("getColor", "Ljava/lang/String;"),
-      ("getPermissions", "Ljava/lang/String;"),
-      ("isHighlighted", "Ljava/lang/Boolean;"),
-   ]
-);
+convert_jvm_helper! {
+   static HELPER: ConvertJniHelper<6> = convert_jvm_helper!(
+      "com/wcaokaze/probosqis/mastodon/entity/Role",
+      JvmInstantiationStrategy::ViaConstructor(
+         "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/Boolean;)V"
+      ),
+      [
+         ("getInstance", "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
+         ("getRawId", "Ljava/lang/String;"),
+         ("getName", "Ljava/lang/String;"),
+         ("getColor", "Ljava/lang/String;"),
+         ("getPermissions", "Ljava/lang/String;"),
+         ("isHighlighted", "Ljava/lang/Boolean;"),
+      ]
+   );
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmRole<'local>> for Role {

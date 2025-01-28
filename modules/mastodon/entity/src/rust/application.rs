@@ -37,19 +37,21 @@ pub struct Application {
 }
 
 #[cfg(feature = "jvm")]
-static HELPER: ConvertJniHelper<5> = convert_jvm_helper!(
-   "com/wcaokaze/probosqis/mastodon/entity/Application",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
-   ),
-   [
-      ("getInstance",     "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getName",         "Ljava/lang/String;"),
-      ("getWebsite",      "Ljava/lang/String;"),
-      ("getClientId",     "Ljava/lang/String;"),
-      ("getClientSecret", "Ljava/lang/String;"),
-   ]
-);
+convert_jvm_helper! {
+   static HELPER: ConvertJniHelper<5> = convert_jvm_helper!(
+      "com/wcaokaze/probosqis/mastodon/entity/Application",
+      JvmInstantiationStrategy::ViaConstructor(
+         "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
+      ),
+      [
+         ("getInstance",     "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
+         ("getName",         "Ljava/lang/String;"),
+         ("getWebsite",      "Ljava/lang/String;"),
+         ("getClientId",     "Ljava/lang/String;"),
+         ("getClientSecret", "Ljava/lang/String;"),
+      ]
+   );
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmApplication<'local>> for Application {

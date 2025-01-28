@@ -39,25 +39,27 @@ pub struct CustomEmoji {
 }
 
 #[cfg(feature = "jvm")]
-static HELPER: ConvertJniHelper<6> = convert_jvm_helper!(
-   "com/wcaokaze/probosqis/mastodon/entity/CustomEmoji",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/Boolean;\
-      Ljava/lang/String;)V"
-   ),
-   [
-      ("getInstance", "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getShortcode", "Ljava/lang/String;"),
-      ("getImageUrl", "Ljava/lang/String;"),
-      ("getStaticImageUrl", "Ljava/lang/String;"),
-      ("isVisibleInPicker", "Ljava/lang/Boolean;"),
-      ("getCategory", "Ljava/lang/String;"),
-   ]
-);
+convert_jvm_helper! {
+   static HELPER: ConvertJniHelper<6> = convert_jvm_helper!(
+      "com/wcaokaze/probosqis/mastodon/entity/CustomEmoji",
+      JvmInstantiationStrategy::ViaConstructor(
+         "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/Boolean;\
+         Ljava/lang/String;)V"
+      ),
+      [
+         ("getInstance", "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
+         ("getShortcode", "Ljava/lang/String;"),
+         ("getImageUrl", "Ljava/lang/String;"),
+         ("getStaticImageUrl", "Ljava/lang/String;"),
+         ("isVisibleInPicker", "Ljava/lang/Boolean;"),
+         ("getCategory", "Ljava/lang/String;"),
+      ]
+   );
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmCustomEmoji<'local>> for CustomEmoji {

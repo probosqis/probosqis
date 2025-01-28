@@ -27,15 +27,23 @@ use jni::sys::jvalue;
 #[macro_export]
 macro_rules! convert_jvm_helper {
    (
-      $class_fully_qualified_name:literal,
-      $instantiation_strategy:expr,
-      $getter_signatures:expr
+      $(
+         $(#[$attr:meta])*
+         static $var_name:ident : ConvertJniHelper< $arity:literal > = convert_jvm_helper!(
+            $class_fully_qualified_name:literal,
+            $instantiation_strategy:expr,
+            [$(($getter_method_name:expr, $getter_signatures:expr)),* $(,)?]
+         );
+      )*
    ) => {
-      $crate::convert_jvm_helper::ConvertJniHelper::new(
-         $class_fully_qualified_name,
-         $instantiation_strategy,
-         $getter_signatures
-      )
+      $(
+         $(#[$attr])*
+         static $var_name: $crate::convert_jvm_helper::ConvertJniHelper<$arity> = $crate::convert_jvm_helper::ConvertJniHelper::new(
+            $class_fully_qualified_name,
+            $instantiation_strategy,
+            [$(($getter_method_name, $getter_signatures)),*]
+         );
+      )*
    };
 }
 
@@ -219,48 +227,54 @@ mod jni_tests {
    use jni::sys::{JNI_FALSE, jvalue};
 
    use panoptiqon::convert_jvm::CloneFromJvm;
-   use super::{JvmInstantiationStrategy, ConvertJniHelper, ConvertJniHelperInner};
+   use super::{JvmInstantiationStrategy, ConvertJniHelperInner};
 
-   fn create_helper() -> ConvertJniHelper<'static, 10> {
-      convert_jvm_helper!(
-         "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity",
-         JvmInstantiationStrategy::ViaConstructor("(ZBSIJFDCLjava/lang/String;[I)V"),
-         [
-            ("getZ", "Z"),
-            ("getB", "B"),
-            ("getS", "S"),
-            ("getI", "I"),
-            ("getJ", "J"),
-            ("getF", "F"),
-            ("getD", "D"),
-            ("getC", "C"),
-            ("getStr", "Ljava/lang/String;"),
-            ("getArr", "[I"),
-         ]
-      )
+   macro_rules! helper {
+      ($name:ident) => {
+         convert_jvm_helper! {
+            #[allow(non_upper_case_globals)]
+            static $name: ConvertJniHelper<10> = convert_jvm_helper!(
+               "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity",
+               JvmInstantiationStrategy::ViaConstructor("(ZBSIJFDCLjava/lang/String;[I)V"),
+               [
+                  ("getZ", "Z"),
+                  ("getB", "B"),
+                  ("getS", "S"),
+                  ("getI", "I"),
+                  ("getJ", "J"),
+                  ("getF", "F"),
+                  ("getD", "D"),
+                  ("getC", "C"),
+                  ("getStr", "Ljava/lang/String;"),
+                  ("getArr", "[I"),
+               ]
+            );
+         }
+      };
    }
+
+   helper!(variantStrsOnInit_helper);
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantStrsOnInit(
       _env: JNIEnv,
       _obj: JObject
    ) {
-      let helper = create_helper();
-      let helper_inner= helper.0.read().unwrap();
+      let helper_inner= variantStrsOnInit_helper.0.read().unwrap();
       assert!(matches!(helper_inner.deref(), &ConvertJniHelperInner::SignatureStrs { .. }));
    }
+
+   helper!(variantJvmIdsAfterCloneIntoJvm_helper);
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantJvmIdsAfterCloneIntoJvm(
       mut env: JNIEnv,
       _obj: JObject
    ) {
-      let helper = create_helper();
-
       let l = env.new_string("").unwrap();
       let a = env.new_int_array(0).unwrap();
 
-      helper.clone_into_jvm(&mut env, &[
+      variantJvmIdsAfterCloneIntoJvm_helper.clone_into_jvm(&mut env, &[
          jvalue { z: JNI_FALSE },
          jvalue { b: 0 },
          jvalue { s: 0 },
@@ -273,9 +287,11 @@ mod jni_tests {
          jvalue { l: a.into_raw() },
       ]);
 
-      let helper_inner= helper.0.read().unwrap();
+      let helper_inner= variantJvmIdsAfterCloneIntoJvm_helper.0.read().unwrap();
       assert!(matches!(helper_inner.deref(), &ConvertJniHelperInner::JvmIds { .. }));
    }
+
+   helper!(variantJvmIdsAfterGet_helper);
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantJvmIdsAfterGet_00024assert(
@@ -283,26 +299,24 @@ mod jni_tests {
       _obj: JObject,
       jvm_entity: JObject
    ) {
-      let helper = create_helper();
+      variantJvmIdsAfterGet_helper.get(&mut env, &jvm_entity, 0);
 
-      helper.get(&mut env, &jvm_entity, 0);
-
-      let helper_inner= helper.0.read().unwrap();
+      let helper_inner = variantJvmIdsAfterGet_helper.0.read().unwrap();
       assert!(matches!(helper_inner.deref(), &ConvertJniHelperInner::JvmIds { .. }));
    }
 
+   helper!(cloneIntoJvm_helper);
+
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_CloneIntoJvm_00024createEntity<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_cloneIntoJvm_00024createEntity<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
    ) -> JObject<'local> {
-      let helper = create_helper();
-
       let l = env.new_string("9012345").unwrap();
       let a = env.new_int_array(5).unwrap();
       env.set_int_array_region(&a, 0, &[6, 7, 8, 9, 0]).unwrap();
 
-      helper.clone_into_jvm(&mut env, &[
+      cloneIntoJvm_helper.clone_into_jvm(&mut env, &[
          jvalue { z: JNI_FALSE },
          jvalue { b: 0 },
          jvalue { s: 1 },
@@ -316,27 +330,27 @@ mod jni_tests {
       ])
    }
 
+   helper!(cloneFromJvm_helper);
+
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_CloneFromJvm_00024assert(
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_cloneFromJvm_00024assert(
       mut env: JNIEnv,
       _obj: JObject,
       jvm_entity: JObject
    ) {
-      let helper = create_helper();
+      let z = cloneFromJvm_helper.get(&mut env, &jvm_entity, 0).z().unwrap();
+      let b = cloneFromJvm_helper.get(&mut env, &jvm_entity, 1).b().unwrap();
+      let s = cloneFromJvm_helper.get(&mut env, &jvm_entity, 2).s().unwrap();
+      let i = cloneFromJvm_helper.get(&mut env, &jvm_entity, 3).i().unwrap();
+      let j = cloneFromJvm_helper.get(&mut env, &jvm_entity, 4).j().unwrap();
+      let f = cloneFromJvm_helper.get(&mut env, &jvm_entity, 5).f().unwrap();
+      let d = cloneFromJvm_helper.get(&mut env, &jvm_entity, 6).d().unwrap();
+      let c = cloneFromJvm_helper.get(&mut env, &jvm_entity, 7).c().unwrap();
 
-      let z = helper.get(&mut env, &jvm_entity, 0).z().unwrap();
-      let b = helper.get(&mut env, &jvm_entity, 1).b().unwrap();
-      let s = helper.get(&mut env, &jvm_entity, 2).s().unwrap();
-      let i = helper.get(&mut env, &jvm_entity, 3).i().unwrap();
-      let j = helper.get(&mut env, &jvm_entity, 4).j().unwrap();
-      let f = helper.get(&mut env, &jvm_entity, 5).f().unwrap();
-      let d = helper.get(&mut env, &jvm_entity, 6).d().unwrap();
-      let c = helper.get(&mut env, &jvm_entity, 7).c().unwrap();
-
-      let str = helper.get(&mut env, &jvm_entity, 8).l().unwrap();
+      let str = cloneFromJvm_helper.get(&mut env, &jvm_entity, 8).l().unwrap();
       let str = unsafe { String::clone_from_j_object(&mut env, &str) };
 
-      let arr = helper.get(&mut env, &jvm_entity, 9).l().unwrap();
+      let arr = cloneFromJvm_helper.get(&mut env, &jvm_entity, 9).l().unwrap();
       let mut buf = [0; 5];
       env.get_int_array_region(JIntArray::from(arr), 0, &mut buf).unwrap();
 

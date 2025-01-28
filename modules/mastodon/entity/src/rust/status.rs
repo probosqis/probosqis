@@ -34,15 +34,17 @@ pub enum StatusVisibility {
 }
 
 #[cfg(feature = "jvm")]
-static STATUS_VISIBILITY_HELPER: ConvertJniHelper<1> = convert_jvm_helper!(
-   "com/wcaokaze/probosqis/mastodon/entity/Status$Visibility",
-   JvmInstantiationStrategy::ViaStaticMethod(
-      "fromInt", "(I)Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;"
-   ),
-   [
-      ("getValue", "I"),
-   ]
-);
+convert_jvm_helper! {
+   static STATUS_VISIBILITY_HELPER: ConvertJniHelper<1> = convert_jvm_helper!(
+      "com/wcaokaze/probosqis/mastodon/entity/Status$Visibility",
+      JvmInstantiationStrategy::ViaStaticMethod(
+         "fromInt", "(I)Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;"
+      ),
+      [
+         ("getValue", "I"),
+      ]
+   );
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmStatusVisibility<'local>> for StatusVisibility {

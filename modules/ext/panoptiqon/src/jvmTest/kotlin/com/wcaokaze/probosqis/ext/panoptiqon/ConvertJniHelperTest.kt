@@ -54,8 +54,8 @@ class ConvertJniHelperTest {
    external fun `variantJvmIdsAfterGet$assert`(entity: TestEntity)
 
    @Test
-   fun CloneIntoJvm() {
-      val entity = `CloneIntoJvm$createEntity`()
+   fun cloneIntoJvm() {
+      val entity = `cloneIntoJvm$createEntity`()
       assertEquals(false, entity.z)
       assertEquals(0, entity.b)
       assertEquals(1, entity.s)
@@ -68,10 +68,10 @@ class ConvertJniHelperTest {
       assertContentEquals(intArrayOf(6, 7, 8, 9, 0), entity.arr)
    }
 
-   external fun `CloneIntoJvm$createEntity`(): TestEntity
+   external fun `cloneIntoJvm$createEntity`(): TestEntity
 
    @Test
-   fun CloneFromJvm() {
+   fun cloneFromJvm() {
       val entity = TestEntity(
          z = false,
          b = 0,
@@ -84,8 +84,8 @@ class ConvertJniHelperTest {
          str = "9012345",
          arr = intArrayOf(6, 7, 8, 9, 0),
       )
-      `CloneFromJvm$assert`(entity)
+      `cloneFromJvm$assert`(entity)
    }
 
-   external fun `CloneFromJvm$assert`(entity: TestEntity)
+   external fun `cloneFromJvm$assert`(entity: TestEntity)
 }

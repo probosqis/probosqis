@@ -93,65 +93,67 @@ pub struct AccountProfileField {
 }
 
 #[cfg(feature = "jvm")]
-static ACCOUNT_HELPER: ConvertJniHelper<26> = convert_jvm_helper!(
-   "com/wcaokaze/probosqis/mastodon/entity/Account",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/Boolean;\
-      Ljava/util/List;\
-      Ljava/util/List;\
-      Ljava/lang/Boolean;\
-      Ljava/lang/Boolean;\
-      Ljava/lang/Boolean;\
-      Ljava/lang/Boolean;\
-      Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
-      Ljava/lang/Boolean;\
-      Ljava/lang/Boolean;\
-      Ljava/lang/Long;\
-      Ljava/lang/Long;\
-      Ljava/lang/Long;\
-      Ljava/lang/Long;\
-      Ljava/lang/Long;)V"
-   ),
-   [
-      ("getInstance", "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getRawId", "Ljava/lang/String;"),
-      ("getUsername", "Ljava/lang/String;"),
-      ("getAcct", "Ljava/lang/String;"),
-      ("getUrl", "Ljava/lang/String;"),
-      ("getDisplayName", "Ljava/lang/String;"),
-      ("getProfileNote", "Ljava/lang/String;"),
-      ("getAvatarImageUrl", "Ljava/lang/String;"),
-      ("getAvatarStaticImageUrl", "Ljava/lang/String;"),
-      ("getHeaderImageUrl", "Ljava/lang/String;"),
-      ("getHeaderStaticImageUrl", "Ljava/lang/String;"),
-      ("isLocked", "Ljava/lang/Boolean;"),
-      ("getProfileFields", "Ljava/util/List;"),
-      ("getEmojisInProfile", "Ljava/util/List;"),
-      ("isBot", "Ljava/lang/Boolean;"),
-      ("isGroup", "Ljava/lang/Boolean;"),
-      ("isDiscoverable", "Ljava/lang/Boolean;"),
-      ("isNoindex", "Ljava/lang/Boolean;"),
-      ("getMovedTo", "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("isSuspended", "Ljava/lang/Boolean;"),
-      ("isLimited", "Ljava/lang/Boolean;"),
-      ("getCreatedTimeEpochMillis", "Ljava/lang/Long;"),
-      ("getLastStatusPostTimeEpochMillis", "Ljava/lang/Long;"),
-      ("getStatusCount", "Ljava/lang/Long;"),
-      ("getFollowerCount", "Ljava/lang/Long;"),
-      ("getFolloweeCount", "Ljava/lang/Long;"),
-   ]
-);
+convert_jvm_helper! {
+   static ACCOUNT_HELPER: ConvertJniHelper<26> = convert_jvm_helper!(
+      "com/wcaokaze/probosqis/mastodon/entity/Account",
+      JvmInstantiationStrategy::ViaConstructor(
+         "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/String;\
+         Ljava/lang/Boolean;\
+         Ljava/util/List;\
+         Ljava/util/List;\
+         Ljava/lang/Boolean;\
+         Ljava/lang/Boolean;\
+         Ljava/lang/Boolean;\
+         Ljava/lang/Boolean;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+         Ljava/lang/Boolean;\
+         Ljava/lang/Boolean;\
+         Ljava/lang/Long;\
+         Ljava/lang/Long;\
+         Ljava/lang/Long;\
+         Ljava/lang/Long;\
+         Ljava/lang/Long;)V"
+      ),
+      [
+         ("getInstance", "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
+         ("getRawId", "Ljava/lang/String;"),
+         ("getUsername", "Ljava/lang/String;"),
+         ("getAcct", "Ljava/lang/String;"),
+         ("getUrl", "Ljava/lang/String;"),
+         ("getDisplayName", "Ljava/lang/String;"),
+         ("getProfileNote", "Ljava/lang/String;"),
+         ("getAvatarImageUrl", "Ljava/lang/String;"),
+         ("getAvatarStaticImageUrl", "Ljava/lang/String;"),
+         ("getHeaderImageUrl", "Ljava/lang/String;"),
+         ("getHeaderStaticImageUrl", "Ljava/lang/String;"),
+         ("isLocked", "Ljava/lang/Boolean;"),
+         ("getProfileFields", "Ljava/util/List;"),
+         ("getEmojisInProfile", "Ljava/util/List;"),
+         ("isBot", "Ljava/lang/Boolean;"),
+         ("isGroup", "Ljava/lang/Boolean;"),
+         ("isDiscoverable", "Ljava/lang/Boolean;"),
+         ("isNoindex", "Ljava/lang/Boolean;"),
+         ("getMovedTo", "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
+         ("isSuspended", "Ljava/lang/Boolean;"),
+         ("isLimited", "Ljava/lang/Boolean;"),
+         ("getCreatedTimeEpochMillis", "Ljava/lang/Long;"),
+         ("getLastStatusPostTimeEpochMillis", "Ljava/lang/Long;"),
+         ("getStatusCount", "Ljava/lang/Long;"),
+         ("getFollowerCount", "Ljava/lang/Long;"),
+         ("getFolloweeCount", "Ljava/lang/Long;"),
+      ]
+   );
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmAccount<'local>> for Account {
@@ -347,29 +349,31 @@ impl<'local> CloneFromJvm<'local, JvmAccount<'local>> for Account {
 }
 
 #[cfg(feature = "jvm")]
-static CREDENTIAL_ACCOUNT_HELPER: ConvertJniHelper<8> = convert_jvm_helper!(
-   "com/wcaokaze/probosqis/mastodon/entity/CredentialAccount",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
-      Ljava/lang/String;\
-      Ljava/util/List;\
-      Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;\
-      Ljava/lang/Boolean;\
-      Ljava/lang/String;\
-      Ljava/lang/Long;\
-      Lcom/wcaokaze/probosqis/mastodon/entity/Role;)V"
-   ),
-   [
-      ("getAccount",                "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getRawProfileNote",         "Ljava/lang/String;"),
-      ("getRawProfileFields",       "Ljava/util/List;"),
-      ("getDefaultPostVisibility",  "Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;"),
-      ("getDefaultPostSensitivity", "Ljava/util/Boolean;"),
-      ("getDefaultPostLanguage",    "Ljava/lang/String;"),
-      ("getFollowRequestCount",     "Ljava/lang/Long;"),
-      ("getRole",                   "Lcom/wcaokaze/probosqis/mastodon/entity/Role;"),
-   ]
-);
+convert_jvm_helper! {
+   static CREDENTIAL_ACCOUNT_HELPER: ConvertJniHelper<8> = convert_jvm_helper!(
+      "com/wcaokaze/probosqis/mastodon/entity/CredentialAccount",
+      JvmInstantiationStrategy::ViaConstructor(
+         "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+         Ljava/lang/String;\
+         Ljava/util/List;\
+         Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;\
+         Ljava/lang/Boolean;\
+         Ljava/lang/String;\
+         Ljava/lang/Long;\
+         Lcom/wcaokaze/probosqis/mastodon/entity/Role;)V"
+      ),
+      [
+         ("getAccount",                "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
+         ("getRawProfileNote",         "Ljava/lang/String;"),
+         ("getRawProfileFields",       "Ljava/util/List;"),
+         ("getDefaultPostVisibility",  "Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;"),
+         ("getDefaultPostSensitivity", "Ljava/util/Boolean;"),
+         ("getDefaultPostLanguage",    "Ljava/lang/String;"),
+         ("getFollowRequestCount",     "Ljava/lang/Long;"),
+         ("getRole",                   "Lcom/wcaokaze/probosqis/mastodon/entity/Role;"),
+      ]
+   );
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAccount {
@@ -447,16 +451,18 @@ impl<'local> CloneFromJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
 }
 
 #[cfg(feature = "jvm")]
-static RELATIONAL_ACCOUNT_HELPER: ConvertJniHelper<2> = convert_jvm_helper!(
-   "com/wcaokaze/probosqis/mastodon/entity/RelationalAccount",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/Long;)V"
-   ),
-   [
-      ("getAccount",                   "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getMuteExpireTimeEpochMillis", "Ljava/lang/Long;"),
-   ]
-);
+convert_jvm_helper! {
+   static RELATIONAL_ACCOUNT_HELPER: ConvertJniHelper<2> = convert_jvm_helper!(
+      "com/wcaokaze/probosqis/mastodon/entity/RelationalAccount",
+      JvmInstantiationStrategy::ViaConstructor(
+         "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/Long;)V"
+      ),
+      [
+         ("getAccount",                   "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
+         ("getMuteExpireTimeEpochMillis", "Ljava/lang/Long;"),
+      ]
+   );
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmRelationalAccount<'local>> for RelationalAccount {
@@ -501,17 +507,19 @@ impl<'local> CloneFromJvm<'local, JvmRelationalAccount<'local>> for RelationalAc
 }
 
 #[cfg(feature = "jvm")]
-static ACCOUNT_PROFILE_FIELD_HELPER: ConvertJniHelper<3> = convert_jvm_helper!(
-   "com/wcaokaze/probosqis/mastodon/entity/Account$ProfileField",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V"
-   ),
-   [
-      ("getName",                    "Ljava/lang/String;"),
-      ("getValue",                   "Ljava/lang/String;"),
-      ("getVerifiedTimeEpochMillis", "Ljava/lang/Long;"),
-   ]
-);
+convert_jvm_helper! {
+   static ACCOUNT_PROFILE_FIELD_HELPER: ConvertJniHelper<3> = convert_jvm_helper!(
+      "com/wcaokaze/probosqis/mastodon/entity/Account$ProfileField",
+      JvmInstantiationStrategy::ViaConstructor(
+         "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V"
+      ),
+      [
+         ("getName",                    "Ljava/lang/String;"),
+         ("getValue",                   "Ljava/lang/String;"),
+         ("getVerifiedTimeEpochMillis", "Ljava/lang/Long;"),
+      ]
+   );
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmAccountProfileField<'local>> for AccountProfileField {
