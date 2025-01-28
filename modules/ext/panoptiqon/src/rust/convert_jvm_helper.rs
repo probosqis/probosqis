@@ -56,7 +56,7 @@ macro_rules! convert_jvm_helper {
                },
                JvmIds {
                   class: ::jni::objects::GlobalRef,
-                  clone_into_jvm: $crate::convert_jvm_helper::CloneIntoJvmJvmId,
+                  clone_into_jvm: $crate::convert_jvm_helper::JvmInstantiationMethodId,
                   getter_ids: [(::jni::objects::JMethodID, ::jni::signature::ReturnType); ARITY]
                }
             }
@@ -81,7 +81,7 @@ macro_rules! convert_jvm_helper {
                   class_fully_qualified_name: &str,
                   clone_into_jvm: &$crate::convert_jvm_helper::JvmInstantiationStrategy,
                   getter_signatures: &[(&str, &str); ARITY]
-               ) -> (::jni::objects::GlobalRef, $crate::convert_jvm_helper::CloneIntoJvmJvmId, [(::jni::objects::JMethodID, ::jni::signature::ReturnType); ARITY]) {
+               ) -> (::jni::objects::GlobalRef, $crate::convert_jvm_helper::JvmInstantiationMethodId, [(::jni::objects::JMethodID, ::jni::signature::ReturnType); ARITY]) {
                   let class = env.find_class(class_fully_qualified_name).unwrap();
                   let class = env.new_global_ref(class).unwrap();
 
@@ -90,7 +90,7 @@ macro_rules! convert_jvm_helper {
                         let constructor_id = env
                            .get_method_id(&class, "<init>", constructor_signature).unwrap();
 
-                        $crate::convert_jvm_helper::CloneIntoJvmJvmId::ViaConstructor { constructor_id }
+                        $crate::convert_jvm_helper::JvmInstantiationMethodId::ViaConstructor { constructor_id }
                      },
                      $crate::convert_jvm_helper::JvmInstantiationStrategy::ViaStaticMethod(method_name, signature) => {
                         let method_id = env
@@ -98,7 +98,7 @@ macro_rules! convert_jvm_helper {
 
                         let type_signature = ::jni::signature::TypeSignature::from_str(signature).unwrap();
 
-                        $crate::convert_jvm_helper::CloneIntoJvmJvmId::ViaStaticMethod {
+                        $crate::convert_jvm_helper::JvmInstantiationMethodId::ViaStaticMethod {
                            method_id,
                            return_type: type_signature.ret
                         }
@@ -130,10 +130,10 @@ macro_rules! convert_jvm_helper {
                         ..
                      } => {
                         match clone_into_jvm {
-                           $crate::convert_jvm_helper::CloneIntoJvmJvmId::ViaConstructor { constructor_id } => unsafe {
+                           $crate::convert_jvm_helper::JvmInstantiationMethodId::ViaConstructor { constructor_id } => unsafe {
                               env.new_object_unchecked(class, *constructor_id, args).unwrap()
                            },
-                           $crate::convert_jvm_helper::CloneIntoJvmJvmId::ViaStaticMethod { method_id, return_type } => unsafe {
+                           $crate::convert_jvm_helper::JvmInstantiationMethodId::ViaStaticMethod { method_id, return_type } => unsafe {
                               env.call_static_method_unchecked(
                                     class, *method_id, return_type.clone(), args
                                  )
@@ -213,7 +213,7 @@ pub enum JvmInstantiationStrategy<'a> {
    ViaStaticMethod(&'a str, &'a str)
 }
 
-pub enum CloneIntoJvmJvmId {
+pub enum JvmInstantiationMethodId {
    ViaConstructor {
       constructor_id: JMethodID
    },
