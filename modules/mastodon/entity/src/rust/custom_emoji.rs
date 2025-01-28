@@ -23,7 +23,7 @@ use crate::instance::Instance;
 use {
    jni::JNIEnv,
    ext_panoptiqon::convert_jvm_helper,
-   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
+   ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    crate::jvm_types::JvmCustomEmoji,
 };
@@ -40,7 +40,7 @@ pub struct CustomEmoji {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER: ConvertJniHelper<6> = convert_jvm_helper!(
+   static HELPER: CustomEmojiConvertHelper<6> = convert_jvm_helper!(
       "com/wcaokaze/probosqis/mastodon/entity/CustomEmoji",
       JvmInstantiationStrategy::ViaConstructor(
          "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\

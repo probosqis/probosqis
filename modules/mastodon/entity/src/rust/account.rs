@@ -26,7 +26,7 @@ use crate::status::StatusVisibility;
 #[cfg(feature = "jvm")]
 use {
    ext_panoptiqon::convert_jvm_helper,
-   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
+   ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    crate::jvm_types::{
@@ -94,7 +94,7 @@ pub struct AccountProfileField {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static ACCOUNT_HELPER: ConvertJniHelper<26> = convert_jvm_helper!(
+   static ACCOUNT_HELPER: AccountConvertHelper<26> = convert_jvm_helper!(
       "com/wcaokaze/probosqis/mastodon/entity/Account",
       JvmInstantiationStrategy::ViaConstructor(
          "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
@@ -350,7 +350,7 @@ impl<'local> CloneFromJvm<'local, JvmAccount<'local>> for Account {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static CREDENTIAL_ACCOUNT_HELPER: ConvertJniHelper<8> = convert_jvm_helper!(
+   static CREDENTIAL_ACCOUNT_HELPER: CredentialAccountConvertHelper<8> = convert_jvm_helper!(
       "com/wcaokaze/probosqis/mastodon/entity/CredentialAccount",
       JvmInstantiationStrategy::ViaConstructor(
          "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
@@ -452,7 +452,7 @@ impl<'local> CloneFromJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static RELATIONAL_ACCOUNT_HELPER: ConvertJniHelper<2> = convert_jvm_helper!(
+   static RELATIONAL_ACCOUNT_HELPER: RelationalAccountConvertHelper<2> = convert_jvm_helper!(
       "com/wcaokaze/probosqis/mastodon/entity/RelationalAccount",
       JvmInstantiationStrategy::ViaConstructor(
          "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/Long;)V"
@@ -508,7 +508,7 @@ impl<'local> CloneFromJvm<'local, JvmRelationalAccount<'local>> for RelationalAc
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static ACCOUNT_PROFILE_FIELD_HELPER: ConvertJniHelper<3> = convert_jvm_helper!(
+   static ACCOUNT_PROFILE_FIELD_HELPER: AccountProfileConvertHelper<3> = convert_jvm_helper!(
       "com/wcaokaze/probosqis/mastodon/entity/Account$ProfileField",
       JvmInstantiationStrategy::ViaConstructor(
          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V"

@@ -24,7 +24,7 @@ use {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER_UNSUPPORTED: ConvertJniHelper<0> = convert_jvm_helper!(
+   static HELPER_UNSUPPORTED: UnsupportedConvertHelper<0> = convert_jvm_helper!(
       "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported",
       JvmInstantiationStrategy::ViaConstructor(
          "(Ljava/lang/String;Ljava/lang/String;)V"
@@ -32,7 +32,7 @@ convert_jvm_helper! {
       []
    );
 
-   static HELPER_MASTODON: ConvertJniHelper<0> = convert_jvm_helper!(
+   static HELPER_MASTODON: MastodonConvertHelper<0> = convert_jvm_helper!(
       "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon",
       JvmInstantiationStrategy::ViaConstructor(
          "(Ljava/lang/String;Ljava/lang/String;)V"

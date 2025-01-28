@@ -21,7 +21,7 @@ use crate::instance::Instance;
 #[cfg(feature = "jvm")]
 use {
    ext_panoptiqon::convert_jvm_helper,
-   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
+   ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    panoptiqon::jvm_types::JvmString,
@@ -43,7 +43,7 @@ pub struct RoleId(pub String);
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER: ConvertJniHelper<6> = convert_jvm_helper!(
+   static HELPER: RoleConvertHelper<6> = convert_jvm_helper!(
       "com/wcaokaze/probosqis/mastodon/entity/Role",
       JvmInstantiationStrategy::ViaConstructor(
          "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
