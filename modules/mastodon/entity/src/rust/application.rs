@@ -24,7 +24,8 @@ use {
    ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   crate::jvm_types::JvmApplication,
+   panoptiqon::jvm_types::{JvmCache, JvmNullable, JvmString},
+   crate::jvm_types::{JvmApplication, JvmInstance},
 };
 
 #[derive(Deserialize)]
@@ -38,19 +39,34 @@ pub struct Application {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER: ApplicationConvertHelper<5> = convert_jvm_helper!(
-      "com/wcaokaze/probosqis/mastodon/entity/Application",
-      JvmInstantiationStrategy::ViaConstructor(
-         "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
-      ),
-      [
-         ("getInstance",     "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-         ("getName",         "Ljava/lang/String;"),
-         ("getWebsite",      "Ljava/lang/String;"),
-         ("getClientId",     "Ljava/lang/String;"),
-         ("getClientSecret", "Ljava/lang/String;"),
-      ]
-   );
+   static HELPER = impl struct ApplicationConvertHelper<5>
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Application"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmApplication<'local>
+         where JvmInstantiationStrategy::ViaConstructor(
+            "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
+         );
+
+      fn instance<'local>(..) -> JvmCache<'local, JvmInstance<'local>>
+         where jvm_getter_method: "getInstance",
+               jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
+
+      fn name<'local>(..) -> JvmString<'local>
+         where jvm_getter_method: "getName",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn website<'local>(..) -> JvmNullable<'local, JvmString<'local>>
+         where jvm_getter_method: "getWebsite",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn client_id<'local>(..) -> JvmNullable<'local, JvmString<'local>>
+         where jvm_getter_method: "getClientId",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn client_secret<'local>(..) -> JvmNullable<'local, JvmString<'local>>
+         where jvm_getter_method: "getClientSecret",
+               jvm_return_type: "Ljava/lang/String;";
+   }
 }
 
 #[cfg(feature = "jvm")]

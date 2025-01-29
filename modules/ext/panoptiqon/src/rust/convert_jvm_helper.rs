@@ -26,11 +26,18 @@ macro_rules! convert_jvm_helper {
    (
       $(
          $(#[$attr:meta])*
-         static $var_name:ident : $type_name:ident < $arity:literal > = convert_jvm_helper!(
-            $class_fully_qualified_name:literal,
-            $instantiation_strategy:expr,
-            [$(($getter_method_name:expr, $getter_signatures:expr)),* $(,)?]
-         );
+         static $var_name:ident = impl struct $type_name:ident < $arity:literal >
+            where jvm_class: $class_fully_qualified_name:literal
+         {
+            fn clone_into_jvm<'local>(..) -> $jvm_type:ty
+               where $instantiation_strategy:expr;
+
+            $(
+               fn $prop_name:ident <'local>(..) -> $prop_ret_type:ty
+                  where jvm_getter_method: $getter_method_name:expr,
+                        jvm_return_type: $getter_ret_type:expr
+            );* $(;)?
+         }
       )*
    ) => {
       $(
@@ -38,7 +45,7 @@ macro_rules! convert_jvm_helper {
          static $var_name: $type_name<$arity> = $type_name::new(
             $class_fully_qualified_name,
             $instantiation_strategy,
-            [$(($getter_method_name, $getter_signatures)),*]
+            [$(($getter_method_name, $getter_ret_type)),*]
          );
 
          $crate::convert_jvm_helper::paste! {
@@ -202,6 +209,16 @@ macro_rules! convert_jvm_helper {
                      }
                   }
                }
+
+               $(
+                  fn $prop_name<'local>(
+                     &self,
+                     env: &mut ::jni::JNIEnv<'local>,
+                     instance: &$jvm_type
+                  ) -> $prop_ret_type {
+                     todo!();
+                  }
+               )*
             }
          }
       )*
@@ -228,33 +245,39 @@ mod jni_tests {
    use std::ops::Deref;
 
    use jni::JNIEnv;
-   use jni::objects::{JIntArray, JObject};
+   use jni::objects::JObject;
    use jni::sys::{JNI_FALSE, jvalue};
    use panoptiqon::convert_jvm::CloneFromJvm;
    use paste::paste;
+   use panoptiqon::jvm_type;
+   use panoptiqon::jvm_types::JvmString;
    use super::JvmInstantiationStrategy;
+
+   jvm_type! {
+      JvmTestEntity,
+   }
 
    macro_rules! helper {
       ($name:ident) => {
          paste! {
             convert_jvm_helper! {
                #[allow(non_upper_case_globals, non_camel_case_types)]
-               static $name: [<$name Helper>]<10> = convert_jvm_helper!(
-                  "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity",
-                  JvmInstantiationStrategy::ViaConstructor("(ZBSIJFDCLjava/lang/String;[I)V"),
-                  [
-                     ("getZ", "Z"),
-                     ("getB", "B"),
-                     ("getS", "S"),
-                     ("getI", "I"),
-                     ("getJ", "J"),
-                     ("getF", "F"),
-                     ("getD", "D"),
-                     ("getC", "C"),
-                     ("getStr", "Ljava/lang/String;"),
-                     ("getArr", "[I"),
-                  ]
-               );
+               static $name = impl struct [<$name Helper>]<9>
+                  where jvm_class: "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity"
+               {
+                  fn clone_into_jvm<'local>(..) -> JvmTestEntity<'local>
+                     where JvmInstantiationStrategy::ViaConstructor("(ZBSIJFDCLjava/lang/String;)V");
+
+                  fn z  <'local>(..) -> bool              where jvm_getter_method: "getZ",   jvm_return_type: "Z";
+                  fn b  <'local>(..) -> i8                where jvm_getter_method: "getB",   jvm_return_type: "B";
+                  fn s  <'local>(..) -> i16               where jvm_getter_method: "getS",   jvm_return_type: "S";
+                  fn i  <'local>(..) -> i32               where jvm_getter_method: "getI",   jvm_return_type: "I";
+                  fn j  <'local>(..) -> i64               where jvm_getter_method: "getJ",   jvm_return_type: "J";
+                  fn f  <'local>(..) -> f32               where jvm_getter_method: "getF",   jvm_return_type: "F";
+                  fn d  <'local>(..) -> f64               where jvm_getter_method: "getD",   jvm_return_type: "D";
+                  fn c  <'local>(..) -> char              where jvm_getter_method: "getC",   jvm_return_type: "C";
+                  fn str<'local>(..) -> JvmString<'local> where jvm_getter_method: "getStr", jvm_return_type: "Ljava/lang/String;";
+               }
             }
          }
       };
@@ -279,7 +302,6 @@ mod jni_tests {
       _obj: JObject
    ) {
       let l = env.new_string("").unwrap();
-      let a = env.new_int_array(0).unwrap();
 
       variantJvmIdsAfterCloneIntoJvm_helper.clone_into_jvm(&mut env, &[
          jvalue { z: JNI_FALSE },
@@ -291,7 +313,6 @@ mod jni_tests {
          jvalue { d: 0.0 },
          jvalue { c: 'a' as u16  },
          jvalue { l: l.into_raw() },
-         jvalue { l: a.into_raw() },
       ]);
 
       let helper_inner= variantJvmIdsAfterCloneIntoJvm_helper.0.read().unwrap();
@@ -320,8 +341,6 @@ mod jni_tests {
       _obj: JObject<'local>
    ) -> JObject<'local> {
       let l = env.new_string("9012345").unwrap();
-      let a = env.new_int_array(5).unwrap();
-      env.set_int_array_region(&a, 0, &[6, 7, 8, 9, 0]).unwrap();
 
       cloneIntoJvm_helper.clone_into_jvm(&mut env, &[
          jvalue { z: JNI_FALSE },
@@ -333,7 +352,6 @@ mod jni_tests {
          jvalue { d: 6.75 },
          jvalue { c: '8' as u16 },
          jvalue { l: l.into_raw() },
-         jvalue { l: a.into_raw() },
       ])
    }
 
@@ -357,10 +375,6 @@ mod jni_tests {
       let str = cloneFromJvm_helper.get(&mut env, &jvm_entity, 8).l().unwrap();
       let str = unsafe { String::clone_from_j_object(&mut env, &str) };
 
-      let arr = cloneFromJvm_helper.get(&mut env, &jvm_entity, 9).l().unwrap();
-      let mut buf = [0; 5];
-      env.get_int_array_region(JIntArray::from(arr), 0, &mut buf).unwrap();
-
       assert_eq!(false, z);
       assert_eq!(0, b);
       assert_eq!(1, s);
@@ -370,6 +384,5 @@ mod jni_tests {
       assert_eq!(6.75, d);
       assert_eq!('8' as u16, c);
       assert_eq!("9012345".to_string(), str);
-      assert_eq!([6, 7, 8, 9, 0], buf);
    }
 }

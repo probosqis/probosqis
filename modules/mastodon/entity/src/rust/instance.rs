@@ -24,6 +24,7 @@ use {
    ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
+   panoptiqon::jvm_types::JvmString,
    crate::jvm_types::JvmInstance,
 };
 
@@ -36,15 +37,24 @@ pub struct Instance {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER: ConvertJniHelper<3> = convert_jvm_helper!(
-      "com/wcaokaze/probosqis/mastodon/entity/Instance",
-      JvmInstantiationStrategy::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;J)V"),
-      [
-         ("getUrl",                           "Ljava/lang/String;"),
-         ("getVersion",                       "Ljava/lang/String;"),
-         ("getVersionCheckedTimeEpochMillis", "J"),
-      ]
-   );
+   static HELPER = impl struct ConvertJniHelper<3>
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Instance"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmInstance<'local>
+         where JvmInstantiationStrategy::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;J)V");
+
+      fn url<'local>(..) -> JvmString<'local>
+         where jvm_getter_method: "getUrl",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn version<'local>(..) -> JvmString<'local>
+         where jvm_getter_method: "getVersion",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn version_checked_time_epoch_millis<'local>(..) -> i64
+         where jvm_getter_method: "getVersionCheckedTimeEpochMillis",
+               jvm_return_type: "J";
+   }
 }
 
 #[cfg(feature = "jvm")]

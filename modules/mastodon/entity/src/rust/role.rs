@@ -24,8 +24,8 @@ use {
    ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   panoptiqon::jvm_types::JvmString,
-   crate::jvm_types::JvmRole,
+   panoptiqon::jvm_types::{JvmBoolean, JvmCache, JvmNullable, JvmString},
+   crate::jvm_types::{JvmInstance, JvmRole},
 };
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
@@ -43,25 +43,43 @@ pub struct RoleId(pub String);
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER: RoleConvertHelper<6> = convert_jvm_helper!(
-      "com/wcaokaze/probosqis/mastodon/entity/Role",
-      JvmInstantiationStrategy::ViaConstructor(
-         "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
-         Ljava/lang/String;\
-         Ljava/lang/String;\
-         Ljava/lang/String;\
-         Ljava/lang/String;\
-         Ljava/lang/Boolean;)V"
-      ),
-      [
-         ("getInstance", "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-         ("getRawId", "Ljava/lang/String;"),
-         ("getName", "Ljava/lang/String;"),
-         ("getColor", "Ljava/lang/String;"),
-         ("getPermissions", "Ljava/lang/String;"),
-         ("isHighlighted", "Ljava/lang/Boolean;"),
-      ]
-   );
+   static HELPER = impl struct RoleConvertHelper<6>
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Role"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmRole<'local>
+         where JvmInstantiationStrategy::ViaConstructor(
+            "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/Boolean;)V"
+         );
+
+      fn instance<'local>(..) -> JvmCache<'local, JvmInstance<'local>>
+         where jvm_getter_method: "getInstance",
+               jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
+
+      fn raw_id<'local>(..) -> JvmNullable<'local, JvmString<'local>>
+         where jvm_getter_method: "getRawId",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn name<'local>(..) -> JvmNullable<'local, JvmString<'local>>
+         where jvm_getter_method: "getName",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn color<'local>(..) -> JvmNullable<'local, JvmString<'local>>
+         where jvm_getter_method: "getColor",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn permissions<'local>(..) -> JvmNullable<'local, JvmString<'local>>
+         where jvm_getter_method: "getPermissions",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn is_highlighted<'local>(..) -> JvmNullable<'local, JvmBoolean<'local>>
+         where jvm_getter_method: "isHighlighted",
+               jvm_return_type: "Ljava/lang/Boolean;";
+   }
 }
 
 #[cfg(feature = "jvm")]

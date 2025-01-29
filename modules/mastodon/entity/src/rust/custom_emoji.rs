@@ -25,7 +25,8 @@ use {
    ext_panoptiqon::convert_jvm_helper,
    ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   crate::jvm_types::JvmCustomEmoji,
+   panoptiqon::jvm_types::{JvmBoolean, JvmCache, JvmNullable, JvmString},
+   crate::jvm_types::{JvmCustomEmoji, JvmInstance},
 };
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
@@ -40,25 +41,43 @@ pub struct CustomEmoji {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER: CustomEmojiConvertHelper<6> = convert_jvm_helper!(
-      "com/wcaokaze/probosqis/mastodon/entity/CustomEmoji",
-      JvmInstantiationStrategy::ViaConstructor(
-         "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
-         Ljava/lang/String;\
-         Ljava/lang/String;\
-         Ljava/lang/String;\
-         Ljava/lang/Boolean;\
-         Ljava/lang/String;)V"
-      ),
-      [
-         ("getInstance", "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-         ("getShortcode", "Ljava/lang/String;"),
-         ("getImageUrl", "Ljava/lang/String;"),
-         ("getStaticImageUrl", "Ljava/lang/String;"),
-         ("isVisibleInPicker", "Ljava/lang/Boolean;"),
-         ("getCategory", "Ljava/lang/String;"),
-      ]
-   );
+   static HELPER = impl struct CustomEmojiConvertHelper<6>
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/CustomEmoji"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmCustomEmoji<'local>
+         where JvmInstantiationStrategy::ViaConstructor(
+            "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/Boolean;\
+            Ljava/lang/String;)V"
+         );
+
+      fn instance<'local>(..) -> JvmCache<'local, JvmInstance<'local>>
+         where jvm_getter_method: "getInstance",
+               jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
+
+      fn shortcode<'local>(..) -> JvmString<'local>
+         where jvm_getter_method: "getShortcode",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn image_url<'local>(..) -> JvmString<'local>
+         where jvm_getter_method: "getImageUrl",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn static_image_url<'local>(..) -> JvmNullable<'local, JvmString<'local>>
+         where jvm_getter_method: "getStaticImageUrl",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn is_visible_in_picker<'local>(..) -> JvmNullable<'local, JvmBoolean<'local>>
+         where jvm_getter_method: "isVisibleInPicker",
+               jvm_return_type: "Ljava/lang/Boolean;";
+
+      fn category<'local>(..) -> JvmNullable<'local, JvmString<'local>>
+         where jvm_getter_method: "getCategory",
+               jvm_return_type: "Ljava/lang/String;";
+   }
 }
 
 #[cfg(feature = "jvm")]

@@ -25,7 +25,8 @@ use {
    ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   crate::jvm_types::JvmToken,
+   panoptiqon::jvm_types::{JvmCache, JvmString},
+   crate::jvm_types::{JvmInstance, JvmToken},
 };
 
 #[derive(Deserialize)]
@@ -39,19 +40,34 @@ pub struct Token {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER: TokenConvertHelper<5> = convert_jvm_helper!(
-      "com/wcaokaze/probosqis/mastodon/entity/Token",
-      JvmInstantiationStrategy::ViaConstructor(
-         "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V"
-      ),
-      [
-         ("getInstance",             "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-         ("getAccessToken",          "Ljava/lang/String;"),
-         ("getTokenType",            "Ljava/lang/String;"),
-         ("getScope",                "Ljava/lang/String;"),
-         ("getCreatedAtEpochMillis", "J"),
-      ]
-   );
+   static HELPER = impl struct TokenConvertHelper<5>
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Token"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmToken<'local>
+         where JvmInstantiationStrategy::ViaConstructor(
+            "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V"
+         );
+
+      fn instance<'local>(..) -> JvmCache<'local, JvmInstance<'local>>
+         where jvm_getter_method: "getInstance",
+               jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
+
+      fn access_token<'local>(..) -> JvmString<'local>
+         where jvm_getter_method: "getAccessToken",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn token_type<'local>(..) -> JvmString<'local>
+         where jvm_getter_method: "getTokenType",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn scope<'local>(..) -> JvmString<'local>
+         where jvm_getter_method: "getScope",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn created_at_epoch_millis<'local>(..) -> i64
+         where jvm_getter_method: "getCreatedAtEpochMillis",
+               jvm_return_type: "J";
+   }
 }
 
 #[cfg(feature = "jvm")]

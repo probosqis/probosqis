@@ -35,15 +35,18 @@ pub enum StatusVisibility {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static STATUS_VISIBILITY_HELPER: StatusVisibilityConvertHelper<1> = convert_jvm_helper!(
-      "com/wcaokaze/probosqis/mastodon/entity/Status$Visibility",
-      JvmInstantiationStrategy::ViaStaticMethod(
-         "fromInt", "(I)Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;"
-      ),
-      [
-         ("getValue", "I"),
-      ]
-   );
+   static STATUS_VISIBILITY_HELPER = impl struct StatusVisibilityConvertHelper<1>
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Status$Visibility"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmStatusVisibility<'local>
+         where JvmInstantiationStrategy::ViaStaticMethod(
+            "fromInt", "(I)Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;"
+         );
+
+      fn value<'local>(..) -> i32
+         where jvm_getter_method: "getValue",
+               jvm_return_type: "I";
+   }
 }
 
 #[cfg(feature = "jvm")]

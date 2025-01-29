@@ -24,21 +24,23 @@ use {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER_UNSUPPORTED: UnsupportedConvertHelper<0> = convert_jvm_helper!(
-      "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported",
-      JvmInstantiationStrategy::ViaConstructor(
-         "(Ljava/lang/String;Ljava/lang/String;)V"
-      ),
-      []
-   );
+   static HELPER_UNSUPPORTED = impl struct UnsupportedConvertHelper<0>
+      where jvm_class: "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
+         where JvmInstantiationStrategy::ViaConstructor(
+            "(Ljava/lang/String;Ljava/lang/String;)V"
+         );
+   }
 
-   static HELPER_MASTODON: MastodonConvertHelper<0> = convert_jvm_helper!(
-      "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon",
-      JvmInstantiationStrategy::ViaConstructor(
-         "(Ljava/lang/String;Ljava/lang/String;)V"
-      ),
-      []
-   );
+   static HELPER_MASTODON = impl struct MastodonConvertHelper<0>
+      where jvm_class: "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
+         where JvmInstantiationStrategy::ViaConstructor(
+            "(Ljava/lang/String;Ljava/lang/String;)V"
+         );
+   }
 }
 
 #[cfg(feature = "jvm")]

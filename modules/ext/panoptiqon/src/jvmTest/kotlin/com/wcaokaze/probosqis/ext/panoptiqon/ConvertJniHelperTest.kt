@@ -18,7 +18,6 @@ package com.wcaokaze.probosqis.ext.panoptiqon
 
 import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class TestEntity(
@@ -31,7 +30,6 @@ class TestEntity(
    val d: Double,
    val c: Char,
    val str: String,
-   val arr: IntArray,
 )
 
 class ConvertJniHelperTest {
@@ -47,7 +45,7 @@ class ConvertJniHelperTest {
 
    @Test
    fun variantJvmIdsAfterGet() {
-      val entity = TestEntity(false, 0, 0, 0, 0L, 0.0f, 0.0, 'a', "", IntArray(0))
+      val entity = TestEntity(false, 0, 0, 0, 0L, 0.0f, 0.0, 'a', "")
       `variantJvmIdsAfterGet$assert`(entity)
    }
 
@@ -65,7 +63,6 @@ class ConvertJniHelperTest {
       assertEquals(6.75, entity.d)
       assertEquals('8', entity.c)
       assertEquals("9012345", entity.str)
-      assertContentEquals(intArrayOf(6, 7, 8, 9, 0), entity.arr)
    }
 
    external fun `cloneIntoJvm$createEntity`(): TestEntity
@@ -82,7 +79,6 @@ class ConvertJniHelperTest {
          d = 6.75,
          c = '8',
          str = "9012345",
-         arr = intArrayOf(6, 7, 8, 9, 0),
       )
       `cloneFromJvm$assert`(entity)
    }
