@@ -97,16 +97,14 @@ impl<'local> CloneIntoJvm<'local, JvmRole<'local>> for Role {
       let permissions                     = self.permissions   .clone_into_jvm(env);
       let is_highlighted                  = self.is_highlighted.clone_into_jvm(env);
 
-      let args = [
+      let j_object = HELPER.clone_into_jvm(env,
          jvalue { l: instance      .j_object().as_raw() },
          jvalue { l: id            .j_object().as_raw() },
          jvalue { l: name          .j_object().as_raw() },
          jvalue { l: color         .j_object().as_raw() },
          jvalue { l: permissions   .j_object().as_raw() },
          jvalue { l: is_highlighted.j_object().as_raw() },
-      ];
-
-      let j_object = HELPER.clone_into_jvm(env, &args);
+      );
       unsafe { JvmRole::from_j_object(j_object) }
    }
 }

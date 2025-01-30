@@ -125,7 +125,7 @@ macro_rules! convert_jvm_helper {
                pub fn clone_into_jvm<'local>(
                   &self,
                   env: &mut ::jni::JNIEnv<'local>,
-                  args: &[::jni::sys::jvalue],
+                  $($prop_name: ::jni::sys::jvalue),*
                ) -> ::jni::objects::JObject<'local> {
                   use std::ops::Deref;
 
@@ -136,13 +136,15 @@ macro_rules! convert_jvm_helper {
                         clone_into_jvm,
                         ..
                      } => {
+                        let args = [$($prop_name),*];
+
                         match clone_into_jvm {
                            $crate::convert_jvm_helper::JvmInstantiationMethodId::ViaConstructor { constructor_id } => unsafe {
-                              env.new_object_unchecked(class, *constructor_id, args).unwrap()
+                              env.new_object_unchecked(class, *constructor_id, &args).unwrap()
                            },
                            $crate::convert_jvm_helper::JvmInstantiationMethodId::ViaStaticMethod { method_id, return_type } => unsafe {
                               env.call_static_method_unchecked(
-                                    class, *method_id, return_type.clone(), args
+                                    class, *method_id, return_type.clone(), &args
                                  )
                                  .unwrap().l().unwrap()
                            }
@@ -164,7 +166,7 @@ macro_rules! convert_jvm_helper {
                            class, clone_into_jvm: clone_into_jvm_id, getter_ids
                         };
                         drop(lock);
-                        self.clone_into_jvm(env, args)
+                        self.clone_into_jvm(env, $($prop_name),*)
                      }
                   }
                }
@@ -303,7 +305,7 @@ mod jni_tests {
    ) {
       let l = env.new_string("").unwrap();
 
-      variantJvmIdsAfterCloneIntoJvm_helper.clone_into_jvm(&mut env, &[
+      variantJvmIdsAfterCloneIntoJvm_helper.clone_into_jvm(&mut env,
          jvalue { z: JNI_FALSE },
          jvalue { b: 0 },
          jvalue { s: 0 },
@@ -313,7 +315,7 @@ mod jni_tests {
          jvalue { d: 0.0 },
          jvalue { c: 'a' as u16  },
          jvalue { l: l.into_raw() },
-      ]);
+      );
 
       let helper_inner= variantJvmIdsAfterCloneIntoJvm_helper.0.read().unwrap();
       assert!(matches!(helper_inner.deref(), &variantJvmIdsAfterCloneIntoJvm_helperHelperInner::JvmIds { .. }));
@@ -342,7 +344,7 @@ mod jni_tests {
    ) -> JObject<'local> {
       let l = env.new_string("9012345").unwrap();
 
-      cloneIntoJvm_helper.clone_into_jvm(&mut env, &[
+      cloneIntoJvm_helper.clone_into_jvm(&mut env,
          jvalue { z: JNI_FALSE },
          jvalue { b: 0 },
          jvalue { s: 1 },
@@ -352,7 +354,7 @@ mod jni_tests {
          jvalue { d: 6.75 },
          jvalue { c: '8' as u16 },
          jvalue { l: l.into_raw() },
-      ])
+      )
    }
 
    helper!(cloneFromJvm_helper);

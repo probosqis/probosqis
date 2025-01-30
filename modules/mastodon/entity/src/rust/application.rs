@@ -83,15 +83,13 @@ impl<'local> CloneIntoJvm<'local, JvmApplication<'local>> for Application {
       let client_id                       = self.client_id    .clone_into_jvm(env);
       let client_secret                   = self.client_secret.clone_into_jvm(env);
 
-      let args = [
+      let j_object = HELPER.clone_into_jvm(env,
          jvalue { l: instance     .j_object().as_raw() },
          jvalue { l: name         .j_object().as_raw() },
          jvalue { l: website      .j_object().as_raw() },
          jvalue { l: client_id    .j_object().as_raw() },
          jvalue { l: client_secret.j_object().as_raw() },
-      ];
-
-      let j_object = HELPER.clone_into_jvm(env, &args);
+      );
       unsafe { JvmApplication::from_j_object(j_object) }
    }
 }

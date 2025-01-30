@@ -95,16 +95,14 @@ impl<'local> CloneIntoJvm<'local, JvmCustomEmoji<'local>> for CustomEmoji {
       let is_visible_in_picker            = self.is_visible_in_picker                                .clone_into_jvm(env);
       let category                        = self.category                                            .clone_into_jvm(env);
 
-      let args = [
+      let j_object = HELPER.clone_into_jvm(env,
          jvalue { l: instance            .j_object().as_raw() },
          jvalue { l: shortcode           .j_object().as_raw() },
          jvalue { l: image_url           .j_object().as_raw() },
          jvalue { l: static_image_url    .j_object().as_raw() },
          jvalue { l: is_visible_in_picker.j_object().as_raw() },
          jvalue { l: category            .j_object().as_raw() },
-      ];
-
-      let j_object = HELPER.clone_into_jvm(env, &args);
+      );
       unsafe { JvmCustomEmoji::from_j_object(j_object) }
    }
 }

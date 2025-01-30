@@ -272,7 +272,7 @@ impl<'local> CloneIntoJvm<'local, JvmAccount<'local>> for Account {
       let follower_count = self.follower_count.map(|u| u as i64).clone_into_jvm(env);
       let followee_count = self.followee_count.map(|u| u as i64).clone_into_jvm(env);
 
-      let args = [
+      let j_object = ACCOUNT_HELPER.clone_into_jvm(env,
          jvalue { l: instance               .j_object().as_raw() },
          jvalue { l: id                     .j_string().as_raw() },
          jvalue { l: username               .j_object().as_raw() },
@@ -299,9 +299,7 @@ impl<'local> CloneIntoJvm<'local, JvmAccount<'local>> for Account {
          jvalue { l: status_count           .j_object().as_raw() },
          jvalue { l: follower_count         .j_object().as_raw() },
          jvalue { l: followee_count         .j_object().as_raw() },
-      ];
-
-      let j_object = ACCOUNT_HELPER.clone_into_jvm(env, &args);
+      );
       unsafe { JvmAccount::from_j_object(j_object) }
    }
 }
@@ -497,7 +495,7 @@ impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
       let follow_request_count          = self.follow_request_count.map(|u| u as i64)                          .clone_into_jvm(env);
       let role                          = self.role                                                            .clone_into_jvm(env);
 
-      let args = [
+      let j_object = CREDENTIAL_ACCOUNT_HELPER.clone_into_jvm(env,
          jvalue { l: account.j_object().as_raw() },
          jvalue { l: raw_profile_note.j_object().as_raw() },
          jvalue { l: raw_profile_fields.j_object().as_raw() },
@@ -506,9 +504,7 @@ impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
          jvalue { l: default_post_language.j_object().as_raw() },
          jvalue { l: follow_request_count.j_object().as_raw() },
          jvalue { l: role.j_object().as_raw() },
-      ];
-
-      let j_object = CREDENTIAL_ACCOUNT_HELPER.clone_into_jvm(env, &args);
+      );
       unsafe { JvmCredentialAccount::from_j_object(j_object) }
    }
 }
@@ -586,12 +582,10 @@ impl<'local> CloneIntoJvm<'local, JvmRelationalAccount<'local>> for RelationalAc
       let account: JvmCache<JvmAccount> = self.account.clone_into_jvm(env);
       let mute_expire_time = self.mute_expire_time.map(|t| t.timestamp_millis()).clone_into_jvm(env);
 
-      let args = [
+      let j_object = RELATIONAL_ACCOUNT_HELPER.clone_into_jvm(env,
          jvalue { l: account.j_object().as_raw() },
          jvalue { l: mute_expire_time.j_object().as_raw() },
-      ];
-
-      let j_object = RELATIONAL_ACCOUNT_HELPER.clone_into_jvm(env, &args);
+      );
       unsafe { JvmRelationalAccount::from_j_object(j_object) }
    }
 }
@@ -652,13 +646,11 @@ impl<'local> CloneIntoJvm<'local, JvmAccountProfileField<'local>> for AccountPro
       let value = self.value.clone_into_jvm(env);
       let verified_time = self.verified_time.map(|t| t.timestamp_millis()).clone_into_jvm(env);
 
-      let args = [
+      let j_object = ACCOUNT_PROFILE_FIELD_HELPER.clone_into_jvm(env,
          jvalue { l: name.j_object().as_raw() },
          jvalue { l: value.j_object().as_raw() },
          jvalue { l: verified_time.j_object().as_raw() },
-      ];
-
-      let j_object = ACCOUNT_PROFILE_FIELD_HELPER.clone_into_jvm(env, &args);
+      );
       unsafe { JvmAccountProfileField::from_j_object(j_object) }
    }
 }

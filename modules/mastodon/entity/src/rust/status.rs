@@ -56,11 +56,10 @@ impl<'local> CloneIntoJvm<'local, JvmStatusVisibility<'local>> for StatusVisibil
       use panoptiqon::jvm_type::JvmType;
 
       let visibility = *self as i32;
-      let args = [
-         jvalue { i: visibility },
-      ];
 
-      let j_object = STATUS_VISIBILITY_HELPER.clone_into_jvm(env, &args);
+      let j_object = STATUS_VISIBILITY_HELPER.clone_into_jvm(env,
+         jvalue { i: visibility },
+      );
       unsafe { JvmStatusVisibility::from_j_object(j_object) }
    }
 }

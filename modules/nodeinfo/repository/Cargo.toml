@@ -37,3 +37,4 @@ panoptiqon.workspace = true
 
 nodeinfo_entity.workspace = true
 nodeinfo_webapi.workspace = true
+mastodon_entity.workspace = true

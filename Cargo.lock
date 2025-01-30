@@ -607,6 +607,7 @@ dependencies = [
  "ext_panoptiqon",
  "ext_reqwest",
  "jni",
+ "mastodon_entity",
  "nodeinfo_entity",
  "nodeinfo_webapi",
  "panoptiqon",
