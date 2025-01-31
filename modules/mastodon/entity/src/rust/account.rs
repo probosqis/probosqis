@@ -131,7 +131,7 @@ convert_jvm_helper! {
             Ljava/lang/Long;)V"
          );
 
-      fn instance<'local>(..) -> JvmInstance<'local>
+      fn instance<'local>(..) -> JvmCache<'local, JvmInstance<'local>>
          where jvm_getter_method: "getInstance",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
@@ -240,13 +240,12 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmAccount<'local>> for Account {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmAccount<'local> {
-      use jni::sys::jvalue;
       use panoptiqon::jvm_type::JvmType;
       use panoptiqon::jvm_types::{JvmCache, JvmNullable};
       use crate::jvm_types::JvmInstance;
 
       let instance: JvmCache<JvmInstance> = self.instance.clone_into_jvm(env);
-      let id = self.id.0.clone_into_jvm(env);
+      let raw_id = self.id.0.clone_into_jvm(env);
       let username = self.username.clone_into_jvm(env);
       let acct = self.acct.clone_into_jvm(env);
       let url = self.url.as_ref().map(|url| url.to_string()).clone_into_jvm(env);
@@ -272,33 +271,34 @@ impl<'local> CloneIntoJvm<'local, JvmAccount<'local>> for Account {
       let follower_count = self.follower_count.map(|u| u as i64).clone_into_jvm(env);
       let followee_count = self.followee_count.map(|u| u as i64).clone_into_jvm(env);
 
-      let j_object = ACCOUNT_HELPER.clone_into_jvm(env,
-         jvalue { l: instance               .j_object().as_raw() },
-         jvalue { l: id                     .j_string().as_raw() },
-         jvalue { l: username               .j_object().as_raw() },
-         jvalue { l: acct                   .j_object().as_raw() },
-         jvalue { l: url                    .j_object().as_raw() },
-         jvalue { l: display_name           .j_object().as_raw() },
-         jvalue { l: profile_note           .j_object().as_raw() },
-         jvalue { l: avatar_image_url       .j_object().as_raw() },
-         jvalue { l: avatar_static_image_url.j_object().as_raw() },
-         jvalue { l: header_image_url       .j_object().as_raw() },
-         jvalue { l: header_static_image_url.j_object().as_raw() },
-         jvalue { l: is_locked              .j_object().as_raw() },
-         jvalue { l: profile_fields         .j_object().as_raw() },
-         jvalue { l: emoji_in_profile       .j_object().as_raw() },
-         jvalue { l: is_bot                 .j_object().as_raw() },
-         jvalue { l: is_group               .j_object().as_raw() },
-         jvalue { l: is_discoverable        .j_object().as_raw() },
-         jvalue { l: is_noindex             .j_object().as_raw() },
-         jvalue { l: moved_to               .j_object().as_raw() },
-         jvalue { l: is_suspended           .j_object().as_raw() },
-         jvalue { l: is_limited             .j_object().as_raw() },
-         jvalue { l: created_time           .j_object().as_raw() },
-         jvalue { l: last_status_post_time  .j_object().as_raw() },
-         jvalue { l: status_count           .j_object().as_raw() },
-         jvalue { l: follower_count         .j_object().as_raw() },
-         jvalue { l: followee_count         .j_object().as_raw() },
+      let j_object = ACCOUNT_HELPER.clone_into_jvm(
+         env,
+         instance,
+         raw_id,
+         username,
+         acct,
+         url,
+         display_name,
+         profile_note,
+         avatar_image_url,
+         avatar_static_image_url,
+         header_image_url,
+         header_static_image_url,
+         is_locked,
+         profile_fields,
+         emoji_in_profile,
+         is_bot,
+         is_group,
+         is_discoverable,
+         is_noindex,
+         moved_to,
+         is_suspended,
+         is_limited,
+         created_time,
+         last_status_post_time,
+         status_count,
+         follower_count,
+         followee_count,
       );
       unsafe { JvmAccount::from_j_object(j_object) }
    }
@@ -482,7 +482,6 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAccount {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmCredentialAccount<'local> {
-      use jni::sys::jvalue;
       use panoptiqon::jvm_type::JvmType;
       use panoptiqon::jvm_types::JvmCache;
 
@@ -495,15 +494,16 @@ impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
       let follow_request_count          = self.follow_request_count.map(|u| u as i64)                          .clone_into_jvm(env);
       let role                          = self.role                                                            .clone_into_jvm(env);
 
-      let j_object = CREDENTIAL_ACCOUNT_HELPER.clone_into_jvm(env,
-         jvalue { l: account.j_object().as_raw() },
-         jvalue { l: raw_profile_note.j_object().as_raw() },
-         jvalue { l: raw_profile_fields.j_object().as_raw() },
-         jvalue { l: default_post_visibility.j_object().as_raw() },
-         jvalue { l: default_post_sensitivity.j_object().as_raw() },
-         jvalue { l: default_post_language.j_object().as_raw() },
-         jvalue { l: follow_request_count.j_object().as_raw() },
-         jvalue { l: role.j_object().as_raw() },
+      let j_object = CREDENTIAL_ACCOUNT_HELPER.clone_into_jvm(
+         env,
+         account,
+         raw_profile_note,
+         raw_profile_fields,
+         default_post_visibility,
+         default_post_sensitivity,
+         default_post_language,
+         follow_request_count,
+         role,
       );
       unsafe { JvmCredentialAccount::from_j_object(j_object) }
    }
@@ -575,16 +575,16 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmRelationalAccount<'local>> for RelationalAccount {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmRelationalAccount<'local> {
-      use jni::sys::jvalue;
       use panoptiqon::jvm_type::JvmType;
       use panoptiqon::jvm_types::JvmCache;
 
       let account: JvmCache<JvmAccount> = self.account.clone_into_jvm(env);
       let mute_expire_time = self.mute_expire_time.map(|t| t.timestamp_millis()).clone_into_jvm(env);
 
-      let j_object = RELATIONAL_ACCOUNT_HELPER.clone_into_jvm(env,
-         jvalue { l: account.j_object().as_raw() },
-         jvalue { l: mute_expire_time.j_object().as_raw() },
+      let j_object = RELATIONAL_ACCOUNT_HELPER.clone_into_jvm(
+         env,
+         account,
+         mute_expire_time,
       );
       unsafe { JvmRelationalAccount::from_j_object(j_object) }
    }
@@ -639,17 +639,17 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmAccountProfileField<'local>> for AccountProfileField {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmAccountProfileField<'local> {
-      use jni::sys::jvalue;
       use panoptiqon::jvm_type::JvmType;
 
       let name = self.name.clone_into_jvm(env);
       let value = self.value.clone_into_jvm(env);
       let verified_time = self.verified_time.map(|t| t.timestamp_millis()).clone_into_jvm(env);
 
-      let j_object = ACCOUNT_PROFILE_FIELD_HELPER.clone_into_jvm(env,
-         jvalue { l: name.j_object().as_raw() },
-         jvalue { l: value.j_object().as_raw() },
-         jvalue { l: verified_time.j_object().as_raw() },
+      let j_object = ACCOUNT_PROFILE_FIELD_HELPER.clone_into_jvm(
+         env,
+         name,
+         value,
+         verified_time,
       );
       unsafe { JvmAccountProfileField::from_j_object(j_object) }
    }

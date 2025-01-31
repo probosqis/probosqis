@@ -83,7 +83,6 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmCustomEmoji<'local>> for CustomEmoji {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmCustomEmoji<'local> {
-      use jni::sys::jvalue;
       use panoptiqon::jvm_type::JvmType;
       use panoptiqon::jvm_types::JvmCache;
       use crate::jvm_types::JvmInstance;
@@ -95,13 +94,14 @@ impl<'local> CloneIntoJvm<'local, JvmCustomEmoji<'local>> for CustomEmoji {
       let is_visible_in_picker            = self.is_visible_in_picker                                .clone_into_jvm(env);
       let category                        = self.category                                            .clone_into_jvm(env);
 
-      let j_object = HELPER.clone_into_jvm(env,
-         jvalue { l: instance            .j_object().as_raw() },
-         jvalue { l: shortcode           .j_object().as_raw() },
-         jvalue { l: image_url           .j_object().as_raw() },
-         jvalue { l: static_image_url    .j_object().as_raw() },
-         jvalue { l: is_visible_in_picker.j_object().as_raw() },
-         jvalue { l: category            .j_object().as_raw() },
+      let j_object = HELPER.clone_into_jvm(
+         env,
+         instance,
+         shortcode,
+         image_url,
+         static_image_url,
+         is_visible_in_picker,
+         category,
       );
       unsafe { JvmCustomEmoji::from_j_object(j_object) }
    }

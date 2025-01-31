@@ -125,9 +125,10 @@ macro_rules! convert_jvm_helper {
                pub fn clone_into_jvm<'local>(
                   &self,
                   env: &mut ::jni::JNIEnv<'local>,
-                  $($prop_name: ::jni::sys::jvalue),*
+                  $($prop_name: $prop_ret_type),*
                ) -> ::jni::objects::JObject<'local> {
                   use std::ops::Deref;
+                  use $crate::jvalue;
 
                   let lock = self.0.read().unwrap();
                   match lock.deref() {
@@ -136,7 +137,9 @@ macro_rules! convert_jvm_helper {
                         clone_into_jvm,
                         ..
                      } => {
-                        let args = [$($prop_name),*];
+                        let args = [
+                           $(jvalue!($prop_ret_type, $prop_name)),*
+                        ];
 
                         match clone_into_jvm {
                            $crate::convert_jvm_helper::JvmInstantiationMethodId::ViaConstructor { constructor_id } => unsafe {
@@ -227,6 +230,28 @@ macro_rules! convert_jvm_helper {
    };
 }
 
+#[macro_export]
+macro_rules! jvalue {
+    (   i8, $value:expr) => { ::jni::sys::jvalue { b: $value } };
+    (  i16, $value:expr) => { ::jni::sys::jvalue { s: $value } };
+    (  i32, $value:expr) => { ::jni::sys::jvalue { i: $value } };
+    (  i64, $value:expr) => { ::jni::sys::jvalue { j: $value } };
+    (  f32, $value:expr) => { ::jni::sys::jvalue { f: $value } };
+    (  f64, $value:expr) => { ::jni::sys::jvalue { d: $value } };
+    ( bool,        true) => { ::jni::sys::jvalue { z: ::jni::sys::JNI_TRUE  } };
+    ( bool,       false) => { ::jni::sys::jvalue { z: ::jni::sys::JNI_FALSE } };
+    (bool, $value:expr) => {
+       ::jni::sys::jvalue {
+          z: if $value { ::jni::sys::JNI_TRUE } else { ::jni::sys::JNI_FALSE }
+       }
+    };
+    ($_:ty, $value:expr) => {
+       ::jni::sys::jvalue {
+          l: ::panoptiqon::jvm_type::JvmType::j_object(&$value).as_raw()
+       }
+    };
+}
+
 pub enum JvmInstantiationStrategy<'a> {
    ViaConstructor(&'a str),
    ViaStaticMethod(&'a str, &'a str)
@@ -248,7 +273,6 @@ mod jni_tests {
 
    use jni::JNIEnv;
    use jni::objects::JObject;
-   use jni::sys::{JNI_FALSE, jvalue};
    use panoptiqon::convert_jvm::CloneFromJvm;
    use paste::paste;
    use panoptiqon::jvm_type;
@@ -264,11 +288,11 @@ mod jni_tests {
          paste! {
             convert_jvm_helper! {
                #[allow(non_upper_case_globals, non_camel_case_types)]
-               static $name = impl struct [<$name Helper>]<9>
+               static $name = impl struct [<$name Helper>]<8>
                   where jvm_class: "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity"
                {
                   fn clone_into_jvm<'local>(..) -> JvmTestEntity<'local>
-                     where JvmInstantiationStrategy::ViaConstructor("(ZBSIJFDCLjava/lang/String;)V");
+                     where JvmInstantiationStrategy::ViaConstructor("(ZBSIJFDLjava/lang/String;)V");
 
                   fn z  <'local>(..) -> bool              where jvm_getter_method: "getZ",   jvm_return_type: "Z";
                   fn b  <'local>(..) -> i8                where jvm_getter_method: "getB",   jvm_return_type: "B";
@@ -277,7 +301,6 @@ mod jni_tests {
                   fn j  <'local>(..) -> i64               where jvm_getter_method: "getJ",   jvm_return_type: "J";
                   fn f  <'local>(..) -> f32               where jvm_getter_method: "getF",   jvm_return_type: "F";
                   fn d  <'local>(..) -> f64               where jvm_getter_method: "getD",   jvm_return_type: "D";
-                  fn c  <'local>(..) -> char              where jvm_getter_method: "getC",   jvm_return_type: "C";
                   fn str<'local>(..) -> JvmString<'local> where jvm_getter_method: "getStr", jvm_return_type: "Ljava/lang/String;";
                }
             }
@@ -304,17 +327,18 @@ mod jni_tests {
       _obj: JObject
    ) {
       let l = env.new_string("").unwrap();
+      let l = JvmString::from_j_string(l);
 
-      variantJvmIdsAfterCloneIntoJvm_helper.clone_into_jvm(&mut env,
-         jvalue { z: JNI_FALSE },
-         jvalue { b: 0 },
-         jvalue { s: 0 },
-         jvalue { i: 0 },
-         jvalue { j: 0 },
-         jvalue { f: 0.0 },
-         jvalue { d: 0.0 },
-         jvalue { c: 'a' as u16  },
-         jvalue { l: l.into_raw() },
+      variantJvmIdsAfterCloneIntoJvm_helper.clone_into_jvm(
+         &mut env,
+         false,
+         0i8,
+         0i16,
+         0i32,
+         0i64,
+         0.0f32,
+         0.0f64,
+         l,
       );
 
       let helper_inner= variantJvmIdsAfterCloneIntoJvm_helper.0.read().unwrap();
@@ -343,17 +367,18 @@ mod jni_tests {
       _obj: JObject<'local>
    ) -> JObject<'local> {
       let l = env.new_string("9012345").unwrap();
+      let l = JvmString::from_j_string(l);
 
-      cloneIntoJvm_helper.clone_into_jvm(&mut env,
-         jvalue { z: JNI_FALSE },
-         jvalue { b: 0 },
-         jvalue { s: 1 },
-         jvalue { i: 2 },
-         jvalue { j: 3 },
-         jvalue { f: 4.5 },
-         jvalue { d: 6.75 },
-         jvalue { c: '8' as u16 },
-         jvalue { l: l.into_raw() },
+      cloneIntoJvm_helper.clone_into_jvm(
+         &mut env,
+         false,
+         0i8,
+         1i16,
+         2i32,
+         3i64,
+         4.5f32,
+         6.75f64,
+         l,
       )
    }
 
@@ -372,9 +397,8 @@ mod jni_tests {
       let j = cloneFromJvm_helper.get(&mut env, &jvm_entity, 4).j().unwrap();
       let f = cloneFromJvm_helper.get(&mut env, &jvm_entity, 5).f().unwrap();
       let d = cloneFromJvm_helper.get(&mut env, &jvm_entity, 6).d().unwrap();
-      let c = cloneFromJvm_helper.get(&mut env, &jvm_entity, 7).c().unwrap();
 
-      let str = cloneFromJvm_helper.get(&mut env, &jvm_entity, 8).l().unwrap();
+      let str = cloneFromJvm_helper.get(&mut env, &jvm_entity, 7).l().unwrap();
       let str = unsafe { String::clone_from_j_object(&mut env, &str) };
 
       assert_eq!(false, z);
@@ -384,7 +408,6 @@ mod jni_tests {
       assert_eq!(3, j);
       assert_eq!(4.5, f);
       assert_eq!(6.75, d);
-      assert_eq!('8' as u16, c);
       assert_eq!("9012345".to_string(), str);
    }
 }

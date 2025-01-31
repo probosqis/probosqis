@@ -85,7 +85,6 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmRole<'local>> for Role {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmRole<'local> {
-      use jni::sys::jvalue;
       use panoptiqon::jvm_type::JvmType;
       use panoptiqon::jvm_types::JvmCache;
       use crate::jvm_types::JvmInstance;
@@ -97,13 +96,14 @@ impl<'local> CloneIntoJvm<'local, JvmRole<'local>> for Role {
       let permissions                     = self.permissions   .clone_into_jvm(env);
       let is_highlighted                  = self.is_highlighted.clone_into_jvm(env);
 
-      let j_object = HELPER.clone_into_jvm(env,
-         jvalue { l: instance      .j_object().as_raw() },
-         jvalue { l: id            .j_object().as_raw() },
-         jvalue { l: name          .j_object().as_raw() },
-         jvalue { l: color         .j_object().as_raw() },
-         jvalue { l: permissions   .j_object().as_raw() },
-         jvalue { l: is_highlighted.j_object().as_raw() },
+      let j_object = HELPER.clone_into_jvm(
+         env,
+         instance,
+         id,
+         name,
+         color,
+         permissions,
+         is_highlighted,
       );
       unsafe { JvmRole::from_j_object(j_object) }
    }

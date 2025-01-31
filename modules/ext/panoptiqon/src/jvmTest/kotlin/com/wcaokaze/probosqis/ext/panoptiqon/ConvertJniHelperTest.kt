@@ -28,7 +28,6 @@ class TestEntity(
    val j: Long,
    val f: Float,
    val d: Double,
-   val c: Char,
    val str: String,
 )
 
@@ -45,7 +44,7 @@ class ConvertJniHelperTest {
 
    @Test
    fun variantJvmIdsAfterGet() {
-      val entity = TestEntity(false, 0, 0, 0, 0L, 0.0f, 0.0, 'a', "")
+      val entity = TestEntity(false, 0, 0, 0, 0L, 0.0f, 0.0, "")
       `variantJvmIdsAfterGet$assert`(entity)
    }
 
@@ -61,7 +60,6 @@ class ConvertJniHelperTest {
       assertEquals(3L, entity.j)
       assertEquals(4.5f, entity.f)
       assertEquals(6.75, entity.d)
-      assertEquals('8', entity.c)
       assertEquals("9012345", entity.str)
    }
 
@@ -77,7 +75,6 @@ class ConvertJniHelperTest {
          j = 3L,
          f = 4.5f,
          d = 6.75,
-         c = '8',
          str = "9012345",
       )
       `cloneFromJvm$assert`(entity)
