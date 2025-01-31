@@ -21,7 +21,6 @@ use crate::instance::Instance;
 #[cfg(feature = "jvm")]
 use {
    ext_panoptiqon::convert_jvm_helper,
-   ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    panoptiqon::jvm_types::{JvmBoolean, JvmCache, JvmNullable, JvmString},
@@ -47,14 +46,14 @@ convert_jvm_helper! {
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Role"
    {
       fn clone_into_jvm<'local>(..) -> JvmRole<'local>
-         where JvmInstantiationStrategy::ViaConstructor(
-            "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+         where jvm_constructor: "(\
+            Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
             Ljava/lang/String;\
             Ljava/lang/String;\
             Ljava/lang/String;\
             Ljava/lang/String;\
-            Ljava/lang/Boolean;)V"
-         );
+            Ljava/lang/Boolean;\
+         )V";
 
       fn instance<'local>(..) -> JvmCache<'local, JvmInstance<'local>>
          where jvm_getter_method: "getInstance",

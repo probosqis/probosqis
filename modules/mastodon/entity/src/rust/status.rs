@@ -20,7 +20,6 @@ use serde::Deserialize;
 use {
    jni::JNIEnv,
    ext_panoptiqon::convert_jvm_helper,
-   ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    crate::jvm_types::JvmStatusVisibility,
 };
@@ -39,9 +38,8 @@ convert_jvm_helper! {
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Status$Visibility"
    {
       fn clone_into_jvm<'local>(..) -> JvmStatusVisibility<'local>
-         where JvmInstantiationStrategy::ViaStaticMethod(
-            "fromInt", "(I)Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;"
-         );
+         where jvm_static_method: "fromInt",
+               jvm_signature: "(I)Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;";
 
       fn value<'local>(..) -> i32
          where jvm_getter_method: "getValue",

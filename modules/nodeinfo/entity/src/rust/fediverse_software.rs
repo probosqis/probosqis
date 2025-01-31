@@ -19,7 +19,6 @@ use mastodon_entity::instance::Instance;
 #[cfg(feature = "jvm")]
 use {
    ext_panoptiqon::convert_jvm_helper,
-   ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    jni::JNIEnv,
    mastodon_entity::jvm_types::JvmInstance,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
@@ -45,9 +44,7 @@ convert_jvm_helper! {
       where jvm_class: "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported"
    {
       fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
-         where JvmInstantiationStrategy::ViaConstructor(
-            "(Ljava/lang/String;Ljava/lang/String;)V"
-         );
+         where jvm_constructor: "(Ljava/lang/String;Ljava/lang/String;)V";
 
       fn name<'local>(..) -> JvmString<'local>
          where jvm_getter_method: "getName",
@@ -62,9 +59,7 @@ convert_jvm_helper! {
       where jvm_class: "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon"
    {
       fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
-         where JvmInstantiationStrategy::ViaConstructor(
-            "(Lcom/wcaokaze/probosqis/mastodon/entity/Instance;)V"
-         );
+         where jvm_constructor: "(Lcom/wcaokaze/probosqis/mastodon/entity/Instance;)V";
 
       fn instance<'local>(..) -> JvmInstance<'local>
          where jvm_getter_method: "getInstance",

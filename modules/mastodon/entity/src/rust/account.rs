@@ -26,7 +26,6 @@ use crate::status::StatusVisibility;
 #[cfg(feature = "jvm")]
 use {
    ext_panoptiqon::convert_jvm_helper,
-   ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    panoptiqon::jvm_types::{
@@ -102,8 +101,8 @@ convert_jvm_helper! {
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Account"
    {
       fn clone_into_jvm<'local>(..) -> JvmAccount<'local>
-         where JvmInstantiationStrategy::ViaConstructor(
-            "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+         where jvm_constructor: "(\
+            Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
             Ljava/lang/String;\
             Ljava/lang/String;\
             Ljava/lang/String;\
@@ -128,8 +127,8 @@ convert_jvm_helper! {
             Ljava/lang/Long;\
             Ljava/lang/Long;\
             Ljava/lang/Long;\
-            Ljava/lang/Long;)V"
-         );
+            Ljava/lang/Long;\
+         )V";
 
       fn instance<'local>(..) -> JvmCache<'local, JvmInstance<'local>>
          where jvm_getter_method: "getInstance",
@@ -434,16 +433,16 @@ convert_jvm_helper! {
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/CredentialAccount"
    {
       fn clone_into_jvm<'local>(..) -> JvmCredentialAccount<'local>
-         where JvmInstantiationStrategy::ViaConstructor(
-            "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+         where jvm_constructor: "(\
+            Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
             Ljava/lang/String;\
             Ljava/util/List;\
             Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;\
             Ljava/lang/Boolean;\
             Ljava/lang/String;\
             Ljava/lang/Long;\
-            Lcom/wcaokaze/probosqis/mastodon/entity/Role;)V"
-         );
+            Lcom/wcaokaze/probosqis/mastodon/entity/Role;\
+         )V";
 
       fn account<'local>(..) -> JvmCache<'local, JvmAccount<'local>>
          where jvm_getter_method: "getAccount",
@@ -558,9 +557,7 @@ convert_jvm_helper! {
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/RelationalAccount"
    {
       fn clone_into_jvm<'local>(..) -> JvmRelationalAccount<'local>
-         where JvmInstantiationStrategy::ViaConstructor(
-            "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/Long;)V"
-         );
+         where jvm_constructor: "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/Long;)V";
 
       fn account<'local>(..) -> JvmCache<'local, JvmAccount<'local>>
          where jvm_getter_method: "getAccount",
@@ -618,9 +615,7 @@ convert_jvm_helper! {
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Account$ProfileField"
    {
       fn clone_into_jvm<'local>(..) -> JvmAccountProfileField<'local>
-         where JvmInstantiationStrategy::ViaConstructor(
-            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V"
-         );
+         where jvm_constructor: "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V";
 
       fn name<'local>(..) -> JvmNullable<'local, JvmString<'local>>
          where jvm_getter_method: "getName",

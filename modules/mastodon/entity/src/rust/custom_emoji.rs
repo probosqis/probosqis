@@ -23,7 +23,6 @@ use crate::instance::Instance;
 use {
    jni::JNIEnv,
    ext_panoptiqon::convert_jvm_helper,
-   ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    panoptiqon::jvm_types::{JvmBoolean, JvmCache, JvmNullable, JvmString},
    crate::jvm_types::{JvmCustomEmoji, JvmInstance},
@@ -45,14 +44,14 @@ convert_jvm_helper! {
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/CustomEmoji"
    {
       fn clone_into_jvm<'local>(..) -> JvmCustomEmoji<'local>
-         where JvmInstantiationStrategy::ViaConstructor(
-            "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+         where jvm_constructor: "(\
+            Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
             Ljava/lang/String;\
             Ljava/lang/String;\
             Ljava/lang/String;\
             Ljava/lang/Boolean;\
-            Ljava/lang/String;)V"
-         );
+            Ljava/lang/String;\
+         )V";
 
       fn instance<'local>(..) -> JvmCache<'local, JvmInstance<'local>>
          where jvm_getter_method: "getInstance",

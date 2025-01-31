@@ -21,7 +21,6 @@ use url::Url;
 #[cfg(feature = "jvm")]
 use {
    ext_panoptiqon::convert_jvm_helper,
-   ext_panoptiqon::convert_jvm_helper::JvmInstantiationStrategy,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    panoptiqon::jvm_types::JvmString,
@@ -41,7 +40,7 @@ convert_jvm_helper! {
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Instance"
    {
       fn clone_into_jvm<'local>(..) -> JvmInstance<'local>
-         where JvmInstantiationStrategy::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;J)V");
+         where jvm_constructor: "(Ljava/lang/String;Ljava/lang/String;J)V";
 
       fn url<'local>(..) -> JvmString<'local>
          where jvm_getter_method: "getUrl",
