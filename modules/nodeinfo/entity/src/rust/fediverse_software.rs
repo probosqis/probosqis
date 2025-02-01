@@ -40,7 +40,7 @@ pub enum FediverseSoftware {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER_UNSUPPORTED = impl struct UnsupportedConvertHelper<2>
+   static HELPER_UNSUPPORTED = impl struct UnsupportedConvertHelper
       where jvm_class: "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported"
    {
       fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
@@ -55,7 +55,7 @@ convert_jvm_helper! {
                jvm_return_type: "Ljava/lang/String;";
    }
 
-   static HELPER_MASTODON = impl struct MastodonConvertHelper<1>
+   static HELPER_MASTODON = impl struct MastodonConvertHelper
       where jvm_class: "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon"
    {
       fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
@@ -112,17 +112,13 @@ impl<'local> CloneFromJvm<'local, JvmFediverseSoftware<'local>> for FediverseSof
          )
          .unwrap()
       {
-         let instance = HELPER_UNSUPPORTED.get(env, jvm_instance.j_object(), 0).l().unwrap();
-         let jvm_instance = unsafe { JvmInstance::from_j_object(instance) };
-         let instance = Instance::clone_from_jvm(env, &jvm_instance);
+         let instance = HELPER_MASTODON.instance(env, jvm_instance);
+         let instance = Instance::clone_from_jvm(env, &instance);
 
          FediverseSoftware::Mastodon { instance }
       } else {
-         let name = HELPER_UNSUPPORTED.get(env, jvm_instance.j_object(), 0).l().unwrap();
-         let version = HELPER_UNSUPPORTED.get(env, jvm_instance.j_object(), 1).l().unwrap();
-
-         let name = unsafe { JvmString::from_j_object(name) };
-         let version = unsafe { JvmString::from_j_object(version) };
+         let name = HELPER_UNSUPPORTED.name(env, jvm_instance);
+         let version = HELPER_UNSUPPORTED.version(env, jvm_instance);
 
          let name = String::clone_from_jvm(env, &name);
          let version = String::clone_from_jvm(env, &version);

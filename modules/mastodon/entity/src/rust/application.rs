@@ -38,7 +38,7 @@ pub struct Application {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER = impl struct ApplicationConvertHelper<5>
+   static HELPER = impl struct ApplicationConvertHelper
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Application"
    {
       fn clone_into_jvm<'local>(..) -> JvmApplication<'local>
@@ -100,24 +100,14 @@ impl<'local> CloneIntoJvm<'local, JvmApplication<'local>> for Application {
 #[cfg(feature = "jvm")]
 impl<'local> CloneFromJvm<'local, JvmApplication<'local>> for Application {
    fn clone_from_jvm(
-      env: &mut JNIEnv,
+      env: &mut JNIEnv<'local>,
       jvm_instance: &JvmApplication<'local>
    ) -> Application {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::{JvmCache, JvmNullable, JvmString};
-      use crate::jvm_types::JvmInstance;
-
-      let instance      = HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let name          = HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-      let website       = HELPER.get(env, jvm_instance.j_object(), 2).l().unwrap();
-      let client_id     = HELPER.get(env, jvm_instance.j_object(), 3).l().unwrap();
-      let client_secret = HELPER.get(env, jvm_instance.j_object(), 4).l().unwrap();
-
-      let instance      = unsafe { JvmCache::<JvmInstance> ::from_j_object(instance)      };
-      let name          = unsafe { JvmString               ::from_j_object(name)          };
-      let website       = unsafe { JvmNullable::<JvmString>::from_j_object(website)       };
-      let client_id     = unsafe { JvmNullable::<JvmString>::from_j_object(client_id)     };
-      let client_secret = unsafe { JvmNullable::<JvmString>::from_j_object(client_secret) };
+      let instance      = HELPER.instance     (env, jvm_instance);
+      let name          = HELPER.name         (env, jvm_instance);
+      let website       = HELPER.website      (env, jvm_instance);
+      let client_id     = HELPER.client_id    (env, jvm_instance);
+      let client_secret = HELPER.client_secret(env, jvm_instance);
 
       Application {
          instance:      Cache::<Instance>::clone_from_jvm(env, &instance),

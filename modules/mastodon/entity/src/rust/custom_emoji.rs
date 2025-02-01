@@ -40,7 +40,7 @@ pub struct CustomEmoji {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER = impl struct CustomEmojiConvertHelper<6>
+   static HELPER = impl struct CustomEmojiConvertHelper
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/CustomEmoji"
    {
       fn clone_into_jvm<'local>(..) -> JvmCustomEmoji<'local>
@@ -112,23 +112,12 @@ impl<'local> CloneFromJvm<'local, JvmCustomEmoji<'local>> for CustomEmoji {
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmCustomEmoji<'local>
    ) -> CustomEmoji {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::{JvmBoolean, JvmCache, JvmNullable, JvmString};
-      use crate::jvm_types::JvmInstance;
-
-      let instance             = HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let shortcode            = HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-      let image_url            = HELPER.get(env, jvm_instance.j_object(), 2).l().unwrap();
-      let static_image_url     = HELPER.get(env, jvm_instance.j_object(), 3).l().unwrap();
-      let is_visible_in_picker = HELPER.get(env, jvm_instance.j_object(), 4).l().unwrap();
-      let category             = HELPER.get(env, jvm_instance.j_object(), 5).l().unwrap();
-
-      let instance             = unsafe { JvmCache::<JvmInstance>  ::from_j_object(instance)             };
-      let shortcode            = unsafe { JvmString                ::from_j_object(shortcode)            };
-      let image_url            = unsafe { JvmString                ::from_j_object(image_url)            };
-      let static_image_url     = unsafe { JvmNullable::<JvmString> ::from_j_object(static_image_url)     };
-      let is_visible_in_picker = unsafe { JvmNullable::<JvmBoolean>::from_j_object(is_visible_in_picker) };
-      let category             = unsafe { JvmNullable::<JvmString> ::from_j_object(category)             };
+      let instance             = HELPER.instance            (env, jvm_instance);
+      let shortcode            = HELPER.shortcode           (env, jvm_instance);
+      let image_url            = HELPER.image_url           (env, jvm_instance);
+      let static_image_url     = HELPER.static_image_url    (env, jvm_instance);
+      let is_visible_in_picker = HELPER.is_visible_in_picker(env, jvm_instance);
+      let category             = HELPER.category            (env, jvm_instance);
 
       let instance             = Cache::<Instance>::clone_from_jvm(env, &instance);
       let shortcode            = String           ::clone_from_jvm(env, &shortcode);

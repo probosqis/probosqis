@@ -34,7 +34,7 @@ pub enum StatusVisibility {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static STATUS_VISIBILITY_HELPER = impl struct StatusVisibilityConvertHelper<1>
+   static STATUS_VISIBILITY_HELPER = impl struct StatusVisibilityConvertHelper
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Status$Visibility"
    {
       fn clone_into_jvm<'local>(..) -> JvmStatusVisibility<'local>
@@ -68,9 +68,7 @@ impl<'local> CloneFromJvm<'local, JvmStatusVisibility<'local>> for StatusVisibil
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmStatusVisibility<'local>
    ) -> StatusVisibility {
-      use panoptiqon::jvm_type::JvmType;
-
-      let v = STATUS_VISIBILITY_HELPER.get(env, jvm_instance.j_object(), 0).i().unwrap();
+      let v = STATUS_VISIBILITY_HELPER.value(env, jvm_instance);
       match v {
          0 => StatusVisibility::Public,
          1 => StatusVisibility::Unlisted,

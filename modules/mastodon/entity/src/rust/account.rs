@@ -97,7 +97,7 @@ pub struct AccountProfileField {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static ACCOUNT_HELPER = impl struct AccountConvertHelper<26>
+   static ACCOUNT_HELPER = impl struct AccountConvertHelper
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Account"
    {
       fn clone_into_jvm<'local>(..) -> JvmAccount<'local>
@@ -202,7 +202,7 @@ convert_jvm_helper! {
          where jvm_getter_method: "isNoindex",
                jvm_return_type: "Ljava/lang/Boolean;";
 
-      fn get_moved_to<'local>(..) -> JvmNullable<'local, JvmCache<'local, JvmAccount<'local>>>
+      fn moved_to<'local>(..) -> JvmNullable<'local, JvmCache<'local, JvmAccount<'local>>>
          where jvm_getter_method: "getMovedTo",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
@@ -214,23 +214,23 @@ convert_jvm_helper! {
          where jvm_getter_method: "isLimited",
                jvm_return_type: "Ljava/lang/Boolean;";
 
-      fn get_created_time_epoch_millis<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
+      fn created_time_epoch_millis<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
          where jvm_getter_method: "getCreatedTimeEpochMillis",
                jvm_return_type: "Ljava/lang/Long;";
 
-      fn get_last_status_post_time_epoch_millis<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
+      fn last_status_post_time_epoch_millis<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
          where jvm_getter_method: "getLastStatusPostTimeEpochMillis",
                jvm_return_type: "Ljava/lang/Long;";
 
-      fn get_status_count<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
+      fn status_count<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
          where jvm_getter_method: "getStatusCount",
                jvm_return_type: "Ljava/lang/Long;";
 
-      fn get_follower_count<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
+      fn follower_count<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
          where jvm_getter_method: "getFollowerCount",
                jvm_return_type: "Ljava/lang/Long;";
 
-      fn get_followee_count<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
+      fn followee_count<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
          where jvm_getter_method: "getFolloweeCount",
                jvm_return_type: "Ljava/lang/Long;";
    }
@@ -309,65 +309,32 @@ impl<'local> CloneFromJvm<'local, JvmAccount<'local>> for Account {
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmAccount<'local>
    ) -> Account {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::{
-         JvmBoolean, JvmCache, JvmList, JvmLong, JvmNullable, JvmString,
-      };
-      use crate::jvm_types::{JvmCustomEmoji, JvmInstance};
-
-      let instance                = ACCOUNT_HELPER.get(env, jvm_instance.j_object(),  0).l().unwrap();
-      let id                      = ACCOUNT_HELPER.get(env, jvm_instance.j_object(),  1).l().unwrap();
-      let username                = ACCOUNT_HELPER.get(env, jvm_instance.j_object(),  2).l().unwrap();
-      let acct                    = ACCOUNT_HELPER.get(env, jvm_instance.j_object(),  3).l().unwrap();
-      let url                     = ACCOUNT_HELPER.get(env, jvm_instance.j_object(),  4).l().unwrap();
-      let display_name            = ACCOUNT_HELPER.get(env, jvm_instance.j_object(),  5).l().unwrap();
-      let profile_note            = ACCOUNT_HELPER.get(env, jvm_instance.j_object(),  6).l().unwrap();
-      let avatar_image_url        = ACCOUNT_HELPER.get(env, jvm_instance.j_object(),  7).l().unwrap();
-      let avatar_static_image_url = ACCOUNT_HELPER.get(env, jvm_instance.j_object(),  8).l().unwrap();
-      let header_image_url        = ACCOUNT_HELPER.get(env, jvm_instance.j_object(),  9).l().unwrap();
-      let header_static_image_url = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 10).l().unwrap();
-      let is_locked               = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 11).l().unwrap();
-      let profile_fields          = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 12).l().unwrap();
-      let emojis_in_profile       = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 13).l().unwrap();
-      let is_bot                  = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 14).l().unwrap();
-      let is_group                = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 15).l().unwrap();
-      let is_discoverable         = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 16).l().unwrap();
-      let is_noindex              = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 17).l().unwrap();
-      let moved_to                = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 18).l().unwrap();
-      let is_suspended            = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 19).l().unwrap();
-      let is_limited              = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 20).l().unwrap();
-      let created_time            = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 21).l().unwrap();
-      let last_status_post_time   = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 22).l().unwrap();
-      let status_count            = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 23).l().unwrap();
-      let follower_count          = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 24).l().unwrap();
-      let followee_count          = ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 25).l().unwrap();
-
-      let instance                = unsafe { JvmCache::<JvmInstance>            ::from_j_object(instance)                };
-      let id                      = unsafe { JvmString                          ::from_j_object(id)                      };
-      let username                = unsafe { JvmNullable::<JvmString>           ::from_j_object(username)                };
-      let acct                    = unsafe { JvmNullable::<JvmString>           ::from_j_object(acct)                    };
-      let url                     = unsafe { JvmNullable::<JvmString>           ::from_j_object(url)                     };
-      let display_name            = unsafe { JvmNullable::<JvmString>           ::from_j_object(display_name)            };
-      let profile_note            = unsafe { JvmNullable::<JvmString>           ::from_j_object(profile_note)            };
-      let avatar_image_url        = unsafe { JvmNullable::<JvmString>           ::from_j_object(avatar_image_url)        };
-      let avatar_static_image_url = unsafe { JvmNullable::<JvmString>           ::from_j_object(avatar_static_image_url) };
-      let header_image_url        = unsafe { JvmNullable::<JvmString>           ::from_j_object(header_image_url)        };
-      let header_static_image_url = unsafe { JvmNullable::<JvmString>           ::from_j_object(header_static_image_url) };
-      let is_locked               = unsafe { JvmNullable::<JvmBoolean>          ::from_j_object(is_locked)               };
-      let profile_fields          = unsafe { JvmList::<JvmAccountProfileField>  ::from_j_object(profile_fields)          };
-      let emojis_in_profile       = unsafe { JvmList::<JvmCustomEmoji>          ::from_j_object(emojis_in_profile)       };
-      let is_bot                  = unsafe { JvmNullable::<JvmBoolean>          ::from_j_object(is_bot)                  };
-      let is_group                = unsafe { JvmNullable::<JvmBoolean>          ::from_j_object(is_group)                };
-      let is_discoverable         = unsafe { JvmNullable::<JvmBoolean>          ::from_j_object(is_discoverable)         };
-      let is_noindex              = unsafe { JvmNullable::<JvmBoolean>          ::from_j_object(is_noindex)              };
-      let moved_to                = unsafe { JvmNullable::<JvmCache<JvmAccount>>::from_j_object(moved_to  )              };
-      let is_suspended            = unsafe { JvmNullable::<JvmBoolean>          ::from_j_object(is_suspended)            };
-      let is_limited              = unsafe { JvmNullable::<JvmBoolean>          ::from_j_object(is_limited)              };
-      let created_time            = unsafe { JvmNullable::<JvmLong>             ::from_j_object(created_time)            };
-      let last_status_post_time   = unsafe { JvmNullable::<JvmLong>             ::from_j_object(last_status_post_time)   };
-      let status_count            = unsafe { JvmNullable::<JvmLong>             ::from_j_object(status_count)            };
-      let follower_count          = unsafe { JvmNullable::<JvmLong>             ::from_j_object(follower_count)          };
-      let followee_count          = unsafe { JvmNullable::<JvmLong>             ::from_j_object(followee_count)          };
+      let instance                = ACCOUNT_HELPER.instance                          (env, jvm_instance);
+      let id                      = ACCOUNT_HELPER.raw_id                            (env, jvm_instance);
+      let username                = ACCOUNT_HELPER.username                          (env, jvm_instance);
+      let acct                    = ACCOUNT_HELPER.acct                              (env, jvm_instance);
+      let url                     = ACCOUNT_HELPER.url                               (env, jvm_instance);
+      let display_name            = ACCOUNT_HELPER.display_name                      (env, jvm_instance);
+      let profile_note            = ACCOUNT_HELPER.profile_note                      (env, jvm_instance);
+      let avatar_image_url        = ACCOUNT_HELPER.avatar_image_url                  (env, jvm_instance);
+      let avatar_static_image_url = ACCOUNT_HELPER.avatar_static_image_url           (env, jvm_instance);
+      let header_image_url        = ACCOUNT_HELPER.header_image_url                  (env, jvm_instance);
+      let header_static_image_url = ACCOUNT_HELPER.header_static_image_url           (env, jvm_instance);
+      let is_locked               = ACCOUNT_HELPER.is_locked                         (env, jvm_instance);
+      let profile_fields          = ACCOUNT_HELPER.profile_fields                    (env, jvm_instance);
+      let emojis_in_profile       = ACCOUNT_HELPER.emojis_in_profile                 (env, jvm_instance);
+      let is_bot                  = ACCOUNT_HELPER.is_bot                            (env, jvm_instance);
+      let is_group                = ACCOUNT_HELPER.is_group                          (env, jvm_instance);
+      let is_discoverable         = ACCOUNT_HELPER.is_discoverable                   (env, jvm_instance);
+      let is_noindex              = ACCOUNT_HELPER.is_noindex                        (env, jvm_instance);
+      let moved_to                = ACCOUNT_HELPER.moved_to                          (env, jvm_instance);
+      let is_suspended            = ACCOUNT_HELPER.is_suspended                      (env, jvm_instance);
+      let is_limited              = ACCOUNT_HELPER.is_limited                        (env, jvm_instance);
+      let created_time            = ACCOUNT_HELPER.created_time_epoch_millis         (env, jvm_instance);
+      let last_status_post_time   = ACCOUNT_HELPER.last_status_post_time_epoch_millis(env, jvm_instance);
+      let status_count            = ACCOUNT_HELPER.status_count                      (env, jvm_instance);
+      let follower_count          = ACCOUNT_HELPER.follower_count                    (env, jvm_instance);
+      let followee_count          = ACCOUNT_HELPER.followee_count                    (env, jvm_instance);
 
       let instance                = Cache::<Instance>         ::clone_from_jvm(env, &instance);
       let id                      = String                    ::clone_from_jvm(env, &id);
@@ -429,7 +396,7 @@ impl<'local> CloneFromJvm<'local, JvmAccount<'local>> for Account {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static CREDENTIAL_ACCOUNT_HELPER = impl struct CredentialAccountConvertHelper<8>
+   static CREDENTIAL_ACCOUNT_HELPER = impl struct CredentialAccountConvertHelper
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/CredentialAccount"
    {
       fn clone_into_jvm<'local>(..) -> JvmCredentialAccount<'local>
@@ -452,7 +419,7 @@ convert_jvm_helper! {
          where jvm_getter_method: "getRawProfileNote",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn raw_profile_field<'local>(..) -> JvmList<'local, JvmAccountProfileField<'local>>
+      fn raw_profile_fields<'local>(..) -> JvmList<'local, JvmAccountProfileField<'local>>
          where jvm_getter_method: "getRawProfileFields",
                jvm_return_type: "Ljava/util/List;";
 
@@ -511,32 +478,17 @@ impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
 #[cfg(feature = "jvm")]
 impl<'local> CloneFromJvm<'local, JvmCredentialAccount<'local>> for CredentialAccount {
    fn clone_from_jvm(
-      env: &mut JNIEnv,
+      env: &mut JNIEnv<'local>,
       jvm_instance: &JvmCredentialAccount<'local>
    ) -> CredentialAccount {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::{
-         JvmBoolean, JvmCache, JvmList, JvmLong, JvmNullable, JvmString,
-      };
-      use crate::jvm_types::{JvmRole, JvmStatusVisibility};
-
-      let account                  = CREDENTIAL_ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let raw_profile_note         = CREDENTIAL_ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-      let raw_profile_fields       = CREDENTIAL_ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 2).l().unwrap();
-      let default_post_visibility  = CREDENTIAL_ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 3).l().unwrap();
-      let default_post_sensitivity = CREDENTIAL_ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 4).l().unwrap();
-      let default_post_language    = CREDENTIAL_ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 5).l().unwrap();
-      let follow_request_count     = CREDENTIAL_ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 6).l().unwrap();
-      let role                     = CREDENTIAL_ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 7).l().unwrap();
-
-      let account                  = unsafe { JvmCache   ::<JvmAccount>            ::from_j_object(account)                  };
-      let raw_profile_note         = unsafe { JvmNullable::<JvmString>             ::from_j_object(raw_profile_note)         };
-      let raw_profile_fields       = unsafe { JvmList    ::<JvmAccountProfileField>::from_j_object(raw_profile_fields)       };
-      let default_post_visibility  = unsafe { JvmNullable::<JvmStatusVisibility>   ::from_j_object(default_post_visibility)  };
-      let default_post_sensitivity = unsafe { JvmNullable::<JvmBoolean>            ::from_j_object(default_post_sensitivity) };
-      let default_post_language    = unsafe { JvmNullable::<JvmString>             ::from_j_object(default_post_language)    };
-      let follow_request_count     = unsafe { JvmNullable::<JvmLong>               ::from_j_object(follow_request_count)     };
-      let role                     = unsafe { JvmNullable::<JvmRole>               ::from_j_object(role)                     };
+      let account                  = CREDENTIAL_ACCOUNT_HELPER.account                 (env, jvm_instance);
+      let raw_profile_note         = CREDENTIAL_ACCOUNT_HELPER.raw_profile_note        (env, jvm_instance);
+      let raw_profile_fields       = CREDENTIAL_ACCOUNT_HELPER.raw_profile_fields      (env, jvm_instance);
+      let default_post_visibility  = CREDENTIAL_ACCOUNT_HELPER.default_post_visibility (env, jvm_instance);
+      let default_post_sensitivity = CREDENTIAL_ACCOUNT_HELPER.default_post_sensitivity(env, jvm_instance);
+      let default_post_language    = CREDENTIAL_ACCOUNT_HELPER.default_post_language   (env, jvm_instance);
+      let follow_request_count     = CREDENTIAL_ACCOUNT_HELPER.follow_request_count    (env, jvm_instance);
+      let role                     = CREDENTIAL_ACCOUNT_HELPER.role                    (env, jvm_instance);
 
       CredentialAccount {
          account:                  Cache ::<Account>            ::clone_from_jvm(env, &account),
@@ -553,7 +505,7 @@ impl<'local> CloneFromJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static RELATIONAL_ACCOUNT_HELPER = impl struct RelationalAccountConvertHelper<2>
+   static RELATIONAL_ACCOUNT_HELPER = impl struct RelationalAccountConvertHelper
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/RelationalAccount"
    {
       fn clone_into_jvm<'local>(..) -> JvmRelationalAccount<'local>
@@ -593,14 +545,8 @@ impl<'local> CloneFromJvm<'local, JvmRelationalAccount<'local>> for RelationalAc
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmRelationalAccount<'local>
    ) -> RelationalAccount {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::{JvmCache, JvmLong, JvmNullable};
-
-      let account          = RELATIONAL_ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let mute_expire_time = RELATIONAL_ACCOUNT_HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-
-      let account          = unsafe { JvmCache::<JvmAccount>::from_j_object(account)          };
-      let mute_expire_time = unsafe { JvmNullable::<JvmLong>::from_j_object(mute_expire_time) };
+      let account          = RELATIONAL_ACCOUNT_HELPER.account(env, jvm_instance);
+      let mute_expire_time = RELATIONAL_ACCOUNT_HELPER.mute_expire_time_epoch_millis(env, jvm_instance);
 
       RelationalAccount {
          account:          Cache::<Account>::clone_from_jvm(env, &account),
@@ -611,7 +557,7 @@ impl<'local> CloneFromJvm<'local, JvmRelationalAccount<'local>> for RelationalAc
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static ACCOUNT_PROFILE_FIELD_HELPER = impl struct AccountProfileFieldConvertHelper<3>
+   static ACCOUNT_PROFILE_FIELD_HELPER = impl struct AccountProfileFieldConvertHelper
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Account$ProfileField"
    {
       fn clone_into_jvm<'local>(..) -> JvmAccountProfileField<'local>
@@ -656,16 +602,9 @@ impl<'local> CloneFromJvm<'local, JvmAccountProfileField<'local>> for AccountPro
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmAccountProfileField<'local>
    ) -> AccountProfileField {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::{JvmLong, JvmNullable, JvmString};
-
-      let name                       = ACCOUNT_PROFILE_FIELD_HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let value                      = ACCOUNT_PROFILE_FIELD_HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-      let verified_time_epoch_millis = ACCOUNT_PROFILE_FIELD_HELPER.get(env, jvm_instance.j_object(), 2).l().unwrap();
-
-      let name = unsafe { JvmNullable::<JvmString>::from_j_object(name) };
-      let value = unsafe { JvmNullable::<JvmString>::from_j_object(value) };
-      let verified_time_epoch_millis = unsafe { JvmNullable::<JvmLong>::from_j_object(verified_time_epoch_millis) };
+      let name                       = ACCOUNT_PROFILE_FIELD_HELPER.name(env, jvm_instance);
+      let value                      = ACCOUNT_PROFILE_FIELD_HELPER.value(env, jvm_instance);
+      let verified_time_epoch_millis = ACCOUNT_PROFILE_FIELD_HELPER.verified_time_epoch_millis(env, jvm_instance);
 
       AccountProfileField {
          name: Option::<String>::clone_from_jvm(env, &name),

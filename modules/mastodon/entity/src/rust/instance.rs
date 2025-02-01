@@ -36,7 +36,7 @@ pub struct Instance {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER = impl struct ConvertJniHelper<3>
+   static HELPER = impl struct ConvertJniHelper
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Instance"
    {
       fn clone_into_jvm<'local>(..) -> JvmInstance<'local>
@@ -78,18 +78,12 @@ impl<'local> CloneIntoJvm<'local, JvmInstance<'local>> for Instance {
 #[cfg(feature = "jvm")]
 impl<'local> CloneFromJvm<'local, JvmInstance<'local>> for Instance {
    fn clone_from_jvm(
-      env: &mut JNIEnv,
+      env: &mut JNIEnv<'local>,
       jvm_instance: &JvmInstance<'local>
    ) -> Instance {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::JvmString;
-
-      let url                               = HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let version                           = HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-      let version_checked_time_epoch_millis = HELPER.get(env, jvm_instance.j_object(), 2).j().unwrap();
-
-      let url = unsafe { JvmString::from_j_object(url) };
-      let version = unsafe { JvmString::from_j_object(version) };
+      let url                               = HELPER.url                              (env, jvm_instance);
+      let version                           = HELPER.version                          (env, jvm_instance);
+      let version_checked_time_epoch_millis = HELPER.version_checked_time_epoch_millis(env, jvm_instance);
 
       Instance {
          url:     String::clone_from_jvm(env, &url).parse().unwrap(),

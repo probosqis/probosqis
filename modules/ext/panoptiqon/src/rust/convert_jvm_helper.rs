@@ -23,7 +23,7 @@ macro_rules! convert_jvm_helper {
    (
       $(
          $(#[$attr:meta])*
-         static $var_name:ident = impl struct $type_name:ident < $arity:literal >
+         static $var_name:ident = impl struct $type_name:ident
             where jvm_class: $class_fully_qualified_name:literal
          {
             fn clone_into_jvm<'local>(..) -> $jvm_type:ty
@@ -39,55 +39,63 @@ macro_rules! convert_jvm_helper {
    ) => {
       $(
          $(#[$attr])*
-         static $var_name: $type_name<$arity> = $type_name::new(
-            [$(($getter_method_name, $getter_ret_type)),*]
-         );
+         static $var_name: $type_name = $type_name::new();
 
          $crate::convert_jvm_helper::paste! {
             $(#[$attr])*
-            struct $type_name<'a, const ARITY: usize>(
-               ::std::sync::RwLock<[<$type_name Inner>]<'a, ARITY>>
+            struct $type_name(
+               ::std::sync::RwLock<[<$type_name Inner>]>
             );
 
             $(#[$attr])*
-            enum [<$type_name Inner>]<'a, const ARITY: usize> {
-               SignatureStrs {
-                  getter_signatures: [(&'a str, &'a str); ARITY]
-               },
+            enum [<$type_name Inner>] {
+               SignatureStrs,
                JvmIds {
                   class: ::jni::objects::GlobalRef,
                   constructor_id: ::jni::objects::JMethodID,
-                  getter_ids: [(::jni::objects::JMethodID, ::jni::signature::ReturnType); ARITY]
+                  $(
+                     [<$prop_name _id>]: (::jni::objects::JMethodID, ::jni::signature::ReturnType)
+                  ),*
                }
             }
 
-            impl<'a, const ARITY: usize> $type_name<'a, ARITY> {
-               pub const fn new(
-                  getter_signatures: [(&'a str, &'a str); ARITY]
-               ) -> Self {
-                  let inner = [<$type_name Inner>]::SignatureStrs {
-                     getter_signatures
-                  };
+            impl $type_name {
+               pub const fn new() -> Self {
+                  let inner = [<$type_name Inner>]::SignatureStrs;
                   $type_name(::std::sync::RwLock::new(inner))
                }
 
-               fn prepare_ids(
+               fn get_method_id(
                   env: &mut ::jni::JNIEnv,
-                  getter_signatures: &[(&str, &str); ARITY]
-               ) -> (::jni::objects::GlobalRef, ::jni::objects::JMethodID, [(::jni::objects::JMethodID, ::jni::signature::ReturnType); ARITY]) {
+                  class: &::jni::objects::GlobalRef,
+                  name: &str,
+                  ret_type: &str
+               ) -> (::jni::objects::JMethodID, ::jni::signature::ReturnType) {
+                  let type_signature_str = format!("(){ret_type}");
+                  let type_signature = ::jni::signature
+                     ::TypeSignature::from_str(&type_signature_str).unwrap();
+                  let method_id = env
+                     .get_method_id(class, name, &type_signature_str).unwrap();
+                  (method_id, type_signature.ret)
+               }
+
+               fn prepare_ids(env: &mut ::jni::JNIEnv) -> [<$type_name Inner>] {
                   let class = env.find_class($class_fully_qualified_name).unwrap();
                   let class = env.new_global_ref(class).unwrap();
 
-                  let constructor_id = env.get_method_id(&class, "<init>", $constructor_signature).unwrap();
+                  let constructor_id = env
+                     .get_method_id(&class, "<init>", $constructor_signature).unwrap();
 
-                  let getter_ids = getter_signatures.map(|(name, ty)| {
-                     let type_signature_str = format!("(){ty}");
-                     let type_signature = ::jni::signature::TypeSignature::from_str(&type_signature_str).unwrap();
-                     let getter_id = env.get_method_id(&class, name, &type_signature_str).unwrap();
-                     (getter_id, type_signature.ret)
-                  });
+                  $(
+                     let [<$prop_name _id>] = Self::get_method_id(
+                           env, &class, $getter_method_name, $getter_ret_type
+                     );
+                  )*
 
-                  (class, constructor_id, getter_ids)
+                  [<$type_name Inner>]::JvmIds {
+                     class, constructor_id,
+                     $([<$prop_name _id>]),*
+                  }
                }
 
                pub fn clone_into_jvm<'local>(
@@ -114,59 +122,13 @@ macro_rules! convert_jvm_helper {
                         }
                      }
 
-                     [<$type_name Inner>]::SignatureStrs {
-                        getter_signatures
-                     } => {
-                        let (class, constructor_id, getter_ids) = Self::prepare_ids(
-                           env,
-                           getter_signatures
-                        );
+                     [<$type_name Inner>]::SignatureStrs => {
+                        let jvm_ids = Self::prepare_ids(env);
                         drop(lock);
                         let mut lock = self.0.write().unwrap();
-                        *lock = [<$type_name Inner>]::JvmIds {
-                           class, constructor_id, getter_ids
-                        };
+                        *lock = jvm_ids;
                         drop(lock);
                         self.clone_into_jvm(env, $($prop_name),*)
-                     }
-                  }
-               }
-
-               pub fn get<'local>(
-                  &self,
-                  env: &mut ::jni::JNIEnv<'local>,
-                  instance: &::jni::objects::JObject,
-                  n: usize
-               ) -> ::jni::objects::JValueOwned<'local> {
-                  use std::ops::Deref;
-
-                  let lock = self.0.read().unwrap();
-                  match lock.deref() {
-                     [<$type_name Inner>]::JvmIds {
-                        getter_ids,
-                        ..
-                     } => {
-                        let (getter_id, return_type) = &getter_ids[n];
-                        unsafe {
-                           env.call_method_unchecked(instance, getter_id, return_type.clone(), &[])
-                              .unwrap()
-                        }
-                     }
-
-                     [<$type_name Inner>]::SignatureStrs {
-                        getter_signatures
-                     } => {
-                        let (class, constructor_id, getter_ids) = Self::prepare_ids(
-                           env,
-                           getter_signatures
-                        );
-                        drop(lock);
-                        let mut lock = self.0.write().unwrap();
-                        *lock = [<$type_name Inner>]::JvmIds {
-                           class, constructor_id, getter_ids
-                        };
-                        drop(lock);
-                        self.get(env, instance, n)
                      }
                   }
                }
@@ -177,7 +139,37 @@ macro_rules! convert_jvm_helper {
                      env: &mut ::jni::JNIEnv<'local>,
                      instance: &$jvm_type
                   ) -> $prop_ret_type {
-                     todo!();
+                     use std::ops::Deref;
+                     use $crate::from_jvalue;
+
+                     let lock = self.0.read().unwrap();
+                     match lock.deref() {
+                        [<$type_name Inner>]::JvmIds {
+                           [<$prop_name _id>]: (getter_id, return_type),
+                           ..
+                        } => {
+                           let jvalue = unsafe {
+                              env.call_method_unchecked(
+                                    ::panoptiqon::jvm_type::JvmType::j_object(instance),
+                                    getter_id,
+                                    return_type.clone(),
+                                    &[]
+                                 )
+                                 .unwrap()
+                           };
+
+                           from_jvalue!($prop_ret_type, jvalue)
+                        }
+
+                        [<$type_name Inner>]::SignatureStrs => {
+                           let jvm_ids = Self::prepare_ids(env);
+                           drop(lock);
+                           let mut lock = self.0.write().unwrap();
+                           *lock = jvm_ids;
+                           drop(lock);
+                           self.$prop_name(env, instance)
+                        }
+                     }
                   }
                )*
             }
@@ -188,7 +180,7 @@ macro_rules! convert_jvm_helper {
    (
       $(
          $(#[$attr:meta])*
-         static $var_name:ident = impl struct $type_name:ident < $arity:literal >
+         static $var_name:ident = impl struct $type_name:ident
             where jvm_class: $class_fully_qualified_name:literal
          {
             fn clone_into_jvm<'local>(..) -> $jvm_type:ty
@@ -205,59 +197,68 @@ macro_rules! convert_jvm_helper {
    ) => {
       $(
          $(#[$attr])*
-         static $var_name: $type_name<$arity> = $type_name::new(
-            [$(($getter_method_name, $getter_ret_type)),*]
-         );
+         static $var_name: $type_name = $type_name::new();
 
          $crate::convert_jvm_helper::paste! {
             $(#[$attr])*
-            struct $type_name<'a, const ARITY: usize>(
-               ::std::sync::RwLock<[<$type_name Inner>]<'a, ARITY>>
+            struct $type_name(
+               ::std::sync::RwLock<[<$type_name Inner>]>
             );
 
             $(#[$attr])*
-            enum [<$type_name Inner>]<'a, const ARITY: usize> {
-               SignatureStrs {
-                  getter_signatures: [(&'a str, &'a str); ARITY]
-               },
+            enum [<$type_name Inner>] {
+               SignatureStrs,
                JvmIds {
                   class: ::jni::objects::GlobalRef,
                   factory_method_id: ::jni::objects::JStaticMethodID,
                   factory_return_type: ::jni::signature::ReturnType,
-                  getter_ids: [(::jni::objects::JMethodID, ::jni::signature::ReturnType); ARITY]
+                  $(
+                     [<$prop_name _id>]: (::jni::objects::JMethodID, ::jni::signature::ReturnType)
+                  ),*
                }
             }
 
-            impl<'a, const ARITY: usize> $type_name<'a, ARITY> {
-               pub const fn new(
-                  getter_signatures: [(&'a str, &'a str); ARITY]
-               ) -> Self {
-                  let inner = [<$type_name Inner>]::SignatureStrs {
-                     getter_signatures
-                  };
+            impl $type_name {
+               pub const fn new() -> Self {
+                  let inner = [<$type_name Inner>]::SignatureStrs;
                   $type_name(::std::sync::RwLock::new(inner))
                }
 
-               fn prepare_ids(
+               fn get_method_id(
                   env: &mut ::jni::JNIEnv,
-                  getter_signatures: &[(&str, &str); ARITY]
-               ) -> (::jni::objects::GlobalRef, ::jni::objects::JStaticMethodID, ::jni::signature::ReturnType, [(::jni::objects::JMethodID, ::jni::signature::ReturnType); ARITY]) {
+                  class: &::jni::objects::GlobalRef,
+                  name: &str,
+                  ret_type: &str
+               ) -> (::jni::objects::JMethodID, ::jni::signature::ReturnType) {
+                  let type_signature_str = format!("(){ret_type}");
+                  let type_signature = ::jni::signature
+                     ::TypeSignature::from_str(&type_signature_str).unwrap();
+                  let method_id = env
+                     .get_method_id(class, name, &type_signature_str).unwrap();
+                  (method_id, type_signature.ret)
+               }
+
+               fn prepare_ids(env: &mut ::jni::JNIEnv) -> [<$type_name Inner>] {
                   let class = env.find_class($class_fully_qualified_name).unwrap();
                   let class = env.new_global_ref(class).unwrap();
 
-                  let method_id = env
+                  let factory_method_id = env
                      .get_static_method_id(&class, $factory_method_name, $factory_signature).unwrap();
 
                   let type_signature = ::jni::signature::TypeSignature::from_str($factory_signature).unwrap();
 
-                  let getter_ids = getter_signatures.map(|(name, ty)| {
-                     let type_signature_str = format!("(){ty}");
-                     let type_signature = ::jni::signature::TypeSignature::from_str(&type_signature_str).unwrap();
-                     let getter_id = env.get_method_id(&class, name, &type_signature_str).unwrap();
-                     (getter_id, type_signature.ret)
-                  });
+                  $(
+                     let [<$prop_name _id>] = Self::get_method_id(
+                           env, &class, $getter_method_name, $getter_ret_type
+                     );
+                  )*
 
-                  (class, method_id, type_signature.ret, getter_ids)
+                  [<$type_name Inner>]::JvmIds {
+                     class,
+                     factory_method_id,
+                     factory_return_type: type_signature.ret,
+                     $([<$prop_name _id>]),*
+                  }
                }
 
                pub fn clone_into_jvm<'local>(
@@ -288,59 +289,13 @@ macro_rules! convert_jvm_helper {
                         }
                      }
 
-                     [<$type_name Inner>]::SignatureStrs {
-                        getter_signatures
-                     } => {
-                        let (class, factory_method_id, factory_return_type, getter_ids) = Self::prepare_ids(
-                           env,
-                           getter_signatures
-                        );
+                     [<$type_name Inner>]::SignatureStrs => {
+                        let jvm_ids = Self::prepare_ids(env);
                         drop(lock);
                         let mut lock = self.0.write().unwrap();
-                        *lock = [<$type_name Inner>]::JvmIds {
-                           class, factory_method_id, factory_return_type, getter_ids
-                        };
+                        *lock = jvm_ids;
                         drop(lock);
                         self.clone_into_jvm(env, $($prop_name),*)
-                     }
-                  }
-               }
-
-               pub fn get<'local>(
-                  &self,
-                  env: &mut ::jni::JNIEnv<'local>,
-                  instance: &::jni::objects::JObject,
-                  n: usize
-               ) -> ::jni::objects::JValueOwned<'local> {
-                  use std::ops::Deref;
-
-                  let lock = self.0.read().unwrap();
-                  match lock.deref() {
-                     [<$type_name Inner>]::JvmIds {
-                        getter_ids,
-                        ..
-                     } => {
-                        let (getter_id, return_type) = &getter_ids[n];
-                        unsafe {
-                           env.call_method_unchecked(instance, getter_id, return_type.clone(), &[])
-                              .unwrap()
-                        }
-                     }
-
-                     [<$type_name Inner>]::SignatureStrs {
-                        getter_signatures
-                     } => {
-                        let (class, factory_method_id, factory_return_type, getter_ids) = Self::prepare_ids(
-                           env,
-                           getter_signatures
-                        );
-                        drop(lock);
-                        let mut lock = self.0.write().unwrap();
-                        *lock = [<$type_name Inner>]::JvmIds {
-                           class, factory_method_id, factory_return_type, getter_ids
-                        };
-                        drop(lock);
-                        self.get(env, instance, n)
                      }
                   }
                }
@@ -351,7 +306,37 @@ macro_rules! convert_jvm_helper {
                      env: &mut ::jni::JNIEnv<'local>,
                      instance: &$jvm_type
                   ) -> $prop_ret_type {
-                     todo!();
+                     use std::ops::Deref;
+                     use $crate::from_jvalue;
+
+                     let lock = self.0.read().unwrap();
+                     match lock.deref() {
+                        [<$type_name Inner>]::JvmIds {
+                           [<$prop_name _id>]: (getter_id, return_type),
+                           ..
+                        } => {
+                           let jvalue = unsafe {
+                              env.call_method_unchecked(
+                                    ::panoptiqon::jvm_type::JvmType::j_object(instance),
+                                    getter_id,
+                                    return_type.clone(),
+                                    &[]
+                                 )
+                                 .unwrap()
+                           };
+
+                           from_jvalue!($prop_ret_type, jvalue)
+                        }
+
+                        [<$type_name Inner>]::SignatureStrs => {
+                           let jvm_ids = Self::prepare_ids(env);
+                           drop(lock);
+                           let mut lock = self.0.write().unwrap();
+                           *lock = jvm_ids;
+                           drop(lock);
+                           self.$prop_name(env, instance)
+                        }
+                     }
                   }
                )*
             }
@@ -382,6 +367,23 @@ macro_rules! jvalue {
     };
 }
 
+#[macro_export]
+macro_rules! from_jvalue {
+    (  i8, $value:expr) => { $value.b().unwrap() };
+    ( i16, $value:expr) => { $value.s().unwrap() };
+    ( i32, $value:expr) => { $value.i().unwrap() };
+    ( i64, $value:expr) => { $value.j().unwrap() };
+    ( f32, $value:expr) => { $value.f().unwrap() };
+    ( f64, $value:expr) => { $value.d().unwrap() };
+    (bool, $value:expr) => { $value.z().unwrap() };
+    ($_:ty, $value:expr) => {
+       {
+          let j_object = $value.l().unwrap();
+          unsafe { ::panoptiqon::jvm_type::JvmType::from_j_object(j_object) }
+       }
+    };
+}
+
 #[cfg(feature="jni-test")]
 mod jni_tests {
    use std::ops::Deref;
@@ -402,7 +404,7 @@ mod jni_tests {
          paste! {
             convert_jvm_helper! {
                #[allow(non_upper_case_globals, non_camel_case_types)]
-               static $name = impl struct [<$name Helper>]<8>
+               static $name = impl struct [<$name Helper>]
                   where jvm_class: "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity"
                {
                   fn clone_into_jvm<'local>(..) -> JvmTestEntity<'local>
@@ -462,12 +464,12 @@ mod jni_tests {
    helper!(variantJvmIdsAfterGet_helper);
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantJvmIdsAfterGet_00024assert(
-      mut env: JNIEnv,
-      _obj: JObject,
-      jvm_entity: JObject
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantJvmIdsAfterGet_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      jvm_entity: JvmTestEntity<'local>
    ) {
-      variantJvmIdsAfterGet_helper.get(&mut env, &jvm_entity, 0);
+      variantJvmIdsAfterGet_helper.z(&mut env, &jvm_entity);
 
       let helper_inner = variantJvmIdsAfterGet_helper.0.read().unwrap();
       assert!(matches!(helper_inner.deref(), &variantJvmIdsAfterGet_helperHelperInner::JvmIds { .. }));
@@ -499,21 +501,21 @@ mod jni_tests {
    helper!(cloneFromJvm_helper);
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_cloneFromJvm_00024assert(
-      mut env: JNIEnv,
-      _obj: JObject,
-      jvm_entity: JObject
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_cloneFromJvm_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      jvm_entity: JvmTestEntity<'local>
    ) {
-      let z = cloneFromJvm_helper.get(&mut env, &jvm_entity, 0).z().unwrap();
-      let b = cloneFromJvm_helper.get(&mut env, &jvm_entity, 1).b().unwrap();
-      let s = cloneFromJvm_helper.get(&mut env, &jvm_entity, 2).s().unwrap();
-      let i = cloneFromJvm_helper.get(&mut env, &jvm_entity, 3).i().unwrap();
-      let j = cloneFromJvm_helper.get(&mut env, &jvm_entity, 4).j().unwrap();
-      let f = cloneFromJvm_helper.get(&mut env, &jvm_entity, 5).f().unwrap();
-      let d = cloneFromJvm_helper.get(&mut env, &jvm_entity, 6).d().unwrap();
+      let z = cloneFromJvm_helper.z(&mut env, &jvm_entity);
+      let b = cloneFromJvm_helper.b(&mut env, &jvm_entity);
+      let s = cloneFromJvm_helper.s(&mut env, &jvm_entity);
+      let i = cloneFromJvm_helper.i(&mut env, &jvm_entity);
+      let j = cloneFromJvm_helper.j(&mut env, &jvm_entity);
+      let f = cloneFromJvm_helper.f(&mut env, &jvm_entity);
+      let d = cloneFromJvm_helper.d(&mut env, &jvm_entity);
 
-      let str = cloneFromJvm_helper.get(&mut env, &jvm_entity, 7).l().unwrap();
-      let str = unsafe { String::clone_from_j_object(&mut env, &str) };
+      let str = cloneFromJvm_helper.str(&mut env, &jvm_entity);
+      let str = String::clone_from_jvm(&mut env, &str);
 
       assert_eq!(false, z);
       assert_eq!(0, b);

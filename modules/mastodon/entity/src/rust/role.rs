@@ -42,7 +42,7 @@ pub struct RoleId(pub String);
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER = impl struct RoleConvertHelper<6>
+   static HELPER = impl struct RoleConvertHelper
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Role"
    {
       fn clone_into_jvm<'local>(..) -> JvmRole<'local>
@@ -111,26 +111,15 @@ impl<'local> CloneIntoJvm<'local, JvmRole<'local>> for Role {
 #[cfg(feature = "jvm")]
 impl<'local> CloneFromJvm<'local, JvmRole<'local>> for Role {
    fn clone_from_jvm(
-      env: &mut JNIEnv,
+      env: &mut JNIEnv<'local>,
       jvm_instance: &JvmRole<'local>
    ) -> Role {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::{JvmBoolean, JvmCache, JvmNullable};
-      use crate::jvm_types::JvmInstance;
-
-      let instance       = HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let id             = HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-      let name           = HELPER.get(env, jvm_instance.j_object(), 2).l().unwrap();
-      let color          = HELPER.get(env, jvm_instance.j_object(), 3).l().unwrap();
-      let permissions    = HELPER.get(env, jvm_instance.j_object(), 4).l().unwrap();
-      let is_highlighted = HELPER.get(env, jvm_instance.j_object(), 5).l().unwrap();
-
-      let instance       = unsafe { JvmCache::<JvmInstance>  ::from_j_object(instance)       };
-      let id             = unsafe { JvmNullable::<JvmString> ::from_j_object(id)             };
-      let name           = unsafe { JvmNullable::<JvmString> ::from_j_object(name)           };
-      let color          = unsafe { JvmNullable::<JvmString> ::from_j_object(color)          };
-      let permissions    = unsafe { JvmNullable::<JvmString> ::from_j_object(permissions)    };
-      let is_highlighted = unsafe { JvmNullable::<JvmBoolean>::from_j_object(is_highlighted) };
+      let instance       = HELPER.instance      (env, jvm_instance);
+      let id             = HELPER.raw_id        (env, jvm_instance);
+      let name           = HELPER.name          (env, jvm_instance);
+      let color          = HELPER.color         (env, jvm_instance);
+      let permissions    = HELPER.permissions   (env, jvm_instance);
+      let is_highlighted = HELPER.is_highlighted(env, jvm_instance);
 
       Role {
          instance:       Cache::<Instance>::clone_from_jvm(env, &instance),

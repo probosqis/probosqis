@@ -39,7 +39,7 @@ pub struct Token {
 
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
-   static HELPER = impl struct TokenConvertHelper<5>
+   static HELPER = impl struct TokenConvertHelper
       where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Token"
    {
       fn clone_into_jvm<'local>(..) -> JvmToken<'local>
@@ -104,20 +104,11 @@ impl<'local> CloneFromJvm<'local, JvmToken<'local>> for Token {
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmToken<'local>
    ) -> Token {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::{JvmCache, JvmString};
-      use crate::jvm_types::JvmInstance;
-
-      let instance                = HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let access_token            = HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-      let token_type              = HELPER.get(env, jvm_instance.j_object(), 2).l().unwrap();
-      let scope                   = HELPER.get(env, jvm_instance.j_object(), 3).l().unwrap();
-      let created_at_epoch_millis = HELPER.get(env, jvm_instance.j_object(), 4).j().unwrap();
-
-      let instance     = unsafe { JvmCache::<JvmInstance>::from_j_object(instance)     };
-      let access_token = unsafe { JvmString              ::from_j_object(access_token) };
-      let token_type   = unsafe { JvmString              ::from_j_object(token_type)   };
-      let scope        = unsafe { JvmString              ::from_j_object(scope)        };
+      let instance                = HELPER.instance               (env, jvm_instance);
+      let access_token            = HELPER.access_token           (env, jvm_instance);
+      let token_type              = HELPER.token_type             (env, jvm_instance);
+      let scope                   = HELPER.scope                  (env, jvm_instance);
+      let created_at_epoch_millis = HELPER.created_at_epoch_millis(env, jvm_instance);
 
       Token {
          instance:     Cache::<Instance>::clone_from_jvm(env, &instance),
