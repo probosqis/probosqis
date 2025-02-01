@@ -49,7 +49,7 @@ macro_rules! convert_jvm_helper {
 
             $(#[$attr])*
             enum [<$type_name Inner>] {
-               SignatureStrs,
+               Uninit,
                JvmIds {
                   class: ::jni::objects::GlobalRef,
                   constructor_id: ::jni::objects::JMethodID,
@@ -61,7 +61,7 @@ macro_rules! convert_jvm_helper {
 
             impl $type_name {
                pub const fn new() -> Self {
-                  let inner = [<$type_name Inner>]::SignatureStrs;
+                  let inner = [<$type_name Inner>]::Uninit;
                   $type_name(::std::sync::RwLock::new(inner))
                }
 
@@ -122,7 +122,7 @@ macro_rules! convert_jvm_helper {
                         }
                      }
 
-                     [<$type_name Inner>]::SignatureStrs => {
+                     [<$type_name Inner>]::Uninit => {
                         let jvm_ids = Self::prepare_ids(env);
                         drop(lock);
                         let mut lock = self.0.write().unwrap();
@@ -161,7 +161,7 @@ macro_rules! convert_jvm_helper {
                            from_jvalue!($prop_ret_type, jvalue)
                         }
 
-                        [<$type_name Inner>]::SignatureStrs => {
+                        [<$type_name Inner>]::Uninit => {
                            let jvm_ids = Self::prepare_ids(env);
                            drop(lock);
                            let mut lock = self.0.write().unwrap();
@@ -207,7 +207,7 @@ macro_rules! convert_jvm_helper {
 
             $(#[$attr])*
             enum [<$type_name Inner>] {
-               SignatureStrs,
+               Uninit,
                JvmIds {
                   class: ::jni::objects::GlobalRef,
                   factory_method_id: ::jni::objects::JStaticMethodID,
@@ -220,7 +220,7 @@ macro_rules! convert_jvm_helper {
 
             impl $type_name {
                pub const fn new() -> Self {
-                  let inner = [<$type_name Inner>]::SignatureStrs;
+                  let inner = [<$type_name Inner>]::Uninit;
                   $type_name(::std::sync::RwLock::new(inner))
                }
 
@@ -289,7 +289,7 @@ macro_rules! convert_jvm_helper {
                         }
                      }
 
-                     [<$type_name Inner>]::SignatureStrs => {
+                     [<$type_name Inner>]::Uninit => {
                         let jvm_ids = Self::prepare_ids(env);
                         drop(lock);
                         let mut lock = self.0.write().unwrap();
@@ -328,7 +328,7 @@ macro_rules! convert_jvm_helper {
                            from_jvalue!($prop_ret_type, jvalue)
                         }
 
-                        [<$type_name Inner>]::SignatureStrs => {
+                        [<$type_name Inner>]::Uninit => {
                            let jvm_ids = Self::prepare_ids(env);
                            drop(lock);
                            let mut lock = self.0.write().unwrap();
@@ -432,7 +432,7 @@ mod jni_tests {
       _obj: JObject
    ) {
       let helper_inner= variantStrsOnInit_helper.0.read().unwrap();
-      assert!(matches!(helper_inner.deref(), &variantStrsOnInit_helperHelperInner::SignatureStrs { .. }));
+      assert!(matches!(helper_inner.deref(), &variantStrsOnInit_helperHelperInner::Uninit));
    }
 
    helper!(variantJvmIdsAfterCloneIntoJvm_helper);
