@@ -75,7 +75,6 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmApplication<'local>> for Application {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmApplication<'local> {
-      use panoptiqon::jvm_type::JvmType;
       use panoptiqon::jvm_types::JvmCache;
       use crate::jvm_types::JvmInstance;
 
@@ -85,15 +84,14 @@ impl<'local> CloneIntoJvm<'local, JvmApplication<'local>> for Application {
       let client_id                       = self.client_id    .clone_into_jvm(env);
       let client_secret                   = self.client_secret.clone_into_jvm(env);
 
-      let j_object = HELPER.clone_into_jvm(
+      HELPER.clone_into_jvm(
          env,
          instance,
          name,
          website,
          client_id,
          client_secret,
-      );
-      unsafe { JvmApplication::from_j_object(j_object) }
+      )
    }
 }
 

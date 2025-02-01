@@ -76,7 +76,6 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmToken<'local>> for Token {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmToken<'local> {
-      use panoptiqon::jvm_type::JvmType;
       use panoptiqon::jvm_types::JvmCache;
       use crate::jvm_types::JvmInstance;
 
@@ -86,15 +85,14 @@ impl<'local> CloneIntoJvm<'local, JvmToken<'local>> for Token {
       let scope                           = self.scope       .clone_into_jvm(env);
       let created_at_epoch_millis         = self.created_at.timestamp_millis();
 
-      let j_object = HELPER.clone_into_jvm(
+      HELPER.clone_into_jvm(
          env,
          instance,
          access_token,
          token_type,
          scope,
          created_at_epoch_millis,
-      );
-      unsafe { JvmToken::from_j_object(j_object) }
+      )
    }
 }
 

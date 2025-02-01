@@ -70,30 +70,25 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmFediverseSoftware<'local>> for FediverseSoftware {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmFediverseSoftware<'local> {
-      use panoptiqon::convert_jvm::CloneIntoJvm;
-      use panoptiqon::jvm_type::JvmType;
-
       match self {
          FediverseSoftware::Unsupported { name, version } => {
             let name = name.clone_into_jvm(env);
             let version = version.clone_into_jvm(env);
 
-            let j_object = HELPER_UNSUPPORTED.clone_into_jvm(
+            HELPER_UNSUPPORTED.clone_into_jvm(
                env,
                name,
                version,
-            );
-            unsafe { JvmFediverseSoftware::from_j_object(j_object) }
+            )
          }
 
          FediverseSoftware::Mastodon { instance } => {
             let jvm_instance = instance.clone_into_jvm(env);
 
-            let j_object = HELPER_MASTODON.clone_into_jvm(
+            HELPER_MASTODON.clone_into_jvm(
                env,
                jvm_instance,
-            );
-            unsafe { JvmFediverseSoftware::from_j_object(j_object) }
+            )
          }
       }
    }

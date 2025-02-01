@@ -59,19 +59,16 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmInstance<'local>> for Instance {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmInstance<'local> {
-      use panoptiqon::jvm_type::JvmType;
-
       let url                               = self.url.to_string().clone_into_jvm(env);
       let version                           = self.version        .clone_into_jvm(env);
       let version_checked_time_epoch_millis = self.version_checked_time.timestamp_millis();
 
-      let j_object = HELPER.clone_into_jvm(
+      HELPER.clone_into_jvm(
          env,
          url,
          version,
          version_checked_time_epoch_millis,
-      );
-      unsafe { JvmInstance::from_j_object(j_object) }
+      )
    }
 }
 

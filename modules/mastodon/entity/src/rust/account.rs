@@ -239,7 +239,6 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmAccount<'local>> for Account {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmAccount<'local> {
-      use panoptiqon::jvm_type::JvmType;
       use panoptiqon::jvm_types::{JvmCache, JvmNullable};
       use crate::jvm_types::JvmInstance;
 
@@ -270,7 +269,7 @@ impl<'local> CloneIntoJvm<'local, JvmAccount<'local>> for Account {
       let follower_count = self.follower_count.map(|u| u as i64).clone_into_jvm(env);
       let followee_count = self.followee_count.map(|u| u as i64).clone_into_jvm(env);
 
-      let j_object = ACCOUNT_HELPER.clone_into_jvm(
+      ACCOUNT_HELPER.clone_into_jvm(
          env,
          instance,
          raw_id,
@@ -298,8 +297,7 @@ impl<'local> CloneIntoJvm<'local, JvmAccount<'local>> for Account {
          status_count,
          follower_count,
          followee_count,
-      );
-      unsafe { JvmAccount::from_j_object(j_object) }
+      )
    }
 }
 
@@ -448,7 +446,6 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAccount {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmCredentialAccount<'local> {
-      use panoptiqon::jvm_type::JvmType;
       use panoptiqon::jvm_types::JvmCache;
 
       let account: JvmCache<JvmAccount> = self.account                                                         .clone_into_jvm(env);
@@ -460,7 +457,7 @@ impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
       let follow_request_count          = self.follow_request_count.map(|u| u as i64)                          .clone_into_jvm(env);
       let role                          = self.role                                                            .clone_into_jvm(env);
 
-      let j_object = CREDENTIAL_ACCOUNT_HELPER.clone_into_jvm(
+      CREDENTIAL_ACCOUNT_HELPER.clone_into_jvm(
          env,
          account,
          raw_profile_note,
@@ -470,8 +467,7 @@ impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
          default_post_language,
          follow_request_count,
          role,
-      );
-      unsafe { JvmCredentialAccount::from_j_object(j_object) }
+      )
    }
 }
 
@@ -524,18 +520,16 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmRelationalAccount<'local>> for RelationalAccount {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmRelationalAccount<'local> {
-      use panoptiqon::jvm_type::JvmType;
       use panoptiqon::jvm_types::JvmCache;
 
       let account: JvmCache<JvmAccount> = self.account.clone_into_jvm(env);
       let mute_expire_time = self.mute_expire_time.map(|t| t.timestamp_millis()).clone_into_jvm(env);
 
-      let j_object = RELATIONAL_ACCOUNT_HELPER.clone_into_jvm(
+      RELATIONAL_ACCOUNT_HELPER.clone_into_jvm(
          env,
          account,
          mute_expire_time,
-      );
-      unsafe { JvmRelationalAccount::from_j_object(j_object) }
+      )
    }
 }
 
@@ -580,19 +574,16 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmAccountProfileField<'local>> for AccountProfileField {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmAccountProfileField<'local> {
-      use panoptiqon::jvm_type::JvmType;
-
       let name = self.name.clone_into_jvm(env);
       let value = self.value.clone_into_jvm(env);
       let verified_time = self.verified_time.map(|t| t.timestamp_millis()).clone_into_jvm(env);
 
-      let j_object = ACCOUNT_PROFILE_FIELD_HELPER.clone_into_jvm(
+      ACCOUNT_PROFILE_FIELD_HELPER.clone_into_jvm(
          env,
          name,
          value,
          verified_time,
-      );
-      unsafe { JvmAccountProfileField::from_j_object(j_object) }
+      )
    }
 }
 

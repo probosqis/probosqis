@@ -50,15 +50,12 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmStatusVisibility<'local>> for StatusVisibility {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmStatusVisibility<'local> {
-      use panoptiqon::jvm_type::JvmType;
-
       let visibility = *self as i32;
 
-      let j_object = STATUS_VISIBILITY_HELPER.clone_into_jvm(
+      STATUS_VISIBILITY_HELPER.clone_into_jvm(
          env,
          visibility,
-      );
-      unsafe { JvmStatusVisibility::from_j_object(j_object) }
+      )
    }
 }
 

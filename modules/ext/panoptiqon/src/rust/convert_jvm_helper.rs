@@ -102,7 +102,7 @@ macro_rules! convert_jvm_helper {
                   &self,
                   env: &mut ::jni::JNIEnv<'local>,
                   $($prop_name: $prop_ret_type),*
-               ) -> ::jni::objects::JObject<'local> {
+               ) -> $jvm_type {
                   use std::ops::Deref;
                   use $crate::jvalue;
 
@@ -118,7 +118,11 @@ macro_rules! convert_jvm_helper {
                         ];
 
                         unsafe {
-                           env.new_object_unchecked(class, *constructor_id, &args).unwrap()
+                           let j_object = env
+                              .new_object_unchecked(class, *constructor_id, &args)
+                              .unwrap();
+
+                           ::panoptiqon::jvm_type::JvmType::from_j_object(j_object)
                         }
                      }
 
@@ -265,7 +269,7 @@ macro_rules! convert_jvm_helper {
                   &self,
                   env: &mut ::jni::JNIEnv<'local>,
                   $($prop_name: $prop_ret_type),*
-               ) -> ::jni::objects::JObject<'local> {
+               ) -> $jvm_type {
                   use std::ops::Deref;
                   use $crate::jvalue;
 
@@ -282,10 +286,13 @@ macro_rules! convert_jvm_helper {
                         ];
 
                         unsafe {
-                           env.call_static_method_unchecked(
+                           let j_object = env
+                              .call_static_method_unchecked(
                                  class, *factory_method_id, factory_return_type.clone(), &args
                               )
-                              .unwrap().l().unwrap()
+                              .unwrap().l().unwrap();
+
+                           ::panoptiqon::jvm_type::JvmType::from_j_object(j_object)
                         }
                      }
 
@@ -481,7 +488,7 @@ mod jni_tests {
    extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_cloneIntoJvm_00024createEntity<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
+   ) -> JvmTestEntity<'local> {
       let l = env.new_string("9012345").unwrap();
       let l = JvmString::from_j_string(l);
 
