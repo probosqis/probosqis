@@ -51,20 +51,24 @@ convert_jvm_helper! {
             J\
          )V";
 
-      fn instance<'local>(..) -> JvmCache<'local, JvmInstance<'local>>
-         where jvm_getter_method: "getInstance",
+      fn instance<'local>(..) -> Cache<Instance>
+         where jvm_type: JvmCache<'local, JvmInstance<'local>>,
+               jvm_getter_method: "getInstance",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
-      fn access_token<'local>(..) -> JvmString<'local>
-         where jvm_getter_method: "getAccessToken",
+      fn access_token<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getAccessToken",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn token_type<'local>(..) -> JvmString<'local>
-         where jvm_getter_method: "getTokenType",
+      fn token_type<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getTokenType",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn scope<'local>(..) -> JvmString<'local>
-         where jvm_getter_method: "getScope",
+      fn scope<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getScope",
                jvm_return_type: "Ljava/lang/String;";
 
       fn created_at_epoch_millis<'local>(..) -> i64
@@ -76,22 +80,13 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmToken<'local>> for Token {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmToken<'local> {
-      use panoptiqon::jvm_types::JvmCache;
-      use crate::jvm_types::JvmInstance;
-
-      let instance: JvmCache<JvmInstance> = self.instance    .clone_into_jvm(env);
-      let access_token                    = self.access_token.clone_into_jvm(env);
-      let token_type                      = self.token_type  .clone_into_jvm(env);
-      let scope                           = self.scope       .clone_into_jvm(env);
-      let created_at_epoch_millis         = self.created_at.timestamp_millis();
-
       HELPER.clone_into_jvm(
          env,
-         instance,
-         access_token,
-         token_type,
-         scope,
-         created_at_epoch_millis,
+         &self.instance,
+         &self.access_token,
+         &self.token_type,
+         &self.scope,
+         self.created_at.timestamp_millis(),
       )
    }
 }
@@ -109,10 +104,10 @@ impl<'local> CloneFromJvm<'local, JvmToken<'local>> for Token {
       let created_at_epoch_millis = HELPER.created_at_epoch_millis(env, jvm_instance);
 
       Token {
-         instance:     Cache::<Instance>::clone_from_jvm(env, &instance),
-         access_token: String           ::clone_from_jvm(env, &access_token),
-         token_type:   String           ::clone_from_jvm(env, &token_type),
-         scope:        String           ::clone_from_jvm(env, &scope),
+         instance,
+         access_token,
+         token_type,
+         scope,
          created_at: DateTime::from_timestamp_millis(created_at_epoch_millis).unwrap(),
       }
    }

@@ -50,24 +50,29 @@ convert_jvm_helper! {
             Ljava/lang/String;\
          )V";
 
-      fn instance<'local>(..) -> JvmCache<'local, JvmInstance<'local>>
-         where jvm_getter_method: "getInstance",
+      fn instance<'local>(..) -> Cache<Instance>
+         where jvm_type: JvmCache<'local, JvmInstance<'local>>,
+               jvm_getter_method: "getInstance",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
-      fn name<'local>(..) -> JvmString<'local>
-         where jvm_getter_method: "getName",
+      fn name<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getName",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn website<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getWebsite",
+      fn website<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getWebsite",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn client_id<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getClientId",
+      fn client_id<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getClientId",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn client_secret<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getClientSecret",
+      fn client_secret<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getClientSecret",
                jvm_return_type: "Ljava/lang/String;";
    }
 }
@@ -75,22 +80,13 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmApplication<'local>> for Application {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmApplication<'local> {
-      use panoptiqon::jvm_types::JvmCache;
-      use crate::jvm_types::JvmInstance;
-
-      let instance: JvmCache<JvmInstance> = self.instance     .clone_into_jvm(env);
-      let name                            = self.name         .clone_into_jvm(env);
-      let website                         = self.website      .clone_into_jvm(env);
-      let client_id                       = self.client_id    .clone_into_jvm(env);
-      let client_secret                   = self.client_secret.clone_into_jvm(env);
-
       HELPER.clone_into_jvm(
          env,
-         instance,
-         name,
-         website,
-         client_id,
-         client_secret,
+         &self.instance,
+         &self.name,
+         &self.website,
+         &self.client_id,
+         &self.client_secret,
       )
    }
 }
@@ -108,11 +104,11 @@ impl<'local> CloneFromJvm<'local, JvmApplication<'local>> for Application {
       let client_secret = HELPER.client_secret(env, jvm_instance);
 
       Application {
-         instance:      Cache::<Instance>::clone_from_jvm(env, &instance),
-         name:          String           ::clone_from_jvm(env, &name),
-         website:       Option::<String> ::clone_from_jvm(env, &website),
-         client_id:     Option::<String> ::clone_from_jvm(env, &client_id),
-         client_secret: Option::<String> ::clone_from_jvm(env, &client_secret),
+         instance,
+         name,
+         website,
+         client_id,
+         client_secret,
       }
    }
 }

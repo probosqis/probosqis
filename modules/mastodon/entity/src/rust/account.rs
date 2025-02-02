@@ -130,108 +130,134 @@ convert_jvm_helper! {
             Ljava/lang/Long;\
          )V";
 
-      fn instance<'local>(..) -> JvmCache<'local, JvmInstance<'local>>
-         where jvm_getter_method: "getInstance",
+      fn instance<'local>(..) -> Cache<Instance>
+         where jvm_type: JvmCache<'local, JvmInstance<'local>>,
+               jvm_getter_method: "getInstance",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
-      fn raw_id<'local>(..) -> JvmString<'local>
-         where jvm_getter_method: "getRawId",
+      fn raw_id<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getRawId",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn username<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getUsername",
+      fn username<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getUsername",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn acct<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getAcct",
+      fn acct<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getAcct",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn url<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getUrl",
+      fn url<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getUrl",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn display_name<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getDisplayName",
+      fn display_name<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getDisplayName",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn profile_note<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getProfileNote",
+      fn profile_note<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getProfileNote",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn avatar_image_url<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getAvatarImageUrl",
+      fn avatar_image_url<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getAvatarImageUrl",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn avatar_static_image_url<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getAvatarStaticImageUrl",
+      fn avatar_static_image_url<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getAvatarStaticImageUrl",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn header_image_url<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getHeaderImageUrl",
+      fn header_image_url<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getHeaderImageUrl",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn header_static_image_url<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getHeaderStaticImageUrl",
+      fn header_static_image_url<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getHeaderStaticImageUrl",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn is_locked<'local>(..) -> JvmNullable<'local, JvmBoolean<'local>>
-         where jvm_getter_method: "isLocked",
+      fn is_locked<'local>(..) -> Option<bool>
+         where jvm_type: JvmNullable<'local, JvmBoolean<'local>>,
+               jvm_getter_method: "isLocked",
                jvm_return_type: "Ljava/lang/Boolean;";
 
-      fn profile_fields<'local>(..) -> JvmList<'local, JvmAccountProfileField<'local>>
-         where jvm_getter_method: "getProfileFields",
+      fn profile_fields<'local>(..) -> Vec<AccountProfileField>
+         where jvm_type: JvmList<'local, JvmAccountProfileField<'local>>,
+               jvm_getter_method: "getProfileFields",
                jvm_return_type: "Ljava/util/List;";
 
-      fn emojis_in_profile<'local>(..) -> JvmList<'local, JvmCustomEmoji<'local>>
-         where jvm_getter_method: "getEmojisInProfile",
+      fn emojis_in_profile<'local>(..) -> Vec<CustomEmoji>
+         where jvm_type: JvmList<'local, JvmCustomEmoji<'local>>,
+               jvm_getter_method: "getEmojisInProfile",
                jvm_return_type: "Ljava/util/List;";
 
-      fn is_bot<'local>(..) -> JvmNullable<'local, JvmBoolean<'local>>
-         where jvm_getter_method: "isBot",
+      fn is_bot<'local>(..) -> Option<bool>
+         where jvm_type: JvmNullable<'local, JvmBoolean<'local>>,
+               jvm_getter_method: "isBot",
                jvm_return_type: "Ljava/lang/Boolean;";
 
-      fn is_group<'local>(..) -> JvmNullable<'local, JvmBoolean<'local>>
-         where jvm_getter_method: "isGroup",
+      fn is_group<'local>(..) -> Option<bool>
+         where jvm_type: JvmNullable<'local, JvmBoolean<'local>>,
+               jvm_getter_method: "isGroup",
                jvm_return_type: "Ljava/lang/Boolean;";
 
-      fn is_discoverable<'local>(..) -> JvmNullable<'local, JvmBoolean<'local>>
-         where jvm_getter_method: "isDiscoverable",
+      fn is_discoverable<'local>(..) -> Option<bool>
+         where jvm_type: JvmNullable<'local, JvmBoolean<'local>>,
+               jvm_getter_method: "isDiscoverable",
                jvm_return_type: "Ljava/lang/Boolean;";
 
-      fn is_noindex<'local>(..) -> JvmNullable<'local, JvmBoolean<'local>>
-         where jvm_getter_method: "isNoindex",
+      fn is_noindex<'local>(..) -> Option<bool>
+         where jvm_type: JvmNullable<'local, JvmBoolean<'local>>,
+               jvm_getter_method: "isNoindex",
                jvm_return_type: "Ljava/lang/Boolean;";
 
-      fn moved_to<'local>(..) -> JvmNullable<'local, JvmCache<'local, JvmAccount<'local>>>
-         where jvm_getter_method: "getMovedTo",
+      fn moved_to<'local>(..) -> Option<Cache<Account>>
+         where jvm_type: JvmNullable<'local, JvmCache<'local, JvmAccount<'local>>>,
+               jvm_getter_method: "getMovedTo",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
-      fn is_suspended<'local>(..) -> JvmNullable<'local, JvmBoolean<'local>>
-         where jvm_getter_method: "isSuspended",
+      fn is_suspended<'local>(..) -> Option<bool>
+         where jvm_type: JvmNullable<'local, JvmBoolean<'local>>,
+               jvm_getter_method: "isSuspended",
                jvm_return_type: "Ljava/lang/Boolean;";
 
-      fn is_limited<'local>(..) -> JvmNullable<'local, JvmBoolean<'local>>
-         where jvm_getter_method: "isLimited",
+      fn is_limited<'local>(..) -> Option<bool>
+         where jvm_type: JvmNullable<'local, JvmBoolean<'local>>,
+               jvm_getter_method: "isLimited",
                jvm_return_type: "Ljava/lang/Boolean;";
 
-      fn created_time_epoch_millis<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
-         where jvm_getter_method: "getCreatedTimeEpochMillis",
+      fn created_time_epoch_millis<'local>(..) -> Option<i64>
+         where jvm_type: JvmNullable<'local, JvmLong<'local>>,
+               jvm_getter_method: "getCreatedTimeEpochMillis",
                jvm_return_type: "Ljava/lang/Long;";
 
-      fn last_status_post_time_epoch_millis<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
-         where jvm_getter_method: "getLastStatusPostTimeEpochMillis",
+      fn last_status_post_time_epoch_millis<'local>(..) -> Option<i64>
+         where jvm_type: JvmNullable<'local, JvmLong<'local>>,
+               jvm_getter_method: "getLastStatusPostTimeEpochMillis",
                jvm_return_type: "Ljava/lang/Long;";
 
-      fn status_count<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
-         where jvm_getter_method: "getStatusCount",
+      fn status_count<'local>(..) -> Option<i64>
+         where jvm_type: JvmNullable<'local, JvmLong<'local>>,
+               jvm_getter_method: "getStatusCount",
                jvm_return_type: "Ljava/lang/Long;";
 
-      fn follower_count<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
-         where jvm_getter_method: "getFollowerCount",
+      fn follower_count<'local>(..) -> Option<i64>
+         where jvm_type: JvmNullable<'local, JvmLong<'local>>,
+               jvm_getter_method: "getFollowerCount",
                jvm_return_type: "Ljava/lang/Long;";
 
-      fn followee_count<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
-         where jvm_getter_method: "getFolloweeCount",
+      fn followee_count<'local>(..) -> Option<i64>
+         where jvm_type: JvmNullable<'local, JvmLong<'local>>,
+               jvm_getter_method: "getFolloweeCount",
                jvm_return_type: "Ljava/lang/Long;";
    }
 }
@@ -239,64 +265,34 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmAccount<'local>> for Account {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmAccount<'local> {
-      use panoptiqon::jvm_types::{JvmCache, JvmNullable};
-      use crate::jvm_types::JvmInstance;
-
-      let instance: JvmCache<JvmInstance> = self.instance.clone_into_jvm(env);
-      let raw_id = self.id.0.clone_into_jvm(env);
-      let username = self.username.clone_into_jvm(env);
-      let acct = self.acct.clone_into_jvm(env);
-      let url = self.url.as_ref().map(|url| url.to_string()).clone_into_jvm(env);
-      let display_name = self.display_name.clone_into_jvm(env);
-      let profile_note = self.profile_note.clone_into_jvm(env);
-      let avatar_image_url = self.avatar_image_url.as_ref().map(|url| url.to_string()).clone_into_jvm(env);
-      let avatar_static_image_url = self.avatar_static_image_url.as_ref().map(|url| url.to_string()).clone_into_jvm(env);
-      let header_image_url = self.header_image_url.as_ref().map(|url| url.to_string()).clone_into_jvm(env);
-      let header_static_image_url = self.header_static_image_url.as_ref().map(|url| url.to_string()).clone_into_jvm(env);
-      let is_locked = self.is_locked.clone_into_jvm(env);
-      let profile_fields = self.profile_fields.clone_into_jvm(env);
-      let emoji_in_profile = self.emojis_in_profile.clone_into_jvm(env);
-      let is_bot = self.is_bot.clone_into_jvm(env);
-      let is_group = self.is_group.clone_into_jvm(env);
-      let is_discoverable = self.is_discoverable.clone_into_jvm(env);
-      let is_noindex = self.is_noindex.clone_into_jvm(env);
-      let moved_to: JvmNullable<'local, JvmCache<JvmAccount>> = self.moved_to.clone_into_jvm(env);
-      let is_suspended = self.is_suspended.clone_into_jvm(env);
-      let is_limited = self.is_limited.clone_into_jvm(env);
-      let created_time = self.created_time.map(|t| t.timestamp_millis()).clone_into_jvm(env);
-      let last_status_post_time = self.last_status_post_time.map(|t| t.timestamp_millis()).clone_into_jvm(env);
-      let status_count = self.status_count  .map(|u| u as i64).clone_into_jvm(env);
-      let follower_count = self.follower_count.map(|u| u as i64).clone_into_jvm(env);
-      let followee_count = self.followee_count.map(|u| u as i64).clone_into_jvm(env);
-
       ACCOUNT_HELPER.clone_into_jvm(
          env,
-         instance,
-         raw_id,
-         username,
-         acct,
-         url,
-         display_name,
-         profile_note,
-         avatar_image_url,
-         avatar_static_image_url,
-         header_image_url,
-         header_static_image_url,
-         is_locked,
-         profile_fields,
-         emoji_in_profile,
-         is_bot,
-         is_group,
-         is_discoverable,
-         is_noindex,
-         moved_to,
-         is_suspended,
-         is_limited,
-         created_time,
-         last_status_post_time,
-         status_count,
-         follower_count,
-         followee_count,
+         &self.instance,
+         &self.id.0,
+         &self.username,
+         &self.acct,
+         &self.url.as_ref().map(Url::as_str),
+         &self.display_name,
+         &self.profile_note,
+         &self.avatar_image_url       .as_ref().map(Url::as_str),
+         &self.avatar_static_image_url.as_ref().map(Url::as_str),
+         &self.header_image_url       .as_ref().map(Url::as_str),
+         &self.header_static_image_url.as_ref().map(Url::as_str),
+         &self.is_locked,
+         &self.profile_fields,
+         &self.emojis_in_profile,
+         &self.is_bot,
+         &self.is_group,
+         &self.is_discoverable,
+         &self.is_noindex,
+         &self.moved_to,
+         &self.is_suspended,
+         &self.is_limited,
+         &self.created_time         .map(|t| t.timestamp_millis()),
+         &self.last_status_post_time.map(|t| t.timestamp_millis()),
+         &self.status_count  .map(|u| u as i64),
+         &self.follower_count.map(|u| u as i64),
+         &self.followee_count.map(|u| u as i64),
       )
    }
 }
@@ -333,33 +329,6 @@ impl<'local> CloneFromJvm<'local, JvmAccount<'local>> for Account {
       let status_count            = ACCOUNT_HELPER.status_count                      (env, jvm_instance);
       let follower_count          = ACCOUNT_HELPER.follower_count                    (env, jvm_instance);
       let followee_count          = ACCOUNT_HELPER.followee_count                    (env, jvm_instance);
-
-      let instance                = Cache::<Instance>         ::clone_from_jvm(env, &instance);
-      let id                      = String                    ::clone_from_jvm(env, &id);
-      let username                = Option::<String>          ::clone_from_jvm(env, &username);
-      let acct                    = Option::<String>          ::clone_from_jvm(env, &acct);
-      let url                     = Option::<String>          ::clone_from_jvm(env, &url);
-      let display_name            = Option::<String>          ::clone_from_jvm(env, &display_name);
-      let profile_note            = Option::<String>          ::clone_from_jvm(env, &profile_note);
-      let avatar_image_url        = Option::<String>          ::clone_from_jvm(env, &avatar_image_url);
-      let avatar_static_image_url = Option::<String>          ::clone_from_jvm(env, &avatar_static_image_url);
-      let header_image_url        = Option::<String>          ::clone_from_jvm(env, &header_image_url);
-      let header_static_image_url = Option::<String>          ::clone_from_jvm(env, &header_static_image_url);
-      let is_locked               = Option::<bool>            ::clone_from_jvm(env, &is_locked);
-      let profile_fields          = Vec::<AccountProfileField>::clone_from_jvm(env, &profile_fields);
-      let emojis_in_profile       = Vec::<CustomEmoji>        ::clone_from_jvm(env, &emojis_in_profile);
-      let is_bot                  = Option::<bool>            ::clone_from_jvm(env, &is_bot);
-      let is_group                = Option::<bool>            ::clone_from_jvm(env, &is_group);
-      let is_discoverable         = Option::<bool>            ::clone_from_jvm(env, &is_discoverable);
-      let is_noindex              = Option::<bool>            ::clone_from_jvm(env, &is_noindex);
-      let moved_to                = Option::<Cache<Account>>  ::clone_from_jvm(env, &moved_to);
-      let is_suspended            = Option::<bool>            ::clone_from_jvm(env, &is_suspended);
-      let is_limited              = Option::<bool>            ::clone_from_jvm(env, &is_limited);
-      let created_time            = Option::<i64>             ::clone_from_jvm(env, &created_time);
-      let last_status_post_time   = Option::<i64>             ::clone_from_jvm(env, &last_status_post_time);
-      let status_count            = Option::<i64>             ::clone_from_jvm(env, &status_count);
-      let follower_count          = Option::<i64>             ::clone_from_jvm(env, &follower_count);
-      let followee_count          = Option::<i64>             ::clone_from_jvm(env, &followee_count);
 
       Account {
          instance,
@@ -409,36 +378,44 @@ convert_jvm_helper! {
             Lcom/wcaokaze/probosqis/mastodon/entity/Role;\
          )V";
 
-      fn account<'local>(..) -> JvmCache<'local, JvmAccount<'local>>
-         where jvm_getter_method: "getAccount",
+      fn account<'local>(..) -> Cache<Account>
+         where jvm_type: JvmCache<'local, JvmAccount<'local>>,
+               jvm_getter_method: "getAccount",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
-      fn raw_profile_note<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getRawProfileNote",
+      fn raw_profile_note<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getRawProfileNote",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn raw_profile_fields<'local>(..) -> JvmList<'local, JvmAccountProfileField<'local>>
-         where jvm_getter_method: "getRawProfileFields",
+      fn raw_profile_fields<'local>(..) -> Vec<AccountProfileField>
+         where jvm_type: JvmList<'local, JvmAccountProfileField<'local>>,
+               jvm_getter_method: "getRawProfileFields",
                jvm_return_type: "Ljava/util/List;";
 
-      fn default_post_visibility<'local>(..) -> JvmNullable<'local, JvmStatusVisibility<'local>>
-         where jvm_getter_method: "getDefaultPostVisibility",
+      fn default_post_visibility<'local>(..) -> Option<StatusVisibility>
+         where jvm_type: JvmNullable<'local, JvmStatusVisibility<'local>>,
+               jvm_getter_method: "getDefaultPostVisibility",
                jvm_return_type: "Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;";
 
-      fn default_post_sensitivity<'local>(..) -> JvmNullable<'local, JvmBoolean<'local>>
-         where jvm_getter_method: "getDefaultPostSensitivity",
+      fn default_post_sensitivity<'local>(..) -> Option<bool>
+         where jvm_type: JvmNullable<'local, JvmBoolean<'local>>,
+               jvm_getter_method: "getDefaultPostSensitivity",
                jvm_return_type: "Ljava/util/Boolean;";
 
-      fn default_post_language<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getDefaultPostLanguage",
+      fn default_post_language<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getDefaultPostLanguage",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn follow_request_count<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
-         where jvm_getter_method: "getFollowRequestCount",
+      fn follow_request_count<'local>(..) -> Option<i64>
+         where jvm_type: JvmNullable<'local, JvmLong<'local>>,
+               jvm_getter_method: "getFollowRequestCount",
                jvm_return_type: "Ljava/lang/Long;";
 
-      fn role<'local>(..) -> JvmNullable<'local, JvmRole<'local>>
-         where jvm_getter_method: "getRole",
+      fn role<'local>(..) -> Option<Role>
+         where jvm_type: JvmNullable<'local, JvmRole<'local>>,
+               jvm_getter_method: "getRole",
                jvm_return_type: "Lcom/wcaokaze/probosqis/mastodon/entity/Role;";
    }
 }
@@ -446,27 +423,16 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAccount {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmCredentialAccount<'local> {
-      use panoptiqon::jvm_types::JvmCache;
-
-      let account: JvmCache<JvmAccount> = self.account                                                         .clone_into_jvm(env);
-      let raw_profile_note              = self.raw_profile_note                                                .clone_into_jvm(env);
-      let raw_profile_fields            = self.raw_profile_fields                                              .clone_into_jvm(env);
-      let default_post_visibility       = self.default_post_visibility                                         .clone_into_jvm(env);
-      let default_post_sensitivity      = self.default_post_sensitivity                                        .clone_into_jvm(env);
-      let default_post_language         = self.default_post_language.map(|l| l.to_639_1().unwrap().to_string()).clone_into_jvm(env);
-      let follow_request_count          = self.follow_request_count.map(|u| u as i64)                          .clone_into_jvm(env);
-      let role                          = self.role                                                            .clone_into_jvm(env);
-
       CREDENTIAL_ACCOUNT_HELPER.clone_into_jvm(
          env,
-         account,
-         raw_profile_note,
-         raw_profile_fields,
-         default_post_visibility,
-         default_post_sensitivity,
-         default_post_language,
-         follow_request_count,
-         role,
+         &self.account,
+         &self.raw_profile_note,
+         &self.raw_profile_fields,
+         &self.default_post_visibility,
+         &self.default_post_sensitivity,
+         &self.default_post_language.map(|l| l.to_639_1().unwrap().to_string()),
+         &self.follow_request_count.map(|u| u as i64),
+         &self.role,
       )
    }
 }
@@ -487,14 +453,15 @@ impl<'local> CloneFromJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
       let role                     = CREDENTIAL_ACCOUNT_HELPER.role                    (env, jvm_instance);
 
       CredentialAccount {
-         account:                  Cache ::<Account>            ::clone_from_jvm(env, &account),
-         raw_profile_note:         Option::<String>             ::clone_from_jvm(env, &raw_profile_note),
-         raw_profile_fields:       Vec   ::<AccountProfileField>::clone_from_jvm(env, &raw_profile_fields),
-         default_post_visibility:  Option::<StatusVisibility>   ::clone_from_jvm(env, &default_post_visibility),
-         default_post_sensitivity: Option::<bool>               ::clone_from_jvm(env, &default_post_sensitivity),
-         default_post_language:    Option::<String>             ::clone_from_jvm(env, &default_post_language).map(|code| Language::from_639_1(&code).unwrap()),
-         follow_request_count:     Option::<i64>                ::clone_from_jvm(env, &follow_request_count).map(|i| i as u64),
-         role:                     Option::<Role>               ::clone_from_jvm(env, &role),
+         account,
+         raw_profile_note,
+         raw_profile_fields,
+         default_post_visibility,
+         default_post_sensitivity,
+         default_post_language: default_post_language
+            .map(|code| Language::from_639_1(&code).unwrap()),
+         follow_request_count: follow_request_count.map(|i| i as u64),
+         role,
       }
    }
 }
@@ -507,12 +474,14 @@ convert_jvm_helper! {
       fn clone_into_jvm<'local>(..) -> JvmRelationalAccount<'local>
          where jvm_constructor: "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/Long;)V";
 
-      fn account<'local>(..) -> JvmCache<'local, JvmAccount<'local>>
-         where jvm_getter_method: "getAccount",
+      fn account<'local>(..) -> Cache<Account>
+         where jvm_type: JvmCache<'local, JvmAccount<'local>>,
+               jvm_getter_method: "getAccount",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
-      fn mute_expire_time_epoch_millis<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
-         where jvm_getter_method: "getMuteExpireTimeEpochMillis",
+      fn mute_expire_time_epoch_millis<'local>(..) -> Option<i64>
+         where jvm_type: JvmNullable<'local, JvmLong<'local>>,
+               jvm_getter_method: "getMuteExpireTimeEpochMillis",
                jvm_return_type: "Ljava/lang/Long;";
    }
 }
@@ -520,15 +489,10 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmRelationalAccount<'local>> for RelationalAccount {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmRelationalAccount<'local> {
-      use panoptiqon::jvm_types::JvmCache;
-
-      let account: JvmCache<JvmAccount> = self.account.clone_into_jvm(env);
-      let mute_expire_time = self.mute_expire_time.map(|t| t.timestamp_millis()).clone_into_jvm(env);
-
       RELATIONAL_ACCOUNT_HELPER.clone_into_jvm(
          env,
-         account,
-         mute_expire_time,
+         &self.account,
+         &self.mute_expire_time.map(|t| t.timestamp_millis()),
       )
    }
 }
@@ -543,8 +507,9 @@ impl<'local> CloneFromJvm<'local, JvmRelationalAccount<'local>> for RelationalAc
       let mute_expire_time = RELATIONAL_ACCOUNT_HELPER.mute_expire_time_epoch_millis(env, jvm_instance);
 
       RelationalAccount {
-         account:          Cache::<Account>::clone_from_jvm(env, &account),
-         mute_expire_time: Option::<i64>   ::clone_from_jvm(env, &mute_expire_time).map(|time| DateTime::from_timestamp_millis(time).unwrap()),
+         account,
+         mute_expire_time: mute_expire_time
+            .map(|time| DateTime::from_timestamp_millis(time).unwrap()),
       }
    }
 }
@@ -557,16 +522,19 @@ convert_jvm_helper! {
       fn clone_into_jvm<'local>(..) -> JvmAccountProfileField<'local>
          where jvm_constructor: "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V";
 
-      fn name<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getName",
+      fn name<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getName",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn value<'local>(..) -> JvmNullable<'local, JvmString<'local>>
-         where jvm_getter_method: "getValue",
+      fn value<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getValue",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn verified_time_epoch_millis<'local>(..) -> JvmNullable<'local, JvmLong<'local>>
-         where jvm_getter_method: "getVerifiedTimeEpochMillis",
+      fn verified_time_epoch_millis<'local>(..) -> Option<i64>
+         where jvm_type: JvmNullable<'local, JvmLong<'local>>,
+               jvm_getter_method: "getVerifiedTimeEpochMillis",
                jvm_return_type: "Ljava/lang/Long;";
    }
 }
@@ -574,15 +542,12 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmAccountProfileField<'local>> for AccountProfileField {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmAccountProfileField<'local> {
-      let name = self.name.clone_into_jvm(env);
-      let value = self.value.clone_into_jvm(env);
-      let verified_time = self.verified_time.map(|t| t.timestamp_millis()).clone_into_jvm(env);
 
       ACCOUNT_PROFILE_FIELD_HELPER.clone_into_jvm(
          env,
-         name,
-         value,
-         verified_time,
+         &self.name,
+         &self.value,
+         &self.verified_time.map(|t| t.timestamp_millis()),
       )
    }
 }
@@ -598,9 +563,9 @@ impl<'local> CloneFromJvm<'local, JvmAccountProfileField<'local>> for AccountPro
       let verified_time_epoch_millis = ACCOUNT_PROFILE_FIELD_HELPER.verified_time_epoch_millis(env, jvm_instance);
 
       AccountProfileField {
-         name: Option::<String>::clone_from_jvm(env, &name),
-         value: Option::<String>::clone_from_jvm(env, &value),
-         verified_time: Option::<i64>::clone_from_jvm(env, &verified_time_epoch_millis)
+         name,
+         value,
+         verified_time: verified_time_epoch_millis
             .map(|time_millis| DateTime::from_timestamp_millis(time_millis).unwrap()),
       }
    }

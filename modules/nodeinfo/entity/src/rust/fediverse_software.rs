@@ -46,12 +46,14 @@ convert_jvm_helper! {
       fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
          where jvm_constructor: "(Ljava/lang/String;Ljava/lang/String;)V";
 
-      fn name<'local>(..) -> JvmString<'local>
-         where jvm_getter_method: "getName",
+      fn name<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getName",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn version<'local>(..) -> JvmString<'local>
-         where jvm_getter_method: "getVersion",
+      fn version<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getVersion",
                jvm_return_type: "Ljava/lang/String;";
    }
 
@@ -61,8 +63,9 @@ convert_jvm_helper! {
       fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
          where jvm_constructor: "(Lcom/wcaokaze/probosqis/mastodon/entity/Instance;)V";
 
-      fn instance<'local>(..) -> JvmInstance<'local>
-         where jvm_getter_method: "getInstance",
+      fn instance<'local>(..) -> Instance
+         where jvm_type: JvmInstance<'local>,
+               jvm_getter_method: "getInstance",
                jvm_return_type: "Lcom/wcaokaze/probosqis/mastodon/entity/Instance;";
    }
 }
@@ -72,9 +75,6 @@ impl<'local> CloneIntoJvm<'local, JvmFediverseSoftware<'local>> for FediverseSof
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmFediverseSoftware<'local> {
       match self {
          FediverseSoftware::Unsupported { name, version } => {
-            let name = name.clone_into_jvm(env);
-            let version = version.clone_into_jvm(env);
-
             HELPER_UNSUPPORTED.clone_into_jvm(
                env,
                name,
@@ -83,11 +83,9 @@ impl<'local> CloneIntoJvm<'local, JvmFediverseSoftware<'local>> for FediverseSof
          }
 
          FediverseSoftware::Mastodon { instance } => {
-            let jvm_instance = instance.clone_into_jvm(env);
-
             HELPER_MASTODON.clone_into_jvm(
                env,
-               jvm_instance,
+               instance,
             )
          }
       }
@@ -108,15 +106,11 @@ impl<'local> CloneFromJvm<'local, JvmFediverseSoftware<'local>> for FediverseSof
          .unwrap()
       {
          let instance = HELPER_MASTODON.instance(env, jvm_instance);
-         let instance = Instance::clone_from_jvm(env, &instance);
 
          FediverseSoftware::Mastodon { instance }
       } else {
          let name = HELPER_UNSUPPORTED.name(env, jvm_instance);
          let version = HELPER_UNSUPPORTED.version(env, jvm_instance);
-
-         let name = String::clone_from_jvm(env, &name);
-         let version = String::clone_from_jvm(env, &version);
 
          FediverseSoftware::Unsupported { name, version }
       }
