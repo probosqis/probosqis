@@ -16,183 +16,494 @@
 
 #![cfg(feature="jvm")]
 
-use std::ops::Deref;
-use std::sync::RwLock;
+pub use paste::paste;
 
-use jni::JNIEnv;
-use jni::objects::{GlobalRef, JMethodID, JObject, JStaticMethodID, JValueOwned};
-use jni::signature::{ReturnType, TypeSignature};
-use jni::sys::jvalue;
+#[macro_export]
+macro_rules! convert_jvm_helper {
+   (
+      $(
+         $(#[$attr:meta])*
+         static $var_name:ident = impl struct $type_name:ident
+            where jvm_class: $class_fully_qualified_name:literal
+         {
+            fn clone_into_jvm<'local>(..) -> $jvm_type:ty
+               where jvm_constructor: $constructor_signature:expr;
 
-pub struct ConvertJniHelper<'a, const ARITY: usize>(
-   RwLock<ConvertJniHelperInner<'a, ARITY>>
-);
-
-pub enum JvmInstantiationStrategy<'a> {
-   ViaConstructor(&'a str),
-   ViaStaticMethod(&'a str, &'a str)
-}
-
-enum ConvertJniHelperInner<'a, const ARITY: usize> {
-   SignatureStrs {
-      class_fully_qualified_name: &'a str,
-      clone_into_jvm: JvmInstantiationStrategy<'a>,
-      getter_signatures: [(&'a str, &'a str); ARITY]
-   },
-   JvmIds {
-      class: GlobalRef,
-      clone_into_jvm: CloneIntoJvmJvmId,
-      getter_ids: [(JMethodID, ReturnType); ARITY]
-   }
-}
-
-enum CloneIntoJvmJvmId {
-   ViaConstructor {
-      constructor_id: JMethodID
-   },
-   ViaStaticMethod {
-      method_id: JStaticMethodID,
-      return_type: ReturnType
-   }
-}
-
-impl<'a, const ARITY: usize> ConvertJniHelper<'a, ARITY> {
-   pub const fn new(
-      class_fully_qualified_name: &'a str,
-      clone_into_jvm: JvmInstantiationStrategy<'a>,
-      getter_signatures: [(&'a str, &'a str); ARITY]
-   ) -> Self {
-      let inner = ConvertJniHelperInner::SignatureStrs {
-         class_fully_qualified_name,
-         clone_into_jvm,
-         getter_signatures
-      };
-      ConvertJniHelper(RwLock::new(inner))
-   }
-
-   fn prepare_ids(
-      &self,
-      env: &mut JNIEnv,
-      class_fully_qualified_name: &str,
-      clone_into_jvm: &JvmInstantiationStrategy,
-      getter_signatures: &[(&str, &str); ARITY]
-   ) -> (GlobalRef, CloneIntoJvmJvmId, [(JMethodID, ReturnType); ARITY]) {
-      let class = env.find_class(class_fully_qualified_name).unwrap();
-      let class = env.new_global_ref(class).unwrap();
-
-      let clone_into_jvm_id = match clone_into_jvm {
-         JvmInstantiationStrategy::ViaConstructor(constructor_signature) => {
-            let constructor_id = env
-               .get_method_id(&class, "<init>", constructor_signature).unwrap();
-
-            CloneIntoJvmJvmId::ViaConstructor { constructor_id }
-         },
-         JvmInstantiationStrategy::ViaStaticMethod(method_name, signature) => {
-            let method_id = env
-               .get_static_method_id(&class, method_name, signature).unwrap();
-
-            let type_signature = TypeSignature::from_str(signature).unwrap();
-
-            CloneIntoJvmJvmId::ViaStaticMethod {
-               method_id,
-               return_type: type_signature.ret
-            }
+            $(
+               fn $prop_name:ident <'local>(..) -> $prop_ret_type:ty
+                  where $(jvm_type: $prop_jvm_type:ty,)?
+                        jvm_getter_method: $getter_method_name:expr,
+                        jvm_return_type: $getter_ret_type:expr
+            );* $(;)?
          }
-      };
+      )*
+   ) => {
+      $(
+         $(#[$attr])*
+         static $var_name: $type_name = $type_name::new();
 
-      let getter_ids = getter_signatures.map(|(name, ty)| {
-         let type_signature_str = format!("(){ty}");
-         let type_signature = TypeSignature::from_str(&type_signature_str).unwrap();
-         let getter_id = env.get_method_id(&class, name, &type_signature_str).unwrap();
-         (getter_id, type_signature.ret)
-      });
+         $crate::convert_jvm_helper::paste! {
+            $(#[$attr])*
+            struct $type_name(
+               ::std::sync::RwLock<[<$type_name Inner>]>
+            );
 
-      (class, clone_into_jvm_id, getter_ids)
-   }
-
-   pub fn clone_into_jvm<'local>(
-      &self,
-      env: &mut JNIEnv<'local>,
-      args: &[jvalue],
-   ) -> JObject<'local> {
-      let lock = self.0.read().unwrap();
-      match lock.deref() {
-         ConvertJniHelperInner::JvmIds {
-            class,
-            clone_into_jvm,
-            ..
-         } => {
-            match clone_into_jvm {
-               CloneIntoJvmJvmId::ViaConstructor { constructor_id } => unsafe {
-                  env.new_object_unchecked(class, *constructor_id, args).unwrap()
-               },
-               CloneIntoJvmJvmId::ViaStaticMethod { method_id, return_type } => unsafe {
-                  env.call_static_method_unchecked(
-                        class, *method_id, return_type.clone(), args
-                     )
-                     .unwrap().l().unwrap()
+            $(#[$attr])*
+            enum [<$type_name Inner>] {
+               Uninit,
+               JvmIds {
+                  class: ::jni::objects::GlobalRef,
+                  constructor_id: ::jni::objects::JMethodID,
+                  $(
+                     [<$prop_name _id>]: (::jni::objects::JMethodID, ::jni::signature::ReturnType)
+                  ),*
                }
             }
-         }
 
-         ConvertJniHelperInner::SignatureStrs {
-            class_fully_qualified_name,
-            clone_into_jvm,
-            getter_signatures
-         } => {
-            let (class, clone_into_jvm_id, getter_ids) = self.prepare_ids(
-               env, class_fully_qualified_name, clone_into_jvm,
-               getter_signatures
-            );
-            drop(lock);
-            let mut lock = self.0.write().unwrap();
-            *lock = ConvertJniHelperInner::JvmIds {
-               class, clone_into_jvm: clone_into_jvm_id, getter_ids
-            };
-            drop(lock);
-            self.clone_into_jvm(env, args)
-         }
-      }
-   }
+            impl $type_name {
+               pub const fn new() -> Self {
+                  let inner = [<$type_name Inner>]::Uninit;
+                  $type_name(::std::sync::RwLock::new(inner))
+               }
 
-   pub fn get<'local>(
-      &self,
-      env: &mut JNIEnv<'local>,
-      instance: &JObject,
-      n: usize
-   ) -> JValueOwned<'local> {
-      let lock = self.0.read().unwrap();
-      match lock.deref() {
-         ConvertJniHelperInner::JvmIds {
-            getter_ids,
-            ..
-         } => {
-            let (getter_id, return_type) = &getter_ids[n];
-            unsafe {
-               env.call_method_unchecked(instance, getter_id, return_type.clone(), &[])
-                  .unwrap()
+               fn get_method_id(
+                  env: &mut ::jni::JNIEnv,
+                  class: &::jni::objects::GlobalRef,
+                  name: &str,
+                  ret_type: &str
+               ) -> (::jni::objects::JMethodID, ::jni::signature::ReturnType) {
+                  let type_signature_str = format!("(){ret_type}");
+                  let type_signature = ::jni::signature
+                     ::TypeSignature::from_str(&type_signature_str).unwrap();
+                  let method_id = env
+                     .get_method_id(class, name, &type_signature_str).unwrap();
+                  (method_id, type_signature.ret)
+               }
+
+               fn prepare_ids(env: &mut ::jni::JNIEnv) -> [<$type_name Inner>] {
+                  let class = env.find_class($class_fully_qualified_name).unwrap();
+                  let class = env.new_global_ref(class).unwrap();
+
+                  let constructor_id = env
+                     .get_method_id(&class, "<init>", $constructor_signature).unwrap();
+
+                  $(
+                     let [<$prop_name _id>] = Self::get_method_id(
+                           env, &class, $getter_method_name, $getter_ret_type
+                     );
+                  )*
+
+                  [<$type_name Inner>]::JvmIds {
+                     class, constructor_id,
+                     $([<$prop_name _id>]),*
+                  }
+               }
+
+               pub fn clone_into_jvm<'local>(
+                  &self,
+                  env: &mut ::jni::JNIEnv<'local>,
+                  $(
+                     $prop_name: $crate::convert_jvm_helper_clone_param_type!(
+                        $prop_ret_type$(, $prop_jvm_type)?
+                     )
+                  ),*
+               ) -> $jvm_type {
+                  $(
+                     let $prop_name = $crate::convert_jvm_helper_clone_arg_conversion!(
+                        env, $prop_name, $prop_ret_type$(, $prop_jvm_type)?
+                     );
+                  )*
+
+                  self.clone_into_jvm_from_jvm_type(
+                     env,
+                     $($prop_name),*
+                  )
+               }
+
+               pub fn clone_into_jvm_from_jvm_type<'local>(
+                  &self,
+                  env: &mut ::jni::JNIEnv<'local>,
+                  $(
+                     $prop_name: $crate::convert_jvm_helper_clone_jvm_param_type!(
+                        $prop_ret_type$(, $prop_jvm_type)?
+                     )
+                  ),*
+               ) -> $jvm_type {
+                  use std::ops::Deref;
+                  use $crate::jvalue;
+
+                  let lock = self.0.read().unwrap();
+                  match lock.deref() {
+                     [<$type_name Inner>]::JvmIds {
+                        class,
+                        constructor_id,
+                        ..
+                     } => {
+                        let args = [
+                           $(jvalue!($prop_ret_type, $prop_name)),*
+                        ];
+
+                        unsafe {
+                           let j_object = env
+                              .new_object_unchecked(class, *constructor_id, &args)
+                              .unwrap();
+
+                           ::panoptiqon::jvm_type::JvmType::from_j_object(j_object)
+                        }
+                     }
+
+                     [<$type_name Inner>]::Uninit => {
+                        let jvm_ids = Self::prepare_ids(env);
+                        drop(lock);
+                        let mut lock = self.0.write().unwrap();
+                        *lock = jvm_ids;
+                        drop(lock);
+                        self.clone_into_jvm_from_jvm_type(env, $($prop_name),*)
+                     }
+                  }
+               }
+
+               $(
+                  $crate::convert_jvm_helper_prop!(
+                     $jvm_type,
+                     [<$type_name Inner>],
+                     [<$prop_name _id>],
+                     $prop_name,
+                     $prop_ret_type,
+                     $($prop_jvm_type,)?
+                     [<$prop_name _jvm_type>]
+                  );
+               )*
             }
          }
+      )*
+   };
 
-         ConvertJniHelperInner::SignatureStrs {
-            class_fully_qualified_name,
-            clone_into_jvm,
-            getter_signatures
-         } => {
-            let (class, clone_into_jvm_id, getter_ids) = self.prepare_ids(
-               env, class_fully_qualified_name, clone_into_jvm,
-               getter_signatures
+   (
+      $(
+         $(#[$attr:meta])*
+         static $var_name:ident = impl struct $type_name:ident
+            where jvm_class: $class_fully_qualified_name:literal
+         {
+            fn clone_into_jvm<'local>(..) -> $jvm_type:ty
+               where jvm_static_method: $factory_method_name:expr,
+                     jvm_signature: $factory_signature:expr;
+
+            $(
+               fn $prop_name:ident <'local>(..) -> $prop_ret_type:ty
+                  where $(jvm_type: $prop_jvm_type:ty,)?
+                        jvm_getter_method: $getter_method_name:expr,
+                        jvm_return_type: $getter_ret_type:expr
+            );* $(;)?
+         }
+      )*
+   ) => {
+      $(
+         $(#[$attr])*
+         static $var_name: $type_name = $type_name::new();
+
+         $crate::convert_jvm_helper::paste! {
+            $(#[$attr])*
+            struct $type_name(
+               ::std::sync::RwLock<[<$type_name Inner>]>
             );
-            drop(lock);
-            let mut lock = self.0.write().unwrap();
-            *lock = ConvertJniHelperInner::JvmIds {
-               class, clone_into_jvm: clone_into_jvm_id, getter_ids
-            };
-            drop(lock);
-            self.get(env, instance, n)
+
+            $(#[$attr])*
+            enum [<$type_name Inner>] {
+               Uninit,
+               JvmIds {
+                  class: ::jni::objects::GlobalRef,
+                  factory_method_id: ::jni::objects::JStaticMethodID,
+                  factory_return_type: ::jni::signature::ReturnType,
+                  $(
+                     [<$prop_name _id>]: (::jni::objects::JMethodID, ::jni::signature::ReturnType)
+                  ),*
+               }
+            }
+
+            impl $type_name {
+               pub const fn new() -> Self {
+                  let inner = [<$type_name Inner>]::Uninit;
+                  $type_name(::std::sync::RwLock::new(inner))
+               }
+
+               fn get_method_id(
+                  env: &mut ::jni::JNIEnv,
+                  class: &::jni::objects::GlobalRef,
+                  name: &str,
+                  ret_type: &str
+               ) -> (::jni::objects::JMethodID, ::jni::signature::ReturnType) {
+                  let type_signature_str = format!("(){ret_type}");
+                  let type_signature = ::jni::signature
+                     ::TypeSignature::from_str(&type_signature_str).unwrap();
+                  let method_id = env
+                     .get_method_id(class, name, &type_signature_str).unwrap();
+                  (method_id, type_signature.ret)
+               }
+
+               fn prepare_ids(env: &mut ::jni::JNIEnv) -> [<$type_name Inner>] {
+                  let class = env.find_class($class_fully_qualified_name).unwrap();
+                  let class = env.new_global_ref(class).unwrap();
+
+                  let factory_method_id = env
+                     .get_static_method_id(&class, $factory_method_name, $factory_signature).unwrap();
+
+                  let type_signature = ::jni::signature::TypeSignature::from_str($factory_signature).unwrap();
+
+                  $(
+                     let [<$prop_name _id>] = Self::get_method_id(
+                           env, &class, $getter_method_name, $getter_ret_type
+                     );
+                  )*
+
+                  [<$type_name Inner>]::JvmIds {
+                     class,
+                     factory_method_id,
+                     factory_return_type: type_signature.ret,
+                     $([<$prop_name _id>]),*
+                  }
+               }
+
+               pub fn clone_into_jvm<'local>(
+                  &self,
+                  env: &mut ::jni::JNIEnv<'local>,
+                  $(
+                     $prop_name: $crate::convert_jvm_helper_clone_param_type!(
+                        $prop_ret_type$(, $prop_jvm_type)?
+                     )
+                  ),*
+               ) -> $jvm_type {
+                  $(
+                     let $prop_name = $crate::convert_jvm_helper_clone_arg_conversion!(
+                        env, $prop_name, $prop_ret_type$(, $prop_jvm_type)?
+                     );
+                  )*
+
+                  self.clone_into_jvm_from_jvm_type(
+                     env,
+                     $($prop_name),*
+                  )
+               }
+
+               pub fn clone_into_jvm_from_jvm_type<'local>(
+                  &self,
+                  env: &mut ::jni::JNIEnv<'local>,
+                  $(
+                     $prop_name: $crate::convert_jvm_helper_clone_jvm_param_type!(
+                        $prop_ret_type$(, $prop_jvm_type)?
+                     )
+                  ),*
+               ) -> $jvm_type {
+                  use std::ops::Deref;
+                  use $crate::jvalue;
+
+                  let lock = self.0.read().unwrap();
+                  match lock.deref() {
+                     [<$type_name Inner>]::JvmIds {
+                        class,
+                        factory_method_id,
+                        factory_return_type,
+                        ..
+                     } => {
+                        let args = [
+                           $(jvalue!($prop_ret_type, $prop_name)),*
+                        ];
+
+                        unsafe {
+                           let j_object = env
+                              .call_static_method_unchecked(
+                                 class, *factory_method_id, factory_return_type.clone(), &args
+                              )
+                              .unwrap().l().unwrap();
+
+                           ::panoptiqon::jvm_type::JvmType::from_j_object(j_object)
+                        }
+                     }
+
+                     [<$type_name Inner>]::Uninit => {
+                        let jvm_ids = Self::prepare_ids(env);
+                        drop(lock);
+                        let mut lock = self.0.write().unwrap();
+                        *lock = jvm_ids;
+                        drop(lock);
+                        self.clone_into_jvm_from_jvm_type(env, $($prop_name),*)
+                     }
+                  }
+               }
+
+               $(
+                  $crate::convert_jvm_helper_prop!(
+                     $jvm_type,
+                     [<$type_name Inner>],
+                     [<$prop_name _id>],
+                     $prop_name,
+                     $prop_ret_type,
+                     $($prop_jvm_type,)?
+                     [<$prop_name _jvm_type>]
+                  );
+               )*
+            }
+         }
+      )*
+   };
+}
+
+#[macro_export]
+macro_rules! convert_jvm_helper_clone_param_type {
+   ($prop_ret_type:ty) => { $prop_ret_type };
+   ($prop_ret_type:ty, $prop_jvm_type:ty) => {
+      &(impl ::panoptiqon::convert_jvm::CloneIntoJvm<'local, $prop_jvm_type> + ?Sized)
+   };
+}
+
+#[macro_export]
+macro_rules! convert_jvm_helper_clone_arg_conversion {
+   ($jni_env:ident, $prop_name:ident, $prop_ret_type:ty) => { $prop_name };
+   ($jni_env:ident, $prop_name:ident, $prop_ret_type:ty, $prop_jvm_type:ty) => {
+      ::panoptiqon::convert_jvm::CloneIntoJvm::clone_into_jvm($prop_name, $jni_env)
+   };
+}
+
+#[macro_export]
+macro_rules! convert_jvm_helper_clone_jvm_param_type {
+   ($prop_ret_type:ty) => { $prop_ret_type };
+   ($prop_ret_type:ty, $prop_jvm_type:ty) => { $prop_jvm_type };
+}
+
+#[macro_export]
+macro_rules! convert_jvm_helper_prop {
+   (
+      $jvm_type:ty, $helper_inner:ident, $helper_inner_prop_id:ident,
+      $prop_name:ident, $prop_ret_type:tt, $jvm_prop:ident
+   ) => {
+      fn $prop_name<'local>(
+         &self,
+         env: &mut ::jni::JNIEnv<'local>,
+         instance: &$jvm_type
+      ) -> $prop_ret_type {
+         use std::ops::Deref;
+         use $crate::from_jvalue;
+
+         let lock = self.0.read().unwrap();
+         match lock.deref() {
+            $helper_inner::JvmIds {
+               $helper_inner_prop_id: (getter_id, return_type),
+               ..
+            } => {
+               let jvalue = unsafe {
+                  env.call_method_unchecked(
+                        ::panoptiqon::jvm_type::JvmType::j_object(instance),
+                        getter_id,
+                        return_type.clone(),
+                        &[]
+                     )
+                     .unwrap()
+               };
+
+               from_jvalue!($prop_ret_type, jvalue)
+            }
+
+            $helper_inner::Uninit => {
+               let jvm_ids = Self::prepare_ids(env);
+               drop(lock);
+               let mut lock = self.0.write().unwrap();
+               *lock = jvm_ids;
+               drop(lock);
+               self.$prop_name(env, instance)
+            }
          }
       }
-   }
+   };
+   (
+      $jvm_type:ty, $helper_inner:ident, $helper_inner_prop_id:ident,
+      $prop_name:ident, $prop_ret_type:ty, $prop_jvm_type:ty, $jvm_prop:ident
+   ) => {
+      fn $prop_name<'local>(
+         &self,
+         env: &mut ::jni::JNIEnv<'local>,
+         instance: &$jvm_type
+      ) -> $prop_ret_type {
+         let jvm_type = self.$jvm_prop(env, instance);
+         ::panoptiqon::convert_jvm::CloneFromJvm::clone_from_jvm(env, &jvm_type)
+      }
+
+      fn $jvm_prop<'local>(
+         &self,
+         env: &mut ::jni::JNIEnv<'local>,
+         instance: &$jvm_type
+      ) -> $prop_jvm_type {
+         use std::ops::Deref;
+         use $crate::from_jvalue;
+
+         let lock = self.0.read().unwrap();
+         match lock.deref() {
+            $helper_inner::JvmIds {
+               $helper_inner_prop_id: (getter_id, return_type),
+               ..
+            } => {
+               let jvalue = unsafe {
+                  env.call_method_unchecked(
+                        ::panoptiqon::jvm_type::JvmType::j_object(instance),
+                        getter_id,
+                        return_type.clone(),
+                        &[]
+                     )
+                     .unwrap()
+               };
+
+               from_jvalue!($prop_jvm_type, jvalue)
+            }
+
+            $helper_inner::Uninit => {
+               let jvm_ids = Self::prepare_ids(env);
+               drop(lock);
+               let mut lock = self.0.write().unwrap();
+               *lock = jvm_ids;
+               drop(lock);
+               self.$jvm_prop(env, instance)
+            }
+         }
+      }
+   };
+}
+
+#[macro_export]
+macro_rules! jvalue {
+    (   i8, $value:expr) => { ::jni::sys::jvalue { b: $value } };
+    (  i16, $value:expr) => { ::jni::sys::jvalue { s: $value } };
+    (  i32, $value:expr) => { ::jni::sys::jvalue { i: $value } };
+    (  i64, $value:expr) => { ::jni::sys::jvalue { j: $value } };
+    (  f32, $value:expr) => { ::jni::sys::jvalue { f: $value } };
+    (  f64, $value:expr) => { ::jni::sys::jvalue { d: $value } };
+    ( bool,        true) => { ::jni::sys::jvalue { z: ::jni::sys::JNI_TRUE  } };
+    ( bool,       false) => { ::jni::sys::jvalue { z: ::jni::sys::JNI_FALSE } };
+    (bool, $value:expr) => {
+       ::jni::sys::jvalue {
+          z: if $value { ::jni::sys::JNI_TRUE } else { ::jni::sys::JNI_FALSE }
+       }
+    };
+    ($_:ty, $value:expr) => {
+       ::jni::sys::jvalue {
+          l: ::panoptiqon::jvm_type::JvmType::j_object(&$value).as_raw()
+       }
+    };
+}
+
+#[macro_export]
+macro_rules! from_jvalue {
+    (  i8, $value:expr) => { $value.b().unwrap() };
+    ( i16, $value:expr) => { $value.s().unwrap() };
+    ( i32, $value:expr) => { $value.i().unwrap() };
+    ( i64, $value:expr) => { $value.j().unwrap() };
+    ( f32, $value:expr) => { $value.f().unwrap() };
+    ( f64, $value:expr) => { $value.d().unwrap() };
+    (bool, $value:expr) => { $value.z().unwrap() };
+    ($_:ty, $value:expr) => {
+       {
+          let j_object = $value.l().unwrap();
+          unsafe { ::panoptiqon::jvm_type::JvmType::from_j_object(j_object) }
+       }
+    };
 }
 
 #[cfg(feature="jni-test")]
@@ -200,130 +511,125 @@ mod jni_tests {
    use std::ops::Deref;
 
    use jni::JNIEnv;
-   use jni::objects::{JIntArray, JObject};
-   use jni::sys::{JNI_FALSE, jvalue};
+   use jni::objects::JObject;
+   use paste::paste;
+   use panoptiqon::jvm_type;
+   use panoptiqon::jvm_types::JvmString;
 
-   use panoptiqon::convert_jvm::CloneFromJvm;
-   use super::{JvmInstantiationStrategy, ConvertJniHelper, ConvertJniHelperInner};
-
-   fn create_helper() -> ConvertJniHelper<'static, 10> {
-      ConvertJniHelper::new(
-         "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity",
-         JvmInstantiationStrategy::ViaConstructor("(ZBSIJFDCLjava/lang/String;[I)V"),
-         [
-            ("getZ", "Z"),
-            ("getB", "B"),
-            ("getS", "S"),
-            ("getI", "I"),
-            ("getJ", "J"),
-            ("getF", "F"),
-            ("getD", "D"),
-            ("getC", "C"),
-            ("getStr", "Ljava/lang/String;"),
-            ("getArr", "[I"),
-         ]
-      )
+   jvm_type! {
+      JvmTestEntity,
    }
+
+   macro_rules! helper {
+      ($name:ident) => {
+         paste! {
+            convert_jvm_helper! {
+               #[allow(non_upper_case_globals, non_camel_case_types)]
+               static $name = impl struct [<$name Helper>]
+                  where jvm_class: "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity"
+               {
+                  fn clone_into_jvm<'local>(..) -> JvmTestEntity<'local>
+                     where jvm_constructor: "(ZBSIJFDLjava/lang/String;)V";
+
+                  fn z  <'local>(..) -> bool   where jvm_getter_method: "getZ",   jvm_return_type: "Z";
+                  fn b  <'local>(..) -> i8     where jvm_getter_method: "getB",   jvm_return_type: "B";
+                  fn s  <'local>(..) -> i16    where jvm_getter_method: "getS",   jvm_return_type: "S";
+                  fn i  <'local>(..) -> i32    where jvm_getter_method: "getI",   jvm_return_type: "I";
+                  fn j  <'local>(..) -> i64    where jvm_getter_method: "getJ",   jvm_return_type: "J";
+                  fn f  <'local>(..) -> f32    where jvm_getter_method: "getF",   jvm_return_type: "F";
+                  fn d  <'local>(..) -> f64    where jvm_getter_method: "getD",   jvm_return_type: "D";
+                  fn str<'local>(..) -> String where jvm_type: JvmString<'local>, jvm_getter_method: "getStr", jvm_return_type: "Ljava/lang/String;";
+               }
+            }
+         }
+      };
+   }
+
+   helper!(variantStrsOnInit_helper);
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantStrsOnInit(
       _env: JNIEnv,
       _obj: JObject
    ) {
-      let helper = create_helper();
-      let helper_inner= helper.0.read().unwrap();
-      assert!(matches!(helper_inner.deref(), &ConvertJniHelperInner::SignatureStrs { .. }));
+      let helper_inner= variantStrsOnInit_helper.0.read().unwrap();
+      assert!(matches!(helper_inner.deref(), &variantStrsOnInit_helperHelperInner::Uninit));
    }
+
+   helper!(variantJvmIdsAfterCloneIntoJvm_helper);
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantJvmIdsAfterCloneIntoJvm(
       mut env: JNIEnv,
       _obj: JObject
    ) {
-      let helper = create_helper();
+      variantJvmIdsAfterCloneIntoJvm_helper.clone_into_jvm(
+         &mut env,
+         false,
+         0i8,
+         0i16,
+         0i32,
+         0i64,
+         0.0f32,
+         0.0f64,
+         "",
+      );
 
-      let l = env.new_string("").unwrap();
-      let a = env.new_int_array(0).unwrap();
-
-      helper.clone_into_jvm(&mut env, &[
-         jvalue { z: JNI_FALSE },
-         jvalue { b: 0 },
-         jvalue { s: 0 },
-         jvalue { i: 0 },
-         jvalue { j: 0 },
-         jvalue { f: 0.0 },
-         jvalue { d: 0.0 },
-         jvalue { c: 'a' as u16  },
-         jvalue { l: l.into_raw() },
-         jvalue { l: a.into_raw() },
-      ]);
-
-      let helper_inner= helper.0.read().unwrap();
-      assert!(matches!(helper_inner.deref(), &ConvertJniHelperInner::JvmIds { .. }));
+      let helper_inner= variantJvmIdsAfterCloneIntoJvm_helper.0.read().unwrap();
+      assert!(matches!(helper_inner.deref(), &variantJvmIdsAfterCloneIntoJvm_helperHelperInner::JvmIds { .. }));
    }
 
+   helper!(variantJvmIdsAfterGet_helper);
+
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantJvmIdsAfterGet_00024assert(
-      mut env: JNIEnv,
-      _obj: JObject,
-      jvm_entity: JObject
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_variantJvmIdsAfterGet_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      jvm_entity: JvmTestEntity<'local>
    ) {
-      let helper = create_helper();
+      variantJvmIdsAfterGet_helper.z(&mut env, &jvm_entity);
 
-      helper.get(&mut env, &jvm_entity, 0);
-
-      let helper_inner= helper.0.read().unwrap();
-      assert!(matches!(helper_inner.deref(), &ConvertJniHelperInner::JvmIds { .. }));
+      let helper_inner = variantJvmIdsAfterGet_helper.0.read().unwrap();
+      assert!(matches!(helper_inner.deref(), &variantJvmIdsAfterGet_helperHelperInner::JvmIds { .. }));
    }
 
+   helper!(cloneIntoJvm_helper);
+
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_CloneIntoJvm_00024createEntity<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_cloneIntoJvm_00024createEntity<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JObject<'local> {
-      let helper = create_helper();
-
-      let l = env.new_string("9012345").unwrap();
-      let a = env.new_int_array(5).unwrap();
-      env.set_int_array_region(&a, 0, &[6, 7, 8, 9, 0]).unwrap();
-
-      helper.clone_into_jvm(&mut env, &[
-         jvalue { z: JNI_FALSE },
-         jvalue { b: 0 },
-         jvalue { s: 1 },
-         jvalue { i: 2 },
-         jvalue { j: 3 },
-         jvalue { f: 4.5 },
-         jvalue { d: 6.75 },
-         jvalue { c: '8' as u16 },
-         jvalue { l: l.into_raw() },
-         jvalue { l: a.into_raw() },
-      ])
+   ) -> JvmTestEntity<'local> {
+      cloneIntoJvm_helper.clone_into_jvm(
+         &mut env,
+         false,
+         0i8,
+         1i16,
+         2i32,
+         3i64,
+         4.5f32,
+         6.75f64,
+         "9012345",
+      )
    }
 
+   helper!(cloneFromJvm_helper);
+
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_CloneFromJvm_00024assert(
-      mut env: JNIEnv,
-      _obj: JObject,
-      jvm_entity: JObject
+   extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_ConvertJniHelperTest_cloneFromJvm_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      jvm_entity: JvmTestEntity<'local>
    ) {
-      let helper = create_helper();
+      let z = cloneFromJvm_helper.z(&mut env, &jvm_entity);
+      let b = cloneFromJvm_helper.b(&mut env, &jvm_entity);
+      let s = cloneFromJvm_helper.s(&mut env, &jvm_entity);
+      let i = cloneFromJvm_helper.i(&mut env, &jvm_entity);
+      let j = cloneFromJvm_helper.j(&mut env, &jvm_entity);
+      let f = cloneFromJvm_helper.f(&mut env, &jvm_entity);
+      let d = cloneFromJvm_helper.d(&mut env, &jvm_entity);
 
-      let z = helper.get(&mut env, &jvm_entity, 0).z().unwrap();
-      let b = helper.get(&mut env, &jvm_entity, 1).b().unwrap();
-      let s = helper.get(&mut env, &jvm_entity, 2).s().unwrap();
-      let i = helper.get(&mut env, &jvm_entity, 3).i().unwrap();
-      let j = helper.get(&mut env, &jvm_entity, 4).j().unwrap();
-      let f = helper.get(&mut env, &jvm_entity, 5).f().unwrap();
-      let d = helper.get(&mut env, &jvm_entity, 6).d().unwrap();
-      let c = helper.get(&mut env, &jvm_entity, 7).c().unwrap();
-
-      let str = helper.get(&mut env, &jvm_entity, 8).l().unwrap();
-      let str = unsafe { String::clone_from_j_object(&mut env, &str) };
-
-      let arr = helper.get(&mut env, &jvm_entity, 9).l().unwrap();
-      let mut buf = [0; 5];
-      env.get_int_array_region(JIntArray::from(arr), 0, &mut buf).unwrap();
+      let str = cloneFromJvm_helper.str(&mut env, &jvm_entity);
 
       assert_eq!(false, z);
       assert_eq!(0, b);
@@ -332,8 +638,6 @@ mod jni_tests {
       assert_eq!(3, j);
       assert_eq!(4.5, f);
       assert_eq!(6.75, d);
-      assert_eq!('8' as u16, c);
       assert_eq!("9012345".to_string(), str);
-      assert_eq!([6, 7, 8, 9, 0], buf);
    }
 }

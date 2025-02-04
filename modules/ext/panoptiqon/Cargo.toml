@@ -27,4 +27,7 @@ jni-test = ["jvm", "panoptiqon/jni-test"]
 anyhow.workspace = true
 serde.workspace = true
 jni = { workspace = true, optional = true }
+
+paste.workspace = true
+
 panoptiqon.workspace = true

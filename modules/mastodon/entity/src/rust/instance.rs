@@ -20,9 +20,10 @@ use url::Url;
 
 #[cfg(feature = "jvm")]
 use {
-   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
+   ext_panoptiqon::convert_jvm_helper,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
+   panoptiqon::jvm_types::JvmString,
    crate::jvm_types::JvmInstance,
 };
 
@@ -34,57 +35,56 @@ pub struct Instance {
 }
 
 #[cfg(feature = "jvm")]
-static HELPER: ConvertJniHelper<3> = ConvertJniHelper::new(
-   "com/wcaokaze/probosqis/mastodon/entity/Instance",
-   JvmInstantiationStrategy::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;J)V"),
-   [
-      ("getUrl",                           "Ljava/lang/String;"),
-      ("getVersion",                       "Ljava/lang/String;"),
-      ("getVersionCheckedTimeEpochMillis", "J"),
-   ]
-);
+convert_jvm_helper! {
+   static HELPER = impl struct ConvertJniHelper
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Instance"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmInstance<'local>
+         where jvm_constructor: "(Ljava/lang/String;Ljava/lang/String;J)V";
+
+      fn url<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getUrl",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn version<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getVersion",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn version_checked_time_epoch_millis<'local>(..) -> i64
+         where jvm_getter_method: "getVersionCheckedTimeEpochMillis",
+               jvm_return_type: "J";
+   }
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmInstance<'local>> for Instance {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmInstance<'local> {
-      use jni::sys::jvalue;
-      use panoptiqon::jvm_type::JvmType;
-
-      let url                               = self.url.to_string().clone_into_jvm(env);
-      let version                           = self.version        .clone_into_jvm(env);
-      let version_checked_time_epoch_millis = self.version_checked_time.timestamp_millis();
-
-      let args = [
-         jvalue { l: url    .j_object().as_raw() },
-         jvalue { l: version.j_object().as_raw() },
-         jvalue { j: version_checked_time_epoch_millis },
-      ];
-
-      let j_object = HELPER.clone_into_jvm(env, &args);
-      unsafe { JvmInstance::from_j_object(j_object) }
+      HELPER.clone_into_jvm(
+         env,
+         self.url.as_str(),
+         &self.version,
+         self.version_checked_time.timestamp_millis(),
+      )
    }
 }
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneFromJvm<'local, JvmInstance<'local>> for Instance {
    fn clone_from_jvm(
-      env: &mut JNIEnv,
+      env: &mut JNIEnv<'local>,
       jvm_instance: &JvmInstance<'local>
    ) -> Instance {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::JvmString;
-
-      let url                               = HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let version                           = HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-      let version_checked_time_epoch_millis = HELPER.get(env, jvm_instance.j_object(), 2).j().unwrap();
-
-      let url = unsafe { JvmString::from_j_object(url) };
-      let version = unsafe { JvmString::from_j_object(version) };
+      let url                               = HELPER.url                              (env, jvm_instance);
+      let version                           = HELPER.version                          (env, jvm_instance);
+      let version_checked_time_epoch_millis = HELPER.version_checked_time_epoch_millis(env, jvm_instance);
 
       Instance {
-         url:     String::clone_from_jvm(env, &url).parse().unwrap(),
-         version: String::clone_from_jvm(env, &version),
-         version_checked_time: DateTime::from_timestamp_millis(version_checked_time_epoch_millis).unwrap(),
+         url: url.parse().unwrap(),
+         version,
+         version_checked_time:
+            DateTime::from_timestamp_millis(version_checked_time_epoch_millis).unwrap(),
       }
    }
 }

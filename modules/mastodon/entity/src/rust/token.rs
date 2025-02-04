@@ -21,10 +21,11 @@ use crate::instance::Instance;
 
 #[cfg(feature = "jvm")]
 use {
-   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
+   ext_panoptiqon::convert_jvm_helper,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   crate::jvm_types::JvmToken,
+   panoptiqon::jvm_types::{JvmCache, JvmString},
+   crate::jvm_types::{JvmInstance, JvmToken},
 };
 
 #[derive(Deserialize)]
@@ -37,44 +38,56 @@ pub struct Token {
 }
 
 #[cfg(feature = "jvm")]
-static HELPER: ConvertJniHelper<5> = ConvertJniHelper::new(
-   "com/wcaokaze/probosqis/mastodon/entity/Token",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V"
-   ),
-   [
-      ("getInstance",             "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getAccessToken",          "Ljava/lang/String;"),
-      ("getTokenType",            "Ljava/lang/String;"),
-      ("getScope",                "Ljava/lang/String;"),
-      ("getCreatedAtEpochMillis", "J"),
-   ]
-);
+convert_jvm_helper! {
+   static HELPER = impl struct TokenConvertHelper
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Token"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmToken<'local>
+         where jvm_constructor: "(\
+            Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            J\
+         )V";
+
+      fn instance<'local>(..) -> Cache<Instance>
+         where jvm_type: JvmCache<'local, JvmInstance<'local>>,
+               jvm_getter_method: "getInstance",
+               jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
+
+      fn access_token<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getAccessToken",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn token_type<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getTokenType",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn scope<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getScope",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn created_at_epoch_millis<'local>(..) -> i64
+         where jvm_getter_method: "getCreatedAtEpochMillis",
+               jvm_return_type: "J";
+   }
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmToken<'local>> for Token {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmToken<'local> {
-      use jni::sys::jvalue;
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::JvmCache;
-      use crate::jvm_types::JvmInstance;
-
-      let instance: JvmCache<JvmInstance> = self.instance    .clone_into_jvm(env);
-      let access_token                    = self.access_token.clone_into_jvm(env);
-      let token_type                      = self.token_type  .clone_into_jvm(env);
-      let scope                           = self.scope       .clone_into_jvm(env);
-      let created_at_epoch_millis         = self.created_at.timestamp_millis();
-
-      let args = [
-         jvalue { l: instance    .j_object().as_raw() },
-         jvalue { l: access_token.j_object().as_raw() },
-         jvalue { l: token_type  .j_object().as_raw() },
-         jvalue { l: scope       .j_object().as_raw() },
-         jvalue { j: created_at_epoch_millis          },
-      ];
-
-      let j_object = HELPER.clone_into_jvm(env, &args);
-      unsafe { JvmToken::from_j_object(j_object) }
+      HELPER.clone_into_jvm(
+         env,
+         &self.instance,
+         &self.access_token,
+         &self.token_type,
+         &self.scope,
+         self.created_at.timestamp_millis(),
+      )
    }
 }
 
@@ -84,26 +97,17 @@ impl<'local> CloneFromJvm<'local, JvmToken<'local>> for Token {
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmToken<'local>
    ) -> Token {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::{JvmCache, JvmString};
-      use crate::jvm_types::JvmInstance;
-
-      let instance                = HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let access_token            = HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-      let token_type              = HELPER.get(env, jvm_instance.j_object(), 2).l().unwrap();
-      let scope                   = HELPER.get(env, jvm_instance.j_object(), 3).l().unwrap();
-      let created_at_epoch_millis = HELPER.get(env, jvm_instance.j_object(), 4).j().unwrap();
-
-      let instance     = unsafe { JvmCache::<JvmInstance>::from_j_object(instance)     };
-      let access_token = unsafe { JvmString              ::from_j_object(access_token) };
-      let token_type   = unsafe { JvmString              ::from_j_object(token_type)   };
-      let scope        = unsafe { JvmString              ::from_j_object(scope)        };
+      let instance                = HELPER.instance               (env, jvm_instance);
+      let access_token            = HELPER.access_token           (env, jvm_instance);
+      let token_type              = HELPER.token_type             (env, jvm_instance);
+      let scope                   = HELPER.scope                  (env, jvm_instance);
+      let created_at_epoch_millis = HELPER.created_at_epoch_millis(env, jvm_instance);
 
       Token {
-         instance:     Cache::<Instance>::clone_from_jvm(env, &instance),
-         access_token: String           ::clone_from_jvm(env, &access_token),
-         token_type:   String           ::clone_from_jvm(env, &token_type),
-         scope:        String           ::clone_from_jvm(env, &scope),
+         instance,
+         access_token,
+         token_type,
+         scope,
          created_at: DateTime::from_timestamp_millis(created_at_epoch_millis).unwrap(),
       }
    }

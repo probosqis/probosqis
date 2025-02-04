@@ -58,11 +58,13 @@ mod jvm {
       env: &mut JNIEnv<'local>,
       server_url: JvmString<'local>
    ) -> anyhow::Result<JvmFediverseSoftware<'local>> {
+      use chrono::Utc;
       use ext_reqwest::CLIENT;
       use anyhow::anyhow;
-      use nodeinfo_entity::fediverse_software;
+      use mastodon_entity::instance::Instance;
+      use nodeinfo_entity::fediverse_software::FediverseSoftware;
       use nodeinfo_webapi::entity::node_info::{NodeInfo, Software};
-      use panoptiqon::convert_jvm::CloneFromJvm;
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
       use url::Url;
 
       let server_url = String::clone_from_jvm(env, &server_url);
@@ -80,14 +82,23 @@ mod jvm {
 
       name.make_ascii_lowercase();
 
-      if name == "mastodon" {
-         let jvm_instance = fediverse_software::instantiate_mastodon(
-            env, server_url.as_str(), &version);
-         Ok(jvm_instance)
+      let fediverse_software = if name == "mastodon" {
+         FediverseSoftware::Mastodon {
+            instance: Instance {
+               url: server_url,
+               version,
+               version_checked_time: Utc::now(),
+            },
+         }
       } else {
-         let jvm_instance = fediverse_software::instantiate_unsupported(env, &name, &version);
-         Ok(jvm_instance)
-      }
+         FediverseSoftware::Unsupported {
+            name,
+            version,
+         }
+      };
+
+      let jvm_instance = fediverse_software.clone_into_jvm(env);
+      Ok(jvm_instance)
    }
 
    fn get_node_info_url(

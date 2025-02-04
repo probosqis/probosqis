@@ -20,10 +20,11 @@ use crate::instance::Instance;
 
 #[cfg(feature = "jvm")]
 use {
-   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
+   ext_panoptiqon::convert_jvm_helper,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   crate::jvm_types::JvmApplication,
+   panoptiqon::jvm_types::{JvmCache, JvmNullable, JvmString},
+   crate::jvm_types::{JvmApplication, JvmInstance},
 };
 
 #[derive(Deserialize)]
@@ -36,75 +37,78 @@ pub struct Application {
 }
 
 #[cfg(feature = "jvm")]
-static HELPER: ConvertJniHelper<5> = ConvertJniHelper::new(
-   "com/wcaokaze/probosqis/mastodon/entity/Application",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
-   ),
-   [
-      ("getInstance",     "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getName",         "Ljava/lang/String;"),
-      ("getWebsite",      "Ljava/lang/String;"),
-      ("getClientId",     "Ljava/lang/String;"),
-      ("getClientSecret", "Ljava/lang/String;"),
-   ]
-);
+convert_jvm_helper! {
+   static HELPER = impl struct ApplicationConvertHelper
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Application"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmApplication<'local>
+         where jvm_constructor: "(\
+            Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+         )V";
+
+      fn instance<'local>(..) -> Cache<Instance>
+         where jvm_type: JvmCache<'local, JvmInstance<'local>>,
+               jvm_getter_method: "getInstance",
+               jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
+
+      fn name<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getName",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn website<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getWebsite",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn client_id<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getClientId",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn client_secret<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getClientSecret",
+               jvm_return_type: "Ljava/lang/String;";
+   }
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmApplication<'local>> for Application {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmApplication<'local> {
-      use jni::sys::jvalue;
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::JvmCache;
-      use crate::jvm_types::JvmInstance;
-
-      let instance: JvmCache<JvmInstance> = self.instance     .clone_into_jvm(env);
-      let name                            = self.name         .clone_into_jvm(env);
-      let website                         = self.website      .clone_into_jvm(env);
-      let client_id                       = self.client_id    .clone_into_jvm(env);
-      let client_secret                   = self.client_secret.clone_into_jvm(env);
-
-      let args = [
-         jvalue { l: instance     .j_object().as_raw() },
-         jvalue { l: name         .j_object().as_raw() },
-         jvalue { l: website      .j_object().as_raw() },
-         jvalue { l: client_id    .j_object().as_raw() },
-         jvalue { l: client_secret.j_object().as_raw() },
-      ];
-
-      let j_object = HELPER.clone_into_jvm(env, &args);
-      unsafe { JvmApplication::from_j_object(j_object) }
+      HELPER.clone_into_jvm(
+         env,
+         &self.instance,
+         &self.name,
+         &self.website,
+         &self.client_id,
+         &self.client_secret,
+      )
    }
 }
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneFromJvm<'local, JvmApplication<'local>> for Application {
    fn clone_from_jvm(
-      env: &mut JNIEnv,
+      env: &mut JNIEnv<'local>,
       jvm_instance: &JvmApplication<'local>
    ) -> Application {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::{JvmCache, JvmNullable, JvmString};
-      use crate::jvm_types::JvmInstance;
-
-      let instance      = HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let name          = HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-      let website       = HELPER.get(env, jvm_instance.j_object(), 2).l().unwrap();
-      let client_id     = HELPER.get(env, jvm_instance.j_object(), 3).l().unwrap();
-      let client_secret = HELPER.get(env, jvm_instance.j_object(), 4).l().unwrap();
-
-      let instance      = unsafe { JvmCache::<JvmInstance> ::from_j_object(instance)      };
-      let name          = unsafe { JvmString               ::from_j_object(name)          };
-      let website       = unsafe { JvmNullable::<JvmString>::from_j_object(website)       };
-      let client_id     = unsafe { JvmNullable::<JvmString>::from_j_object(client_id)     };
-      let client_secret = unsafe { JvmNullable::<JvmString>::from_j_object(client_secret) };
+      let instance      = HELPER.instance     (env, jvm_instance);
+      let name          = HELPER.name         (env, jvm_instance);
+      let website       = HELPER.website      (env, jvm_instance);
+      let client_id     = HELPER.client_id    (env, jvm_instance);
+      let client_secret = HELPER.client_secret(env, jvm_instance);
 
       Application {
-         instance:      Cache::<Instance>::clone_from_jvm(env, &instance),
-         name:          String           ::clone_from_jvm(env, &name),
-         website:       Option::<String> ::clone_from_jvm(env, &website),
-         client_id:     Option::<String> ::clone_from_jvm(env, &client_id),
-         client_secret: Option::<String> ::clone_from_jvm(env, &client_secret),
+         instance,
+         name,
+         website,
+         client_id,
+         client_secret,
       }
    }
 }

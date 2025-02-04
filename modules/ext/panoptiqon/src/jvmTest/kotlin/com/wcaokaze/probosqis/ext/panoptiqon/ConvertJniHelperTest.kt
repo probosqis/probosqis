@@ -18,7 +18,6 @@ package com.wcaokaze.probosqis.ext.panoptiqon
 
 import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class TestEntity(
@@ -29,9 +28,7 @@ class TestEntity(
    val j: Long,
    val f: Float,
    val d: Double,
-   val c: Char,
    val str: String,
-   val arr: IntArray,
 )
 
 class ConvertJniHelperTest {
@@ -47,15 +44,15 @@ class ConvertJniHelperTest {
 
    @Test
    fun variantJvmIdsAfterGet() {
-      val entity = TestEntity(false, 0, 0, 0, 0L, 0.0f, 0.0, 'a', "", IntArray(0))
+      val entity = TestEntity(false, 0, 0, 0, 0L, 0.0f, 0.0, "")
       `variantJvmIdsAfterGet$assert`(entity)
    }
 
    external fun `variantJvmIdsAfterGet$assert`(entity: TestEntity)
 
    @Test
-   fun CloneIntoJvm() {
-      val entity = `CloneIntoJvm$createEntity`()
+   fun cloneIntoJvm() {
+      val entity = `cloneIntoJvm$createEntity`()
       assertEquals(false, entity.z)
       assertEquals(0, entity.b)
       assertEquals(1, entity.s)
@@ -63,15 +60,13 @@ class ConvertJniHelperTest {
       assertEquals(3L, entity.j)
       assertEquals(4.5f, entity.f)
       assertEquals(6.75, entity.d)
-      assertEquals('8', entity.c)
       assertEquals("9012345", entity.str)
-      assertContentEquals(intArrayOf(6, 7, 8, 9, 0), entity.arr)
    }
 
-   external fun `CloneIntoJvm$createEntity`(): TestEntity
+   external fun `cloneIntoJvm$createEntity`(): TestEntity
 
    @Test
-   fun CloneFromJvm() {
+   fun cloneFromJvm() {
       val entity = TestEntity(
          z = false,
          b = 0,
@@ -80,12 +75,10 @@ class ConvertJniHelperTest {
          j = 3L,
          f = 4.5f,
          d = 6.75,
-         c = '8',
          str = "9012345",
-         arr = intArrayOf(6, 7, 8, 9, 0),
       )
-      `CloneFromJvm$assert`(entity)
+      `cloneFromJvm$assert`(entity)
    }
 
-   external fun `CloneFromJvm$assert`(entity: TestEntity)
+   external fun `cloneFromJvm$assert`(entity: TestEntity)
 }

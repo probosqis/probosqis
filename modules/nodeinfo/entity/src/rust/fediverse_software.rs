@@ -14,71 +14,105 @@
  * limitations under the License.
  */
 
+use mastodon_entity::instance::Instance;
+
 #[cfg(feature = "jvm")]
 use {
-   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
+   ext_panoptiqon::convert_jvm_helper,
    jni::JNIEnv,
+   mastodon_entity::jvm_types::JvmInstance,
+   panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
+   panoptiqon::jvm_type::JvmType,
+   panoptiqon::jvm_types::JvmString,
    crate::jvm_types::JvmFediverseSoftware,
 };
 
-#[cfg(feature = "jvm")]
-static HELPER_UNSUPPORTED: ConvertJniHelper<0> = ConvertJniHelper::new(
-   "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Ljava/lang/String;Ljava/lang/String;)V"
-   ),
-   []
-);
+pub enum FediverseSoftware {
+   Unsupported {
+      name: String,
+      version: String,
+   },
 
-#[cfg(feature = "jvm")]
-static HELPER_MASTODON: ConvertJniHelper<0> = ConvertJniHelper::new(
-   "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Ljava/lang/String;Ljava/lang/String;)V"
-   ),
-   []
-);
-
-#[cfg(feature = "jvm")]
-pub fn instantiate_unsupported<'local>(
-   env: &mut JNIEnv<'local>,
-   name: &str,
-   version: &str
-) -> JvmFediverseSoftware<'local> {
-   use jni::sys::jvalue;
-   use panoptiqon::convert_jvm::CloneIntoJvm;
-   use panoptiqon::jvm_type::JvmType;
-
-   let name = name.clone_into_jvm(env);
-   let version = version.clone_into_jvm(env);
-
-   let args = [
-      jvalue { l: name.j_string().as_raw() },
-      jvalue { l: version.j_string().as_raw() },
-   ];
-
-   let j_object = HELPER_UNSUPPORTED.clone_into_jvm(env, &args);
-   unsafe { JvmFediverseSoftware::from_j_object(j_object) }
+   Mastodon {
+      instance: Instance,
+   },
 }
 
 #[cfg(feature = "jvm")]
-pub fn instantiate_mastodon<'local>(
-   env: &mut JNIEnv<'local>,
-   instance_base_url: &str,
-   version: &str
-) -> JvmFediverseSoftware<'local> {
-   use jni::sys::jvalue;
-   use panoptiqon::convert_jvm::CloneIntoJvm;
-   use panoptiqon::jvm_type::JvmType;
+convert_jvm_helper! {
+   static HELPER_UNSUPPORTED = impl struct UnsupportedConvertHelper
+      where jvm_class: "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
+         where jvm_constructor: "(Ljava/lang/String;Ljava/lang/String;)V";
 
-   let instance_base_url = instance_base_url.clone_into_jvm(env);
-   let version = version.clone_into_jvm(env);
+      fn name<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getName",
+               jvm_return_type: "Ljava/lang/String;";
 
-   let args = [
-      jvalue { l: instance_base_url.j_string().as_raw() },
-      jvalue { l: version.j_string().as_raw() },
-   ];
+      fn version<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getVersion",
+               jvm_return_type: "Ljava/lang/String;";
+   }
 
-   let j_object = HELPER_MASTODON.clone_into_jvm(env, &args);
-   unsafe { JvmFediverseSoftware::from_j_object(j_object) }
+   static HELPER_MASTODON = impl struct MastodonConvertHelper
+      where jvm_class: "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
+         where jvm_constructor: "(Lcom/wcaokaze/probosqis/mastodon/entity/Instance;)V";
+
+      fn instance<'local>(..) -> Instance
+         where jvm_type: JvmInstance<'local>,
+               jvm_getter_method: "getInstance",
+               jvm_return_type: "Lcom/wcaokaze/probosqis/mastodon/entity/Instance;";
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmFediverseSoftware<'local>> for FediverseSoftware {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmFediverseSoftware<'local> {
+      match self {
+         FediverseSoftware::Unsupported { name, version } => {
+            HELPER_UNSUPPORTED.clone_into_jvm(
+               env,
+               name,
+               version,
+            )
+         }
+
+         FediverseSoftware::Mastodon { instance } => {
+            HELPER_MASTODON.clone_into_jvm(
+               env,
+               instance,
+            )
+         }
+      }
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmFediverseSoftware<'local>> for FediverseSoftware {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmFediverseSoftware<'local>
+   ) -> FediverseSoftware {
+      if env
+         .is_instance_of(
+            jvm_instance.j_object(),
+            "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon"
+         )
+         .unwrap()
+      {
+         let instance = HELPER_MASTODON.instance(env, jvm_instance);
+
+         FediverseSoftware::Mastodon { instance }
+      } else {
+         let name = HELPER_UNSUPPORTED.name(env, jvm_instance);
+         let version = HELPER_UNSUPPORTED.version(env, jvm_instance);
+
+         FediverseSoftware::Unsupported { name, version }
+      }
+   }
 }

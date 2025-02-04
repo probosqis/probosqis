@@ -20,11 +20,11 @@ use crate::instance::Instance;
 
 #[cfg(feature = "jvm")]
 use {
-   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
+   ext_panoptiqon::convert_jvm_helper,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   panoptiqon::jvm_types::JvmString,
-   crate::jvm_types::JvmRole,
+   panoptiqon::jvm_types::{JvmBoolean, JvmCache, JvmNullable, JvmString},
+   crate::jvm_types::{JvmInstance, JvmRole},
 };
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
@@ -41,86 +41,87 @@ pub struct Role {
 pub struct RoleId(pub String);
 
 #[cfg(feature = "jvm")]
-static HELPER: ConvertJniHelper<6> = ConvertJniHelper::new(
-   "com/wcaokaze/probosqis/mastodon/entity/Role",
-   JvmInstantiationStrategy::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/String;\
-      Ljava/lang/Boolean;)V"
-   ),
-   [
-      ("getInstance", "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getRawId", "Ljava/lang/String;"),
-      ("getName", "Ljava/lang/String;"),
-      ("getColor", "Ljava/lang/String;"),
-      ("getPermissions", "Ljava/lang/String;"),
-      ("isHighlighted", "Ljava/lang/Boolean;"),
-   ]
-);
+convert_jvm_helper! {
+   static HELPER = impl struct RoleConvertHelper
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Role"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmRole<'local>
+         where jvm_constructor: "(\
+            Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/Boolean;\
+         )V";
+
+      fn instance<'local>(..) -> Cache<Instance>
+         where jvm_type: JvmCache<'local, JvmInstance<'local>>,
+               jvm_getter_method: "getInstance",
+               jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
+
+      fn raw_id<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getRawId",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn name<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getName",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn color<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getColor",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn permissions<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getPermissions",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn is_highlighted<'local>(..) -> Option<bool>
+         where jvm_type: JvmNullable<'local, JvmBoolean<'local>>,
+               jvm_getter_method: "isHighlighted",
+               jvm_return_type: "Ljava/lang/Boolean;";
+   }
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmRole<'local>> for Role {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmRole<'local> {
-      use jni::sys::jvalue;
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::JvmCache;
-      use crate::jvm_types::JvmInstance;
-
-      let instance: JvmCache<JvmInstance> = self.instance      .clone_into_jvm(env);
-      let id                              = self.id            .clone_into_jvm(env);
-      let name                            = self.name          .clone_into_jvm(env);
-      let color                           = self.color         .clone_into_jvm(env);
-      let permissions                     = self.permissions   .clone_into_jvm(env);
-      let is_highlighted                  = self.is_highlighted.clone_into_jvm(env);
-
-      let args = [
-         jvalue { l: instance      .j_object().as_raw() },
-         jvalue { l: id            .j_object().as_raw() },
-         jvalue { l: name          .j_object().as_raw() },
-         jvalue { l: color         .j_object().as_raw() },
-         jvalue { l: permissions   .j_object().as_raw() },
-         jvalue { l: is_highlighted.j_object().as_raw() },
-      ];
-
-      let j_object = HELPER.clone_into_jvm(env, &args);
-      unsafe { JvmRole::from_j_object(j_object) }
+      HELPER.clone_into_jvm(
+         env,
+         &self.instance,
+         &self.id,
+         &self.name,
+         &self.color,
+         &self.permissions,
+         &self.is_highlighted,
+      )
    }
 }
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneFromJvm<'local, JvmRole<'local>> for Role {
    fn clone_from_jvm(
-      env: &mut JNIEnv,
+      env: &mut JNIEnv<'local>,
       jvm_instance: &JvmRole<'local>
    ) -> Role {
-      use panoptiqon::jvm_type::JvmType;
-      use panoptiqon::jvm_types::{JvmBoolean, JvmCache, JvmNullable};
-      use crate::jvm_types::JvmInstance;
-
-      let instance       = HELPER.get(env, jvm_instance.j_object(), 0).l().unwrap();
-      let id             = HELPER.get(env, jvm_instance.j_object(), 1).l().unwrap();
-      let name           = HELPER.get(env, jvm_instance.j_object(), 2).l().unwrap();
-      let color          = HELPER.get(env, jvm_instance.j_object(), 3).l().unwrap();
-      let permissions    = HELPER.get(env, jvm_instance.j_object(), 4).l().unwrap();
-      let is_highlighted = HELPER.get(env, jvm_instance.j_object(), 5).l().unwrap();
-
-      let instance       = unsafe { JvmCache::<JvmInstance>  ::from_j_object(instance)       };
-      let id             = unsafe { JvmNullable::<JvmString> ::from_j_object(id)             };
-      let name           = unsafe { JvmNullable::<JvmString> ::from_j_object(name)           };
-      let color          = unsafe { JvmNullable::<JvmString> ::from_j_object(color)          };
-      let permissions    = unsafe { JvmNullable::<JvmString> ::from_j_object(permissions)    };
-      let is_highlighted = unsafe { JvmNullable::<JvmBoolean>::from_j_object(is_highlighted) };
+      let instance       = HELPER.instance      (env, jvm_instance);
+      let raw_id         = HELPER.raw_id        (env, jvm_instance);
+      let name           = HELPER.name          (env, jvm_instance);
+      let color          = HELPER.color         (env, jvm_instance);
+      let permissions    = HELPER.permissions   (env, jvm_instance);
+      let is_highlighted = HELPER.is_highlighted(env, jvm_instance);
 
       Role {
-         instance:       Cache::<Instance>::clone_from_jvm(env, &instance),
-         id:             Option::<RoleId> ::clone_from_jvm(env, &id),
-         name:           Option::<String> ::clone_from_jvm(env, &name),
-         color:          Option::<String> ::clone_from_jvm(env, &color),
-         permissions:    Option::<String> ::clone_from_jvm(env, &permissions),
-         is_highlighted: Option::<bool>   ::clone_from_jvm(env, &is_highlighted),
+         instance,
+         id: raw_id.map(RoleId),
+         name,
+         color,
+         permissions,
+         is_highlighted,
       }
    }
 }

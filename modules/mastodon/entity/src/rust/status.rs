@@ -19,7 +19,7 @@ use serde::Deserialize;
 #[cfg(feature = "jvm")]
 use {
    jni::JNIEnv,
-   ext_panoptiqon::convert_jvm_helper::{ConvertJniHelper, JvmInstantiationStrategy},
+   ext_panoptiqon::convert_jvm_helper,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    crate::jvm_types::JvmStatusVisibility,
 };
@@ -33,29 +33,29 @@ pub enum StatusVisibility {
 }
 
 #[cfg(feature = "jvm")]
-static STATUS_VISIBILITY_HELPER: ConvertJniHelper<1> = ConvertJniHelper::new(
-   "com/wcaokaze/probosqis/mastodon/entity/Status$Visibility",
-   JvmInstantiationStrategy::ViaStaticMethod(
-      "fromInt", "(I)Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;"
-   ),
-   [
-      ("getValue", "I"),
-   ]
-);
+convert_jvm_helper! {
+   static STATUS_VISIBILITY_HELPER = impl struct StatusVisibilityConvertHelper
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Status$Visibility"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmStatusVisibility<'local>
+         where jvm_static_method: "fromInt",
+               jvm_signature: "(I)Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;";
+
+      fn value<'local>(..) -> i32
+         where jvm_getter_method: "getValue",
+               jvm_return_type: "I";
+   }
+}
 
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmStatusVisibility<'local>> for StatusVisibility {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmStatusVisibility<'local> {
-      use jni::sys::jvalue;
-      use panoptiqon::jvm_type::JvmType;
-
       let visibility = *self as i32;
-      let args = [
-         jvalue { i: visibility },
-      ];
 
-      let j_object = STATUS_VISIBILITY_HELPER.clone_into_jvm(env, &args);
-      unsafe { JvmStatusVisibility::from_j_object(j_object) }
+      STATUS_VISIBILITY_HELPER.clone_into_jvm(
+         env,
+         visibility,
+      )
    }
 }
 
@@ -65,9 +65,7 @@ impl<'local> CloneFromJvm<'local, JvmStatusVisibility<'local>> for StatusVisibil
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmStatusVisibility<'local>
    ) -> StatusVisibility {
-      use panoptiqon::jvm_type::JvmType;
-
-      let v = STATUS_VISIBILITY_HELPER.get(env, jvm_instance.j_object(), 0).i().unwrap();
+      let v = STATUS_VISIBILITY_HELPER.value(env, jvm_instance);
       match v {
          0 => StatusVisibility::Public,
          1 => StatusVisibility::Unlisted,
