@@ -401,7 +401,7 @@ convert_jvm_helper! {
       fn default_post_sensitivity<'local>(..) -> Option<bool>
          where jvm_type: JvmNullable<'local, JvmBoolean<'local>>,
                jvm_getter_method: "getDefaultPostSensitivity",
-               jvm_return_type: "Ljava/util/Boolean;";
+               jvm_return_type: "Ljava/lang/Boolean;";
 
       fn default_post_language<'local>(..) -> Option<String>
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
@@ -542,7 +542,6 @@ convert_jvm_helper! {
 #[cfg(feature = "jvm")]
 impl<'local> CloneIntoJvm<'local, JvmAccountProfileField<'local>> for AccountProfileField {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmAccountProfileField<'local> {
-
       ACCOUNT_PROFILE_FIELD_HELPER.clone_into_jvm(
          env,
          &self.name,
