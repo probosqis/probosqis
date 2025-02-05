@@ -15,6 +15,7 @@
 [workspace]
 members = [
     "modules/app",
+    "modules/entity",
     "modules/ext/kotlinTest",
     "modules/ext/panoptiqon",
     "modules/ext/reqwest",
@@ -44,6 +45,7 @@ reqwest.version = "0.12.7"
 reqwest.default-features = false
 reqwest.features = ["rustls-tls", "charset", "http2", "blocking", "json"]
 
+entity = { path = "modules/entity" }
 ext-kotlintest = { path = "modules/ext/kotlinTest" }
 ext_panoptiqon = { path = "modules/ext/panoptiqon" }
 ext_reqwest = { path = "modules/ext/reqwest" }
