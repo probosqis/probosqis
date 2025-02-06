@@ -14,22 +14,11 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.android.library
-   alias libs.plugins.compose.jb
-   alias libs.plugins.compose.compiler
-}
+package com.wcaokaze.probosqis.entity
 
-apply from: rootProject.file('gradle/setupModule.gradle')
+import androidx.compose.ui.graphics.ImageBitmap
 
-android {
-   namespace 'com.wcaokaze.probosqis.entity'
-}
-
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-      }
-   }
+expect class Image {
+   val url: String
+   val composeImageBitmap: ImageBitmap
 }

@@ -14,22 +14,10 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.android.library
-   alias libs.plugins.compose.jb
-   alias libs.plugins.compose.compiler
-}
+#![cfg(feature = "jvm")]
 
-apply from: rootProject.file('gradle/setupModule.gradle')
+use panoptiqon::jvm_type;
 
-android {
-   namespace 'com.wcaokaze.probosqis.entity'
-}
-
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-      }
-   }
+jvm_type! {
+   JvmImage,
 }
