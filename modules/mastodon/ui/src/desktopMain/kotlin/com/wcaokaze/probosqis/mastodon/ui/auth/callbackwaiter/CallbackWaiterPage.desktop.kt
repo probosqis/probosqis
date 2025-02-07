@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.LoadState
-import com.wcaokaze.probosqis.mastodon.entity.Token
+import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.resources.Strings
@@ -111,11 +111,12 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
             .verticalScroll(rememberScrollState())
             .windowInsetsPadding(windowInsets)
       ) {
-         val token = (state.tokenLoadState as? LoadState.Success)?.data
-         if (token == null) {
+         val credentialAccount
+            = (state.credentialAccountLoadState as? LoadState.Success)?.data
+         if (credentialAccount == null) {
             CallbackWaiterPageContent(
                state.inputCode,
-               state.tokenLoadState,
+               state.credentialAccountLoadState,
                onInputCodeChange = { newValue ->
                   state.inputCode = newValue
                },
@@ -128,29 +129,8 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                focusRequester
             )
          } else {
-            val format = remember(token) {
-               buildString {
-                  append("instance url: ")
-                  append(token.instance.value.url)
-                  appendLine()
-                  append("token type: ")
-                  append(token.tokenType)
-                  appendLine()
-                  append("scope: ")
-                  append(token.scope)
-                  appendLine()
-                  append("created at: ")
-                  append(token.createdAt)
-                  appendLine()
-                  append("access token: ")
-                  repeat(token.accessToken.length) {
-                     append("x")
-                  }
-               }
-            }
-
             Text(
-               format,
+               credentialAccount.account.value.username ?: "",
                modifier = Modifier.padding(16.dp)
             )
          }
@@ -164,7 +144,7 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
 @Composable
 private fun CallbackWaiterPageContent(
    inputCode: TextFieldValue,
-   tokenLoadState: LoadState<Token?>,
+   tokenLoadState: LoadState<CredentialAccount?>,
    onInputCodeChange: (TextFieldValue) -> Unit,
    onAuthorizationCodeTextFieldKeyboardActionGo: KeyboardActionScope.() -> Unit,
    onVerifyButtonClick: () -> Unit,

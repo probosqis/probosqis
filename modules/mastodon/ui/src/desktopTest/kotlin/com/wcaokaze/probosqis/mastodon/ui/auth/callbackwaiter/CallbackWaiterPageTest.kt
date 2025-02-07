@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,12 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
+import com.wcaokaze.probosqis.ext.compose.LoadState
+import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.Application
+import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Instance
+import com.wcaokaze.probosqis.mastodon.entity.Status
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
@@ -144,6 +148,34 @@ class CallbackWaiterPageTest {
       )
    }
 
+   private fun credentialAccount(instance: Cache<Instance>): CredentialAccount {
+      return CredentialAccount(
+         Cache(Account(
+            instance, Account.Id("id"), "username", "acct",
+            "https://example.com/",
+            "display name", "profile note",
+            "https://example.com/avatar/image",
+            "https://example.com/avatar/static/image",
+            "https://example.com/header/image",
+            "https://example.com/header/static/image",
+            isLocked = false, profileFields = emptyList(),
+            emojisInProfile = emptyList(), isBot = false, isGroup = false,
+            isDiscoverable = false, isNoindex = false, movedTo = null,
+            isSuspended = false, isLimited = false,
+            createdTime = LocalDateTime(2000, Month.JANUARY, 1, 0, 0).toInstant(TimeZone.UTC),
+            lastStatusPostTime = LocalDateTime(2000, Month.FEBRUARY, 1, 0, 0).toInstant(TimeZone.UTC),
+            statusCount = 3000L, followerCount = 100L, followeeCount = 200L,
+         )),
+         rawProfileNote = "profile note",
+         rawProfileFields = emptyList(),
+         defaultPostVisibility = Status.Visibility.PRIVATE,
+         defaultPostSensitivity = false,
+         defaultPostLanguage = "en",
+         followRequestCount = 0L,
+         role = null,
+      )
+   }
+
    @Test
    fun textField_focused_afterPageStarted() {
       rule.setContent {
@@ -234,6 +266,10 @@ class CallbackWaiterPageTest {
          every { getToken(any(), any()) } answers {
             token(firstArg<Application>().instance)
          }
+
+         every { getCredentialAccount(any()) } answers {
+            credentialAccount(firstArg<Token>().instance)
+         }
       }
 
       val page = CallbackWaiterPage("https://mastodon.social/")
@@ -254,6 +290,13 @@ class CallbackWaiterPageTest {
       }
 
       rule.onNodeWithText("Verify the Code").performClick()
+
+      rule.waitUntil {
+         val loadState = state.credentialAccountLoadState
+         loadState is LoadState.Success && loadState.data != null
+      }
+
+      rule.mainClock.advanceTimeBy(3000L)
 
       rule.runOnIdle {
          assertIs<DummyPage>(pageStackSlot.captured.head.page)
@@ -276,6 +319,10 @@ class CallbackWaiterPageTest {
          every { getToken(any(), any()) } answers {
             token(firstArg<Application>().instance)
          }
+
+         every { getCredentialAccount(any()) } answers {
+            credentialAccount(firstArg<Token>().instance)
+         }
       }
 
       val page = CallbackWaiterPage("https://mastodon.social/")
@@ -297,6 +344,13 @@ class CallbackWaiterPageTest {
 
       rule.onNodeWithText("Verify the Code").performClick()
 
+      rule.waitUntil {
+         val loadState = state.credentialAccountLoadState
+         loadState is LoadState.Success && loadState.data != null
+      }
+
+      rule.mainClock.advanceTimeBy(3000L)
+
       rule.runOnIdle {
          assertIs<DummyPage>(pageStackSlot.captured.head.page)
          assertNull(pageStackSlot.captured.tailOrNull())
@@ -315,6 +369,10 @@ class CallbackWaiterPageTest {
 
          every { getToken(any(), any()) } answers {
             token(firstArg<Application>().instance)
+         }
+
+         every { getCredentialAccount(any()) } answers {
+            credentialAccount(firstArg<Token>().instance)
          }
       }
 
@@ -336,6 +394,13 @@ class CallbackWaiterPageTest {
 
       rule.onNodeWithText("Verify the Code").performClick()
 
+      rule.waitUntil {
+         val loadState = state.credentialAccountLoadState
+         loadState is LoadState.Success && loadState.data != null
+      }
+
+      rule.mainClock.advanceTimeBy(3000L)
+
       rule.runOnIdle {
          verify {
             pageState.removeFromDeck()
@@ -356,6 +421,10 @@ class CallbackWaiterPageTest {
          every { getToken(any(), any()) } answers {
             token(firstArg<Application>().instance)
          }
+
+         every { getCredentialAccount(any()) } answers {
+            credentialAccount(firstArg<Token>().instance)
+         }
       }
 
       val page = CallbackWaiterPage("https://mastodon.social/")
@@ -375,6 +444,13 @@ class CallbackWaiterPageTest {
       }
 
       rule.onNodeWithText("Verify the Code").performClick()
+
+      rule.waitUntil {
+         val loadState = state.credentialAccountLoadState
+         loadState is LoadState.Success && loadState.data != null
+      }
+
+      rule.mainClock.advanceTimeBy(3000L)
 
       rule.runOnIdle {
          verify {

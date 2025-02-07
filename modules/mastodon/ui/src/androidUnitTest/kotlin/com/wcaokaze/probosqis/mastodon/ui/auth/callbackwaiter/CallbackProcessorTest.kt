@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
+import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import io.mockk.every
@@ -67,6 +68,7 @@ class CallbackProcessorTest {
       val appRepository: AppRepository = mockk {
          every { loadAppCache(any()) } returns Cache(mockk())
          every { getToken(any(), any()) } returns mockk()
+         every { getCredentialAccount(any()) } returns mockk()
       }
 
       startKoin {
@@ -94,9 +96,15 @@ class CallbackProcessorTest {
          CallbackProcessor.onNewIntent(intent, sequenceOf(pageState))
       }
 
+      rule.waitUntil {
+         val loadState = pageState.credentialAccountLoadState
+         loadState is LoadState.Success && loadState.data != null
+      }
+
       rule.runOnIdle {
          verify { appRepository.loadAppCache("https://example.com/") }
          verify { appRepository.getToken(any(), "abcdefghijk") }
+         verify { appRepository.getCredentialAccount(any()) }
       }
    }
 

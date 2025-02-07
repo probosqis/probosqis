@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -59,7 +58,7 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
             .verticalScroll(rememberScrollState())
             .windowInsetsPadding(windowInsets)
       ) {
-         when (val tokenLoadState = state.tokenLoadState) {
+         when (val credentialAccountLoadState = state.credentialAccountLoadState) {
             is LoadState.Loading -> {
                Text(
                   Strings.Mastodon.callbackWaiter.android.tokenLoadingMessage,
@@ -87,39 +86,18 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                }
             }
             is LoadState.Success -> {
-               val token = tokenLoadState.data
-               if (token == null) {
+               val credentialAccount = credentialAccountLoadState.data
+               if (credentialAccount == null) {
                   Text(
                      Strings.Mastodon.callbackWaiter.android.initialMessage,
                      fontSize = 15.sp,
                      modifier = Modifier.padding(16.dp)
                   )
                } else {
-                  val format = remember(token) {
-                     buildString {
-                        append("instance url: ")
-                        append(token.instance.value.url)
-                        appendLine()
-                        append("token type: ")
-                        append(token.tokenType)
-                        appendLine()
-                        append("scope: ")
-                        append(token.scope)
-                        appendLine()
-                        append("created at: ")
-                        append(token.createdAt)
-                        appendLine()
-                        append("access token: ")
-                        repeat(token.accessToken.length) {
-                           append("x")
-                        }
-                     }
-                  }
-
                   Text(
-                     format,
+                     credentialAccount.account.value.username ?: "",
                      fontSize = 15.sp,
-                     modifier = Modifier.padding(16.dp)
+                     modifier = Modifier.padding(8.dp)
                   )
                }
             }
