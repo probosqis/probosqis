@@ -39,3 +39,16 @@ pub mod account {
       &REPO
    }
 }
+
+pub mod account_icon {
+   use entity::image_bytes::ImageBytes;
+   use ext_panoptiqon::repository_holder::RepositoryHolder;
+
+   pub type Repository = panoptiqon::repository::Repository<ImageBytes>;
+
+   static REPO: RepositoryHolder<ImageBytes> = RepositoryHolder::new();
+
+   pub fn repo() -> &'static RepositoryHolder<ImageBytes> {
+      &REPO
+   }
+}

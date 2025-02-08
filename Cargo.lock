@@ -528,6 +528,7 @@ name = "mastodon_entity"
 version = "0.0.0"
 dependencies = [
  "chrono",
+ "entity",
  "ext_panoptiqon",
  "isolang",
  "jni",
@@ -542,6 +543,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "entity",
  "ext_panoptiqon",
  "ext_reqwest",
  "isolang",

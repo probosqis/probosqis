@@ -37,5 +37,6 @@ ext_reqwest.workspace = true
 panoptiqon.workspace = true
 ext_panoptiqon.workspace = true
 
+entity.workspace = true
 mastodon_entity.workspace = true
 mastodon_webapi.workspace = true

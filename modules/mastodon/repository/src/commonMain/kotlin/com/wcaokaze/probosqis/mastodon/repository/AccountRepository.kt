@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 wcaokaze
+ * Copyright 2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
-}
+package com.wcaokaze.probosqis.mastodon.repository
 
-apply from: rootProject.file('gradle/setupModule.gradle')
+import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.mastodon.entity.Account
+import com.wcaokaze.probosqis.panoptiqon.Cache
+import java.io.IOException
 
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         implementation project(':panoptiqon')
-         implementation project(':modules:entity')
-         implementation project(':modules:ext:panoptiqon')
-      }
-   }
+interface AccountRepository {
+   /**
+    * @throws IOException
+    */
+   fun getAccountIcon(account: Account): Cache<Image>
 }

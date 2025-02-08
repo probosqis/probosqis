@@ -33,3 +33,5 @@ url.workspace = true
 
 panoptiqon.workspace = true
 ext_panoptiqon.workspace = true
+
+entity.workspace = true
