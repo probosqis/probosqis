@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,6 +37,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,8 +49,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -129,10 +133,34 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                focusRequester
             )
          } else {
-            Text(
-               credentialAccount.account.value.username ?: "",
-               modifier = Modifier.padding(16.dp)
-            )
+            Row(
+               verticalAlignment = Alignment.CenterVertically,
+               modifier = Modifier.padding(8.dp)
+            ) {
+               val icon = state.credentialAccountIcon
+               if (icon != null) {
+                  Image(
+                     painter = BitmapPainter(icon.composeImageBitmap),
+                     contentDescription = credentialAccount.account.value.username,
+                     modifier = Modifier
+                        .padding(8.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .size(56.dp)
+                  )
+               } else {
+                  Spacer(
+                     modifier = Modifier
+                        .padding(8.dp)
+                        .size(56.dp)
+                  )
+               }
+
+               Text(
+                  credentialAccount.account.value.username ?: "",
+                  fontSize = 15.sp,
+                  modifier = Modifier.padding(8.dp)
+               )
+            }
          }
       }
    },

@@ -20,13 +20,16 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.wcaokaze.probosqis.entity.Image
 import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
+import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,9 +47,16 @@ class CallbackWaiterPage(
 
 abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
    private val appRepository: AppRepository by inject()
+   private val accountRepository: AccountRepository by inject()
 
    var credentialAccountLoadState: LoadState<CredentialAccount?>
       by mutableStateOf(LoadState.Success(null))
+
+   private var credentialAccountIconCache: Cache<Image>?
+      by mutableStateOf(null)
+
+   val credentialAccountIcon: Image?
+      get() = credentialAccountIconCache?.value
 
    fun saveAuthorizedAccountByCode(code: String) {
       if (credentialAccountLoadState is LoadState.Loading) { return }
@@ -62,6 +72,9 @@ abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>(
             }
             credentialAccountLoadState = LoadState.Success(credentialAccount)
 
+            credentialAccountIconCache = withContext(Dispatchers.IO) {
+               accountRepository.getAccountIcon(credentialAccount.account.value)
+            }
          } catch (e: Exception) {
             credentialAccountLoadState = LoadState.Error(e)
             return@launch

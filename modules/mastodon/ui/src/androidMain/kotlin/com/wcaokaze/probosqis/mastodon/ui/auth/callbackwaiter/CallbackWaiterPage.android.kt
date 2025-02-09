@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,9 +28,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -94,11 +99,34 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                      modifier = Modifier.padding(16.dp)
                   )
                } else {
-                  Text(
-                     credentialAccount.account.value.username ?: "",
-                     fontSize = 15.sp,
+                  Row(
+                     verticalAlignment = Alignment.CenterVertically,
                      modifier = Modifier.padding(8.dp)
-                  )
+                  ) {
+                     val icon = state.credentialAccountIcon
+                     if (icon != null) {
+                        Image(
+                           painter = BitmapPainter(icon.composeImageBitmap),
+                           contentDescription = credentialAccount.account.value.username,
+                           modifier = Modifier
+                              .padding(8.dp)
+                              .clip(MaterialTheme.shapes.small)
+                              .size(56.dp)
+                        )
+                     } else {
+                        Spacer(
+                           modifier = Modifier
+                              .padding(8.dp)
+                              .size(56.dp)
+                        )
+                     }
+
+                     Text(
+                        credentialAccount.account.value.username ?: "",
+                        fontSize = 15.sp,
+                        modifier = Modifier.padding(8.dp)
+                     )
+                  }
                }
             }
          }
