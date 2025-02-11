@@ -305,7 +305,9 @@ class CallbackWaiterPageTest {
 
       rule.onNodeWithText("Verify the Code").performClick()
 
-      rule.waitUntil { state.credentialAccountIcon != null }
+      rule.waitUntil {
+         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+      }
 
       rule.mainClock.advanceTimeBy(3000L)
 
@@ -365,7 +367,9 @@ class CallbackWaiterPageTest {
 
       rule.onNodeWithText("Verify the Code").performClick()
 
-      rule.waitUntil { state.credentialAccountIcon != null }
+      rule.waitUntil {
+         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+      }
 
       rule.mainClock.advanceTimeBy(3000L)
 
@@ -422,7 +426,9 @@ class CallbackWaiterPageTest {
 
       rule.onNodeWithText("Verify the Code").performClick()
 
-      rule.waitUntil { state.credentialAccountIcon != null }
+      rule.waitUntil {
+         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+      }
 
       rule.mainClock.advanceTimeBy(3000L)
 
@@ -480,7 +486,9 @@ class CallbackWaiterPageTest {
 
       rule.onNodeWithText("Verify the Code").performClick()
 
-      rule.waitUntil { state.credentialAccountIcon != null }
+      rule.waitUntil {
+         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+      }
 
       rule.mainClock.advanceTimeBy(3000L)
 

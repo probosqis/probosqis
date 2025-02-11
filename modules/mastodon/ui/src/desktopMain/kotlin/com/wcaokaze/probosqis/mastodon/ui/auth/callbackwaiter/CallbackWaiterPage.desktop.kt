@@ -69,9 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.CircularProgressCompleteIcon
-import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.mastodon.entity.Account
-import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.resources.Strings
@@ -114,7 +112,7 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
          val slideOffset = with (LocalDensity.current) { 64.dp.roundToPx() }
 
          AnimatedContent(
-            (state.credentialAccountLoadState as? LoadState.Success)?.data,
+            state.credentialAccountLoadState as? CredentialAccountLoadState.Success,
             transitionSpec = {
                val halfPi = PI.toFloat() / 2.0f
 
@@ -133,8 +131,8 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
 
                enter togetherWith exit
             }
-         ) { credentialAccount ->
-            if (credentialAccount == null) {
+         ) { credentialAccountLoadState ->
+            if (credentialAccountLoadState == null) {
                val focusRequester = remember { FocusRequester() }
                val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -164,14 +162,14 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                   windowInsets
                )
             } else {
-               val icon = state.credentialAccountIcon
-               if (icon != null) {
-                  VerifiedAccount(
-                     credentialAccount.account.value,
-                     icon.composeImageBitmap,
-                     windowInsets,
-                  )
-               }
+               val verifiedAccount = credentialAccountLoadState
+                  .credentialAccount.account.value
+               val verifiedAccountIcon = credentialAccountLoadState
+                  .credentialAccountIcon.value.composeImageBitmap
+
+               VerifiedAccount(
+                  verifiedAccount, verifiedAccountIcon, windowInsets
+               )
             }
          }
       }
@@ -184,7 +182,7 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
 @Composable
 private fun CallbackWaiterPageContent(
    inputCode: TextFieldValue,
-   tokenLoadState: LoadState<CredentialAccount?>,
+   tokenLoadState: CredentialAccountLoadState,
    onInputCodeChange: (TextFieldValue) -> Unit,
    onAuthorizationCodeTextFieldKeyboardActionGo: KeyboardActionScope.() -> Unit,
    onVerifyButtonClick: () -> Unit,
@@ -207,7 +205,7 @@ private fun CallbackWaiterPageContent(
       Spacer(Modifier.height(24.dp))
 
       AuthorizationCodeInputField(
-         inputCode, showError = tokenLoadState is LoadState.Error,
+         inputCode, showError = tokenLoadState is CredentialAccountLoadState.Error,
          onInputCodeChange, onAuthorizationCodeTextFieldKeyboardActionGo,
          focusRequester
       )
@@ -218,7 +216,7 @@ private fun CallbackWaiterPageContent(
             .align(Alignment.End)
             .padding(horizontal = 8.dp)
       ) {
-         val isLoading = tokenLoadState is LoadState.Loading
+         val isLoading = tokenLoadState is CredentialAccountLoadState.Loading
 
          if (isLoading) {
             CircularProgressIndicator(

@@ -21,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.entity.Image
-import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
@@ -45,38 +44,46 @@ class CallbackWaiterPage(
    val instanceBaseUrl: String
 ) : PPage()
 
+internal sealed class CredentialAccountLoadState {
+   data object Unloading : CredentialAccountLoadState()
+   data object Loading   : CredentialAccountLoadState()
+   data object Error     : CredentialAccountLoadState()
+
+   class Success(
+      val credentialAccount: CredentialAccount,
+      val credentialAccountIcon: Cache<Image>
+   ) : CredentialAccountLoadState()
+}
+
 abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
    private val appRepository: AppRepository by inject()
    private val accountRepository: AccountRepository by inject()
 
-   var credentialAccountLoadState: LoadState<CredentialAccount?>
-      by mutableStateOf(LoadState.Success(null))
-
-   private var credentialAccountIconCache: Cache<Image>?
-      by mutableStateOf(null)
-
-   val credentialAccountIcon: Image?
-      get() = credentialAccountIconCache?.value
+   internal var credentialAccountLoadState: CredentialAccountLoadState
+      by mutableStateOf(CredentialAccountLoadState.Unloading)
 
    fun saveAuthorizedAccountByCode(code: String) {
-      if (credentialAccountLoadState is LoadState.Loading) { return }
+      if (credentialAccountLoadState is CredentialAccountLoadState.Loading) {
+         return
+      }
 
-      credentialAccountLoadState = LoadState.Loading
+      credentialAccountLoadState = CredentialAccountLoadState.Loading
 
       pageStateScope.launch {
          try {
-            val credentialAccount = withContext(Dispatchers.IO) {
+            credentialAccountLoadState = withContext(Dispatchers.IO) {
                val application = appRepository.loadAppCache(page.instanceBaseUrl)
                val token = appRepository.getToken(application.value, code)
-               appRepository.getCredentialAccount(token)
-            }
-            credentialAccountLoadState = LoadState.Success(credentialAccount)
+               val credentialAccount = appRepository.getCredentialAccount(token)
+               val credentialAccountIcon
+                  = accountRepository.getAccountIcon(credentialAccount.account.value)
 
-            credentialAccountIconCache = withContext(Dispatchers.IO) {
-               accountRepository.getAccountIcon(credentialAccount.account.value)
+               CredentialAccountLoadState.Success(
+                  credentialAccount, credentialAccountIcon
+               )
             }
          } catch (e: Exception) {
-            credentialAccountLoadState = LoadState.Error(e)
+            credentialAccountLoadState = CredentialAccountLoadState.Error
             return@launch
          }
 

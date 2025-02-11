@@ -103,7 +103,9 @@ class CallbackProcessorTest {
          CallbackProcessor.onNewIntent(intent, sequenceOf(pageState))
       }
 
-      rule.waitUntil { pageState.credentialAccountIcon != null }
+      rule.waitUntil {
+         pageState.credentialAccountLoadState is CredentialAccountLoadState.Success
+      }
 
       rule.runOnIdle {
          verify { appRepository.loadAppCache("https://example.com/") }
