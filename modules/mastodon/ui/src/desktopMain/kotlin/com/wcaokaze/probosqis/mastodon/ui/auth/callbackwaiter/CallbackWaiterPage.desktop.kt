@@ -16,11 +16,19 @@
 
 package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 
-import androidx.compose.foundation.Image
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -37,7 +45,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,10 +56,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -61,7 +68,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.ext.compose.CircularProgressCompleteIcon
 import com.wcaokaze.probosqis.ext.compose.LoadState
+import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
@@ -69,6 +78,10 @@ import com.wcaokaze.probosqis.resources.Strings
 import com.wcaokaze.probosqis.resources.icons.Error
 import kotlinx.coroutines.delay
 import kotlinx.serialization.builtins.serializer
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.time.Duration.Companion.milliseconds
 
 @Stable
 actual class CallbackWaiterPageState : AbstractCallbackWaiterPageState() {
@@ -97,69 +110,68 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
       )
    },
    content = { _, state, windowInsets ->
-      val focusRequester = remember { FocusRequester() }
-      val keyboardController = LocalSoftwareKeyboardController.current
+      Box {
+         val slideOffset = with (LocalDensity.current) { 64.dp.roundToPx() }
 
-      LaunchedEffect(Unit) {
-         if (!state.hasKeyboardShown) {
-            state.hasKeyboardShown = true
+         AnimatedContent(
+            (state.credentialAccountLoadState as? LoadState.Success)?.data,
+            transitionSpec = {
+               val halfPi = PI.toFloat() / 2.0f
 
-            focusRequester.requestFocus()
-            delay(100L)
-            keyboardController?.show()
-         }
-      }
-
-      Box(
-         modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .windowInsetsPadding(windowInsets)
-      ) {
-         val credentialAccount
-            = (state.credentialAccountLoadState as? LoadState.Success)?.data
-         if (credentialAccount == null) {
-            CallbackWaiterPageContent(
-               state.inputCode,
-               state.credentialAccountLoadState,
-               onInputCodeChange = { newValue ->
-                  state.inputCode = newValue
-               },
-               onAuthorizationCodeTextFieldKeyboardActionGo = {
-                  state.saveAuthorizedAccount()
-               },
-               onVerifyButtonClick = {
-                  state.saveAuthorizedAccount()
-               },
-               focusRequester
-            )
-         } else {
-            Row(
-               verticalAlignment = Alignment.CenterVertically,
-               modifier = Modifier.padding(8.dp)
-            ) {
-               val icon = state.credentialAccountIcon
-               if (icon != null) {
-                  Image(
-                     painter = BitmapPainter(icon.composeImageBitmap),
-                     contentDescription = credentialAccount.account.value.username,
-                     modifier = Modifier
-                        .padding(8.dp)
-                        .clip(MaterialTheme.shapes.small)
-                        .size(56.dp)
+               val enter =
+                  fadeIn(tween(300, delayMillis = 100)) +
+                  slideInVertically(
+                     tween(300, delayMillis = 100, easing = { sin(it * halfPi) }),
+                     initialOffsetY = { slideOffset }
                   )
-               } else {
-                  Spacer(
-                     modifier = Modifier
-                        .padding(8.dp)
-                        .size(56.dp)
+               val exit =
+                  fadeOut(tween(300)) +
+                  slideOutVertically(
+                     tween(300, easing = { 1.0f - cos(it * halfPi) }),
+                     targetOffsetY = { -slideOffset }
                   )
+
+               enter togetherWith exit
+            }
+         ) { credentialAccount ->
+            if (credentialAccount == null) {
+               val focusRequester = remember { FocusRequester() }
+               val keyboardController = LocalSoftwareKeyboardController.current
+
+               LaunchedEffect(Unit) {
+                  if (!state.hasKeyboardShown) {
+                     state.hasKeyboardShown = true
+
+                     focusRequester.requestFocus()
+                     delay(100L)
+                     keyboardController?.show()
+                  }
                }
 
-               Text(
-                  credentialAccount.account.value.username ?: "",
-                  fontSize = 15.sp,
-                  modifier = Modifier.padding(8.dp)
+               CallbackWaiterPageContent(
+                  state.inputCode,
+                  state.credentialAccountLoadState,
+                  onInputCodeChange = { newValue ->
+                     state.inputCode = newValue
+                  },
+                  onAuthorizationCodeTextFieldKeyboardActionGo = {
+                     state.saveAuthorizedAccount()
+                  },
+                  onVerifyButtonClick = {
+                     state.saveAuthorizedAccount()
+                  },
+                  focusRequester,
+                  windowInsets
                )
+            } else {
+               val icon = state.credentialAccountIcon
+               if (icon != null) {
+                  VerifiedAccount(
+                     credentialAccount.account.value,
+                     icon.composeImageBitmap,
+                     windowInsets,
+                  )
+               }
             }
          }
       }
@@ -176,10 +188,14 @@ private fun CallbackWaiterPageContent(
    onInputCodeChange: (TextFieldValue) -> Unit,
    onAuthorizationCodeTextFieldKeyboardActionGo: KeyboardActionScope.() -> Unit,
    onVerifyButtonClick: () -> Unit,
-   focusRequester: FocusRequester
+   focusRequester: FocusRequester,
+   windowInsets: WindowInsets
 ) {
    Column(
       modifier = Modifier
+         .fillMaxSize()
+         .verticalScroll(rememberScrollState())
+         .windowInsetsPadding(windowInsets)
          .padding(16.dp)
    ) {
       Text(
@@ -227,6 +243,45 @@ private fun CallbackWaiterPageContent(
 }
 
 @Composable
+private fun VerifiedAccount(
+   verifiedAccount: Account,
+   verifiedAccountIcon: ImageBitmap,
+   windowInsets: WindowInsets
+) {
+   Column(
+      modifier = Modifier
+         .fillMaxSize()
+         .verticalScroll(rememberScrollState())
+         .windowInsetsPadding(windowInsets)
+         .padding(16.dp)
+   ) {
+      Row(
+         verticalAlignment = Alignment.CenterVertically,
+         modifier = Modifier.padding(horizontal = 8.dp)
+      ) {
+         CompleteIcon(
+            modifier = Modifier
+               .size(with (LocalDensity.current) { 22.sp.toDp() })
+         )
+
+         Text(
+            Strings.Mastodon.callbackWaiter.desktop.verifySucceedMessage,
+            fontSize = 15.sp,
+            modifier = Modifier.padding(8.dp)
+         )
+      }
+
+      VerifiedAccount(
+         verifiedAccount,
+         verifiedAccountIcon,
+         modifier = Modifier
+            .padding(vertical = 16.dp)
+            .fillMaxWidth()
+      )
+   }
+}
+
+@Composable
 private fun AuthorizationCodeInputField(
    inputCode: TextFieldValue,
    showError: Boolean,
@@ -270,4 +325,24 @@ private fun AuthorizationCodeInputField(
          .fillMaxWidth()
          .focusRequester(focusRequester)
    )
+}
+
+@Composable
+private fun CompleteIcon(
+   modifier: Modifier = Modifier
+) {
+   Box(
+      contentAlignment = Alignment.Center,
+      modifier = modifier
+   ) {
+      CircularProgressIndicator(
+         progress = { 1.0f },
+         strokeWidth = 1.5.dp
+      )
+
+      CircularProgressCompleteIcon(
+         animDelay = 700.milliseconds,
+         strokeWidth = 1.5.dp
+      )
+   }
 }
