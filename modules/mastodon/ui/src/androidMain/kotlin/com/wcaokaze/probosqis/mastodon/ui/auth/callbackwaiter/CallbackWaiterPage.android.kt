@@ -16,10 +16,26 @@
 
 package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 
-import androidx.compose.foundation.Image
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.ExperimentalTransitionApi
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberTransition
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,23 +43,27 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
-import com.wcaokaze.probosqis.ext.compose.LoadState
+import com.wcaokaze.probosqis.ext.compose.CircularProgressCompleteIcon
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.resources.Strings
 import com.wcaokaze.probosqis.resources.icons.Error
+import kotlin.time.Duration.Companion.milliseconds
 
 @Stable
 actual class CallbackWaiterPageState : AbstractCallbackWaiterPageState()
@@ -60,71 +80,121 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
    content = { _, state, windowInsets ->
       Box(
          modifier = Modifier
+            .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .windowInsetsPadding(windowInsets)
       ) {
-         when (val credentialAccountLoadState = state.credentialAccountLoadState) {
-            is LoadState.Loading -> {
-               Text(
-                  Strings.Mastodon.callbackWaiter.android.tokenLoadingMessage,
-                  modifier = Modifier.padding(16.dp)
-               )
+         AnimatedContent(
+            state.credentialAccountLoadState,
+            transitionSpec = {
+               EnterTransition.None togetherWith ExitTransition.None using null
             }
-            is LoadState.Error -> {
-               Row(
-                  modifier = Modifier.padding(16.dp)
-               ) {
-                  Icon(
-                     Icons.Outlined.Error,
-                     contentDescription = null,
+         ) { credentialAccountLoadState ->
+            val density = LocalDensity.current
+            val progressIndicatorSize = with (density) { 22.sp.toDp() }
+
+            when (credentialAccountLoadState) {
+               is CredentialAccountLoadState.Loading -> {
+                  Row(
+                     verticalAlignment = Alignment.CenterVertically,
                      modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .size(20.dp)
-                  )
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .padding(horizontal = 8.dp)
+                  ) {
+                     @OptIn(ExperimentalAnimationApi::class)
+                     CircularProgressIndicator(
+                        strokeWidth = 1.5.dp,
+                        modifier = Modifier
+                           .size(progressIndicatorSize)
+                           .animateEnterExit(
+                              enter = EnterTransition.None,
+                              exit = fadeOut(snap(600))
+                           )
+                     )
 
-                  Spacer(Modifier.width(8.dp))
-
-                  Text(
-                     Strings.Mastodon.callbackWaiter.android.errorMessage,
-                     fontSize = 15.sp
-                  )
+                     @OptIn(ExperimentalAnimationApi::class)
+                     Text(
+                        Strings.Mastodon.callbackWaiter.android.tokenLoadingMessage,
+                        fontSize = 15.sp,
+                        modifier = Modifier
+                           .padding(8.dp)
+                           .animateEnterExit(
+                              enter = EnterTransition.None,
+                              exit = fadeOut(snap())
+                           )
+                     )
+                  }
                }
-            }
-            is LoadState.Success -> {
-               val credentialAccount = credentialAccountLoadState.data
-               if (credentialAccount == null) {
+               is CredentialAccountLoadState.Error -> {
+                  Row(
+                     modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                  ) {
+                     Icon(
+                        Icons.Outlined.Error,
+                        contentDescription = null,
+                        modifier = Modifier
+                           .padding(vertical = 4.dp)
+                           .size(progressIndicatorSize)
+                     )
+
+                     Spacer(Modifier.width(8.dp))
+
+                     Text(
+                        Strings.Mastodon.callbackWaiter.android.errorMessage,
+                        fontSize = 15.sp
+                     )
+                  }
+               }
+               is CredentialAccountLoadState.Unloading -> {
                   Text(
                      Strings.Mastodon.callbackWaiter.android.initialMessage,
                      fontSize = 15.sp,
-                     modifier = Modifier.padding(16.dp)
+                     modifier = Modifier.fillMaxWidth()
+                        .padding(16.dp)
                   )
-               } else {
-                  Row(
-                     verticalAlignment = Alignment.CenterVertically,
-                     modifier = Modifier.padding(8.dp)
+               }
+               is CredentialAccountLoadState.Success -> {
+                  Column(
+                     modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                   ) {
-                     val icon = state.credentialAccountIcon
-                     if (icon != null) {
-                        Image(
-                           painter = BitmapPainter(icon.composeImageBitmap),
-                           contentDescription = credentialAccount.account.value.username,
+                     Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                     ) {
+                        CompleteIcon(
                            modifier = Modifier
-                              .padding(8.dp)
-                              .clip(MaterialTheme.shapes.small)
-                              .size(56.dp)
+                              .size(progressIndicatorSize)
                         )
-                     } else {
-                        Spacer(
-                           modifier = Modifier
-                              .padding(8.dp)
-                              .size(56.dp)
+
+                        Text(
+                           Strings.Mastodon.callbackWaiter.desktop.verifySucceedMessage,
+                           fontSize = 15.sp,
+                           modifier = Modifier.padding(8.dp)
                         )
                      }
 
-                     Text(
-                        credentialAccount.account.value.username ?: "",
-                        fontSize = 15.sp,
-                        modifier = Modifier.padding(8.dp)
+                     val verifiedAccount = credentialAccountLoadState
+                        .credentialAccount.account.value
+                     val verifiedAccountIcon = credentialAccountLoadState
+                        .credentialAccountIcon.value.composeImageBitmap
+
+                     val slideInOffset = with (density) { -32.dp.roundToPx() }
+
+                     @OptIn(ExperimentalAnimationApi::class)
+                     VerifiedAccount(
+                        verifiedAccount, verifiedAccountIcon,
+                        modifier = Modifier
+                           .padding(vertical = 16.dp)
+                           .fillMaxWidth()
+                           .animateEnterExit(
+                              enter = fadeIn() + slideInVertically { slideInOffset },
+                              exit = ExitTransition.None
+                           )
                      )
                   }
                }
@@ -136,3 +206,34 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
    pageTransitions = {
    }
 )
+
+@Composable
+private fun CompleteIcon(
+   modifier: Modifier = Modifier
+) {
+   Box(
+      contentAlignment = Alignment.Center,
+      modifier = modifier
+   ) {
+      val transitionState = remember {
+         MutableTransitionState(false).also { it.targetState = true }
+      }
+      @OptIn(ExperimentalTransitionApi::class)
+      val transition = rememberTransition(transitionState)
+      val alpha by transition.animateFloat(
+         transitionSpec = { tween(500) },
+         targetValueByState = { if (it) { 1f } else { 0f } }
+      )
+
+      CircularProgressIndicator(
+         progress = { 1.0f },
+         strokeWidth = 1.5.dp,
+         modifier = Modifier.alpha(alpha)
+      )
+
+      CircularProgressCompleteIcon(
+         animDelay = 500.milliseconds,
+         strokeWidth = 1.5.dp
+      )
+   }
+}
