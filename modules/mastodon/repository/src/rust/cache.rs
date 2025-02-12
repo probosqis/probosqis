@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use std::clone::Clone;
 
-use url::Url;
+pub mod instance {
+   use ext_panoptiqon::repository_holder::RepositoryHolder;
+   use mastodon_entity::instance::Instance;
 
-use ext_panoptiqon::repository_holder::RepositoryHolder;
-use mastodon_entity::instance::Instance;
+   pub type Repository = panoptiqon::repository::Repository<Instance>;
 
-static INSTANCE_REPO: RepositoryHolder<Url, Instance>
-   = RepositoryHolder::new(|i| i.url.clone());
+   static REPO: RepositoryHolder<Instance> = RepositoryHolder::new();
 
-pub fn instance_repo() -> &'static RepositoryHolder<Url, Instance> {
-   &INSTANCE_REPO
+   pub fn repo() -> &'static RepositoryHolder<Instance> {
+      &REPO
+   }
+}
+
+pub mod account {
+   use ext_panoptiqon::repository_holder::RepositoryHolder;
+   use mastodon_entity::account::Account;
+
+   pub type Repository = panoptiqon::repository::Repository<Account>;
+
+   static REPO: RepositoryHolder<Account> = RepositoryHolder::new();
+
+   pub fn repo() -> &'static RepositoryHolder<Account> {
+      &REPO
+   }
+}
+
+pub mod account_icon {
+   use entity::image_bytes::ImageBytes;
+   use ext_panoptiqon::repository_holder::RepositoryHolder;
+
+   pub type Repository = panoptiqon::repository::Repository<ImageBytes>;
+
+   static REPO: RepositoryHolder<ImageBytes> = RepositoryHolder::new();
+
+   pub fn repo() -> &'static RepositoryHolder<ImageBytes> {
+      &REPO
+   }
 }

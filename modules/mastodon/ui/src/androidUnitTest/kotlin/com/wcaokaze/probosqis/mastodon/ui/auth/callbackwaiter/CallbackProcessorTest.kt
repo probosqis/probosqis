@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
+import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import io.mockk.every
@@ -67,12 +68,20 @@ class CallbackProcessorTest {
       val appRepository: AppRepository = mockk {
          every { loadAppCache(any()) } returns Cache(mockk())
          every { getToken(any(), any()) } returns mockk()
+         every { getCredentialAccount(any()) } returns mockk {
+            every { account } returns Cache(mockk())
+         }
+      }
+
+      val accountRepository: AccountRepository = mockk {
+         every { getAccountIcon(any()) } returns Cache(mockk())
       }
 
       startKoin {
          modules(
             module {
                single { appRepository }
+               single { accountRepository }
             }
          )
       }
@@ -94,9 +103,15 @@ class CallbackProcessorTest {
          CallbackProcessor.onNewIntent(intent, sequenceOf(pageState))
       }
 
+      rule.waitUntil {
+         pageState.credentialAccountLoadState is CredentialAccountLoadState.Success
+      }
+
       rule.runOnIdle {
          verify { appRepository.loadAppCache("https://example.com/") }
          verify { appRepository.getToken(any(), "abcdefghijk") }
+         verify { appRepository.getCredentialAccount(any()) }
+         verify { accountRepository.getAccountIcon(any()) }
       }
    }
 

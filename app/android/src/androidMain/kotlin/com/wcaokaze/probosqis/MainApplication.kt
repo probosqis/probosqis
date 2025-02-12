@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
+import com.wcaokaze.probosqis.mastodon.repository.AndroidAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.AndroidNodeInfoRepository
@@ -125,6 +127,7 @@ class MainApplication : Application() {
       }
 
       single<AppRepository> { AndroidAppRepository(context = get()) }
+      single<AccountRepository> { AndroidAccountRepository() }
       single<NodeInfoRepository> { AndroidNodeInfoRepository() }
    }
 

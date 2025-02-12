@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 use serde::Deserialize;
 use panoptiqon::cache::Cache;
-
 use crate::instance::Instance;
 
-#[cfg(feature="jvm")]
+#[cfg(feature = "jvm")]
 use {
-   ext_panoptiqon::convert_java_helper::CloneIntoJava,
-   ext_panoptiqon::convert_java_helper::ConvertJavaHelper,
+   ext_panoptiqon::convert_jvm_helper,
    jni::JNIEnv,
-   jni::objects::JObject,
-   jni::sys::jvalue,
-   panoptiqon::convert_java::ConvertJava,
+   panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
+   panoptiqon::jvm_types::{JvmCache, JvmNullable, JvmString},
+   crate::jvm_types::{JvmApplication, JvmInstance},
 };
 
 #[derive(Deserialize)]
@@ -37,54 +36,79 @@ pub struct Application {
    pub client_secret: Option<String>,
 }
 
-#[cfg(feature="jvm")]
-static HELPER: ConvertJavaHelper<5> = ConvertJavaHelper::new(
-   "com/wcaokaze/probosqis/mastodon/entity/Application",
-   CloneIntoJava::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
-   ),
-   [
-      ("getInstance",     "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getName",         "Ljava/lang/String;"),
-      ("getWebsite",      "Ljava/lang/String;"),
-      ("getClientId",     "Ljava/lang/String;"),
-      ("getClientSecret", "Ljava/lang/String;"),
-   ]
-);
+#[cfg(feature = "jvm")]
+convert_jvm_helper! {
+   static HELPER = impl struct ApplicationConvertHelper
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Application"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmApplication<'local>
+         where jvm_constructor: "(\
+            Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+         )V";
 
-#[cfg(feature="jvm")]
-impl ConvertJava for Application {
-   fn clone_into_java<'local>(&self, env: &mut JNIEnv<'local>) -> JObject<'local> {
-      let instance      = self.instance     .clone_into_java(env);
-      let name          = self.name         .clone_into_java(env);
-      let website       = self.website      .clone_into_java(env);
-      let client_id     = self.client_id    .clone_into_java(env);
-      let client_secret = self.client_secret.clone_into_java(env);
+      fn instance<'local>(..) -> Cache<Instance>
+         where jvm_type: JvmCache<'local, JvmInstance<'local>>,
+               jvm_getter_method: "getInstance",
+               jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
-      let args = [
-         jvalue { l: instance     .into_raw() },
-         jvalue { l: name         .into_raw() },
-         jvalue { l: website      .into_raw() },
-         jvalue { l: client_id    .into_raw() },
-         jvalue { l: client_secret.into_raw() },
-      ];
+      fn name<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getName",
+               jvm_return_type: "Ljava/lang/String;";
 
-      HELPER.clone_into_java(env, &args)
+      fn website<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getWebsite",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn client_id<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getClientId",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn client_secret<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getClientSecret",
+               jvm_return_type: "Ljava/lang/String;";
    }
+}
 
-   fn clone_from_java(env: &mut JNIEnv, java_object: &JObject) -> Self {
-      let instance      = HELPER.get(env, &java_object, 0).l().unwrap();
-      let name          = HELPER.get(env, &java_object, 1).l().unwrap();
-      let website       = HELPER.get(env, &java_object, 2).l().unwrap();
-      let client_id     = HELPER.get(env, &java_object, 3).l().unwrap();
-      let client_secret = HELPER.get(env, &java_object, 4).l().unwrap();
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmApplication<'local>> for Application {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmApplication<'local> {
+      HELPER.clone_into_jvm(
+         env,
+         &self.instance,
+         &self.name,
+         &self.website,
+         &self.client_id,
+         &self.client_secret,
+      )
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmApplication<'local>> for Application {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmApplication<'local>
+   ) -> Application {
+      let instance      = HELPER.instance     (env, jvm_instance);
+      let name          = HELPER.name         (env, jvm_instance);
+      let website       = HELPER.website      (env, jvm_instance);
+      let client_id     = HELPER.client_id    (env, jvm_instance);
+      let client_secret = HELPER.client_secret(env, jvm_instance);
 
       Application {
-         instance:      Cache::<Instance>::clone_from_java(env, &instance),
-         name:          String           ::clone_from_java(env, &name),
-         website:       Option::<String> ::clone_from_java(env, &website),
-         client_id:     Option::<String> ::clone_from_java(env, &client_id),
-         client_secret: Option::<String> ::clone_from_java(env, &client_secret),
+         instance,
+         name,
+         website,
+         client_id,
+         client_secret,
       }
    }
 }

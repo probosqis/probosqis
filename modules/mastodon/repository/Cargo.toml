@@ -26,6 +26,7 @@ jni-test = ["jvm", "panoptiqon/jni-test"]
 [dependencies]
 anyhow.workspace = true
 chrono.workspace = true
+isolang.workspace = true
 jni = { workspace = true, optional = true }
 
 url.workspace = true
@@ -36,5 +37,6 @@ ext_reqwest.workspace = true
 panoptiqon.workspace = true
 ext_panoptiqon.workspace = true
 
+entity.workspace = true
 mastodon_entity.workspace = true
 mastodon_webapi.workspace = true

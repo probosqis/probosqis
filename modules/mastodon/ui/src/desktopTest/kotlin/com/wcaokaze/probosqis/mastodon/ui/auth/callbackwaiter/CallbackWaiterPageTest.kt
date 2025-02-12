@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -32,9 +33,14 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
+import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.Application
+import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Instance
+import com.wcaokaze.probosqis.mastodon.entity.Status
 import com.wcaokaze.probosqis.mastodon.entity.Token
+import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import com.wcaokaze.probosqis.page.PPageState
@@ -84,12 +90,14 @@ class CallbackWaiterPageTest {
    private fun CallbackWaiterPage(
       pageState: CallbackWaiterPageState,
       appRepository: AppRepository = mockk(),
+      accountRepository: AccountRepository = mockk(),
    ) {
       val koinApplication = remember {
          koinApplication {
             modules(
                module {
                   single { appRepository }
+                  single { accountRepository }
                }
             )
          }
@@ -141,6 +149,34 @@ class CallbackWaiterPageTest {
          "token type",
          "scope",
          LocalDateTime(2000, Month.JANUARY, 1, 0, 0).toInstant(TimeZone.UTC)
+      )
+   }
+
+   private fun credentialAccount(instance: Cache<Instance>): CredentialAccount {
+      return CredentialAccount(
+         Cache(Account(
+            instance, Account.Id("id"), "username", "acct",
+            "https://example.com/",
+            "display name", "profile note",
+            "https://example.com/avatar/image",
+            "https://example.com/avatar/static/image",
+            "https://example.com/header/image",
+            "https://example.com/header/static/image",
+            isLocked = false, profileFields = emptyList(),
+            emojisInProfile = emptyList(), isBot = false, isGroup = false,
+            isDiscoverable = false, isNoindex = false, movedTo = null,
+            isSuspended = false, isLimited = false,
+            createdTime = LocalDateTime(2000, Month.JANUARY, 1, 0, 0).toInstant(TimeZone.UTC),
+            lastStatusPostTime = LocalDateTime(2000, Month.FEBRUARY, 1, 0, 0).toInstant(TimeZone.UTC),
+            statusCount = 3000L, followerCount = 100L, followeeCount = 200L,
+         )),
+         rawProfileNote = "profile note",
+         rawProfileFields = emptyList(),
+         defaultPostVisibility = Status.Visibility.PRIVATE,
+         defaultPostSensitivity = false,
+         defaultPostLanguage = "en",
+         followRequestCount = 0L,
+         role = null,
       )
    }
 
@@ -234,6 +270,20 @@ class CallbackWaiterPageTest {
          every { getToken(any(), any()) } answers {
             token(firstArg<Application>().instance)
          }
+
+         every { getCredentialAccount(any()) } answers {
+            credentialAccount(firstArg<Token>().instance)
+         }
+      }
+
+      val accountRepository: AccountRepository = mockk {
+         every { getAccountIcon(any()) } answers {
+            val imageUrl = firstArg<Account>().avatarImageUrl ?: throw IOException()
+
+            Cache(
+               Image(imageUrl, ImageBitmap(100, 100))
+            )
+         }
       }
 
       val page = CallbackWaiterPage("https://mastodon.social/")
@@ -246,7 +296,7 @@ class CallbackWaiterPageTest {
 
       rule.setContent {
          state = rememberPageState(page, pageState)
-         CallbackWaiterPage(state, appRepository)
+         CallbackWaiterPage(state, appRepository, accountRepository)
       }
 
       rule.runOnIdle {
@@ -254,6 +304,12 @@ class CallbackWaiterPageTest {
       }
 
       rule.onNodeWithText("Verify the Code").performClick()
+
+      rule.waitUntil {
+         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+      }
+
+      rule.mainClock.advanceTimeBy(3000L)
 
       rule.runOnIdle {
          assertIs<DummyPage>(pageStackSlot.captured.head.page)
@@ -276,6 +332,20 @@ class CallbackWaiterPageTest {
          every { getToken(any(), any()) } answers {
             token(firstArg<Application>().instance)
          }
+
+         every { getCredentialAccount(any()) } answers {
+            credentialAccount(firstArg<Token>().instance)
+         }
+      }
+
+      val accountRepository: AccountRepository = mockk {
+         every { getAccountIcon(any()) } answers {
+            val imageUrl = firstArg<Account>().avatarImageUrl ?: throw IOException()
+
+            Cache(
+               Image(imageUrl, ImageBitmap(100, 100))
+            )
+         }
       }
 
       val page = CallbackWaiterPage("https://mastodon.social/")
@@ -288,7 +358,7 @@ class CallbackWaiterPageTest {
 
       rule.setContent {
          state = rememberPageState(page, pageState)
-         CallbackWaiterPage(state, appRepository)
+         CallbackWaiterPage(state, appRepository, accountRepository)
       }
 
       rule.runOnIdle {
@@ -296,6 +366,12 @@ class CallbackWaiterPageTest {
       }
 
       rule.onNodeWithText("Verify the Code").performClick()
+
+      rule.waitUntil {
+         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+      }
+
+      rule.mainClock.advanceTimeBy(3000L)
 
       rule.runOnIdle {
          assertIs<DummyPage>(pageStackSlot.captured.head.page)
@@ -316,6 +392,20 @@ class CallbackWaiterPageTest {
          every { getToken(any(), any()) } answers {
             token(firstArg<Application>().instance)
          }
+
+         every { getCredentialAccount(any()) } answers {
+            credentialAccount(firstArg<Token>().instance)
+         }
+      }
+
+      val accountRepository: AccountRepository = mockk {
+         every { getAccountIcon(any()) } answers {
+            val imageUrl = firstArg<Account>().avatarImageUrl ?: throw IOException()
+
+            Cache(
+               Image(imageUrl, ImageBitmap(100, 100))
+            )
+         }
       }
 
       val page = CallbackWaiterPage("https://mastodon.social/")
@@ -327,7 +417,7 @@ class CallbackWaiterPageTest {
 
       rule.setContent {
          state = rememberPageState(page, pageState)
-         CallbackWaiterPage(state, appRepository)
+         CallbackWaiterPage(state, appRepository, accountRepository)
       }
 
       rule.runOnIdle {
@@ -335,6 +425,12 @@ class CallbackWaiterPageTest {
       }
 
       rule.onNodeWithText("Verify the Code").performClick()
+
+      rule.waitUntil {
+         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+      }
+
+      rule.mainClock.advanceTimeBy(3000L)
 
       rule.runOnIdle {
          verify {
@@ -356,6 +452,20 @@ class CallbackWaiterPageTest {
          every { getToken(any(), any()) } answers {
             token(firstArg<Application>().instance)
          }
+
+         every { getCredentialAccount(any()) } answers {
+            credentialAccount(firstArg<Token>().instance)
+         }
+      }
+
+      val accountRepository: AccountRepository = mockk {
+         every { getAccountIcon(any()) } answers {
+            val imageUrl = firstArg<Account>().avatarImageUrl ?: throw IOException()
+
+            Cache(
+               Image(imageUrl, ImageBitmap(100, 100))
+            )
+         }
       }
 
       val page = CallbackWaiterPage("https://mastodon.social/")
@@ -367,7 +477,7 @@ class CallbackWaiterPageTest {
 
       rule.setContent {
          state = rememberPageState(page, pageState)
-         CallbackWaiterPage(state, appRepository)
+         CallbackWaiterPage(state, appRepository, accountRepository)
       }
 
       rule.runOnIdle {
@@ -375,6 +485,12 @@ class CallbackWaiterPageTest {
       }
 
       rule.onNodeWithText("Verify the Code").performClick()
+
+      rule.waitUntil {
+         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+      }
+
+      rule.mainClock.advanceTimeBy(3000L)
 
       rule.runOnIdle {
          verify {

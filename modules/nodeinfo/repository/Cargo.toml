@@ -30,9 +30,11 @@ jni = { workspace = true, optional = true }
 
 url.workspace = true
 reqwest.workspace = true
+ext_panoptiqon.workspace = true
 ext_reqwest.workspace = true
 
 panoptiqon.workspace = true
 
 nodeinfo_entity.workspace = true
 nodeinfo_webapi.workspace = true
+mastodon_entity.workspace = true

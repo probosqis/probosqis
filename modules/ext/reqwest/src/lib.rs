@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,6 @@
 use std::cell::LazyCell;
 
 use reqwest::blocking::Client;
-
-#[cfg(feature="jvm")]
-pub mod unwrap_or_throw;
 
 pub const CLIENT: LazyCell<Client> = LazyCell::new(
    || Client::builder().build().unwrap()

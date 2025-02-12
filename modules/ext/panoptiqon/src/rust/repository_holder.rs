@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,90 +13,65 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use std::hash::Hash;
-use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::sync::{PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 #[cfg(feature="jvm")]
 use {
    jni::JNIEnv,
-   panoptiqon::convert_java::ConvertJava,
+   panoptiqon::convert_jvm::{CloneIntoJvm, CloneIntoJvmHelper},
 };
+use panoptiqon::cache::CacheContent;
 use panoptiqon::repository::Repository;
 
-pub struct RepositoryHolder<K, T, S = fn (&T) -> K>
-   where S: Fn(&T) -> K
-{
-   lock: RwLock<LazyInitRepository<K, T, S>>
+pub struct RepositoryHolder<T: CacheContent> {
+   lock: RwLock<LazyInitRepository<T>>
 }
 
-enum LazyInitRepository<K, T, S>
-   where S: Fn(&T) -> K
-{
-   Repository(Repository<K, T, S>),
-   None(S),
-   Initializing
+enum LazyInitRepository<T: CacheContent> {
+   Repository(Repository<T>),
+   None
 }
 
-impl<K, T, S> LazyInitRepository<K, T, S>
-   where S: Fn(&T) -> K
-{
+impl<T: CacheContent> LazyInitRepository<T> {
    fn is_initialized(&self) -> bool {
       matches!(self, LazyInitRepository::Repository(_))
    }
 
    #[cfg(not(feature="jvm"))]
-   fn initialize(&mut self)
-      where K: Hash + Eq
-   {
+   fn initialize(&mut self) {
       if self.is_initialized() { return; }
 
-      let LazyInitRepository::None(key)
-         = mem::replace(self, LazyInitRepository::Initializing)
-         else { return; };
-
-      let repository = Repository::new(key);
+      let repository = Repository::new();
       *self = LazyInitRepository::Repository(repository);
    }
 
    #[cfg(feature="jvm")]
-   fn initialize(
+   fn initialize<'local>(
       &mut self,
-      env: &mut JNIEnv,
+      env: &mut JNIEnv<'local>,
    )
-      where K: Hash + Eq,
-            T: ConvertJava
+      where T: CloneIntoJvm<'local, T::JvmType<'local>> + CloneIntoJvmHelper
    {
       if self.is_initialized() { return; }
 
-      let LazyInitRepository::None(key)
-         = mem::replace(self, LazyInitRepository::Initializing)
-         else { return; };
-
-      let repository = Repository::new(env, key);
+      let repository = Repository::new(env);
       *self = LazyInitRepository::Repository(repository);
    }
 }
 
-pub struct RepositoryReadGuard<'a, K, T, S>
-   where S: Fn(&T) -> K
-{
-   lock_guard: RwLockReadGuard<'a, LazyInitRepository<K, T, S>>
+pub struct RepositoryReadGuard<'a, T: CacheContent> {
+   lock_guard: RwLockReadGuard<'a, LazyInitRepository<T>>
 }
 
-pub struct RepositoryWriteGuard<'a, K, T, S>
-   where S: Fn(&T) -> K
-{
-   lock_guard: RwLockWriteGuard<'a, LazyInitRepository<K, T, S>>
+pub struct RepositoryWriteGuard<'a, T: CacheContent> {
+   lock_guard: RwLockWriteGuard<'a, LazyInitRepository<T>>
 }
 
-impl<'a, K, T, S> Deref for RepositoryReadGuard<'a, K, T, S>
-   where S: Fn(&T) -> K
-{
-   type Target = Repository<K, T, S>;
+impl<'a, T: CacheContent> Deref for RepositoryReadGuard<'a, T> {
+   type Target = Repository<T>;
    
-   fn deref(&self) -> &Repository<K, T, S> {
+   fn deref(&self) -> &Repository<T> {
       if let LazyInitRepository::Repository(ref repo) = *self.lock_guard {
          return repo;
       } else {
@@ -105,12 +80,10 @@ impl<'a, K, T, S> Deref for RepositoryReadGuard<'a, K, T, S>
    }
 }
 
-impl<'a, K, T, S> Deref for RepositoryWriteGuard<'a, K, T, S>
-   where S: Fn(&T) -> K
-{
-   type Target = Repository<K, T, S>;
+impl<'a, T: CacheContent> Deref for RepositoryWriteGuard<'a, T> {
+   type Target = Repository<T>;
 
-   fn deref(&self) -> &Repository<K, T, S> {
+   fn deref(&self) -> &Repository<T> {
       if let LazyInitRepository::Repository(ref repo) = *self.lock_guard {
          return repo;
       } else {
@@ -119,10 +92,8 @@ impl<'a, K, T, S> Deref for RepositoryWriteGuard<'a, K, T, S>
    }
 }
 
-impl<'a, K, T, S> DerefMut for RepositoryWriteGuard<'a, K, T, S>
-   where S: Fn(&T) -> K
-{
-   fn deref_mut(&mut self) -> &mut Repository<K, T, S> {
+impl<'a, T: CacheContent> DerefMut for RepositoryWriteGuard<'a, T> {
+   fn deref_mut(&mut self) -> &mut Repository<T> {
       if let LazyInitRepository::Repository(ref mut repo) = *self.lock_guard {
          return repo;
       } else {
@@ -131,18 +102,15 @@ impl<'a, K, T, S> DerefMut for RepositoryWriteGuard<'a, K, T, S>
    }
 }
 
-impl<K, T, S> RepositoryHolder<K, T, S>
-   where K: Hash + Eq,
-         S: Fn(&T) -> K
-{
-   pub const fn new(key: S) -> Self {
+impl<T: CacheContent> RepositoryHolder<T> {
+   pub const fn new() -> Self {
       RepositoryHolder {
-         lock: RwLock::new(LazyInitRepository::None(key))
+         lock: RwLock::new(LazyInitRepository::None)
       }
    }
 
    #[cfg(not(feature="jvm"))]
-   pub fn read(&self) -> Result<RepositoryReadGuard<K, T, S>, PoisonError<()>> {
+   pub fn read(&self) -> Result<RepositoryReadGuard<T>, PoisonError<()>> {
       let lock = self.lock.read().map_err(|_| PoisonError::new(()))?;
 
       if lock.is_initialized() {
@@ -162,11 +130,11 @@ impl<K, T, S> RepositoryHolder<K, T, S>
    }
 
    #[cfg(feature="jvm")]
-   pub fn read(
+   pub fn read<'local>(
       &self,
-      env: &mut JNIEnv
-   ) -> Result<RepositoryReadGuard<K, T, S>, PoisonError<()>>
-      where T: ConvertJava
+      env: &mut JNIEnv<'local>
+   ) -> Result<RepositoryReadGuard<T>, PoisonError<()>>
+      where T: CloneIntoJvm<'local, T::JvmType<'local>> + CloneIntoJvmHelper
    {
       let lock = self.lock.read().map_err(|_| PoisonError::new(()))?;
 
@@ -187,7 +155,7 @@ impl<K, T, S> RepositoryHolder<K, T, S>
    }
 
    #[cfg(not(feature="jvm"))]
-   pub fn write(&self) -> Result<RepositoryWriteGuard<K, T, S>, PoisonError<()>> {
+   pub fn write(&self) -> Result<RepositoryWriteGuard<T>, PoisonError<()>> {
       let mut lock = self.lock.write().map_err(|_| PoisonError::new(()))?;
 
       if !lock.is_initialized() {
@@ -202,11 +170,11 @@ impl<K, T, S> RepositoryHolder<K, T, S>
    }
 
    #[cfg(feature="jvm")]
-   pub fn write(
+   pub fn write<'local>(
       &self,
-      env: &mut JNIEnv
-   ) -> Result<RepositoryWriteGuard<K, T, S>, PoisonError<()>>
-      where T: ConvertJava
+      env: &mut JNIEnv<'local>
+   ) -> Result<RepositoryWriteGuard<T>, PoisonError<()>>
+      where T: CloneIntoJvm<'local, T::JvmType<'local>> + CloneIntoJvmHelper
    {
       let mut lock = self.lock.write().map_err(|_| PoisonError::new(()))?;
 
@@ -224,24 +192,44 @@ impl<K, T, S> RepositoryHolder<K, T, S>
 
 #[cfg(feature="jni-test")]
 mod jni_tests {
-   use std::ops::Not;
    use std::sync::Mutex;
-   use std::thread;
-   use std::time::Duration;
-
    use jni::JNIEnv;
    use jni::objects::JObject;
-
+   use panoptiqon::cache::CacheContent;
+   use panoptiqon::convert_jvm::CloneIntoJvm;
+   use panoptiqon::jvm_type;
    use super::{LazyInitRepository, RepositoryHolder};
+
+   jvm_type! {
+      JvmContent,
+   }
+
+   struct Content;
+
+   impl CacheContent for Content {
+      type Key = ();
+      type JvmType<'local> = JvmContent<'local>;
+
+      fn key(&self) {}
+   }
+
+   impl<'local> CloneIntoJvm<'local, JvmContent<'local>> for Content {
+      fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmContent<'local> {
+         use panoptiqon::jvm_type::JvmType;
+
+         let dummy_j_object = ().clone_into_jvm(env);
+         JvmContent(dummy_j_object.into_j_object())
+      }
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_RepositoryHolderTest_initializeRepositoryByReading(
       mut env: JNIEnv,
       _obj: JObject
    ) {
-      let holder = RepositoryHolder::<(), ()>::new(|_| ());
+      let holder = RepositoryHolder::<Content>::new();
       {
-         assert!(matches!(*holder.lock.read().unwrap(), LazyInitRepository::None(_)));
+         assert!(matches!(*holder.lock.read().unwrap(), LazyInitRepository::None));
       }
 
       {
@@ -257,9 +245,9 @@ mod jni_tests {
       mut env: JNIEnv,
       _obj: JObject
    ) {
-      let holder = RepositoryHolder::<(), ()>::new(|_| ());
+      let holder = RepositoryHolder::<Content>::new();
       {
-         assert!(matches!(*holder.lock.read().unwrap(), LazyInitRepository::None(_)));
+         assert!(matches!(*holder.lock.read().unwrap(), LazyInitRepository::None));
       }
 
       {
@@ -271,7 +259,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static readBlocks_repository_holder: RepositoryHolder<(), ()> = RepositoryHolder::new(|_| ());
+   static readBlocks_repository_holder: RepositoryHolder<Content> = RepositoryHolder::new();
    struct ReadBlocksState {
       thread1_read_repository: bool,
       thread1_write_repository: bool,
@@ -291,6 +279,9 @@ mod jni_tests {
       mut env: JNIEnv,
       _obj: JObject
    ) {
+      use std::thread;
+      use std::time::Duration;
+
       // readロックを取る
       let repository_lock = readBlocks_repository_holder.read(&mut env).unwrap();
       {
@@ -339,6 +330,10 @@ mod jni_tests {
       mut env: JNIEnv,
       _obj: JObject
    ) {
+      use std::ops::Not;
+      use std::thread;
+      use std::time::Duration;
+
       // 一旦thread1がreadロックを取るのを待機
       loop {
          thread::sleep(Duration::from_millis(1));

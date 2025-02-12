@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,63 +13,78 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use url::Url;
 
-#[cfg(feature="jvm")]
+#[cfg(feature = "jvm")]
 use {
-   ext_panoptiqon::convert_java_helper::CloneIntoJava,
-   ext_panoptiqon::convert_java_helper::ConvertJavaHelper,
+   ext_panoptiqon::convert_jvm_helper,
    jni::JNIEnv,
-   jni::objects::JObject,
-   jni::sys::jvalue,
-   panoptiqon::convert_java::ConvertJava,
+   panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
+   panoptiqon::jvm_types::JvmString,
+   crate::jvm_types::JvmInstance,
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
 pub struct Instance {
    pub url: Url,
    pub version: String,
    pub version_checked_time: DateTime<Utc>,
 }
 
-#[cfg(feature="jvm")]
-static HELPER: ConvertJavaHelper<3> = ConvertJavaHelper::new(
-   "com/wcaokaze/probosqis/mastodon/entity/Instance",
-   CloneIntoJava::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;J)V"),
-   [
-      ("getUrl",                           "Ljava/lang/String;"),
-      ("getVersion",                       "Ljava/lang/String;"),
-      ("getVersionCheckedTimeEpochMillis", "J"),
-   ]
-);
+#[cfg(feature = "jvm")]
+convert_jvm_helper! {
+   static HELPER = impl struct ConvertJniHelper
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Instance"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmInstance<'local>
+         where jvm_constructor: "(Ljava/lang/String;Ljava/lang/String;J)V";
 
-#[cfg(feature="jvm")]
-impl ConvertJava for Instance {
-   fn clone_into_java<'local>(&self, env: &mut JNIEnv<'local>) -> JObject<'local> {
-      let url                               = self.url.to_string().clone_into_java(env);
-      let version                           = self.version        .clone_into_java(env);
-      let version_checked_time_epoch_millis = self.version_checked_time.timestamp_millis();
+      fn url<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getUrl",
+               jvm_return_type: "Ljava/lang/String;";
 
-      let args = [
-         jvalue { l: url    .into_raw() },
-         jvalue { l: version.into_raw() },
-         jvalue { j: version_checked_time_epoch_millis },
-      ];
+      fn version<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getVersion",
+               jvm_return_type: "Ljava/lang/String;";
 
-      HELPER.clone_into_java(env, &args)
+      fn version_checked_time_epoch_millis<'local>(..) -> i64
+         where jvm_getter_method: "getVersionCheckedTimeEpochMillis",
+               jvm_return_type: "J";
    }
+}
 
-   fn clone_from_java(env: &mut JNIEnv, java_object: &JObject) -> Self {
-      let url                               = HELPER.get(env, &java_object, 0).l().unwrap();
-      let version                           = HELPER.get(env, &java_object, 1).l().unwrap();
-      let version_checked_time_epoch_millis = HELPER.get(env, &java_object, 2).j().unwrap();
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmInstance<'local>> for Instance {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmInstance<'local> {
+      HELPER.clone_into_jvm(
+         env,
+         self.url.as_str(),
+         &self.version,
+         self.version_checked_time.timestamp_millis(),
+      )
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmInstance<'local>> for Instance {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmInstance<'local>
+   ) -> Instance {
+      let url                               = HELPER.url                              (env, jvm_instance);
+      let version                           = HELPER.version                          (env, jvm_instance);
+      let version_checked_time_epoch_millis = HELPER.version_checked_time_epoch_millis(env, jvm_instance);
 
       Instance {
-         url:     String::clone_from_java(env, &url).parse().unwrap(),
-         version: String::clone_from_java(env, &version),
-         version_checked_time: DateTime::from_timestamp_millis(version_checked_time_epoch_millis).unwrap(),
+         url: url.parse().unwrap(),
+         version,
+         version_checked_time:
+            DateTime::from_timestamp_millis(version_checked_time_epoch_millis).unwrap(),
       }
    }
 }

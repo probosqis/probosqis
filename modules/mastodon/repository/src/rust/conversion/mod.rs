@@ -14,5 +14,9 @@
  * limitations under the License.
  */
 
+pub(crate) mod account;
 pub(crate) mod application;
+pub(crate) mod custom_emoji;
+pub(crate) mod role;
+pub(crate) mod status;
 pub(crate) mod token;

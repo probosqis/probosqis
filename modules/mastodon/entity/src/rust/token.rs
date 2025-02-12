@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 use chrono::{DateTime, Utc};
-use serde::Deserialize;
-
-#[cfg(feature="jvm")]
-use {
-   ext_panoptiqon::convert_java_helper::CloneIntoJava,
-   ext_panoptiqon::convert_java_helper::ConvertJavaHelper,
-   jni::JNIEnv,
-   jni::objects::JObject,
-   jni::sys::jvalue,
-   panoptiqon::convert_java::ConvertJava,
-};
 use panoptiqon::cache::Cache;
-
+use serde::Deserialize;
 use crate::instance::Instance;
+
+#[cfg(feature = "jvm")]
+use {
+   ext_panoptiqon::convert_jvm_helper,
+   jni::JNIEnv,
+   panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
+   panoptiqon::jvm_types::{JvmCache, JvmString},
+   crate::jvm_types::{JvmInstance, JvmToken},
+};
 
 #[derive(Deserialize)]
 pub struct Token {
@@ -38,53 +37,77 @@ pub struct Token {
    pub created_at: DateTime<Utc>,
 }
 
-#[cfg(feature="jvm")]
-static HELPER: ConvertJavaHelper<5> = ConvertJavaHelper::new(
-   "com/wcaokaze/probosqis/mastodon/entity/Token",
-   CloneIntoJava::ViaConstructor(
-      "(Lcom/wcaokaze/probosqis/panoptiqon/Cache;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V"
-   ),
-   [
-      ("getInstance",             "Lcom/wcaokaze/probosqis/panoptiqon/Cache;"),
-      ("getAccessToken",          "Ljava/lang/String;"),
-      ("getTokenType",            "Ljava/lang/String;"),
-      ("getScope",                "Ljava/lang/String;"),
-      ("getCreatedAtEpochMillis", "J"),
-   ]
-);
+#[cfg(feature = "jvm")]
+convert_jvm_helper! {
+   static HELPER = impl struct TokenConvertHelper
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Token"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmToken<'local>
+         where jvm_constructor: "(\
+            Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            J\
+         )V";
 
-#[cfg(feature="jvm")]
-impl ConvertJava for Token {
-   fn clone_into_java<'local>(&self, env: &mut JNIEnv<'local>) -> JObject<'local> {
-      let instance                = self.instance                     .clone_into_java(env);
-      let access_token            = self.access_token                 .clone_into_java(env);
-      let token_type              = self.token_type                   .clone_into_java(env);
-      let scope                   = self.scope                        .clone_into_java(env);
-      let created_at_epoch_millis = self.created_at.timestamp_millis();
+      fn instance<'local>(..) -> Cache<Instance>
+         where jvm_type: JvmCache<'local, JvmInstance<'local>>,
+               jvm_getter_method: "getInstance",
+               jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
-      let args = [
-         jvalue { l: instance         .into_raw() },
-         jvalue { l: access_token     .into_raw() },
-         jvalue { l: token_type       .into_raw() },
-         jvalue { l: scope            .into_raw() },
-         jvalue { j: created_at_epoch_millis      },
-      ];
+      fn access_token<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getAccessToken",
+               jvm_return_type: "Ljava/lang/String;";
 
-      HELPER.clone_into_java(env, &args)
+      fn token_type<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getTokenType",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn scope<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getScope",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn created_at_epoch_millis<'local>(..) -> i64
+         where jvm_getter_method: "getCreatedAtEpochMillis",
+               jvm_return_type: "J";
    }
+}
 
-   fn clone_from_java(env: &mut JNIEnv, java_object: &JObject) -> Self {
-      let instance_base_url       = HELPER.get(env, &java_object, 0).l().unwrap();
-      let access_token            = HELPER.get(env, &java_object, 1).l().unwrap();
-      let token_type              = HELPER.get(env, &java_object, 2).l().unwrap();
-      let scope                   = HELPER.get(env, &java_object, 3).l().unwrap();
-      let created_at_epoch_millis = HELPER.get(env, &java_object, 4).j().unwrap();
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmToken<'local>> for Token {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmToken<'local> {
+      HELPER.clone_into_jvm(
+         env,
+         &self.instance,
+         &self.access_token,
+         &self.token_type,
+         &self.scope,
+         self.created_at.timestamp_millis(),
+      )
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmToken<'local>> for Token {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmToken<'local>
+   ) -> Token {
+      let instance                = HELPER.instance               (env, jvm_instance);
+      let access_token            = HELPER.access_token           (env, jvm_instance);
+      let token_type              = HELPER.token_type             (env, jvm_instance);
+      let scope                   = HELPER.scope                  (env, jvm_instance);
+      let created_at_epoch_millis = HELPER.created_at_epoch_millis(env, jvm_instance);
 
       Token {
-         instance:     Cache::<Instance>::clone_from_java(env, &instance_base_url),
-         access_token: String           ::clone_from_java(env, &access_token),
-         token_type:   String           ::clone_from_java(env, &token_type),
-         scope:        String           ::clone_from_java(env, &scope),
+         instance,
+         access_token,
+         token_type,
+         scope,
          created_at: DateTime::from_timestamp_millis(created_at_epoch_millis).unwrap(),
       }
    }

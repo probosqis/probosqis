@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,9 @@ import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.repository.DesktopAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAppRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.DesktopNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
@@ -134,6 +136,7 @@ object Main {
       }
 
       single<AppRepository> { DesktopAppRepository(probosqisDataDir) }
+      single<AccountRepository> { DesktopAccountRepository() }
       single<NodeInfoRepository> { DesktopNodeInfoRepository() }
    }
 

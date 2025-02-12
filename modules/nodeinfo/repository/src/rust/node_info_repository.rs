@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,12 @@
 
 #[cfg(feature="jvm")]
 mod jvm {
-   use anyhow::{anyhow, Result};
    use jni::JNIEnv;
-   use jni::objects::{JObject, JString};
-   use url::Url;
-
-   use ext_reqwest::CLIENT;
-   use ext_reqwest::unwrap_or_throw::UnwrapOrThrow;
-   use nodeinfo_entity::fediverse_software;
+   use jni::objects::JObject;
+   use nodeinfo_entity::jvm_types::JvmFediverseSoftware;
    use nodeinfo_webapi::api::node_info;
-   use nodeinfo_webapi::entity::node_info::{NodeInfo, Software};
    use nodeinfo_webapi::entity::resource_descriptor::ResourceDescriptor;
+   use panoptiqon::jvm_types::JvmString;
 
    const REL_MAPPING: [(&str, &str); 4] = [
       ("http://nodeinfo.diaspora.software/ns/schema/1.0", "1.0"),
@@ -39,8 +34,10 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_nodeinfo_repository_DesktopNodeInfoRepository_getServerSoftware<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      server_url: JString<'local>
-   ) -> JObject<'local> {
+      server_url: JvmString<'local>
+   ) -> JvmFediverseSoftware<'local> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+
       get_node_info(&mut env, server_url)
          .unwrap_or_throw_io_exception(&mut env)
    }
@@ -49,17 +46,28 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_nodeinfo_repository_AndroidNodeInfoRepository_getServerSoftware<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      server_url: JString<'local>
-   ) -> JObject<'local> {
+      server_url: JvmString<'local>
+   ) -> JvmFediverseSoftware<'local> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+
       get_node_info(&mut env, server_url)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_node_info<'local>(
       env: &mut JNIEnv<'local>,
-      server_url: JString<'local>
-   ) -> Result<JObject<'local>> {
-      let server_url: String = env.get_string(&server_url)?.into();
+      server_url: JvmString<'local>
+   ) -> anyhow::Result<JvmFediverseSoftware<'local>> {
+      use chrono::Utc;
+      use ext_reqwest::CLIENT;
+      use anyhow::anyhow;
+      use mastodon_entity::instance::Instance;
+      use nodeinfo_entity::fediverse_software::FediverseSoftware;
+      use nodeinfo_webapi::entity::node_info::{NodeInfo, Software};
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use url::Url;
+
+      let server_url = String::clone_from_jvm(env, &server_url);
       let server_url: Url = server_url.parse()?;
 
       let resource_descriptor
@@ -74,14 +82,23 @@ mod jvm {
 
       name.make_ascii_lowercase();
 
-      if name == "mastodon" {
-         let jvm_instance = fediverse_software::instantiate_mastodon(
-            env, server_url.as_str(), &version);
-         Ok(jvm_instance)
+      let fediverse_software = if name == "mastodon" {
+         FediverseSoftware::Mastodon {
+            instance: Instance {
+               url: server_url,
+               version,
+               version_checked_time: Utc::now(),
+            },
+         }
       } else {
-         let jvm_instance = fediverse_software::instantiate_unsupported(env, &name, &version);
-         Ok(jvm_instance)
-      }
+         FediverseSoftware::Unsupported {
+            name,
+            version,
+         }
+      };
+
+      let jvm_instance = fediverse_software.clone_into_jvm(env);
+      Ok(jvm_instance)
    }
 
    fn get_node_info_url(

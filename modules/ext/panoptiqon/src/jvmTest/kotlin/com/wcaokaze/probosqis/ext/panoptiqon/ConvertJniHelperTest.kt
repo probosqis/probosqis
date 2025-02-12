@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package com.wcaokaze.probosqis.ext.panoptiqon
 
 import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class TestEntity(
@@ -29,12 +28,10 @@ class TestEntity(
    val j: Long,
    val f: Float,
    val d: Double,
-   val c: Char,
    val str: String,
-   val arr: IntArray,
 )
 
-class ConvertJavaHelperTest {
+class ConvertJniHelperTest {
    init {
       loadNativeLib()
    }
@@ -43,19 +40,19 @@ class ConvertJavaHelperTest {
    external fun variantStrsOnInit()
 
    @Test
-   external fun variantJvmIdsAfterCloneIntoJava()
+   external fun variantJvmIdsAfterCloneIntoJvm()
 
    @Test
    fun variantJvmIdsAfterGet() {
-      val entity = TestEntity(false, 0, 0, 0, 0L, 0.0f, 0.0, 'a', "", IntArray(0))
+      val entity = TestEntity(false, 0, 0, 0, 0L, 0.0f, 0.0, "")
       `variantJvmIdsAfterGet$assert`(entity)
    }
 
    external fun `variantJvmIdsAfterGet$assert`(entity: TestEntity)
 
    @Test
-   fun cloneIntoJava() {
-      val entity = `cloneIntoJava$createEntity`()
+   fun cloneIntoJvm() {
+      val entity = `cloneIntoJvm$createEntity`()
       assertEquals(false, entity.z)
       assertEquals(0, entity.b)
       assertEquals(1, entity.s)
@@ -63,15 +60,13 @@ class ConvertJavaHelperTest {
       assertEquals(3L, entity.j)
       assertEquals(4.5f, entity.f)
       assertEquals(6.75, entity.d)
-      assertEquals('8', entity.c)
       assertEquals("9012345", entity.str)
-      assertContentEquals(intArrayOf(6, 7, 8, 9, 0), entity.arr)
    }
 
-   external fun `cloneIntoJava$createEntity`(): TestEntity
+   external fun `cloneIntoJvm$createEntity`(): TestEntity
 
    @Test
-   fun cloneFromJava() {
+   fun cloneFromJvm() {
       val entity = TestEntity(
          z = false,
          b = 0,
@@ -80,12 +75,10 @@ class ConvertJavaHelperTest {
          j = 3L,
          f = 4.5f,
          d = 6.75,
-         c = '8',
          str = "9012345",
-         arr = intArrayOf(6, 7, 8, 9, 0),
       )
-      `cloneFromJava$assert`(entity)
+      `cloneFromJvm$assert`(entity)
    }
 
-   external fun `cloneFromJava$assert`(entity: TestEntity)
+   external fun `cloneFromJvm$assert`(entity: TestEntity)
 }

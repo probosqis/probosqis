@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,59 +13,106 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#[cfg(feature="jvm")]
+
+use mastodon_entity::instance::Instance;
+
+#[cfg(feature = "jvm")]
 use {
-   ext_panoptiqon::convert_java_helper::CloneIntoJava,
-   ext_panoptiqon::convert_java_helper::ConvertJavaHelper,
+   ext_panoptiqon::convert_jvm_helper,
    jni::JNIEnv,
-   jni::objects::JObject,
-   jni::sys::jvalue,
+   mastodon_entity::jvm_types::JvmInstance,
+   panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
+   panoptiqon::jvm_type::JvmType,
+   panoptiqon::jvm_types::JvmString,
+   crate::jvm_types::JvmFediverseSoftware,
 };
 
-#[cfg(feature="jvm")]
-static HELPER_UNSUPPORTED: ConvertJavaHelper<0> = ConvertJavaHelper::new(
-   "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported",
-   CloneIntoJava::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;)V"),
-   []
-);
+pub enum FediverseSoftware {
+   Unsupported {
+      name: String,
+      version: String,
+   },
 
-#[cfg(feature="jvm")]
-static HELPER_MASTODON: ConvertJavaHelper<0> = ConvertJavaHelper::new(
-   "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon",
-   CloneIntoJava::ViaConstructor("(Ljava/lang/String;Ljava/lang/String;)V"),
-   []
-);
-
-#[cfg(feature="jvm")]
-pub fn instantiate_unsupported<'local>(
-   env: &mut JNIEnv<'local>,
-   name: &str,
-   version: &str
-) -> JObject<'local> {
-   let name    = env.new_string(name)   .unwrap();
-   let version = env.new_string(version).unwrap();
-
-   let args = [
-      jvalue { l: name   .into_raw() },
-      jvalue { l: version.into_raw() },
-   ];
-
-   HELPER_UNSUPPORTED.clone_into_java(env, &args)
+   Mastodon {
+      instance: Instance,
+   },
 }
 
-#[cfg(feature="jvm")]
-pub fn instantiate_mastodon<'local>(
-   env: &mut JNIEnv<'local>,
-   instance_base_url: &str,
-   version: &str
-) -> JObject<'local> {
-   let instance_base_url = env.new_string(instance_base_url).unwrap();
-   let version           = env.new_string(version)          .unwrap();
+#[cfg(feature = "jvm")]
+convert_jvm_helper! {
+   static HELPER_UNSUPPORTED = impl struct UnsupportedConvertHelper
+      where jvm_class: "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Unsupported"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
+         where jvm_constructor: "(Ljava/lang/String;Ljava/lang/String;)V";
 
-   let args = [
-      jvalue { l: instance_base_url.into_raw() },
-      jvalue { l: version          .into_raw() },
-   ];
+      fn name<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getName",
+               jvm_return_type: "Ljava/lang/String;";
 
-   HELPER_MASTODON.clone_into_java(env, &args)
+      fn version<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getVersion",
+               jvm_return_type: "Ljava/lang/String;";
+   }
+
+   static HELPER_MASTODON = impl struct MastodonConvertHelper
+      where jvm_class: "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmFediverseSoftware<'local>
+         where jvm_constructor: "(Lcom/wcaokaze/probosqis/mastodon/entity/Instance;)V";
+
+      fn instance<'local>(..) -> Instance
+         where jvm_type: JvmInstance<'local>,
+               jvm_getter_method: "getInstance",
+               jvm_return_type: "Lcom/wcaokaze/probosqis/mastodon/entity/Instance;";
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmFediverseSoftware<'local>> for FediverseSoftware {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmFediverseSoftware<'local> {
+      match self {
+         FediverseSoftware::Unsupported { name, version } => {
+            HELPER_UNSUPPORTED.clone_into_jvm(
+               env,
+               name,
+               version,
+            )
+         }
+
+         FediverseSoftware::Mastodon { instance } => {
+            HELPER_MASTODON.clone_into_jvm(
+               env,
+               instance,
+            )
+         }
+      }
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmFediverseSoftware<'local>> for FediverseSoftware {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmFediverseSoftware<'local>
+   ) -> FediverseSoftware {
+      if env
+         .is_instance_of(
+            jvm_instance.j_object(),
+            "com/wcaokaze/probosqis/nodeinfo/entity/FediverseSoftware$Mastodon"
+         )
+         .unwrap()
+      {
+         let instance = HELPER_MASTODON.instance(env, jvm_instance);
+
+         FediverseSoftware::Mastodon { instance }
+      } else {
+         let name = HELPER_UNSUPPORTED.name(env, jvm_instance);
+         let version = HELPER_UNSUPPORTED.version(env, jvm_instance);
+
+         FediverseSoftware::Unsupported { name, version }
+      }
+   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,19 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.wcaokaze.probosqis.ext.compose.LoadState
-import com.wcaokaze.probosqis.mastodon.entity.Token
+import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
+import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.panoptiqon.Cache
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.koin.core.component.inject
@@ -40,23 +44,46 @@ class CallbackWaiterPage(
    val instanceBaseUrl: String
 ) : PPage()
 
+internal sealed class CredentialAccountLoadState {
+   data object Unloading : CredentialAccountLoadState()
+   data object Loading   : CredentialAccountLoadState()
+   data object Error     : CredentialAccountLoadState()
+
+   class Success(
+      val credentialAccount: CredentialAccount,
+      val credentialAccountIcon: Cache<Image>
+   ) : CredentialAccountLoadState()
+}
+
 abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
    private val appRepository: AppRepository by inject()
+   private val accountRepository: AccountRepository by inject()
 
-   var tokenLoadState: LoadState<Token?> by mutableStateOf(LoadState.Success(null))
+   internal var credentialAccountLoadState: CredentialAccountLoadState
+      by mutableStateOf(CredentialAccountLoadState.Unloading)
 
    fun saveAuthorizedAccountByCode(code: String) {
-      if (tokenLoadState is LoadState.Loading) { return }
+      if (credentialAccountLoadState is CredentialAccountLoadState.Loading) {
+         return
+      }
 
-      tokenLoadState = LoadState.Loading
+      credentialAccountLoadState = CredentialAccountLoadState.Loading
 
       pageStateScope.launch {
          try {
-            val application = appRepository.loadAppCache(page.instanceBaseUrl)
-            val token = appRepository.getToken(application.value, code)
-            tokenLoadState = LoadState.Success(token)
+            credentialAccountLoadState = withContext(Dispatchers.IO) {
+               val application = appRepository.loadAppCache(page.instanceBaseUrl)
+               val token = appRepository.getToken(application.value, code)
+               val credentialAccount = appRepository.getCredentialAccount(token)
+               val credentialAccountIcon
+                  = accountRepository.getAccountIcon(credentialAccount.account.value)
+
+               CredentialAccountLoadState.Success(
+                  credentialAccount, credentialAccountIcon
+               )
+            }
          } catch (e: Exception) {
-            tokenLoadState = LoadState.Error(e)
+            credentialAccountLoadState = CredentialAccountLoadState.Error
             return@launch
          }
 
@@ -84,7 +111,7 @@ abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>(
          return
       }
 
-      this.pageStack =  pageStack
+      this.pageStack = pageStack
    }
 }
 
