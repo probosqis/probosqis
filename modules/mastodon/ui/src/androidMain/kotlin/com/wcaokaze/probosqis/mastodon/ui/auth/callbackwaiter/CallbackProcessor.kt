@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,9 @@ import com.wcaokaze.probosqis.page.PPageState
 
 object CallbackProcessor {
    fun onNewIntent(
-      intent: Intent?,
+      intent: Intent,
       allVisiblePageStates: Sequence<PPageState<*>>
    ) {
-      if (intent == null) { return }
       val uri = intent.data ?: return
       if (uri.host != "probosqis.wcaokaze.com") { return }
       if (uri.path != "/auth/callback") { return }
