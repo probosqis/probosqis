@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -706,7 +706,7 @@ class PErrorListTest {
          assertEquals(0.0f, sliderValue)
       }
       rule.onNodeWithTag(sliderTag).performTouchInput {
-         swipeRight()
+         swipeRight(centerX, right)
       }
       rule.runOnIdle {
          assertEquals(1.0f, sliderValue)
