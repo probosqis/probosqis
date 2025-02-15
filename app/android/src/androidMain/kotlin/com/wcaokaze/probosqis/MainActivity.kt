@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
       }
    }
 
-   override fun onNewIntent(intent: Intent?) {
+   override fun onNewIntent(intent: Intent) {
       super.onNewIntent(intent)
 
       CallbackProcessor.onNewIntent(intent, probosqisState.allVisiblePageStates)

@@ -116,17 +116,6 @@ class CallbackProcessorTest {
    }
 
    @Test
-   fun doNothing_intentIsNull() {
-      val pageState: CallbackWaiterPageState = mockk {
-         every { saveAuthorizedAccountByCode(any()) } just runs
-      }
-
-      CallbackProcessor.onNewIntent(intent = null, sequenceOf(pageState))
-
-      verify(exactly = 0) { pageState.saveAuthorizedAccountByCode(any()) }
-   }
-
-   @Test
    fun doNothing_dataIsNull() {
       val pageState: CallbackWaiterPageState = mockk {
          every { saveAuthorizedAccountByCode(any()) } just runs
