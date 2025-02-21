@@ -91,7 +91,7 @@ mod apps {
    }
 }
 
-struct AppRepository<'jni> {
+pub struct AppRepository<'jni> {
    #[cfg(not(feature = "jvm"))]
    env: PhantomData<&'jni ()>,
    #[cfg(feature = "jvm")]
@@ -103,20 +103,20 @@ impl AppRepository<'_> {
    const DESKTOP_REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
 
    #[cfg(not(feature = "jvm"))]
-   fn new() -> AppRepository<'static> {
+   pub fn new() -> AppRepository<'static> {
       AppRepository {
          env: PhantomData
       }
    }
 
    #[cfg(feature = "jvm")]
-   fn new<'jni>(env: &JNIEnv<'jni>) -> AppRepository<'jni> {
+   pub fn new<'jni>(env: &JNIEnv<'jni>) -> AppRepository<'jni> {
       AppRepository {
          env: unsafe { env.unsafe_clone() }
       }
    }
 
-   fn post_app(
+   pub fn post_app(
       &mut self,
       instance: Instance,
       redirect_uri: &str
@@ -160,7 +160,7 @@ impl AppRepository<'_> {
       Ok(application)
    }
 
-   fn get_authorize_url(
+   pub fn get_authorize_url(
       &self,
       instance_cache: &Cache<Instance>,
       client_id: &str,
@@ -181,7 +181,7 @@ impl AppRepository<'_> {
       Ok(authorize_url)
    }
 
-   fn get_token(
+   pub fn get_token(
       &self,
       instance_cache: Cache<Instance>,
       code: &str,
@@ -208,7 +208,7 @@ impl AppRepository<'_> {
       Ok(token)
    }
 
-   fn get_credential_account(
+   pub fn get_credential_account(
       &mut self,
       token: &Token
    ) -> anyhow::Result<CredentialAccount> {
