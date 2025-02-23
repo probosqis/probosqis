@@ -41,7 +41,7 @@ impl CacheContent for Account {
 
    fn key(&self) -> (Url, AccountId) {
       let instance_url = self.instance.read().unwrap().url.clone();
-      let account_id = self.id.clone();
+      let account_id = self.local_id.clone();
 
       (instance_url, account_id)
    }

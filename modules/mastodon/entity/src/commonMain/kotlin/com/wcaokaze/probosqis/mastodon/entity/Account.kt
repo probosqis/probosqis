@@ -22,7 +22,7 @@ import kotlinx.datetime.Instant
 
 data class Account(
    val instance: Cache<Instance>,
-   val id: Id,
+   val localId: Id,
    val username: String?,
    val acct: String?,
    val url: String?,
@@ -50,7 +50,7 @@ data class Account(
 ) {
    constructor(
       instance: Cache<Instance>,
-      id: String,
+      rawLocalId: String,
       username: String?,
       acct: String?,
       url: String?,
@@ -77,7 +77,7 @@ data class Account(
       followeeCount: Long?,
    ) : this(
       instance,
-      Id(id),
+      Id(rawLocalId),
       username,
       acct,
       url,
@@ -124,8 +124,8 @@ data class Account(
          get() = verifiedTime?.toEpochMilliseconds()
    }
 
-   val rawId: String
-      get() = id.value
+   val rawLocalId: String
+      get() = localId.value
 
    val createdTimeEpochMillis: Long?
       get() = createdTime?.toEpochMilliseconds()

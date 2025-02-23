@@ -42,7 +42,7 @@ pub fn from_api(
 
    let account = Account {
       instance: instance.clone(),
-      id: AccountId(id.context("No account id")?),
+      local_id: AccountId(id.context("No account id")?),
       username,
       acct,
       url: url.and_then(|url| url.parse().ok()),
