@@ -33,7 +33,7 @@ mod jni_tests {
    use ext_panoptiqon::repository_holder::RepositoryHolder;
    use panoptiqon::cache::Cache;
    use panoptiqon::jvm_types::JvmCache;
-   use crate::account::{Account, AccountLocalId};
+   use crate::account::Account;
    use crate::instance::Instance;
    use crate::jvm_types::{
       JvmAccount, JvmCustomEmoji, JvmInstance, JvmRole, JvmStatusVisibility,
@@ -69,9 +69,17 @@ mod jni_tests {
       account_repo: &RepositoryHolder<Account>,
       instance_repo: &RepositoryHolder<Instance>
    ) -> Cache<Account> {
+      use crate::account::{AccountId, AccountLocalId};
+
+      let instance = save_instance(env, instance_repo);
+      let instance_url = instance.read().unwrap().url.clone();
+
       let account = Account {
-         instance: save_instance(env, instance_repo),
-         local_id: AccountLocalId("account id".to_string()),
+         instance,
+         id: AccountId {
+            instance_url,
+            local: AccountLocalId("account id".to_string()),
+         },
          username: None,
          acct: None,
          url: None,
@@ -139,17 +147,21 @@ mod jni_tests {
    ) {
       use chrono::{TimeZone, Utc};
       use panoptiqon::convert_jvm::CloneFromJvm;
-      use crate::account::AccountProfileField;
+      use crate::account::{AccountId, AccountLocalId, AccountProfileField};
       use crate::custom_emoji::CustomEmoji;
 
       let account = Account::clone_from_jvm(&mut env, &account);
 
       let instance = save_instance(&mut env, &account_toRust_instance_repo);
+      let instance_url = instance.read().unwrap().url.clone();
 
       assert_eq!(
          Account {
             instance: instance.clone(),
-            local_id: AccountLocalId("id".to_string()),
+            id: AccountId {
+               instance_url,
+               local: AccountLocalId("id".to_string()),
+            },
             username: Some("username".to_string()),
             acct: Some("acct".to_string()),
             url: Some("https://example.com/url".parse().unwrap()),
@@ -237,14 +249,18 @@ mod jni_tests {
    ) -> JvmAccount<'local> {
       use chrono::{TimeZone, Utc};
       use panoptiqon::convert_jvm::CloneIntoJvm;
-      use crate::account::AccountProfileField;
+      use crate::account::{AccountId, AccountLocalId, AccountProfileField};
       use crate::custom_emoji::CustomEmoji;
 
       let instance = save_instance(&mut env, &account_fromRust_instance_repo);
+      let instance_url = instance.read().unwrap().url.clone();
 
       let account = Account {
          instance: instance.clone(),
-         local_id: AccountLocalId("id".to_string()),
+         id: AccountId {
+            instance_url,
+            local: AccountLocalId("id".to_string()),
+         },
          username: Some("username".to_string()),
          acct: Some("acct".to_string()),
          url: Some("https://example.com/url".parse().unwrap()),

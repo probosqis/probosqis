@@ -40,7 +40,7 @@ use {
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
 pub struct Account {
    pub instance: Cache<Instance>,
-   pub local_id: AccountLocalId,
+   pub id: AccountId,
    pub username: Option<String>,
    pub acct: Option<String>,
    pub url: Option<Url>,
@@ -86,6 +86,12 @@ pub struct RelationalAccount {
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
+pub struct AccountId {
+   pub instance_url: Url,
+   pub local: AccountLocalId,
+}
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
 pub struct AccountLocalId(pub String);
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
@@ -103,6 +109,7 @@ convert_jvm_helper! {
       fn clone_into_jvm<'local>(..) -> JvmAccount<'local>
          where jvm_constructor: "(\
             Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
+            Ljava/lang/String;\
             Ljava/lang/String;\
             Ljava/lang/String;\
             Ljava/lang/String;\
@@ -134,6 +141,11 @@ convert_jvm_helper! {
          where jvm_type: JvmCache<'local, JvmInstance<'local>>,
                jvm_getter_method: "getInstance",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
+
+      fn instance_url<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getInstanceUrl",
+               jvm_return_type: "Ljava/lang/String;";
 
       fn raw_local_id<'local>(..) -> String
          where jvm_type: JvmString<'local>,
@@ -268,7 +280,8 @@ impl<'local> CloneIntoJvm<'local, JvmAccount<'local>> for Account {
       ACCOUNT_HELPER.clone_into_jvm(
          env,
          &self.instance,
-         &self.local_id.0,
+         self.id.instance_url.as_str(),
+         &self.id.local.0,
          &self.username,
          &self.acct,
          &self.url.as_ref().map(Url::as_str),
@@ -304,6 +317,7 @@ impl<'local> CloneFromJvm<'local, JvmAccount<'local>> for Account {
       jvm_instance: &JvmAccount<'local>
    ) -> Account {
       let instance                = ACCOUNT_HELPER.instance                          (env, jvm_instance);
+      let instance_url            = ACCOUNT_HELPER.instance_url                      (env, jvm_instance);
       let raw_local_id            = ACCOUNT_HELPER.raw_local_id                      (env, jvm_instance);
       let username                = ACCOUNT_HELPER.username                          (env, jvm_instance);
       let acct                    = ACCOUNT_HELPER.acct                              (env, jvm_instance);
@@ -332,7 +346,10 @@ impl<'local> CloneFromJvm<'local, JvmAccount<'local>> for Account {
 
       Account {
          instance,
-         local_id: AccountLocalId(raw_local_id),
+         id: AccountId {
+            instance_url: instance_url.parse().unwrap(),
+            local: AccountLocalId(raw_local_id),
+         },
          username,
          acct,
          url: url.map(|url| url.parse().unwrap()),
