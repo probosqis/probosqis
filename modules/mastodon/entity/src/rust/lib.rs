@@ -33,7 +33,7 @@ mod jni_tests {
    use ext_panoptiqon::repository_holder::RepositoryHolder;
    use panoptiqon::cache::Cache;
    use panoptiqon::jvm_types::JvmCache;
-   use crate::account::{Account, AccountId};
+   use crate::account::{Account, AccountLocalId};
    use crate::instance::Instance;
    use crate::jvm_types::{
       JvmAccount, JvmCustomEmoji, JvmInstance, JvmRole, JvmStatusVisibility,
@@ -71,7 +71,7 @@ mod jni_tests {
    ) -> Cache<Account> {
       let account = Account {
          instance: save_instance(env, instance_repo),
-         local_id: AccountId("account id".to_string()),
+         local_id: AccountLocalId("account id".to_string()),
          username: None,
          acct: None,
          url: None,
@@ -149,7 +149,7 @@ mod jni_tests {
       assert_eq!(
          Account {
             instance: instance.clone(),
-            local_id: AccountId("id".to_string()),
+            local_id: AccountLocalId("id".to_string()),
             username: Some("username".to_string()),
             acct: Some("acct".to_string()),
             url: Some("https://example.com/url".parse().unwrap()),
@@ -244,7 +244,7 @@ mod jni_tests {
 
       let account = Account {
          instance: instance.clone(),
-         local_id: AccountId("id".to_string()),
+         local_id: AccountLocalId("id".to_string()),
          username: Some("username".to_string()),
          acct: Some("acct".to_string()),
          url: Some("https://example.com/url".parse().unwrap()),

@@ -22,7 +22,7 @@ import kotlinx.datetime.Instant
 
 data class Account(
    val instance: Cache<Instance>,
-   val localId: Id,
+   val localId: LocalId,
    val username: String?,
    val acct: String?,
    val url: String?,
@@ -77,7 +77,7 @@ data class Account(
       followeeCount: Long?,
    ) : this(
       instance,
-      Id(rawLocalId),
+      LocalId(rawLocalId),
       username,
       acct,
       url,
@@ -105,7 +105,7 @@ data class Account(
    )
 
    @JvmInline
-   value class Id(val value: String)
+   value class LocalId(val value: String)
 
    data class ProfileField(
       val name: String?,

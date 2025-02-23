@@ -16,7 +16,7 @@
 
 use url::Url;
 use panoptiqon::cache::CacheContent;
-use crate::account::{Account, AccountId};
+use crate::account::{Account, AccountLocalId};
 use crate::instance::Instance;
 
 #[cfg(feature = "jvm")]
@@ -34,12 +34,12 @@ impl CacheContent for Instance {
 }
 
 impl CacheContent for Account {
-   type Key = (Url, AccountId);
+   type Key = (Url, AccountLocalId);
 
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmAccount<'local>;
 
-   fn key(&self) -> (Url, AccountId) {
+   fn key(&self) -> (Url, AccountLocalId) {
       let instance_url = self.instance.read().unwrap().url.clone();
       let account_id = self.local_id.clone();
 

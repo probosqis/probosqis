@@ -35,7 +35,7 @@ class ConvertJniTest {
 
       val account = Account(
          instance,
-         Account.Id("id"),
+         Account.LocalId("id"),
          "username",
          "acct",
          "https://example.com/url",
@@ -100,7 +100,7 @@ class ConvertJniTest {
       assertEquals(
          Account(
             instance,
-            Account.Id("id"),
+            Account.LocalId("id"),
             "username",
             "acct",
             "https://example.com/url",

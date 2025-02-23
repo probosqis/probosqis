@@ -40,7 +40,7 @@ use {
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
 pub struct Account {
    pub instance: Cache<Instance>,
-   pub local_id: AccountId,
+   pub local_id: AccountLocalId,
    pub username: Option<String>,
    pub acct: Option<String>,
    pub url: Option<Url>,
@@ -86,7 +86,7 @@ pub struct RelationalAccount {
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
-pub struct AccountId(pub String);
+pub struct AccountLocalId(pub String);
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
 pub struct AccountProfileField {
@@ -332,7 +332,7 @@ impl<'local> CloneFromJvm<'local, JvmAccount<'local>> for Account {
 
       Account {
          instance,
-         local_id: AccountId(raw_local_id),
+         local_id: AccountLocalId(raw_local_id),
          username,
          acct,
          url: url.map(|url| url.parse().unwrap()),
