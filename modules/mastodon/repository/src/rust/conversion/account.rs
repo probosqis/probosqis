@@ -30,7 +30,7 @@ pub fn from_api(
 ) -> anyhow::Result<Account> {
    use anyhow::Context;
    use chrono::DateTime;
-   use mastodon_entity::account::AccountId;
+   use mastodon_entity::account::{AccountId, AccountLocalId};
    use crate::conversion::custom_emoji;
 
    let ApiAccount {
@@ -42,7 +42,12 @@ pub fn from_api(
 
    let account = Account {
       instance: instance.clone(),
-      id: AccountId(id.context("No account id")?),
+      id: AccountId {
+         instance_url: instance.read()
+            .map_err(|_| anyhow::format_err!("instance cache was poisoned"))?
+            .url.clone(),
+         local: AccountLocalId(id.context("No account id")?)
+      },
       username,
       acct,
       url: url.and_then(|url| url.parse().ok()),

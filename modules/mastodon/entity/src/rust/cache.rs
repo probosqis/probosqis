@@ -34,15 +34,12 @@ impl CacheContent for Instance {
 }
 
 impl CacheContent for Account {
-   type Key = (Url, AccountId);
+   type Key = AccountId;
 
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmAccount<'local>;
 
-   fn key(&self) -> (Url, AccountId) {
-      let instance_url = self.instance.read().unwrap().url.clone();
-      let account_id = self.id.clone();
-
-      (instance_url, account_id)
+   fn key(&self) -> AccountId {
+      self.id.clone()
    }
 }

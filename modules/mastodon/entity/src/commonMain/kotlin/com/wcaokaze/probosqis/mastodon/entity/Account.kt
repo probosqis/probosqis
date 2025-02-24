@@ -50,7 +50,8 @@ data class Account(
 ) {
    constructor(
       instance: Cache<Instance>,
-      id: String,
+      instanceUrl: String,
+      rawLocalId: String,
       username: String?,
       acct: String?,
       url: String?,
@@ -77,7 +78,7 @@ data class Account(
       followeeCount: Long?,
    ) : this(
       instance,
-      Id(id),
+      Id(instanceUrl, LocalId(rawLocalId)),
       username,
       acct,
       url,
@@ -104,8 +105,10 @@ data class Account(
       followeeCount,
    )
 
+   data class Id(val instanceUrl: String, val local: LocalId)
+
    @JvmInline
-   value class Id(val value: String)
+   value class LocalId(val value: String)
 
    data class ProfileField(
       val name: String?,
@@ -124,8 +127,11 @@ data class Account(
          get() = verifiedTime?.toEpochMilliseconds()
    }
 
-   val rawId: String
-      get() = id.value
+   val instanceUrl: String
+      get() = id.instanceUrl
+
+   val rawLocalId: String
+      get() = id.local.value
 
    val createdTimeEpochMillis: Long?
       get() = createdTime?.toEpochMilliseconds()
