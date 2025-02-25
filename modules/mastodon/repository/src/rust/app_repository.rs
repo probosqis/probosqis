@@ -18,6 +18,8 @@ use mastodon_entity::account::CredentialAccount;
 use mastodon_entity::application::Application;
 use mastodon_entity::instance::Instance;
 use mastodon_entity::token::Token;
+use panoptiqon::cache::Cache;
+use url::Url;
 
 #[cfg(not(feature = "jvm"))]
 use std::marker::PhantomData;
@@ -89,7 +91,7 @@ mod apps {
    }
 }
 
-struct AppRepository<'jni> {
+pub struct AppRepository<'jni> {
    #[cfg(not(feature = "jvm"))]
    env: PhantomData<&'jni ()>,
    #[cfg(feature = "jvm")]
@@ -101,20 +103,20 @@ impl AppRepository<'_> {
    const DESKTOP_REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
 
    #[cfg(not(feature = "jvm"))]
-   fn new() -> AppRepository<'static> {
+   pub fn new() -> AppRepository<'static> {
       AppRepository {
          env: PhantomData
       }
    }
 
    #[cfg(feature = "jvm")]
-   fn new<'jni>(env: &JNIEnv<'jni>) -> AppRepository<'jni> {
+   pub fn new<'jni>(env: &JNIEnv<'jni>) -> AppRepository<'jni> {
       AppRepository {
          env: unsafe { env.unsafe_clone() }
       }
    }
 
-   fn post_app(
+   pub fn post_app(
       &mut self,
       instance: Instance,
       redirect_uri: &str
@@ -158,7 +160,55 @@ impl AppRepository<'_> {
       Ok(application)
    }
 
-   fn get_credential_account(
+   pub fn get_authorize_url(
+      &self,
+      instance_cache: &Cache<Instance>,
+      client_id: &str,
+      redirect_uri: &str
+   ) -> anyhow::Result<Url> {
+      use mastodon_webapi::api::oauth;
+
+      let authorize_url = oauth::get_authorize_url(
+         /* instance_base_url = */ &instance_cache.read().unwrap().url,
+         /* response_type = */ "code",
+         /* client_id = */ client_id,
+         redirect_uri,
+         /* scope = */ Some("read write push"),
+         /* force_login = */ None,
+         /* lang = */ None
+      )?;
+
+      Ok(authorize_url)
+   }
+
+   pub fn get_token(
+      &self,
+      instance_cache: Cache<Instance>,
+      code: &str,
+      client_id: &str,
+      client_secret: &str,
+      redirect_uri: &str
+   ) -> anyhow::Result<Token> {
+      use ext_reqwest::CLIENT;
+      use mastodon_webapi::api::oauth;
+      use crate::conversion;
+
+      let api_token = oauth::post_token(
+         &CLIENT,
+         /* instance_base_url */ &instance_cache.read().unwrap().url,
+         /* grant_type = */ "authorization_code",
+         /* code = */ Some(code),
+         /* client_id = */ client_id,
+         /* client_secret = */ client_secret,
+         redirect_uri,
+         /* scope = */ Some("read write push")
+      )?;
+
+      let token = conversion::token::from_api(api_token, instance_cache)?;
+      Ok(token)
+   }
+
+   pub fn get_credential_account(
       &mut self,
       token: &Token
    ) -> anyhow::Result<CredentialAccount> {
@@ -271,21 +321,16 @@ mod jvm {
       client_id: JvmString<'local>,
       redirect_uri: &str
    ) -> anyhow::Result<JvmString<'local>> {
-      use mastodon_webapi::api::oauth;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use super::AppRepository;
+
+      let app_repository = AppRepository::new(env);
 
       let instance_cache = get_instance_cache_from_jni(env, &instance)?;
       let client_id = String::clone_from_jvm(env, &client_id);
 
-      let authorize_url = oauth::get_authorize_url(
-         /* instance_base_url = */ &instance_cache.read().unwrap().url,
-         /* response_type = */ "code",
-         /* client_id = */ &client_id,
-         redirect_uri,
-         /* scope = */ Some("read write push"),
-         /* force_login = */ None,
-         /* lang = */ None
-      )?;
+      let authorize_url = app_repository
+         .get_authorize_url(&instance_cache, &client_id, redirect_uri)?;
 
       let authorize_url = authorize_url.as_str().clone_into_jvm(env);
       Ok(authorize_url)
@@ -331,10 +376,10 @@ mod jvm {
       client_secret: JvmString<'local>,
       redirect_uri: &str
    ) -> anyhow::Result<JvmToken<'local>> {
-      use ext_reqwest::CLIENT;
-      use mastodon_webapi::api::oauth;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
-      use crate::conversion;
+      use super::AppRepository;
+
+      let app_repository = AppRepository::new(env);
 
       let instance_cache = get_instance_cache_from_jni(env, &instance)?;
 
@@ -342,18 +387,10 @@ mod jvm {
       let client_id = String::clone_from_jvm(env, &client_id);
       let client_secret = String::clone_from_jvm(env, &client_secret);
 
-      let api_token = oauth::post_token(
-         &CLIENT,
-         /* instance_base_url */ &instance_cache.read().unwrap().url,
-         /* grant_type = */ "authorization_code",
-         /* code = */ Some(&code),
-         /* client_id = */ &client_id,
-         /* client_secret = */ &client_secret,
-         redirect_uri,
-         /* scope = */ Some("read write push")
+      let token = app_repository.get_token(
+         instance_cache, &code, &client_id, &client_secret, redirect_uri
       )?;
 
-      let token = conversion::token::from_api(api_token, instance_cache)?;
       Ok(token.clone_into_jvm(env))
    }
 
@@ -427,7 +464,7 @@ mod jvm {
    }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "jvm")))]
 mod test {
    use mastodon_webapi::entity::application::Application;
    use super::apps;

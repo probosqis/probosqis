@@ -60,6 +60,7 @@ macro_rules! convert_jvm_helper {
                }
             }
 
+            $(#[$attr])*
             impl $type_name {
                pub const fn new() -> Self {
                   let inner = [<$type_name Inner>]::Uninit;
@@ -221,6 +222,7 @@ macro_rules! convert_jvm_helper {
                }
             }
 
+            $(#[$attr])*
             impl $type_name {
                pub const fn new() -> Self {
                   let inner = [<$type_name Inner>]::Uninit;
@@ -524,7 +526,7 @@ mod jni_tests {
       ($name:ident) => {
          paste! {
             convert_jvm_helper! {
-               #[allow(non_upper_case_globals, non_camel_case_types)]
+               #[allow(non_upper_case_globals, non_camel_case_types, dead_code)]
                static $name = impl struct [<$name Helper>]
                   where jvm_class: "com/wcaokaze/probosqis/ext/panoptiqon/TestEntity"
                {

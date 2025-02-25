@@ -18,8 +18,6 @@ pub mod instance {
    use ext_panoptiqon::repository_holder::RepositoryHolder;
    use mastodon_entity::instance::Instance;
 
-   pub type Repository = panoptiqon::repository::Repository<Instance>;
-
    static REPO: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    pub fn repo() -> &'static RepositoryHolder<Instance> {
@@ -43,8 +41,6 @@ pub mod account {
 pub mod account_icon {
    use entity::image_bytes::ImageBytes;
    use ext_panoptiqon::repository_holder::RepositoryHolder;
-
-   pub type Repository = panoptiqon::repository::Repository<ImageBytes>;
 
    static REPO: RepositoryHolder<ImageBytes> = RepositoryHolder::new();
 

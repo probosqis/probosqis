@@ -25,7 +25,7 @@ use std::marker::PhantomData;
 use jni::JNIEnv;
 use panoptiqon::cache::Cache;
 
-struct AccountRepository<'jni> {
+pub struct AccountRepository<'jni> {
    #[cfg(not(feature = "jvm"))]
    env: PhantomData<&'jni ()>,
    #[cfg(feature = "jvm")]
@@ -34,20 +34,20 @@ struct AccountRepository<'jni> {
 
 impl AccountRepository<'_> {
    #[cfg(not(feature = "jvm"))]
-   fn new() -> AccountRepository<'static> {
+   pub fn new() -> AccountRepository<'static> {
       AccountRepository {
          env: PhantomData
       }
    }
 
    #[cfg(feature = "jvm")]
-   fn new<'jni>(env: &JNIEnv<'jni>) -> AccountRepository<'jni> {
+   pub fn new<'jni>(env: &JNIEnv<'jni>) -> AccountRepository<'jni> {
       AccountRepository {
          env: unsafe { env.unsafe_clone() }
       }
    }
 
-   fn get_account_icon(
+   pub fn get_account_icon(
       &mut self,
       account: Account
    ) -> anyhow::Result<Cache<ImageBytes>> {

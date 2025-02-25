@@ -113,7 +113,7 @@ mod jvm {
          .next()
    }
 
-   #[cfg(test)]
+   #[cfg(all(test, not(feature = "jvm")))]
    mod test {
       use nodeinfo_webapi::entity::resource_descriptor::{Link, ResourceDescriptor};
 

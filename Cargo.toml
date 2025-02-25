@@ -47,7 +47,7 @@ reqwest.default-features = false
 reqwest.features = ["rustls-tls", "charset", "http2", "blocking", "json"]
 
 entity = { path = "modules/entity" }
-ext-kotlintest = { path = "modules/ext/kotlinTest" }
+ext_kotlintest = { path = "modules/ext/kotlinTest" }
 ext_panoptiqon = { path = "modules/ext/panoptiqon" }
 ext_reqwest = { path = "modules/ext/reqwest" }
 panoptiqon = { path = "modules/panoptiqon/panoptiqon" }
