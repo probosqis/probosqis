@@ -464,7 +464,7 @@ mod jvm {
    }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "jvm")))]
 mod test {
    use mastodon_webapi::entity::application::Application;
    use super::apps;
