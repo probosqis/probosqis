@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use std::collections::HashMap;
 
-use anyhow::Result;
 use reqwest::blocking::Client;
 use url::Url;
-
 use crate::entity::application::Application;
+
+#[cfg(feature = "mock")]
+use std::cell::RefCell;
+
+thread_local! {
+   #[cfg(feature = "mock")]
+   static POST_APPS_V0: RefCell<Box<dyn Fn(&Client, &Url, &str, &str, Option<&str>, Option<&str>) -> anyhow::Result<Application>>>
+      = RefCell::new(Box::new(|_, _, _, _, _, _| panic!()));
+
+   #[cfg(feature = "mock")]
+   static POST_APPS_V4_3_0: RefCell<Box<dyn Fn(&Client, &Url, &str, &[&str], Option<&str>, Option<&str>) -> anyhow::Result<Application>>>
+      = RefCell::new(Box::new(|_, _, _, _, _, _| panic!()));
+}
 
 /// since mastodon 0.0.0
 pub fn post_apps_v0(
@@ -29,26 +39,39 @@ pub fn post_apps_v0(
    redirect_uris: &str,
    scopes: Option<&str>,
    website: Option<&str>
-) -> Result<Application> {
-   let url = instance_base_url.join("api/v1/apps")?;
+) -> anyhow::Result<Application> {
+   #[cfg(not(feature = "mock"))]
+   {
+      use std::collections::HashMap;
 
-   let mut form = HashMap::new();
-   form.insert("client_name", client_name);
-   form.insert("redirect_uris", redirect_uris);
-   if let Some(scopes) = scopes {
-      form.insert("scopes", scopes);
+      let url = instance_base_url.join("api/v1/apps")?;
+
+      let mut form = HashMap::new();
+      form.insert("client_name", client_name);
+      form.insert("redirect_uris", redirect_uris);
+      if let Some(scopes) = scopes {
+         form.insert("scopes", scopes);
+      }
+      if let Some(website) = website {
+         form.insert("website", website);
+      }
+
+      let application = client
+         .post(url)
+         .form(&form)
+         .send()?
+         .json()?;
+
+      Ok(application)
    }
-   if let Some(website) = website {
-      form.insert("website", website);
+
+   #[cfg(feature = "mock")]
+   {
+      POST_APPS_V0.with(|f| {
+         let f = f.borrow();
+         f(client, instance_base_url, client_name, redirect_uris, scopes, website)
+      })
    }
-
-   let application = client
-      .post(url)
-      .form(&form)
-      .send()?
-      .json()?;
-
-   Ok(application)
 }
 
 /// since mastodon 4.3.0
@@ -61,28 +84,55 @@ pub fn post_apps_v4_3_0(
    redirect_uris: &[&str],
    scopes: Option<&str>,
    website: Option<&str>
-) -> Result<Application> {
-   let url = instance_base_url.join("api/v1/apps")?;
+) -> anyhow::Result<Application> {
+   #[cfg(not(feature = "mock"))]
+   {
+      let url = instance_base_url.join("api/v1/apps")?;
 
-   let mut form = Vec::new();
-   form.push(("client_name", client_name));
+      let mut form = Vec::new();
+      form.push(("client_name", client_name));
 
-   for u in redirect_uris {
-      form.push(("redirect_uris[]", u));
+      for u in redirect_uris {
+         form.push(("redirect_uris[]", u));
+      }
+
+      if let Some(scopes) = scopes {
+         form.push(("scopes", scopes));
+      }
+      if let Some(website) = website {
+         form.push(("website", website));
+      }
+
+      let application = client
+         .post(url)
+         .form(&form)
+         .send()?
+         .json()?;
+
+      Ok(application)
    }
 
-   if let Some(scopes) = scopes {
-      form.push(("scopes", scopes));
+   #[cfg(feature = "mock")]
+   {
+      POST_APPS_V4_3_0.with(|f| {
+         let f = f.borrow();
+         f(client, instance_base_url, client_name, redirect_uris, scopes, website)
+      })
    }
-   if let Some(website) = website {
-      form.push(("website", website));
-   }
+}
 
-   let application = client
-      .post(url)
-      .form(&form)
-      .send()?
-      .json()?;
+#[allow(dead_code)]
+#[cfg(feature = "mock")]
+pub fn inject_post_apps_v0(
+   post_app_v0: impl Fn(&Client, &Url, &str, &str, Option<&str>, Option<&str>) -> anyhow::Result<Application> + 'static
+) {
+   POST_APPS_V0.set(Box::new(post_app_v0));
+}
 
-   Ok(application)
+#[allow(dead_code)]
+#[cfg(feature = "mock")]
+pub fn inject_post_apps_v4_3_0(
+   post_app_v4_3_0: impl Fn(&Client, &Url, &str, &[&str], Option<&str>, Option<&str>) -> anyhow::Result<Application> + 'static
+) {
+   POST_APPS_V4_3_0.set(Box::new(post_app_v4_3_0));
 }

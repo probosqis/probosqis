@@ -27,166 +27,6 @@ use std::marker::PhantomData;
 #[cfg(feature = "jvm")]
 use jni::JNIEnv;
 
-#[cfg(not(any(test, feature = "jni-test")))]
-use mastodon_webapi::api::{
-   accounts,
-   apps,
-   oauth,
-};
-
-#[cfg(any(test, feature = "jni-test"))]
-mod accounts {
-   use std::cell::RefCell;
-   use reqwest::blocking::Client;
-   use url::Url;
-   use mastodon_webapi::entity::account::Account;
-
-   thread_local! {
-      static GET_VERIFY_CREDENTIALS: RefCell<Box<dyn Fn(&Client, &Url, &str) -> anyhow::Result<Account>>>
-         = RefCell::new(Box::new(|_, _, _| panic!()));
-   }
-
-   pub fn get_verify_credentials(
-      client: &Client,
-      instance_base_url: &Url,
-      access_token: &str
-   ) -> anyhow::Result<Account> {
-      GET_VERIFY_CREDENTIALS.with(|f| {
-         let f = f.borrow();
-         f(client, instance_base_url, access_token)
-      })
-   }
-
-   #[allow(dead_code)]
-   pub fn inject_get_verify_credentials(
-      get_verify_credentials: impl Fn(&Client, &Url, &str) -> anyhow::Result<Account> + 'static
-   ) {
-      GET_VERIFY_CREDENTIALS.set(Box::new(get_verify_credentials));
-   }
-}
-
-#[cfg(any(test, feature = "jni-test"))]
-mod apps {
-   use std::cell::RefCell;
-
-   use anyhow::Result;
-   use reqwest::blocking::Client;
-   use url::Url;
-
-   use mastodon_webapi::entity::application::Application as ApiApplication;
-
-   thread_local! {
-      static POST_APPS_V0: RefCell<Box<dyn Fn(&Client, &Url, &str, &str, Option<&str>, Option<&str>) -> Result<ApiApplication>>>
-         = RefCell::new(Box::new(|_, _, _, _, _, _| panic!()));
-
-      static POST_APPS_V4_3_0: RefCell<Box<dyn Fn(&Client, &Url, &str, &[&str], Option<&str>, Option<&str>) -> Result<ApiApplication>>>
-         = RefCell::new(Box::new(|_, _, _, _, _, _| panic!()));
-   }
-
-   pub fn post_apps_v0(
-      client: &Client,
-      instance_base_url: &Url,
-      client_name: &str,
-      redirect_uris: &str,
-      scopes: Option<&str>,
-      website: Option<&str>
-   ) -> Result<ApiApplication> {
-      POST_APPS_V0.with(|f| {
-         let f = f.borrow();
-         f(client, instance_base_url, client_name, redirect_uris, scopes, website)
-      })
-   }
-
-   pub fn post_apps_v4_3_0(
-      client: &Client,
-      instance_base_url: &Url,
-      client_name: &str,
-      redirect_uris: &[&str],
-      scopes: Option<&str>,
-      website: Option<&str>
-   ) -> Result<ApiApplication> {
-      POST_APPS_V4_3_0.with(|f| {
-         let f = f.borrow();
-         f(client, instance_base_url, client_name, redirect_uris, scopes, website)
-      })
-   }
-
-   #[allow(dead_code)]
-   pub fn inject_post_apps_v0(
-      post_app_v0: impl Fn(&Client, &Url, &str, &str, Option<&str>, Option<&str>) -> Result<ApiApplication> + 'static
-   ) {
-      POST_APPS_V0.set(Box::new(post_app_v0));
-   }
-
-   #[allow(dead_code)]
-   pub fn inject_post_apps_v4_3_0(
-      post_app_v4_3_0: impl Fn(&Client, &Url, &str, &[&str], Option<&str>, Option<&str>) -> Result<ApiApplication> + 'static
-   ) {
-      POST_APPS_V4_3_0.set(Box::new(post_app_v4_3_0));
-   }
-}
-
-#[cfg(any(test, feature = "jni-test"))]
-mod oauth {
-   use std::cell::RefCell;
-   use reqwest::blocking::Client;
-   use url::Url;
-   use mastodon_webapi::entity::token::Token;
-
-   thread_local! {
-      static GET_AUTHORIZE_URL: RefCell<Box<dyn Fn(&Url, &str, &str, &str, Option<&str>, Option<bool>, Option<&str>) -> anyhow::Result<Url>>>
-         = RefCell::new(Box::new(|_, _, _, _, _, _, _| panic!()));
-
-      static POST_TOKEN: RefCell<Box<dyn Fn(&Client, &Url, &str, Option<&str>, &str, &str, &str, Option<&str>) -> anyhow::Result<Token>>>
-         = RefCell::new(Box::new(|_, _, _, _, _, _, _, _| panic!()));
-   }
-
-   pub fn get_authorize_url(
-      instance_base_url: &Url,
-      response_type: &str,
-      client_id: &str,
-      redirect_uri: &str,
-      scope: Option<&str>,
-      force_login: Option<bool>,
-      lang: Option<&str>,
-   ) -> anyhow::Result<Url> {
-      GET_AUTHORIZE_URL.with(|f| {
-         let f = f.borrow();
-         f(instance_base_url, response_type, client_id, redirect_uri, scope, force_login, lang)
-      })
-   }
-
-   pub fn post_token(
-      client: &Client,
-      instance_base_url: &Url,
-      grant_type: &str,
-      code: Option<&str>,
-      client_id: &str,
-      client_secret: &str,
-      redirect_uri: &str,
-      scope: Option<&str>,
-   ) -> anyhow::Result<Token> {
-      POST_TOKEN.with(|f| {
-         let f = f.borrow();
-         f(client, instance_base_url, grant_type, code, client_id, client_secret, redirect_uri, scope)
-      })
-   }
-
-   #[allow(dead_code)]
-   pub fn inject_get_authorize_url(
-      get_authorize_url: impl Fn(&Url, &str, &str, &str, Option<&str>, Option<bool>, Option<&str>) -> anyhow::Result<Url> + 'static
-   ) {
-      GET_AUTHORIZE_URL.set(Box::new(get_authorize_url));
-   }
-
-   #[allow(dead_code)]
-   pub fn inject_post_token(
-      post_token: impl Fn(&Client, &Url, &str, Option<&str>, &str, &str, &str, Option<&str>) -> anyhow::Result<Token> + 'static
-   ) {
-      POST_TOKEN.set(Box::new(post_token));
-   }
-}
-
 pub struct AppRepository<'jni> {
    #[cfg(not(feature = "jvm"))]
    env: PhantomData<&'jni ()>,
@@ -218,6 +58,7 @@ impl AppRepository<'_> {
       redirect_uri: &str
    ) -> anyhow::Result<Application> {
       use ext_reqwest::CLIENT;
+      use mastodon_webapi::api::apps;
       use semver::Version;
       use crate::cache;
       use crate::conversion;
@@ -262,6 +103,8 @@ impl AppRepository<'_> {
       client_id: &str,
       redirect_uri: &str
    ) -> anyhow::Result<Url> {
+      use mastodon_webapi::api::oauth;
+
       let authorize_url = {
          let instance_lock = instance_cache.read()
             .map_err(|_| anyhow::format_err!("instance cache was poisoned"))?;
@@ -289,6 +132,7 @@ impl AppRepository<'_> {
       redirect_uri: &str
    ) -> anyhow::Result<Token> {
       use ext_reqwest::CLIENT;
+      use mastodon_webapi::api::oauth;
       use crate::conversion;
 
       let api_token = {
@@ -316,6 +160,7 @@ impl AppRepository<'_> {
       token: &Token
    ) -> anyhow::Result<CredentialAccount> {
       use ext_reqwest::CLIENT;
+      use mastodon_webapi::api::accounts;
       use crate::conversion;
 
       let api_credential_account = {
@@ -571,7 +416,6 @@ mod jvm {
 #[cfg(all(test, not(feature = "jvm")))]
 mod test {
    use mastodon_webapi::entity::application::Application;
-   use super::{accounts, apps, oauth};
    use super::AppRepository;
 
    fn dummy_application() -> Application {
@@ -588,6 +432,7 @@ mod test {
       use std::sync::{Arc, Mutex};
       use chrono::DateTime;
       use mastodon_entity::instance::Instance;
+      use mastodon_webapi::api::apps;
       use url::Url;
 
       let mut repository = AppRepository::new();
@@ -679,6 +524,7 @@ mod test {
    fn authorize_url() {
       use chrono::{TimeZone, Utc};
       use mastodon_entity::instance::Instance;
+      use mastodon_webapi::api::oauth;
       use url::Url;
       use crate::cache;
 
@@ -713,6 +559,7 @@ mod test {
       use chrono::{TimeZone, Utc};
       use mastodon_entity::instance::Instance;
       use mastodon_entity::token::Token;
+      use mastodon_webapi::api::oauth;
       use mastodon_webapi::entity::token::Token as ApiToken;
       use crate::cache;
 
@@ -774,6 +621,7 @@ mod test {
          AccountField as ApiAccountField,
          CredentialAccountSource as ApiCredentialAccountSource,
       };
+      use mastodon_webapi::api::accounts;
       use mastodon_webapi::entity::custom_emoji::CustomEmoji as ApiCustomEmoji;
       use crate::cache;
 
