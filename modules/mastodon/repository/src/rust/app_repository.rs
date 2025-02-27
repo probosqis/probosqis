@@ -28,7 +28,42 @@ use std::marker::PhantomData;
 use jni::JNIEnv;
 
 #[cfg(not(any(test, feature = "jni-test")))]
-use mastodon_webapi::api::apps;
+use mastodon_webapi::api::{
+   accounts,
+   apps,
+   oauth,
+};
+
+#[cfg(any(test, feature = "jni-test"))]
+mod accounts {
+   use std::cell::RefCell;
+   use reqwest::blocking::Client;
+   use url::Url;
+   use mastodon_webapi::entity::account::Account;
+
+   thread_local! {
+      static GET_VERIFY_CREDENTIALS: RefCell<Box<dyn Fn(&Client, &Url, &str) -> anyhow::Result<Account>>>
+         = RefCell::new(Box::new(|_, _, _| panic!()));
+   }
+
+   pub fn get_verify_credentials(
+      client: &Client,
+      instance_base_url: &Url,
+      access_token: &str
+   ) -> anyhow::Result<Account> {
+      GET_VERIFY_CREDENTIALS.with(|f| {
+         let f = f.borrow();
+         f(client, instance_base_url, access_token)
+      })
+   }
+
+   #[allow(dead_code)]
+   pub fn inject_get_verify_credentials(
+      get_verify_credentials: impl Fn(&Client, &Url, &str) -> anyhow::Result<Account> + 'static
+   ) {
+      GET_VERIFY_CREDENTIALS.set(Box::new(get_verify_credentials));
+   }
+}
 
 #[cfg(any(test, feature = "jni-test"))]
 mod apps {
@@ -88,6 +123,67 @@ mod apps {
       post_app_v4_3_0: impl Fn(&Client, &Url, &str, &[&str], Option<&str>, Option<&str>) -> Result<ApiApplication> + 'static
    ) {
       POST_APPS_V4_3_0.set(Box::new(post_app_v4_3_0));
+   }
+}
+
+#[cfg(any(test, feature = "jni-test"))]
+mod oauth {
+   use std::cell::RefCell;
+   use reqwest::blocking::Client;
+   use url::Url;
+   use mastodon_webapi::entity::token::Token;
+
+   thread_local! {
+      static GET_AUTHORIZE_URL: RefCell<Box<dyn Fn(&Url, &str, &str, &str, Option<&str>, Option<bool>, Option<&str>) -> anyhow::Result<Url>>>
+         = RefCell::new(Box::new(|_, _, _, _, _, _, _| panic!()));
+
+      static POST_TOKEN: RefCell<Box<dyn Fn(&Client, &Url, &str, Option<&str>, &str, &str, &str, Option<&str>) -> anyhow::Result<Token>>>
+         = RefCell::new(Box::new(|_, _, _, _, _, _, _, _| panic!()));
+   }
+
+   pub fn get_authorize_url(
+      instance_base_url: &Url,
+      response_type: &str,
+      client_id: &str,
+      redirect_uri: &str,
+      scope: Option<&str>,
+      force_login: Option<bool>,
+      lang: Option<&str>,
+   ) -> anyhow::Result<Url> {
+      GET_AUTHORIZE_URL.with(|f| {
+         let f = f.borrow();
+         f(instance_base_url, response_type, client_id, redirect_uri, scope, force_login, lang)
+      })
+   }
+
+   pub fn post_token(
+      client: &Client,
+      instance_base_url: &Url,
+      grant_type: &str,
+      code: Option<&str>,
+      client_id: &str,
+      client_secret: &str,
+      redirect_uri: &str,
+      scope: Option<&str>,
+   ) -> anyhow::Result<Token> {
+      POST_TOKEN.with(|f| {
+         let f = f.borrow();
+         f(client, instance_base_url, grant_type, code, client_id, client_secret, redirect_uri, scope)
+      })
+   }
+
+   #[allow(dead_code)]
+   pub fn inject_get_authorize_url(
+      get_authorize_url: impl Fn(&Url, &str, &str, &str, Option<&str>, Option<bool>, Option<&str>) -> anyhow::Result<Url> + 'static
+   ) {
+      GET_AUTHORIZE_URL.set(Box::new(get_authorize_url));
+   }
+
+   #[allow(dead_code)]
+   pub fn inject_post_token(
+      post_token: impl Fn(&Client, &Url, &str, Option<&str>, &str, &str, &str, Option<&str>) -> anyhow::Result<Token> + 'static
+   ) {
+      POST_TOKEN.set(Box::new(post_token));
    }
 }
 
@@ -166,17 +262,20 @@ impl AppRepository<'_> {
       client_id: &str,
       redirect_uri: &str
    ) -> anyhow::Result<Url> {
-      use mastodon_webapi::api::oauth;
+      let authorize_url = {
+         let instance_lock = instance_cache.read()
+            .map_err(|_| anyhow::format_err!("instance cache was poisoned"))?;
 
-      let authorize_url = oauth::get_authorize_url(
-         /* instance_base_url = */ &instance_cache.read().unwrap().url,
-         /* response_type = */ "code",
-         /* client_id = */ client_id,
-         redirect_uri,
-         /* scope = */ Some("read write push"),
-         /* force_login = */ None,
-         /* lang = */ None
-      )?;
+         oauth::get_authorize_url(
+            /* instance_base_url = */ &instance_lock.url,
+            /* response_type = */ "code",
+            client_id,
+            redirect_uri,
+            /* scope = */ Some("read write push"),
+            /* force_login = */ None,
+            /* lang = */ None
+         )?
+      };
 
       Ok(authorize_url)
    }
@@ -190,19 +289,23 @@ impl AppRepository<'_> {
       redirect_uri: &str
    ) -> anyhow::Result<Token> {
       use ext_reqwest::CLIENT;
-      use mastodon_webapi::api::oauth;
       use crate::conversion;
 
-      let api_token = oauth::post_token(
-         &CLIENT,
-         /* instance_base_url */ &instance_cache.read().unwrap().url,
-         /* grant_type = */ "authorization_code",
-         /* code = */ Some(code),
-         /* client_id = */ client_id,
-         /* client_secret = */ client_secret,
-         redirect_uri,
-         /* scope = */ Some("read write push")
-      )?;
+      let api_token = {
+         let instance_lock = instance_cache.read()
+            .map_err(|_| anyhow::format_err!("instance cache was poisoned"))?;
+
+         oauth::post_token(
+            &CLIENT,
+            /* instance_base_url */ &instance_lock.url,
+            /* grant_type = */ "authorization_code",
+            /* code = */ Some(code),
+            client_id,
+            client_secret,
+            redirect_uri,
+            /* scope = */ Some("read write push")
+         )?
+      };
 
       let token = conversion::token::from_api(api_token, instance_cache)?;
       Ok(token)
@@ -213,17 +316,18 @@ impl AppRepository<'_> {
       token: &Token
    ) -> anyhow::Result<CredentialAccount> {
       use ext_reqwest::CLIENT;
-      use mastodon_webapi::api::accounts;
       use crate::conversion;
 
-      let instance_lock = token.instance.read()
-         .map_err(|_| anyhow::format_err!("instance cache was poisoned"))?;
+      let api_credential_account = {
+         let instance_lock = token.instance.read()
+            .map_err(|_| anyhow::format_err!("instance cache was poisoned"))?;
 
-      let api_credential_account = accounts::get_verify_credentials(
-         &CLIENT,
-         &instance_lock.url,
-         &token.access_token
-      )?;
+         accounts::get_verify_credentials(
+            &CLIENT,
+            &instance_lock.url,
+            &token.access_token
+         )?
+      };
 
       let credential_account = conversion::account::credential_account_from_api(
          #[cfg(feature = "jvm")] &mut self.env,
@@ -467,7 +571,7 @@ mod jvm {
 #[cfg(all(test, not(feature = "jvm")))]
 mod test {
    use mastodon_webapi::entity::application::Application;
-   use super::apps;
+   use super::{accounts, apps, oauth};
    use super::AppRepository;
 
    fn dummy_application() -> Application {
@@ -569,5 +673,325 @@ mod test {
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
+   }
+
+   #[test]
+   fn authorize_url() {
+      use chrono::{TimeZone, Utc};
+      use mastodon_entity::instance::Instance;
+      use url::Url;
+      use crate::cache;
+
+      let repository = AppRepository::new();
+
+      oauth::inject_get_authorize_url(|instance_base_url, _, _, _, _, _, _|
+         Ok(instance_base_url.join("oauth/authorize")?)
+      );
+
+      let instance = Instance {
+         url: "https://example.com/".parse().unwrap(),
+         version: "0.0.0".to_string(),
+         version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
+      };
+
+      let instance_cache = cache::instance::repo().write().unwrap().save(instance);
+
+      let authorize_url = repository.get_authorize_url(
+         &instance_cache,
+         "client_id",
+         "redirect_uri"
+      ).unwrap();
+
+      assert_eq!(
+         Url::parse("https://example.com/oauth/authorize").unwrap(),
+         authorize_url
+      );
+   }
+
+   #[test]
+   fn token() {
+      use chrono::{TimeZone, Utc};
+      use mastodon_entity::instance::Instance;
+      use mastodon_entity::token::Token;
+      use mastodon_webapi::entity::token::Token as ApiToken;
+      use crate::cache;
+
+      let repository = AppRepository::new();
+
+      oauth::inject_post_token(|_, _, _, _, _, _, _, _|
+         Ok(
+            ApiToken {
+               access_token: "access_token".to_string(),
+               token_type: "token_type".to_string(),
+               scope: "scope".to_string(),
+               created_at: 0,
+            }
+         )
+      );
+
+      let instance = Instance {
+         url: "https://example.com/".parse().unwrap(),
+         version: "0.0.0".to_string(),
+         version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
+      };
+
+      let instance_cache = cache::instance::repo().write().unwrap().save(instance);
+
+      let token = repository.get_token(
+         instance_cache.clone(),
+         "code",
+         "client_id",
+         "client_secret",
+         "redirect_uri"
+      ).unwrap();
+
+      assert_eq!(
+         Token {
+            instance: instance_cache,
+            access_token: "access_token".to_string(),
+            token_type: "token_type".to_string(),
+            scope: "scope".to_string(),
+            created_at: Utc.timestamp_nanos(0),
+         },
+         token
+      );
+   }
+
+   #[test]
+   fn credential_account() {
+      use chrono::{TimeZone, Utc};
+      use isolang::Language;
+      use mastodon_entity::instance::Instance;
+      use mastodon_entity::account::{
+         Account, AccountId, AccountLocalId, AccountProfileField,
+         CredentialAccount,
+      };
+      use mastodon_entity::custom_emoji::CustomEmoji;
+      use mastodon_entity::status::StatusVisibility;
+      use mastodon_entity::token::Token;
+      use mastodon_webapi::entity::account::{
+         Account as ApiAccount,
+         AccountField as ApiAccountField,
+         CredentialAccountSource as ApiCredentialAccountSource,
+      };
+      use mastodon_webapi::entity::custom_emoji::CustomEmoji as ApiCustomEmoji;
+      use crate::cache;
+
+      let mut repository = AppRepository::new();
+
+      accounts::inject_get_verify_credentials(|_, _, _|
+         Ok(
+            ApiAccount {
+               id: Some("account id".to_string()),
+               username: Some("username".to_string()),
+               acct: Some("acct".to_string()),
+               url: Some("https://example.com/url".to_string()),
+               display_name: Some("display_name".to_string()),
+               note: Some("note".to_string()),
+               avatar: Some("https://example.com/avatar/image/url".to_string()),
+               avatar_static: Some("https://example.com/avatar/static/image/url".to_string()),
+               header: Some("https://example.com/header/image/url".to_string()),
+               header_static: Some("https://example.com/header/static/image/url".to_string()),
+               locked: Some(false),
+               fields: Some(vec![
+                  ApiAccountField {
+                     name: Some("name".to_string()),
+                     value: Some("value".to_string()),
+                     verified_at: Some("2000-01-02T00:00:00.000Z".to_string()),
+                  },
+               ]),
+               emojis: Some(vec![
+                  ApiCustomEmoji {
+                     shortcode: Some("shortcode".to_string()),
+                     url: Some("https://example.com/custom/emoji/url".to_string()),
+                     static_url: Some("https://example.com/custom/emoji/static/url".to_string()),
+                     visible_in_picker: Some(false),
+                     category: Some("category".to_string()),
+                  },
+               ]),
+               bot: Some(true),
+               group: Some(false),
+               discoverable: Some(true),
+               noindex: Some(false),
+               moved: Some(Box::new(ApiAccount {
+                  id: Some("moved account id".to_string()),
+                  username: None,
+                  acct: None,
+                  url: None,
+                  display_name: None,
+                  note: None,
+                  avatar: None,
+                  avatar_static: None,
+                  header: None,
+                  header_static: None,
+                  locked: None,
+                  fields: None,
+                  emojis: None,
+                  bot: None,
+                  group: None,
+                  discoverable: None,
+                  noindex: None,
+                  moved: None,
+                  suspended: None,
+                  limited: None,
+                  created_at: None,
+                  last_status_at: None,
+                  statuses_count: None,
+                  followers_count: None,
+                  following_count: None,
+                  source: None,
+                  role: None,
+                  mute_expires_at: None,
+               })),
+               suspended: Some(false),
+               limited: Some(false),
+               created_at: Some("2000-01-02T00:00:00.000Z".to_string()),
+               last_status_at: Some("2000-01-02T00:00:00.000Z".to_string()),
+               statuses_count: Some(10000),
+               followers_count: Some(100),
+               following_count: Some(1000),
+               source: Some(ApiCredentialAccountSource {
+                  note: Some("note".to_string()),
+                  fields: Some(vec![
+                     ApiAccountField {
+                        name: Some("name".to_string()),
+                        value: Some("value".to_string()),
+                        verified_at: Some("2000-01-02T00:00:00.000Z".to_string()),
+                     },
+                  ]),
+                  privacy: Some("public".to_string()),
+                  sensitive: Some(false),
+                  language: Some("ja".to_string()),
+                  follow_requests_count: Some(1),
+               }),
+               role: None,
+               mute_expires_at: None,
+            }
+         )
+      );
+
+      let instance = Instance {
+         url: "https://example.com/".parse().unwrap(),
+         version: "0.0.0".to_string(),
+         version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
+      };
+
+      let instance_cache = cache::instance::repo().write().unwrap().save(instance);
+
+      let token = Token {
+         instance: instance_cache.clone(),
+         access_token: "access_token".to_string(),
+         token_type: "token_type".to_string(),
+         scope: "scope".to_string(),
+         created_at: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
+      };
+
+      let credential_account = repository.get_credential_account(&token).unwrap();
+
+      assert_eq!(
+         Account {
+            instance: instance_cache.clone(),
+            id: AccountId {
+               instance_url: "https://example.com/".parse().unwrap(),
+               local: AccountLocalId("moved account id".to_string()),
+            },
+            username: None,
+            acct: None,
+            url: None,
+            display_name: None,
+            profile_note: None,
+            avatar_image_url: None,
+            avatar_static_image_url: None,
+            header_image_url: None,
+            header_static_image_url: None,
+            is_locked: None,
+            profile_fields: vec![],
+            emojis_in_profile: vec![],
+            is_bot: None,
+            is_group: None,
+            is_discoverable: None,
+            is_noindex: None,
+            moved_to: None,
+            is_suspended: None,
+            is_limited: None,
+            created_time: None,
+            last_status_post_time: None,
+            status_count: None,
+            follower_count: None,
+            followee_count: None,
+         },
+         **credential_account.account.read().unwrap()
+            .moved_to.clone().unwrap().read().unwrap()
+      );
+
+      assert_eq!(
+         Account {
+            instance: instance_cache.clone(),
+            id: AccountId {
+               instance_url: "https://example.com/".parse().unwrap(),
+               local: AccountLocalId("account id".to_string()),
+            },
+            username: Some("username".to_string()),
+            acct: Some("acct".to_string()),
+            url: Some("https://example.com/url".parse().unwrap()),
+            display_name: Some("display_name".to_string()),
+            profile_note: Some("note".to_string()),
+            avatar_image_url: Some("https://example.com/avatar/image/url".parse().unwrap()),
+            avatar_static_image_url: Some("https://example.com/avatar/static/image/url".parse().unwrap()),
+            header_image_url: Some("https://example.com/header/image/url".parse().unwrap()),
+            header_static_image_url: Some("https://example.com/header/static/image/url".parse().unwrap()),
+            is_locked: Some(false),
+            profile_fields: vec![
+               AccountProfileField {
+                  name: Some("name".to_string()),
+                  value: Some("value".to_string()),
+                  verified_time: Some(Utc.with_ymd_and_hms(2000, 1, 2, 0, 0, 0).unwrap()),
+               },
+            ],
+            emojis_in_profile: vec![
+               CustomEmoji {
+                  instance: instance_cache,
+                  shortcode: "shortcode".to_string(),
+                  image_url: "https://example.com/custom/emoji/url".parse().unwrap(),
+                  static_image_url: Some("https://example.com/custom/emoji/static/url".parse().unwrap()),
+                  is_visible_in_picker: Some(false),
+                  category: Some("category".to_string()),
+               },
+            ],
+            is_bot: Some(true),
+            is_group: Some(false),
+            is_discoverable: Some(true),
+            is_noindex: Some(false),
+            moved_to: credential_account.account.read().unwrap().moved_to.clone(),
+            is_suspended: Some(false),
+            is_limited: Some(false),
+            created_time: Some(Utc.with_ymd_and_hms(2000, 1, 2, 0, 0, 0).unwrap()),
+            last_status_post_time: Some(Utc.with_ymd_and_hms(2000, 1, 2, 0, 0, 0).unwrap()),
+            status_count: Some(10000),
+            follower_count: Some(100),
+            followee_count: Some(1000),
+         },
+         **credential_account.account.read().unwrap()
+      );
+
+      assert_eq!(
+         CredentialAccount {
+            account: credential_account.account.clone(),
+            raw_profile_note: Some("note".to_string()),
+            raw_profile_fields: vec![
+               AccountProfileField {
+                  name: Some("name".to_string()),
+                  value: Some("value".to_string()),
+                  verified_time: Some(Utc.with_ymd_and_hms(2000, 1, 2, 0, 0, 0).unwrap()),
+               },
+            ],
+            default_post_visibility: Some(StatusVisibility::Public),
+            default_post_sensitivity: Some(false),
+            default_post_language: Some(Language::from_639_1("ja").unwrap()),
+            follow_request_count: Some(1),
+            role: None,
+         },
+         credential_account
+      );
    }
 }

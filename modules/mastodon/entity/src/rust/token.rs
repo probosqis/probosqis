@@ -28,7 +28,7 @@ use {
    crate::jvm_types::{JvmInstance, JvmToken},
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
 pub struct Token {
    pub instance: Cache<Instance>,
    pub access_token: String,
