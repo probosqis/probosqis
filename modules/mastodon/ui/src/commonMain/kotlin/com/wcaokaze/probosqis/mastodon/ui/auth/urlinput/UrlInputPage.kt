@@ -86,7 +86,7 @@ import org.koin.core.component.inject
 @SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage")
 class UrlInputPage : PPage()
 
-private class UnsupportedServerSoftwareException(
+internal class UnsupportedServerSoftwareException(
    val software: FediverseSoftware.Unsupported
 ) : Exception()
 

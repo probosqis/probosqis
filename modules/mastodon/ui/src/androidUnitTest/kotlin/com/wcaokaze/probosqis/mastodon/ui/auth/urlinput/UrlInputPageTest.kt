@@ -27,6 +27,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
@@ -380,5 +381,23 @@ class UrlInputPageTest {
 
    @Test
    fun screenshot_error_unsupportedServerSoftware() {
+      rule.setContent {
+         val state = rememberPageState().also {
+            it.inputUrl = TextFieldValue(
+               "https://twitter.com/",
+               selection = TextRange(20)
+            )
+
+            it.authorizeUrlLoadState = LoadState.Error(
+               UnsupportedServerSoftwareException(
+                  FediverseSoftware.Unsupported("Twitter", "0.0.0")
+               )
+            )
+         }
+
+         UrlInputPage(state)
+      }
+
+      rule.onRoot().captureRoboImage("urlInputPage/unsupportedServer.png")
    }
 }
