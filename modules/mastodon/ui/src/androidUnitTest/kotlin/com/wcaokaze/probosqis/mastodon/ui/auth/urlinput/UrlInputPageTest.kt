@@ -27,10 +27,12 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
 import com.wcaokaze.probosqis.ext.compose.BrowserLauncher
+import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
 import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
@@ -59,6 +61,7 @@ import kotlin.concurrent.withLock
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -317,6 +320,30 @@ class UrlInputPageTest {
    }
 
    @Test
+   fun errorState_whenRepositoryThrows() {
+      val appRepository = mockk<AppRepository> {
+         every { getAuthorizeUrl(any<Instance>()) } throws IOException()
+      }
+
+      lateinit var state: UrlInputPageState
+
+      rule.setContent {
+         state = rememberPageState()
+
+         UrlInputPage(
+            state,
+            appRepository = appRepository
+         )
+      }
+
+      rule.onNodeWithText("GO").performClick()
+
+      rule.runOnIdle {
+         assertIs<LoadState.Error>(state.authorizeUrlLoadState)
+      }
+   }
+
+   @Test
    fun screenshot_usual() {
       rule.setContent {
          val state = rememberPageState()
@@ -328,64 +355,25 @@ class UrlInputPageTest {
 
    @Test
    fun screenshot_loading() {
-      val lock = ReentrantLock()
-
-      val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<Instance>()) } answers {
-            lock.withLock {
-               "https://auth.wcaokaze.com/"
-            }
-         }
-      }
-
-      val browserLauncher = mockk<BrowserLauncher> {
-         every { launchBrowser(any()) } just runs
-      }
-
-      val pageState = mockk<PPageState.Interface> {
-         every { startPage(any()) } just runs
-      }
-
       rule.setContent {
-         val state = rememberPageState(pageStateBase = pageState)
+         val state = rememberPageState().also {
+            it.authorizeUrlLoadState = LoadState.Loading
+         }
 
-         UrlInputPage(
-            state,
-            browserLauncher = browserLauncher,
-            appRepository = appRepository
-         )
+         UrlInputPage(state)
       }
 
-      lock.withLock {
-         rule.onNodeWithText("GO").performClick()
-         rule.onRoot().captureRoboImage("urlInputPage/loading.png")
-      }
+      rule.onRoot().captureRoboImage("urlInputPage/loading.png")
    }
 
    @Test
    fun screenshot_error() {
-      val lock = ReentrantLock()
-
-      val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<Instance>()) } answers {
-            lock.withLock {
-               throw IOException()
-            }
-         }
-      }
-
       rule.setContent {
-         val state = rememberPageState()
+         val state = rememberPageState().also {
+            it.authorizeUrlLoadState = LoadState.Error(Exception())
+         }
 
-         UrlInputPage(
-            state,
-            appRepository = appRepository
-         )
-      }
-
-      lock.withLock {
-         rule.onNodeWithText("GO").performClick()
-         rule.waitForIdle()
+         UrlInputPage(state)
       }
 
       rule.onRoot().captureRoboImage("urlInputPage/error.png")
@@ -393,5 +381,23 @@ class UrlInputPageTest {
 
    @Test
    fun screenshot_error_unsupportedServerSoftware() {
+      rule.setContent {
+         val state = rememberPageState().also {
+            it.inputUrl = TextFieldValue(
+               "https://twitter.com/",
+               selection = TextRange(20)
+            )
+
+            it.authorizeUrlLoadState = LoadState.Error(
+               UnsupportedServerSoftwareException(
+                  FediverseSoftware.Unsupported("Twitter", "0.0.0")
+               )
+            )
+         }
+
+         UrlInputPage(state)
+      }
+
+      rule.onRoot().captureRoboImage("urlInputPage/unsupportedServer.png")
    }
 }

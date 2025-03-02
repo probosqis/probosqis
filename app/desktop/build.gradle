@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ tasks.register('cargoBuild', Exec) {
 tasks.register('cargoTest', Exec) {
    workingDir rootProject.projectDir
 
-   def args = ['+nightly', 'test']
+   def args = ['+nightly', 'test', '--features', 'mock']
    if (isXterm()) {
       args += '--color=always'
    }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ import org.koin.core.component.inject
 @SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage")
 class UrlInputPage : PPage()
 
-private class UnsupportedServerSoftwareException(
+internal class UnsupportedServerSoftwareException(
    val software: FediverseSoftware.Unsupported
 ) : Exception()
 
@@ -96,7 +96,7 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
    private val nodeInfoRepository: NodeInfoRepository by inject()
 
    var authorizeUrlLoadState: LoadState<Unit> by mutableStateOf(LoadState.Success(Unit))
-      private set
+      internal set
 
    var hasKeyboardShown by save(
       "has_keyboard_shown", Boolean.serializer(),

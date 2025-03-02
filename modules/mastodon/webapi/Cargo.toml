@@ -16,6 +16,9 @@
 name = "mastodon_webapi"
 edition = "2021"
 
+[features]
+mock = []
+
 [dependencies]
 anyhow.workspace = true
 serde.workspace = true
