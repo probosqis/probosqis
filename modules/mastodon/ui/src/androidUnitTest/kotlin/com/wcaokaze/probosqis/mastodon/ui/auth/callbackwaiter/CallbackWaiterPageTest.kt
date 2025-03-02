@@ -224,4 +224,81 @@ class CallbackWaiterPageTest {
 
       rule.onRoot().captureRoboImage("callbackWaiterPage/success_tooLongName.png")
    }
+
+   @Test
+   fun screenshot_anim_verifyingToSuccess() {
+      lateinit var state: CallbackWaiterPageState
+
+      rule.setContent {
+         state = rememberPageState().also {
+            it.credentialAccountLoadState = CredentialAccountLoadState.Loading
+         }
+
+         CallbackWaiterPage(state)
+      }
+
+      rule.mainClock.autoAdvance = false
+
+      state.credentialAccountLoadState = CredentialAccountLoadState.Success(
+         CredentialAccount(
+            Cache(Account(
+               instance = Cache(Instance(
+                  "https://example.com/",
+                  version = "0.0.0",
+                  versionCheckedTime = Instant.fromEpochMilliseconds(
+                     0L
+                  ),
+               )),
+               id = Account.Id(
+                  instanceUrl = "https://example.com/",
+                  Account.LocalId("account id"),
+               ),
+               "username",
+               "acct",
+               "https://example.com/account_id",
+               "displayName",
+               "profileNote",
+               "https://example.com/avatarImageUrl",
+               "https://example.com/avatarStaticImageUrl",
+               "https://example.com/headerImageUrl",
+               "https://example.com/headerStaticImageUrl",
+               isLocked = false,
+               profileFields = emptyList(),
+               emojisInProfile = emptyList(),
+               isBot = false,
+               isGroup = false,
+               isDiscoverable = false,
+               isNoindex = false,
+               movedTo = null,
+               isSuspended = false,
+               isLimited = false,
+               createdTime = Instant.fromEpochMilliseconds(0L),
+               lastStatusPostTime = Instant.fromEpochMilliseconds(0L),
+               statusCount = 0L,
+               followerCount = 0L,
+               followeeCount = 0L,
+            )),
+            rawProfileNote = "profileNote",
+            rawProfileFields = emptyList(),
+            defaultPostVisibility = Status.Visibility.PUBLIC,
+            defaultPostSensitivity = false,
+            defaultPostLanguage = "ja",
+            followRequestCount = 0L,
+            role = null,
+         ),
+         credentialAccountIcon = Cache(Image(
+            "https://example.com/avatarImageUrl",
+            ImageBitmap(100, 100),
+         )),
+      )
+
+      rule.waitForIdle()
+
+      repeat (30) { i ->
+         rule.onRoot().captureRoboImage(
+            "callbackWaiterPage/verifyingToSuccess$i.png"
+         )
+         rule.mainClock.advanceTimeBy(32L)
+      }
+   }
 }
