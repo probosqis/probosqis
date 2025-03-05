@@ -72,7 +72,7 @@ mod jni_tests {
       use crate::account::{AccountId, AccountLocalId};
 
       let instance = save_instance(env, instance_repo);
-      let instance_url = instance.read().unwrap().url.clone();
+      let instance_url = instance.get().url.clone();
 
       let account = Account {
          instance,
@@ -153,7 +153,7 @@ mod jni_tests {
       let account = Account::clone_from_jvm(&mut env, &account);
 
       let instance = save_instance(&mut env, &account_toRust_instance_repo);
-      let instance_url = instance.read().unwrap().url.clone();
+      let instance_url = instance.get().url.clone();
 
       assert_eq!(
          Account {
@@ -253,7 +253,7 @@ mod jni_tests {
       use crate::custom_emoji::CustomEmoji;
 
       let instance = save_instance(&mut env, &account_fromRust_instance_repo);
-      let instance_url = instance.read().unwrap().url.clone();
+      let instance_url = instance.get().url.clone();
 
       let account = Account {
          instance: instance.clone(),

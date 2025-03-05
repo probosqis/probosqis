@@ -106,11 +106,8 @@ impl AppRepository<'_> {
       use mastodon_webapi::api::oauth;
 
       let authorize_url = {
-         let instance_lock = instance_cache.read()
-            .map_err(|_| anyhow::format_err!("instance cache was poisoned"))?;
-
          oauth::get_authorize_url(
-            /* instance_base_url = */ &instance_lock.url,
+            /* instance_base_url = */ &instance_cache.get().url,
             /* response_type = */ "code",
             client_id,
             redirect_uri,
@@ -136,12 +133,9 @@ impl AppRepository<'_> {
       use crate::conversion;
 
       let api_token = {
-         let instance_lock = instance_cache.read()
-            .map_err(|_| anyhow::format_err!("instance cache was poisoned"))?;
-
          oauth::post_token(
             &CLIENT,
-            /* instance_base_url */ &instance_lock.url,
+            /* instance_base_url */ &instance_cache.get().url,
             /* grant_type = */ "authorization_code",
             /* code = */ Some(code),
             client_id,
@@ -164,12 +158,9 @@ impl AppRepository<'_> {
       use crate::conversion;
 
       let api_credential_account = {
-         let instance_lock = token.instance.read()
-            .map_err(|_| anyhow::format_err!("instance cache was poisoned"))?;
-
          accounts::get_verify_credentials(
             &CLIENT,
-            &instance_lock.url,
+            &token.instance.get().url,
             &token.access_token
          )?
       };
@@ -768,8 +759,7 @@ mod test {
             follower_count: None,
             followee_count: None,
          },
-         **credential_account.account.read().unwrap()
-            .moved_to.clone().unwrap().read().unwrap()
+         *credential_account.account.get().moved_to.clone().unwrap().get()
       );
 
       assert_eq!(
@@ -810,7 +800,7 @@ mod test {
             is_group: Some(false),
             is_discoverable: Some(true),
             is_noindex: Some(false),
-            moved_to: credential_account.account.read().unwrap().moved_to.clone(),
+            moved_to: credential_account.account.get().moved_to.clone(),
             is_suspended: Some(false),
             is_limited: Some(false),
             created_time: Some(Utc.with_ymd_and_hms(2000, 1, 2, 0, 0, 0).unwrap()),
@@ -819,7 +809,7 @@ mod test {
             follower_count: Some(100),
             followee_count: Some(1000),
          },
-         **credential_account.account.read().unwrap()
+         *credential_account.account.get()
       );
 
       assert_eq!(

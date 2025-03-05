@@ -43,9 +43,7 @@ pub fn from_api(
    let account = Account {
       instance: instance.clone(),
       id: AccountId {
-         instance_url: instance.read()
-            .map_err(|_| anyhow::format_err!("instance cache was poisoned"))?
-            .url.clone(),
+         instance_url: instance.get().url.clone(),
          local: AccountLocalId(id.context("No account id")?)
       },
       username,
