@@ -16,13 +16,41 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.panoptiqon.Cache
 
 data class CustomEmoji(
    val instance: Cache<Instance>,
    val shortcode: String,
-   val imageUrl: String,
-   val staticImageUrl: String?,
+   val imageUrl: Url,
+   val staticImageUrl: Url?,
    val isVisibleInPicker: Boolean?,
    val category: String?,
-)
+) {
+   constructor(
+      instance: Cache<Instance>,
+      shortcode: String,
+      rawImageUrl: String,
+      rawStaticImageUrl: String?,
+      isVisibleInPicker: Boolean?,
+      category: String?,
+      @Suppress("UNUSED_PARAMETER")
+      dummy: Unit?,
+   ) : this(
+      instance,
+      shortcode,
+      Url(rawImageUrl),
+      rawStaticImageUrl?.let(::Url),
+      isVisibleInPicker,
+      category,
+   )
+
+   val rawImageUrl: String
+      get() = imageUrl.raw
+
+   val rawStaticImageUrl: String?
+      get() = staticImageUrl?.raw
+
+   val dummy: Unit?
+      get() = null
+}

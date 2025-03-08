@@ -24,7 +24,7 @@ use {
    jni::JNIEnv,
    ext_panoptiqon::convert_jvm_helper,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   panoptiqon::jvm_types::{JvmBoolean, JvmCache, JvmNullable, JvmString},
+   panoptiqon::jvm_types::{JvmBoolean, JvmCache, JvmNullable, JvmString, JvmUnit},
    crate::jvm_types::{JvmCustomEmoji, JvmInstance},
 };
 
@@ -51,6 +51,7 @@ convert_jvm_helper! {
             Ljava/lang/String;\
             Ljava/lang/Boolean;\
             Ljava/lang/String;\
+            Lkotlin/Unit;\
          )V";
 
       fn instance<'local>(..) -> Cache<Instance>
@@ -63,14 +64,14 @@ convert_jvm_helper! {
                jvm_getter_method: "getShortcode",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn image_url<'local>(..) -> String
+      fn raw_image_url<'local>(..) -> String
          where jvm_type: JvmString<'local>,
-               jvm_getter_method: "getImageUrl",
+               jvm_getter_method: "getRawImageUrl",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn static_image_url<'local>(..) -> Option<String>
+      fn raw_static_image_url<'local>(..) -> Option<String>
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
-               jvm_getter_method: "getStaticImageUrl",
+               jvm_getter_method: "getRawStaticImageUrl",
                jvm_return_type: "Ljava/lang/String;";
 
       fn is_visible_in_picker<'local>(..) -> Option<bool>
@@ -82,6 +83,11 @@ convert_jvm_helper! {
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
                jvm_getter_method: "getCategory",
                jvm_return_type: "Ljava/lang/String;";
+
+      fn dummy<'local>(..) -> Option<()>
+         where jvm_type: JvmNullable<'local, JvmUnit<'local>>,
+               jvm_getter_method: "getDummy",
+               jvm_return_type: "Lkotlin/Unit;";
    }
 }
 
@@ -96,6 +102,7 @@ impl<'local> CloneIntoJvm<'local, JvmCustomEmoji<'local>> for CustomEmoji {
          &self.static_image_url.as_ref().map(Url::as_str),
          &self.is_visible_in_picker,
          &self.category,
+         &None::<()>,
       )
    }
 }
@@ -108,16 +115,16 @@ impl<'local> CloneFromJvm<'local, JvmCustomEmoji<'local>> for CustomEmoji {
    ) -> CustomEmoji {
       let instance             = HELPER.instance            (env, jvm_instance);
       let shortcode            = HELPER.shortcode           (env, jvm_instance);
-      let image_url            = HELPER.image_url           (env, jvm_instance);
-      let static_image_url     = HELPER.static_image_url    (env, jvm_instance);
+      let raw_image_url        = HELPER.raw_image_url       (env, jvm_instance);
+      let raw_static_image_url = HELPER.raw_static_image_url(env, jvm_instance);
       let is_visible_in_picker = HELPER.is_visible_in_picker(env, jvm_instance);
       let category             = HELPER.category            (env, jvm_instance);
 
       CustomEmoji {
          instance,
          shortcode,
-         image_url: image_url.parse().unwrap(),
-         static_image_url: static_image_url.map(|url| url.parse().unwrap()),
+         image_url: raw_image_url.parse().unwrap(),
+         static_image_url: raw_static_image_url.map(|url| url.parse().unwrap()),
          is_visible_in_picker,
          category,
       }

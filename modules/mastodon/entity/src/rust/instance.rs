@@ -42,9 +42,9 @@ convert_jvm_helper! {
       fn clone_into_jvm<'local>(..) -> JvmInstance<'local>
          where jvm_constructor: "(Ljava/lang/String;Ljava/lang/String;J)V";
 
-      fn url<'local>(..) -> String
+      fn raw_url<'local>(..) -> String
          where jvm_type: JvmString<'local>,
-               jvm_getter_method: "getUrl",
+               jvm_getter_method: "getRawUrl",
                jvm_return_type: "Ljava/lang/String;";
 
       fn version<'local>(..) -> String
@@ -76,7 +76,7 @@ impl<'local> CloneFromJvm<'local, JvmInstance<'local>> for Instance {
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmInstance<'local>
    ) -> Instance {
-      let url                               = HELPER.url                              (env, jvm_instance);
+      let url                               = HELPER.raw_url                          (env, jvm_instance);
       let version                           = HELPER.version                          (env, jvm_instance);
       let version_checked_time_epoch_millis = HELPER.version_checked_time_epoch_millis(env, jvm_instance);
 

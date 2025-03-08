@@ -142,9 +142,9 @@ convert_jvm_helper! {
                jvm_getter_method: "getInstance",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
-      fn instance_url<'local>(..) -> String
+      fn raw_instance_url<'local>(..) -> String
          where jvm_type: JvmString<'local>,
-               jvm_getter_method: "getInstanceUrl",
+               jvm_getter_method: "getRawInstanceUrl",
                jvm_return_type: "Ljava/lang/String;";
 
       fn raw_local_id<'local>(..) -> String
@@ -162,9 +162,9 @@ convert_jvm_helper! {
                jvm_getter_method: "getAcct",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn url<'local>(..) -> Option<String>
+      fn raw_url<'local>(..) -> Option<String>
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
-               jvm_getter_method: "getUrl",
+               jvm_getter_method: "getRawUrl",
                jvm_return_type: "Ljava/lang/String;";
 
       fn display_name<'local>(..) -> Option<String>
@@ -177,24 +177,24 @@ convert_jvm_helper! {
                jvm_getter_method: "getProfileNote",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn avatar_image_url<'local>(..) -> Option<String>
+      fn raw_avatar_image_url<'local>(..) -> Option<String>
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
-               jvm_getter_method: "getAvatarImageUrl",
+               jvm_getter_method: "getRawAvatarImageUrl",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn avatar_static_image_url<'local>(..) -> Option<String>
+      fn raw_avatar_static_image_url<'local>(..) -> Option<String>
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
-               jvm_getter_method: "getAvatarStaticImageUrl",
+               jvm_getter_method: "getRawAvatarStaticImageUrl",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn header_image_url<'local>(..) -> Option<String>
+      fn raw_header_image_url<'local>(..) -> Option<String>
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
-               jvm_getter_method: "getHeaderImageUrl",
+               jvm_getter_method: "getRawHeaderImageUrl",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn header_static_image_url<'local>(..) -> Option<String>
+      fn raw_header_static_image_url<'local>(..) -> Option<String>
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
-               jvm_getter_method: "getHeaderStaticImageUrl",
+               jvm_getter_method: "getRawHeaderStaticImageUrl",
                jvm_return_type: "Ljava/lang/String;";
 
       fn is_locked<'local>(..) -> Option<bool>
@@ -316,49 +316,49 @@ impl<'local> CloneFromJvm<'local, JvmAccount<'local>> for Account {
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmAccount<'local>
    ) -> Account {
-      let instance                = ACCOUNT_HELPER.instance                          (env, jvm_instance);
-      let instance_url            = ACCOUNT_HELPER.instance_url                      (env, jvm_instance);
-      let raw_local_id            = ACCOUNT_HELPER.raw_local_id                      (env, jvm_instance);
-      let username                = ACCOUNT_HELPER.username                          (env, jvm_instance);
-      let acct                    = ACCOUNT_HELPER.acct                              (env, jvm_instance);
-      let url                     = ACCOUNT_HELPER.url                               (env, jvm_instance);
-      let display_name            = ACCOUNT_HELPER.display_name                      (env, jvm_instance);
-      let profile_note            = ACCOUNT_HELPER.profile_note                      (env, jvm_instance);
-      let avatar_image_url        = ACCOUNT_HELPER.avatar_image_url                  (env, jvm_instance);
-      let avatar_static_image_url = ACCOUNT_HELPER.avatar_static_image_url           (env, jvm_instance);
-      let header_image_url        = ACCOUNT_HELPER.header_image_url                  (env, jvm_instance);
-      let header_static_image_url = ACCOUNT_HELPER.header_static_image_url           (env, jvm_instance);
-      let is_locked               = ACCOUNT_HELPER.is_locked                         (env, jvm_instance);
-      let profile_fields          = ACCOUNT_HELPER.profile_fields                    (env, jvm_instance);
-      let emojis_in_profile       = ACCOUNT_HELPER.emojis_in_profile                 (env, jvm_instance);
-      let is_bot                  = ACCOUNT_HELPER.is_bot                            (env, jvm_instance);
-      let is_group                = ACCOUNT_HELPER.is_group                          (env, jvm_instance);
-      let is_discoverable         = ACCOUNT_HELPER.is_discoverable                   (env, jvm_instance);
-      let is_noindex              = ACCOUNT_HELPER.is_noindex                        (env, jvm_instance);
-      let moved_to                = ACCOUNT_HELPER.moved_to                          (env, jvm_instance);
-      let is_suspended            = ACCOUNT_HELPER.is_suspended                      (env, jvm_instance);
-      let is_limited              = ACCOUNT_HELPER.is_limited                        (env, jvm_instance);
-      let created_time            = ACCOUNT_HELPER.created_time_epoch_millis         (env, jvm_instance);
-      let last_status_post_time   = ACCOUNT_HELPER.last_status_post_time_epoch_millis(env, jvm_instance);
-      let status_count            = ACCOUNT_HELPER.status_count                      (env, jvm_instance);
-      let follower_count          = ACCOUNT_HELPER.follower_count                    (env, jvm_instance);
-      let followee_count          = ACCOUNT_HELPER.followee_count                    (env, jvm_instance);
+      let instance                    = ACCOUNT_HELPER.instance                          (env, jvm_instance);
+      let raw_instance_url            = ACCOUNT_HELPER.raw_instance_url                  (env, jvm_instance);
+      let raw_local_id                = ACCOUNT_HELPER.raw_local_id                      (env, jvm_instance);
+      let username                    = ACCOUNT_HELPER.username                          (env, jvm_instance);
+      let acct                        = ACCOUNT_HELPER.acct                              (env, jvm_instance);
+      let raw_url                     = ACCOUNT_HELPER.raw_url                           (env, jvm_instance);
+      let display_name                = ACCOUNT_HELPER.display_name                      (env, jvm_instance);
+      let profile_note                = ACCOUNT_HELPER.profile_note                      (env, jvm_instance);
+      let raw_avatar_image_url        = ACCOUNT_HELPER.raw_avatar_image_url              (env, jvm_instance);
+      let raw_avatar_static_image_url = ACCOUNT_HELPER.raw_avatar_static_image_url       (env, jvm_instance);
+      let raw_header_image_url        = ACCOUNT_HELPER.raw_header_image_url              (env, jvm_instance);
+      let raw_header_static_image_url = ACCOUNT_HELPER.raw_header_static_image_url       (env, jvm_instance);
+      let is_locked                   = ACCOUNT_HELPER.is_locked                         (env, jvm_instance);
+      let profile_fields              = ACCOUNT_HELPER.profile_fields                    (env, jvm_instance);
+      let emojis_in_profile           = ACCOUNT_HELPER.emojis_in_profile                 (env, jvm_instance);
+      let is_bot                      = ACCOUNT_HELPER.is_bot                            (env, jvm_instance);
+      let is_group                    = ACCOUNT_HELPER.is_group                          (env, jvm_instance);
+      let is_discoverable             = ACCOUNT_HELPER.is_discoverable                   (env, jvm_instance);
+      let is_noindex                  = ACCOUNT_HELPER.is_noindex                        (env, jvm_instance);
+      let moved_to                    = ACCOUNT_HELPER.moved_to                          (env, jvm_instance);
+      let is_suspended                = ACCOUNT_HELPER.is_suspended                      (env, jvm_instance);
+      let is_limited                  = ACCOUNT_HELPER.is_limited                        (env, jvm_instance);
+      let created_time                = ACCOUNT_HELPER.created_time_epoch_millis         (env, jvm_instance);
+      let last_status_post_time       = ACCOUNT_HELPER.last_status_post_time_epoch_millis(env, jvm_instance);
+      let status_count                = ACCOUNT_HELPER.status_count                      (env, jvm_instance);
+      let follower_count              = ACCOUNT_HELPER.follower_count                    (env, jvm_instance);
+      let followee_count              = ACCOUNT_HELPER.followee_count                    (env, jvm_instance);
 
       Account {
          instance,
          id: AccountId {
-            instance_url: instance_url.parse().unwrap(),
+            instance_url: raw_instance_url.parse().unwrap(),
             local: AccountLocalId(raw_local_id),
          },
          username,
          acct,
-         url: url.map(|url| url.parse().unwrap()),
+         url: raw_url.map(|url| url.parse().unwrap()),
          display_name,
          profile_note,
-         avatar_image_url:        avatar_image_url       .map(|url| url.parse().unwrap()),
-         avatar_static_image_url: avatar_static_image_url.map(|url| url.parse().unwrap()),
-         header_image_url:        header_image_url       .map(|url| url.parse().unwrap()),
-         header_static_image_url: header_static_image_url.map(|url| url.parse().unwrap()),
+         avatar_image_url:        raw_avatar_image_url       .map(|url| url.parse().unwrap()),
+         avatar_static_image_url: raw_avatar_static_image_url.map(|url| url.parse().unwrap()),
+         header_image_url:        raw_header_image_url       .map(|url| url.parse().unwrap()),
+         header_static_image_url: raw_header_static_image_url.map(|url| url.parse().unwrap()),
          is_locked,
          profile_fields,
          emojis_in_profile,

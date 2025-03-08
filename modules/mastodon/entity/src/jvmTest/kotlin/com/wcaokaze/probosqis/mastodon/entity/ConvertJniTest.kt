@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.LocalDateTime
@@ -41,13 +42,13 @@ class ConvertJniTest {
          ),
          "username",
          "acct",
-         "https://example.com/url",
+         Url("https://example.com/url"),
          "displayName",
          "profileNote",
-         "https://example.com/avatar/image/url",
-         "https://example.com/avatar/static/image/url",
-         "https://example.com/header/image/url",
-         "https://example.com/header/static/image/url",
+         Url("https://example.com/avatar/image/url"),
+         Url("https://example.com/avatar/static/image/url"),
+         Url("https://example.com/header/image/url"),
+         Url("https://example.com/header/static/image/url"),
          isLocked = true,
          listOf(
             Account.ProfileField("name1", "value1", LocalDateTime(2000, 1, 1, 0, 0, 0).toInstant(TimeZone.UTC)),
@@ -60,16 +61,16 @@ class ConvertJniTest {
             CustomEmoji(
                instance,
                "shortcode1",
-               "https://example.com/image/url/1",
-               "https://example.com/static/image/url/1",
+               Url("https://example.com/image/url/1"),
+               Url("https://example.com/static/image/url/1"),
                isVisibleInPicker = true,
                "category1"
             ),
             CustomEmoji(
                instance,
                "shortcode2",
-               "https://example.com/image/url/2",
-               "https://example.com/static/image/url/2",
+               Url("https://example.com/image/url/2"),
+               Url("https://example.com/static/image/url/2"),
                isVisibleInPicker = false,
                "category2"
             ),
@@ -109,13 +110,13 @@ class ConvertJniTest {
             ),
             "username",
             "acct",
-            "https://example.com/url",
+            Url("https://example.com/url"),
             "displayName",
             "profileNote",
-            "https://example.com/avatar/image/url",
-            "https://example.com/avatar/static/image/url",
-            "https://example.com/header/image/url",
-            "https://example.com/header/static/image/url",
+            Url("https://example.com/avatar/image/url"),
+            Url("https://example.com/avatar/static/image/url"),
+            Url("https://example.com/header/image/url"),
+            Url("https://example.com/header/static/image/url"),
             isLocked = true,
             listOf(
                Account.ProfileField("name1", "value1", LocalDateTime(2000, 1, 1, 0, 0, 0).toInstant(TimeZone.UTC)),
@@ -128,16 +129,16 @@ class ConvertJniTest {
                CustomEmoji(
                   instance,
                   "shortcode1",
-                  "https://example.com/image/url/1",
-                  "https://example.com/static/image/url/1",
+                  Url("https://example.com/image/url/1"),
+                  Url("https://example.com/static/image/url/1"),
                   isVisibleInPicker = true,
                   "category1"
                ),
                CustomEmoji(
                   instance,
                   "shortcode2",
-                  "https://example.com/image/url/2",
-                  "https://example.com/static/image/url/2",
+                  Url("https://example.com/image/url/2"),
+                  Url("https://example.com/static/image/url/2"),
                   isVisibleInPicker = false,
                   "category2"
                ),
@@ -188,8 +189,8 @@ class ConvertJniTest {
       val customEmoji = CustomEmoji(
          instance = `customEmoji_toRust$createInstance`(),
          "shortcode",
-         "https://example.com/image/url",
-         "https://example.com/static/image/url",
+         Url("https://example.com/image/url"),
+         Url("https://example.com/static/image/url"),
          isVisibleInPicker = true,
          "category",
       )
@@ -205,7 +206,7 @@ class ConvertJniTest {
       val customEmoji = CustomEmoji(
          instance = `customEmoji_nulls_toRust$createInstance`(),
          "shortcode",
-         "https://example.com/image/url",
+         Url("https://example.com/image/url"),
          staticImageUrl = null,
          isVisibleInPicker = null,
          category = null,
@@ -225,8 +226,8 @@ class ConvertJniTest {
          CustomEmoji(
             instance = `customEmoji_fromRust$createInstance`(),
             "shortcode",
-            "https://example.com/image/url",
-            "https://example.com/static/image/url",
+            Url("https://example.com/image/url"),
+            Url("https://example.com/static/image/url"),
             isVisibleInPicker = true,
             "category",
          ),
@@ -245,7 +246,7 @@ class ConvertJniTest {
          CustomEmoji(
             instance = `customEmoji_nulls_fromRust$createInstance`(),
             "shortcode",
-            "https://example.com/image/url",
+            Url("https://example.com/image/url"),
             staticImageUrl = null,
             isVisibleInPicker = null,
             category = null,

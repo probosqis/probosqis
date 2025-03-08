@@ -17,8 +17,9 @@
 package com.wcaokaze.probosqis.entity
 
 import androidx.compose.ui.graphics.ImageBitmap
+import com.wcaokaze.probosqis.ext.kotlin.Url
 
 expect class Image {
-   val url: String
+   val url: Url
    val composeImageBitmap: ImageBitmap
 }

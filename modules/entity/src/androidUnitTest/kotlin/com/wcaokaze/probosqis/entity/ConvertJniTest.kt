@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.entity
 
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -36,7 +37,7 @@ class ImageConvertJniTest {
    fun image() {
       val image = `image$createImage`()
       assertNotNull(image)
-      assertEquals("https://github.com/wcaokaze.png", image.url)
+      assertEquals(Url("https://github.com/wcaokaze.png"), image.url)
    }
 
    private external fun `image$createImage`(): Image?
