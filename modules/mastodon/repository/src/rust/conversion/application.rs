@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,10 @@ pub fn from_api(
 
    let application = Application {
       instance: instance_cache,
-      name, website, client_id, client_secret
+      name,
+      website: website.and_then(|url| url.parse().ok()),
+      client_id,
+      client_secret,
    };
 
    Ok(application)

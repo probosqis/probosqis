@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
@@ -41,7 +42,7 @@ import kotlin.time.Duration.Companion.seconds
 @Serializable
 @SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage")
 class CallbackWaiterPage(
-   val instanceBaseUrl: String
+   val instanceBaseUrl: Url
 ) : PPage()
 
 internal sealed class CredentialAccountLoadState {

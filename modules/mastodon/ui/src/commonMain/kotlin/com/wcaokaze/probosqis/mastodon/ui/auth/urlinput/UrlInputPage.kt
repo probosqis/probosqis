@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage
@@ -110,7 +111,7 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
    /**
     * @return (authorizeUrl, instanceBaseUrl)
     */
-   fun getAuthorizeUrl(): Deferred<Result<Pair<String, String>>> {
+   fun getAuthorizeUrl(): Deferred<Result<Pair<Url, Url>>> {
       if (authorizeUrlLoadState is LoadState.Loading) {
          val e = IllegalStateException(
             "attempt to get authorize url but an old job is running yet."
@@ -124,7 +125,8 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
       return pageStateScope.async {
          try {
             val result = withContext(Dispatchers.IO) {
-               val software = nodeInfoRepository.getServerSoftware(inputUrl.text)
+               val software = nodeInfoRepository
+                  .getServerSoftware(Url(inputUrl.text))
 
                when (software) {
                   is FediverseSoftware.Mastodon -> {

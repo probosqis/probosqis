@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-use serde::Deserialize;
 use panoptiqon::cache::Cache;
+use serde::Deserialize;
+use url::Url;
 use crate::instance::Instance;
 
 #[cfg(feature = "jvm")]
@@ -23,7 +24,7 @@ use {
    ext_panoptiqon::convert_jvm_helper,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   panoptiqon::jvm_types::{JvmCache, JvmNullable, JvmString},
+   panoptiqon::jvm_types::{ JvmCache, JvmNullable, JvmString, JvmUnit },
    crate::jvm_types::{JvmApplication, JvmInstance},
 };
 
@@ -31,7 +32,7 @@ use {
 pub struct Application {
    pub instance: Cache<Instance>,
    pub name: String,
-   pub website: Option<String>,
+   pub website: Option<Url>,
    pub client_id: Option<String>,
    pub client_secret: Option<String>,
 }
@@ -48,6 +49,7 @@ convert_jvm_helper! {
             Ljava/lang/String;\
             Ljava/lang/String;\
             Ljava/lang/String;\
+            Lkotlin/Unit;\
          )V";
 
       fn instance<'local>(..) -> Cache<Instance>
@@ -60,7 +62,7 @@ convert_jvm_helper! {
                jvm_getter_method: "getName",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn website<'local>(..) -> Option<String>
+      fn raw_website<'local>(..) -> Option<String>
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
                jvm_getter_method: "getWebsite",
                jvm_return_type: "Ljava/lang/String;";
@@ -74,6 +76,11 @@ convert_jvm_helper! {
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
                jvm_getter_method: "getClientSecret",
                jvm_return_type: "Ljava/lang/String;";
+
+      fn dummy<'local>(..) -> Option<()>
+         where jvm_type: JvmNullable<'local, JvmUnit<'local>>,
+               jvm_getter_method: "getDummy",
+               jvm_return_type: "Lkotlin/Unit;";
    }
 }
 
@@ -84,9 +91,10 @@ impl<'local> CloneIntoJvm<'local, JvmApplication<'local>> for Application {
          env,
          &self.instance,
          &self.name,
-         &self.website,
+         &self.website.as_ref().map(Url::as_str),
          &self.client_id,
          &self.client_secret,
+         &None::<()>
       )
    }
 }
@@ -99,14 +107,14 @@ impl<'local> CloneFromJvm<'local, JvmApplication<'local>> for Application {
    ) -> Application {
       let instance      = HELPER.instance     (env, jvm_instance);
       let name          = HELPER.name         (env, jvm_instance);
-      let website       = HELPER.website      (env, jvm_instance);
+      let raw_website   = HELPER.raw_website  (env, jvm_instance);
       let client_id     = HELPER.client_id    (env, jvm_instance);
       let client_secret = HELPER.client_secret(env, jvm_instance);
 
       Application {
          instance,
          name,
-         website,
+         website: raw_website.map(|url| url.parse().unwrap()),
          client_id,
          client_secret,
       }

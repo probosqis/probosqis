@@ -129,9 +129,9 @@ convert_jvm_helper! {
          where jvm_static_method: "fromBytes",
                jvm_signature: "(Ljava/lang/String;[B)Lcom/wcaokaze/probosqis/entity/Image;";
 
-      fn url<'local>(..) -> String
+      fn raw_url<'local>(..) -> String
          where jvm_type: JvmString<'local>,
-               jvm_getter_method: "getUrl",
+               jvm_getter_method: "getRawUrl",
                jvm_return_type: "Ljava/lang/String;";
 
       fn image_bytes<'local>(..) -> Bytes

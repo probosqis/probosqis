@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 wcaokaze
+ * Copyright 2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.ext.compose
+package com.wcaokaze.probosqis.ext.kotlin
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.staticCompositionLocalOf
-import com.wcaokaze.probosqis.ext.kotlin.Url
+import kotlinx.serialization.Serializable
 
-val LocalBrowserLauncher = staticCompositionLocalOf<BrowserLauncher> {
-   throw NoSuchElementException()
-}
-
-@Composable
-expect fun rememberBrowserLauncher(): BrowserLauncher
-
-interface BrowserLauncher {
-   fun launchBrowser(url: Url)
-}
+@JvmInline
+@Serializable
+value class Url(val raw: String)

@@ -19,22 +19,26 @@ package com.wcaokaze.probosqis.entity
 import android.graphics.BitmapFactory
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import com.wcaokaze.probosqis.ext.kotlin.Url
 
 actual class Image(
-   actual val url: String,
+   actual val url: Url,
    actual val composeImageBitmap: ImageBitmap
 ) {
+   val rawUrl: String
+      get() = url.raw
+
    val imageBytes: ByteArray
       get() = throw NotImplementedError()
 
    companion object {
       @JvmStatic
-      fun fromBytes(url: String, imageBytes: ByteArray): Image? {
+      fun fromBytes(rawUrl: String, imageBytes: ByteArray): Image? {
          return try {
             val bitmap = BitmapFactory
                .decodeByteArray(imageBytes, 0, imageBytes.size) ?: return null
             val composeImageBitmap = bitmap.asImageBitmap()
-            Image(url, composeImageBitmap)
+            Image(Url(rawUrl), composeImageBitmap)
          } catch (_: Exception) {
             null
          }

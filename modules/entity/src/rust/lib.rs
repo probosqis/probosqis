@@ -16,6 +16,7 @@
 
 pub mod image_bytes;
 mod cache;
+mod url;
 
 #[cfg(feature = "jvm")]
 pub mod jvm_types;

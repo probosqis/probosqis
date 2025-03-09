@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account.ProfileField
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
@@ -25,13 +26,13 @@ data class Account(
    val id: Id,
    val username: String?,
    val acct: String?,
-   val url: String?,
+   val url: Url?,
    val displayName: String?,
    val profileNote: String?,
-   val avatarImageUrl: String?,
-   val avatarStaticImageUrl: String?,
-   val headerImageUrl: String?,
-   val headerStaticImageUrl: String?,
+   val avatarImageUrl: Url?,
+   val avatarStaticImageUrl: Url?,
+   val headerImageUrl: Url?,
+   val headerStaticImageUrl: Url?,
    val isLocked: Boolean?,
    val profileFields: List<ProfileField>,
    val emojisInProfile: List<CustomEmoji>,
@@ -50,17 +51,17 @@ data class Account(
 ) {
    constructor(
       instance: Cache<Instance>,
-      instanceUrl: String,
+      rawInstanceUrl: String,
       rawLocalId: String,
       username: String?,
       acct: String?,
-      url: String?,
+      rawUrl: String?,
       displayName: String?,
       profileNote: String?,
-      avatarImageUrl: String?,
-      avatarStaticImageUrl: String?,
-      headerImageUrl: String?,
-      headerStaticImageUrl: String?,
+      rawAvatarImageUrl: String?,
+      rawAvatarStaticImageUrl: String?,
+      rawHeaderImageUrl: String?,
+      rawHeaderStaticImageUrl: String?,
       isLocked: Boolean?,
       profileFields: List<ProfileField>,
       emojisInProfile: List<CustomEmoji>,
@@ -78,16 +79,16 @@ data class Account(
       followeeCount: Long?,
    ) : this(
       instance,
-      Id(instanceUrl, LocalId(rawLocalId)),
+      Id(Url(rawInstanceUrl), LocalId(rawLocalId)),
       username,
       acct,
-      url,
+      rawUrl?.let(::Url),
       displayName,
       profileNote,
-      avatarImageUrl,
-      avatarStaticImageUrl,
-      headerImageUrl,
-      headerStaticImageUrl,
+      rawAvatarImageUrl?.let(::Url),
+      rawAvatarStaticImageUrl?.let(::Url),
+      rawHeaderImageUrl?.let(::Url),
+      rawHeaderStaticImageUrl?.let(::Url),
       isLocked,
       profileFields,
       emojisInProfile,
@@ -98,14 +99,14 @@ data class Account(
       movedTo,
       isSuspended,
       isLimited,
-      createdTime?.let { Instant.fromEpochMilliseconds(it) },
-      lastStatusPostTime?.let { Instant.fromEpochMilliseconds(it) },
+      createdTime?.let(Instant::fromEpochMilliseconds),
+      lastStatusPostTime?.let(Instant::fromEpochMilliseconds),
       statusCount,
       followerCount,
       followeeCount,
    )
 
-   data class Id(val instanceUrl: String, val local: LocalId)
+   data class Id(val instanceUrl: Url, val local: LocalId)
 
    @JvmInline
    value class LocalId(val value: String)
@@ -127,11 +128,26 @@ data class Account(
          get() = verifiedTime?.toEpochMilliseconds()
    }
 
-   val instanceUrl: String
-      get() = id.instanceUrl
+   val rawInstanceUrl: String
+      get() = id.instanceUrl.raw
 
    val rawLocalId: String
       get() = id.local.value
+
+   val rawUrl: String?
+      get() = url?.raw
+
+   val rawAvatarImageUrl: String?
+      get() = avatarImageUrl?.raw
+
+   val rawAvatarStaticImageUrl: String?
+      get() = avatarStaticImageUrl?.raw
+
+   val rawHeaderImageUrl: String?
+      get() = headerImageUrl?.raw
+
+   val rawHeaderStaticImageUrl: String?
+      get() = headerStaticImageUrl?.raw
 
    val createdTimeEpochMillis: Long?
       get() = createdTime?.toEpochMilliseconds()

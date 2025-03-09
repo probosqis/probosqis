@@ -20,4 +20,5 @@ use panoptiqon::jvm_type;
 
 jvm_type! {
    JvmImage,
+   JvmUrl,
 }

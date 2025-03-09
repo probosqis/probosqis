@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.mastodon.repository
 
 import android.content.Context
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Application
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Instance
@@ -45,7 +46,7 @@ class AndroidAppRepository(context: Context) : AppRepository {
    override fun createApp(instance: Instance): Cache<Application> {
       val application = postApp(instance)
 
-      val fileName = URLEncoder.encode(instance.url, "UTF-8")
+      val fileName = URLEncoder.encode(instance.url.raw, "UTF-8")
       val file = File(dir, fileName)
       return saveCache(application, file, json).asCache()
    }
@@ -53,20 +54,20 @@ class AndroidAppRepository(context: Context) : AppRepository {
    private external fun postApp(instance: Instance): Application
 
    @TemporaryCacheApi
-   override fun loadAppCache(instanceBaseUrl: String): Cache<Application> {
-      val fileName = URLEncoder.encode(instanceBaseUrl, "UTF-8")
+   override fun loadAppCache(instanceBaseUrl: Url): Cache<Application> {
+      val fileName = URLEncoder.encode(instanceBaseUrl.raw, "UTF-8")
       val file = File(dir, fileName)
       return loadCache<Application>(file, json).asCache()
    }
 
-   override fun getAuthorizeUrl(application: Application): String {
+   override fun getAuthorizeUrl(application: Application): Url {
       return getAuthorizeUrl(
          application.instance,
          application.clientId ?: throw IOException()
       )
    }
 
-   private external fun getAuthorizeUrl(instance: Cache<Instance>, clientId: String): String
+   private external fun getAuthorizeUrl(instance: Cache<Instance>, clientId: String): Url
 
    override fun getToken(application: Application, code: String): Token {
       return getToken(

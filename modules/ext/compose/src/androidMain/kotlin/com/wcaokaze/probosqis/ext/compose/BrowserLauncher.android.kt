@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import com.wcaokaze.probosqis.ext.kotlin.Url
 
 @Composable
 actual fun rememberBrowserLauncher(): BrowserLauncher {
@@ -32,8 +33,8 @@ actual fun rememberBrowserLauncher(): BrowserLauncher {
 }
 
 class AndroidBrowserLauncher(private val context: Context) : BrowserLauncher {
-   override fun launchBrowser(url: String) {
-      val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+   override fun launchBrowser(url: Url) {
+      val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url.raw))
       context.startActivity(intent)
    }
 }

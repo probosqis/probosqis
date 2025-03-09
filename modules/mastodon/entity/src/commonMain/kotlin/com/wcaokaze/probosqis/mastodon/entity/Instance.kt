@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Instance(
-   val url: String,
+   val url: Url,
    val version: String,
    val versionCheckedTime: Instant,
 ) {
@@ -30,8 +31,11 @@ data class Instance(
       version: String,
       versionCheckedTime: Long,
    ) : this(
-      url, version, Instant.fromEpochMilliseconds(versionCheckedTime),
+      Url(url), version, Instant.fromEpochMilliseconds(versionCheckedTime),
    )
+
+   val rawUrl: String
+      get() = url.raw
 
    val versionCheckedTimeEpochMillis: Long
       get() = versionCheckedTime.toEpochMilliseconds()

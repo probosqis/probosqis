@@ -24,6 +24,7 @@ import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
 import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Instance
@@ -46,7 +47,7 @@ class CallbackWaiterPageTest {
 
    @Composable
    private fun rememberPageState(
-      page: CallbackWaiterPage = CallbackWaiterPage("https://example.com/"),
+      page: CallbackWaiterPage = CallbackWaiterPage(Url("https://example.com/")),
       pageStateBase: PPageState.Interface = mockk()
    ): CallbackWaiterPageState {
       val pageState = callbackWaiterPageComposable.pageStateFactory.rememberTestPageState(page)
@@ -105,25 +106,25 @@ class CallbackWaiterPageTest {
                CredentialAccount(
                   Cache(Account(
                      instance = Cache(Instance(
-                        "https://example.com/",
+                        Url("https://example.com/"),
                         version = "0.0.0",
                         versionCheckedTime = Instant.fromEpochMilliseconds(
                            0L
                         ),
                      )),
                      id = Account.Id(
-                        instanceUrl = "https://example.com/",
+                        instanceUrl = Url("https://example.com/"),
                         Account.LocalId("account id"),
                      ),
                      "username",
                      "acct",
-                     "https://example.com/account_id",
+                     Url("https://example.com/account_id"),
                      "displayName",
                      "profileNote",
-                     "https://example.com/avatarImageUrl",
-                     "https://example.com/avatarStaticImageUrl",
-                     "https://example.com/headerImageUrl",
-                     "https://example.com/headerStaticImageUrl",
+                     Url("https://example.com/avatarImageUrl"),
+                     Url("https://example.com/avatarStaticImageUrl"),
+                     Url("https://example.com/headerImageUrl"),
+                     Url("https://example.com/headerStaticImageUrl"),
                      isLocked = false,
                      profileFields = emptyList(),
                      emojisInProfile = emptyList(),
@@ -149,7 +150,7 @@ class CallbackWaiterPageTest {
                   role = null,
                ),
                credentialAccountIcon = Cache(Image(
-                  "https://example.com/avatarImageUrl",
+                  Url("https://example.com/avatarImageUrl"),
                   ImageBitmap(100, 100),
                )),
             )
@@ -169,25 +170,25 @@ class CallbackWaiterPageTest {
                CredentialAccount(
                   Cache(Account(
                      instance = Cache(Instance(
-                        "https://example.com/",
+                        Url("https://example.com/"),
                         version = "0.0.0",
                         versionCheckedTime = Instant.fromEpochMilliseconds(
                            0L
                         ),
                      )),
                      id = Account.Id(
-                        instanceUrl = "https://example.com/",
+                        instanceUrl = Url("https://example.com/"),
                         Account.LocalId("account id"),
                      ),
                      "username".repeat(10),
                      "acct".repeat(10),
-                     "https://example.com/account_id",
+                     Url("https://example.com/account_id"),
                      "displayName".repeat(10),
                      "profileNote",
-                     "https://example.com/avatarImageUrl",
-                     "https://example.com/avatarStaticImageUrl",
-                     "https://example.com/headerImageUrl",
-                     "https://example.com/headerStaticImageUrl",
+                     Url("https://example.com/avatarImageUrl"),
+                     Url("https://example.com/avatarStaticImageUrl"),
+                     Url("https://example.com/headerImageUrl"),
+                     Url("https://example.com/headerStaticImageUrl"),
                      isLocked = false,
                      profileFields = emptyList(),
                      emojisInProfile = emptyList(),
@@ -213,7 +214,7 @@ class CallbackWaiterPageTest {
                   role = null,
                ),
                credentialAccountIcon = Cache(Image(
-                  "https://example.com/avatarImageUrl",
+                  Url("https://example.com/avatarImageUrl"),
                   ImageBitmap(100, 100),
                )),
             )
@@ -243,25 +244,25 @@ class CallbackWaiterPageTest {
          CredentialAccount(
             Cache(Account(
                instance = Cache(Instance(
-                  "https://example.com/",
+                  Url("https://example.com/"),
                   version = "0.0.0",
                   versionCheckedTime = Instant.fromEpochMilliseconds(
                      0L
                   ),
                )),
                id = Account.Id(
-                  instanceUrl = "https://example.com/",
+                  instanceUrl = Url("https://example.com/"),
                   Account.LocalId("account id"),
                ),
                "username",
                "acct",
-               "https://example.com/account_id",
+               Url("https://example.com/account_id"),
                "displayName",
                "profileNote",
-               "https://example.com/avatarImageUrl",
-               "https://example.com/avatarStaticImageUrl",
-               "https://example.com/headerImageUrl",
-               "https://example.com/headerStaticImageUrl",
+               Url("https://example.com/avatarImageUrl"),
+               Url("https://example.com/avatarStaticImageUrl"),
+               Url("https://example.com/headerImageUrl"),
+               Url("https://example.com/headerStaticImageUrl"),
                isLocked = false,
                profileFields = emptyList(),
                emojisInProfile = emptyList(),
@@ -287,7 +288,7 @@ class CallbackWaiterPageTest {
             role = null,
          ),
          credentialAccountIcon = Cache(Image(
-            "https://example.com/avatarImageUrl",
+            Url("https://example.com/avatarImageUrl"),
             ImageBitmap(100, 100),
          )),
       )

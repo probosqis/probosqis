@@ -34,6 +34,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
 import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.Application
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
@@ -78,7 +79,7 @@ class CallbackWaiterPageTest {
 
    @Composable
    private fun rememberPageState(
-      page: CallbackWaiterPage = CallbackWaiterPage("https://example.com/"),
+      page: CallbackWaiterPage = CallbackWaiterPage(Url("https://example.com/")),
       pageStateBase: PPageState.Interface = mockk()
    ): CallbackWaiterPageState {
       val pageState = callbackWaiterPageComposable.pageStateFactory.rememberTestPageState(page)
@@ -129,7 +130,7 @@ class CallbackWaiterPageTest {
       return pageStack
    }
 
-   private fun application(instanceBaseUrl: String): Application {
+   private fun application(instanceBaseUrl: Url): Application {
       val instance = Instance(
          instanceBaseUrl,
          version = "0.0.0",
@@ -156,14 +157,14 @@ class CallbackWaiterPageTest {
       return CredentialAccount(
          Cache(Account(
             instance,
-            Account.Id("https://example.com/", Account.LocalId("id")),
+            Account.Id(Url("https://example.com/"), Account.LocalId("id")),
             "username", "acct",
-            "https://example.com/",
+            Url("https://example.com/"),
             "display name", "profile note",
-            "https://example.com/avatar/image",
-            "https://example.com/avatar/static/image",
-            "https://example.com/header/image",
-            "https://example.com/header/static/image",
+            Url("https://example.com/avatar/image"),
+            Url("https://example.com/avatar/static/image"),
+            Url("https://example.com/header/image"),
+            Url("https://example.com/header/static/image"),
             isLocked = false, profileFields = emptyList(),
             emojisInProfile = emptyList(), isBot = false, isGroup = false,
             isDiscoverable = false, isNoindex = false, movedTo = null,
@@ -220,7 +221,7 @@ class CallbackWaiterPageTest {
 
       val appRepository = mockk<AppRepository> {
          every { loadAppCache(any()) } answers {
-            val application = application(instanceBaseUrl = firstArg())
+            val application = application(instanceBaseUrl = Url(firstArg<String>()))
             Cache(application)
          }
 
@@ -229,7 +230,7 @@ class CallbackWaiterPageTest {
          }
       }
 
-      val page = CallbackWaiterPage("https://mastodon.social/")
+      val page = CallbackWaiterPage(Url("https://mastodon.social/"))
 
       val pageState = mockk<PPageState.Interface> {
          every { pageStack } returns pageStack(page)
@@ -250,7 +251,7 @@ class CallbackWaiterPageTest {
       rule.runOnIdle {
          verify {
             appRepository.getToken(
-               application("https://mastodon.social/"),
+               application(Url("https://mastodon.social/")),
                "abcdefghijklmnopqrstuvwxyz0123456789"
             )
          }
@@ -265,7 +266,7 @@ class CallbackWaiterPageTest {
 
       val appRepository = mockk<AppRepository> {
          every { loadAppCache(any()) } answers {
-            val application = application(instanceBaseUrl = firstArg())
+            val application = application(instanceBaseUrl = Url(firstArg<String>()))
             Cache(application)
          }
 
@@ -288,7 +289,7 @@ class CallbackWaiterPageTest {
          }
       }
 
-      val page = CallbackWaiterPage("https://mastodon.social/")
+      val page = CallbackWaiterPage(Url("https://mastodon.social/"))
       val pageStackSlot = slot<PageStack>()
 
       val pageState = mockk<PPageState.Interface> {
@@ -327,7 +328,7 @@ class CallbackWaiterPageTest {
 
       val appRepository = mockk<AppRepository> {
          every { loadAppCache(any()) } answers {
-            val application = application(instanceBaseUrl = firstArg())
+            val application = application(instanceBaseUrl = Url(firstArg<String>()))
             Cache(application)
          }
 
@@ -350,7 +351,7 @@ class CallbackWaiterPageTest {
          }
       }
 
-      val page = CallbackWaiterPage("https://mastodon.social/")
+      val page = CallbackWaiterPage(Url("https://mastodon.social/"))
       val pageStackSlot = slot<PageStack>()
 
       val pageState = mockk<PPageState.Interface> {
@@ -387,7 +388,7 @@ class CallbackWaiterPageTest {
 
       val appRepository = mockk<AppRepository> {
          every { loadAppCache(any()) } answers {
-            val application = application(instanceBaseUrl = firstArg())
+            val application = application(instanceBaseUrl = Url(firstArg<String>()))
             Cache(application)
          }
 
@@ -410,7 +411,7 @@ class CallbackWaiterPageTest {
          }
       }
 
-      val page = CallbackWaiterPage("https://mastodon.social/")
+      val page = CallbackWaiterPage(Url("https://mastodon.social/"))
 
       val pageState = mockk<PPageState.Interface> {
          every { pageStack } returns pageStack(page)
@@ -447,7 +448,7 @@ class CallbackWaiterPageTest {
 
       val appRepository = mockk<AppRepository> {
          every { loadAppCache(any()) } answers {
-            val application = application(instanceBaseUrl = firstArg())
+            val application = application(instanceBaseUrl = Url(firstArg<String>()))
             Cache(application)
          }
 
@@ -470,7 +471,7 @@ class CallbackWaiterPageTest {
          }
       }
 
-      val page = CallbackWaiterPage("https://mastodon.social/")
+      val page = CallbackWaiterPage(Url("https://mastodon.social/"))
 
       val pageState = mockk<PPageState.Interface> {
          every { pageStack } returns pageStack(UrlInputPage(), page)
@@ -507,14 +508,14 @@ class CallbackWaiterPageTest {
 
       val appRepository = mockk<AppRepository> {
          every { loadAppCache(any()) } answers {
-            val application = application(instanceBaseUrl = firstArg())
+            val application = application(instanceBaseUrl = Url(firstArg<String>()))
             Cache(application)
          }
 
          every { getToken(any(), any()) } throws IOException()
       }
 
-      val page = CallbackWaiterPage("https://mastodon.social/")
+      val page = CallbackWaiterPage(Url("https://mastodon.social/"))
 
       val pageState = mockk<PPageState.Interface> {
          every { pageStack } returns pageStack(page)
