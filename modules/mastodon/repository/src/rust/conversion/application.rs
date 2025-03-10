@@ -13,25 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use anyhow::Result;
-use mastodon_entity::application::Application;
-use mastodon_webapi::entity::application::Application as ApiApplication;
 
+use chrono::DateTime;
+use mastodon_entity::application::Application;
 use mastodon_entity::instance::Instance;
 use panoptiqon::cache::Cache;
+
+use mastodon_webapi::entity::application::Application as ApiApplication;
 
 pub fn from_api(
    entity: ApiApplication,
    instance_cache: Cache<Instance>
-) -> Result<Application> {
-   let ApiApplication { name, website, client_id, client_secret } = entity;
+) -> anyhow::Result<Application> {
+   let ApiApplication {
+      name, website, scopes, redirect_uris, redirect_uri, vapid_key: _,
+      client_id, client_secret, client_secret_expires_at,
+   } = entity;
+
+   let redirect_uris = redirect_uris
+      .or_else(||
+         redirect_uri.map(|uri_lines|
+            uri_lines.lines().map(|str| str.to_string()).collect()
+         )
+      )
+      .unwrap_or(vec![]);
 
    let application = Application {
       instance: instance_cache,
       name,
       website: website.and_then(|url| url.parse().ok()),
+      scopes: scopes.unwrap_or(vec![]),
+      redirect_uris,
       client_id,
       client_secret,
+      client_secret_expire_time: client_secret_expires_at
+         .and_then(|time| DateTime::parse_from_rfc3339(&time).ok())
+         .map(|time| time.to_utc()),
    };
 
    Ok(application)

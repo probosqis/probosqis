@@ -138,8 +138,9 @@ class CallbackWaiterPageTest {
       )
 
       return Application(
-         Cache(instance), "Probosqis", website = null, clientId = null,
-         clientSecret = null
+         Cache(instance), "Probosqis", website = null, scopes = emptyList(),
+         redirectUris = emptyList(), clientId = null, clientSecret = null,
+         clientSecretExpireTime = null,
       )
    }
 
