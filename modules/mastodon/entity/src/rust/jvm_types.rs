@@ -19,15 +19,15 @@
 use panoptiqon::jvm_type;
 
 jvm_type! {
-   JvmApplication,
-   JvmToken,
    JvmAccount,
    JvmAccountId,
-   JvmCredentialAccount,
-   JvmRelationalAccount,
    JvmAccountProfileField,
-   JvmStatusVisibility,
-   JvmInstance,
+   JvmApplication,
+   JvmCredentialAccount,
    JvmCustomEmoji,
+   JvmInstance,
+   JvmRelationalAccount,
    JvmRole,
+   JvmStatusVisibility,
+   JvmToken,
 }
