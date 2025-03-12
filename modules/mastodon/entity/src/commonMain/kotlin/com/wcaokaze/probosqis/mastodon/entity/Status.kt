@@ -17,6 +17,9 @@
 package com.wcaokaze.probosqis.mastodon.entity
 
 class Status {
+   @JvmInline
+   value class Id(val raw: String)
+
    enum class Visibility(val value: Int) {
       PUBLIC  (0),
       UNLISTED(1),

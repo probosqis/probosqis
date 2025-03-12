@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 pub(crate) mod account;
 pub(crate) mod application;
 pub(crate) mod custom_emoji;
+pub(crate) mod filter;
 pub(crate) mod role;
 pub(crate) mod status;
 pub(crate) mod token;

@@ -24,6 +24,9 @@ use {
    crate::jvm_types::JvmStatusVisibility,
 };
 
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+pub struct StatusId(pub String);
+
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Deserialize)]
 pub enum StatusVisibility {
    Public   = 0,

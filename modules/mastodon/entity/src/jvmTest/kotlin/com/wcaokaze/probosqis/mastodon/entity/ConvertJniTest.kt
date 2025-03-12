@@ -30,6 +30,8 @@ class ConvertJniTest {
       loadNativeLib()
    }
 
+   // ==== Account =============================================================
+
    @Test
    fun account_toRust() {
       val instance = `account_toRust$createInstance`()
@@ -164,6 +166,8 @@ class ConvertJniTest {
    private external fun `account_fromRust$createInstance`(): Cache<Instance>
    private external fun `account_fromRust$createMovedTo`(): Cache<Account>
 
+   // ==== Status.Visibility ===================================================
+
    @Test
    fun statusVisibility_toRust() {
       val statusVisibility = Status.Visibility.UNLISTED
@@ -183,6 +187,8 @@ class ConvertJniTest {
    }
 
    private external fun `statusVisibility_fromRust$createStatusVisibility`(): Status.Visibility
+
+   // ==== CustomEmoji =========================================================
 
    @Test
    fun customEmoji_toRust() {
@@ -257,6 +263,170 @@ class ConvertJniTest {
 
    private external fun `customEmoji_nulls_fromRust$createCustomEmoji`(): CustomEmoji
    private external fun `customEmoji_nulls_fromRust$createInstance`(): Cache<Instance>
+
+   // ==== FilterResult ========================================================
+
+   @Test
+   fun filterResult_toRust() {
+      val filterResult = FilterResult(
+         Filter(
+            Filter.Id("filter id"),
+            "title",
+            listOf(
+               Filter.Context.HOME,
+               Filter.Context.PUBLIC,
+               Filter.Context("illegal context"),
+            ),
+            expireTime = LocalDateTime(2000, 1, 1, 0, 0, 0).toInstant(TimeZone.UTC),
+            Filter.Action.HIDE,
+            keywords = listOf(
+               Filter.Keyword(
+                  Filter.Keyword.Id("filter keyword id1"),
+                  "keyword1",
+                  wholeWord = false,
+               ),
+               Filter.Keyword(
+                  Filter.Keyword.Id("filter keyword id2"),
+                  "keyword2",
+                  wholeWord = true,
+               ),
+            ),
+            statuses = listOf(
+               Filter.FilterStatus(
+                  Filter.FilterStatus.Id("filter status id1"),
+                  Status.Id("status id1"),
+               ),
+               Filter.FilterStatus(
+                  Filter.FilterStatus.Id("filter status id2"),
+                  Status.Id("status id2"),
+               ),
+            ),
+         ),
+         keywordMatches = listOf(
+            "keyword1",
+         ),
+         statusMatches = listOf(
+            Status.Id("status id1"),
+            Status.Id("status id2"),
+         )
+      )
+
+      `filterResult_toRust$assert`(filterResult)
+   }
+
+   private external fun `filterResult_toRust$assert`(filterResult: FilterResult)
+
+   @Test
+   fun filterResult_nulls_toRust() {
+      val filterResult = FilterResult(
+         Filter(
+            Filter.Id("filter id"),
+            title = null,
+            context = emptyList(),
+            expireTime = null,
+            filterAction = null,
+            keywords = listOf(
+               Filter.Keyword(
+                  Filter.Keyword.Id("filter keyword id1"),
+                  keyword = null,
+                  wholeWord = null,
+               ),
+            ),
+            statuses = emptyList(),
+         ),
+         keywordMatches = emptyList(),
+         statusMatches = emptyList(),
+      )
+
+      `filterResult_nulls_toRust$assert`(filterResult)
+   }
+
+   private external fun `filterResult_nulls_toRust$assert`(filterResult: FilterResult)
+
+   @Test
+   fun filterResult_fromRust() {
+      val filterResult = `filterResult_fromRust$createFilterResult`()
+
+      assertEquals(
+         FilterResult(
+            Filter(
+               Filter.Id("filter id"),
+               "title",
+               listOf(
+                  Filter.Context.HOME,
+                  Filter.Context.PUBLIC,
+                  Filter.Context("illegal context"),
+               ),
+               expireTime = LocalDateTime(2000, 1, 1, 0, 0, 0).toInstant(TimeZone.UTC),
+               Filter.Action.HIDE,
+               keywords = listOf(
+                  Filter.Keyword(
+                     Filter.Keyword.Id("filter keyword id1"),
+                     "keyword1",
+                     wholeWord = false,
+                  ),
+                  Filter.Keyword(
+                     Filter.Keyword.Id("filter keyword id2"),
+                     "keyword2",
+                     wholeWord = true,
+                  ),
+               ),
+               statuses = listOf(
+                  Filter.FilterStatus(
+                     Filter.FilterStatus.Id("filter status id1"),
+                     Status.Id("status id1"),
+                  ),
+                  Filter.FilterStatus(
+                     Filter.FilterStatus.Id("filter status id2"),
+                     Status.Id("status id2"),
+                  ),
+               ),
+            ),
+            keywordMatches = listOf(
+               "keyword1",
+            ),
+            statusMatches = listOf(
+               Status.Id("status id1"),
+               Status.Id("status id2"),
+            )
+         ),
+         filterResult
+      )
+   }
+
+   private external fun `filterResult_fromRust$createFilterResult`(): FilterResult
+
+   @Test
+   fun filterResult_nulls_fromRust() {
+      val filterResult = `filterResult_nulls_fromRust$createFilterResult`()
+
+      assertEquals(
+         FilterResult(
+            Filter(
+               Filter.Id("filter id"),
+               title = null,
+               context = emptyList(),
+               expireTime = null,
+               filterAction = null,
+               keywords = listOf(
+                  Filter.Keyword(
+                     Filter.Keyword.Id("filter keyword id1"),
+                     keyword = null,
+                     wholeWord = null,
+                  ),
+               ),
+               statuses = emptyList(),
+            ),
+            keywordMatches = emptyList(),
+            statusMatches = emptyList(),
+         ),
+         filterResult
+      )
+   }
+
+   private external fun `filterResult_nulls_fromRust$createFilterResult`(): FilterResult
+
+   // ==== Role ================================================================
 
    @Test
    fun role_toRust() {

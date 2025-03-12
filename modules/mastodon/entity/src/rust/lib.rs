@@ -17,6 +17,7 @@
 pub mod account;
 pub mod application;
 pub mod custom_emoji;
+pub mod filter;
 pub mod instance;
 pub mod role;
 pub mod status;
@@ -36,7 +37,8 @@ mod jni_tests {
    use crate::account::Account;
    use crate::instance::Instance;
    use crate::jvm_types::{
-      JvmAccount, JvmCustomEmoji, JvmInstance, JvmRole, JvmStatusVisibility,
+      JvmAccount, JvmCustomEmoji, JvmFilterResult, JvmInstance, JvmRole,
+      JvmStatusVisibility,
    };
 
    const fn new_instance_repo() -> RepositoryHolder<Instance> {
@@ -528,6 +530,198 @@ mod jni_tests {
 
       save_instance(&mut env, &customEmoji_nulls_fromRust_instance_repo)
          .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_filterResult_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      filter_result: JvmFilterResult<'local>
+   ) {
+      use chrono::{TimeZone, Utc};
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::filter::{
+         Filter, FilterAction, FilterContext, FilterId, FilterKeyword,
+         FilterKeywordId, FilterResult, FilterStatus, FilterStatusId,
+      };
+      use crate::status::StatusId;
+
+      let filter_result = FilterResult::clone_from_jvm(&mut env, &filter_result);
+
+      assert_eq!(
+         FilterResult {
+            filter: Some(Filter {
+               id: FilterId("filter id".to_string()),
+               title: Some("title".to_string()),
+               context: vec![
+                  FilterContext("home".to_string()),
+                  FilterContext("public".to_string()),
+                  FilterContext("illegal context".to_string()),
+               ],
+               expire_time: Some(Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap()),
+               filter_action: Some(FilterAction("hide".to_string())),
+               keywords: vec![
+                  FilterKeyword {
+                     id: FilterKeywordId("filter keyword id1".to_string()),
+                     keyword: Some("keyword1".to_string()),
+                     whole_word: Some(false),
+                  },
+                  FilterKeyword {
+                     id: FilterKeywordId("filter keyword id2".to_string()),
+                     keyword: Some("keyword2".to_string()),
+                     whole_word: Some(true),
+                  },
+               ],
+               statuses: vec![
+                  FilterStatus {
+                     id: FilterStatusId("filter status id1".to_string()),
+                     status_id: StatusId("status id1".to_string()),
+                  },
+                  FilterStatus {
+                     id: FilterStatusId("filter status id2".to_string()),
+                     status_id: StatusId("status id2".to_string()),
+                  },
+               ],
+            }),
+            keyword_matches: vec![
+               "keyword1".to_string(),
+            ],
+            status_matches: vec![
+               StatusId("status id1".to_string()),
+               StatusId("status id2".to_string()),
+            ],
+         },
+         filter_result
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_filterResult_1nulls_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      filter_result: JvmFilterResult<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::filter::{
+         Filter, FilterId, FilterKeyword, FilterKeywordId, FilterResult,
+      };
+
+      let filter_result = FilterResult::clone_from_jvm(&mut env, &filter_result);
+
+      assert_eq!(
+         FilterResult {
+            filter: Some(Filter {
+               id: FilterId("filter id".to_string()),
+               title: None,
+               context: vec![],
+               expire_time: None,
+               filter_action: None,
+               keywords: vec![
+                  FilterKeyword {
+                     id: FilterKeywordId("filter keyword id1".to_string()),
+                     keyword: None,
+                     whole_word: None,
+                  },
+               ],
+               statuses: vec![],
+            }),
+            keyword_matches: vec![],
+            status_matches: vec![],
+         },
+         filter_result
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_filterResult_1fromRust_00024createFilterResult<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmFilterResult<'local> {
+      use chrono::{TimeZone, Utc};
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::filter::{
+         Filter, FilterAction, FilterContext, FilterId, FilterKeyword,
+         FilterKeywordId, FilterResult, FilterStatus, FilterStatusId,
+      };
+      use crate::status::StatusId;
+
+      let filter_result = FilterResult {
+         filter: Some(Filter {
+            id: FilterId("filter id".to_string()),
+            title: Some("title".to_string()),
+            context: vec![
+               FilterContext("home".to_string()),
+               FilterContext("public".to_string()),
+               FilterContext("illegal context".to_string()),
+            ],
+            expire_time: Some(Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap()),
+            filter_action: Some(FilterAction("hide".to_string())),
+            keywords: vec![
+               FilterKeyword {
+                  id: FilterKeywordId("filter keyword id1".to_string()),
+                  keyword: Some("keyword1".to_string()),
+                  whole_word: Some(false),
+               },
+               FilterKeyword {
+                  id: FilterKeywordId("filter keyword id2".to_string()),
+                  keyword: Some("keyword2".to_string()),
+                  whole_word: Some(true),
+               },
+            ],
+            statuses: vec![
+               FilterStatus {
+                  id: FilterStatusId("filter status id1".to_string()),
+                  status_id: StatusId("status id1".to_string()),
+               },
+               FilterStatus {
+                  id: FilterStatusId("filter status id2".to_string()),
+                  status_id: StatusId("status id2".to_string()),
+               },
+            ],
+         }),
+         keyword_matches: vec![
+            "keyword1".to_string(),
+         ],
+         status_matches: vec![
+            StatusId("status id1".to_string()),
+            StatusId("status id2".to_string()),
+         ],
+      };
+
+      filter_result.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_filterResult_1nulls_1fromRust_00024createFilterResult<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmFilterResult<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::filter::{
+         Filter, FilterId, FilterKeyword, FilterKeywordId, FilterResult,
+      };
+
+      let filter_result = FilterResult {
+         filter: Some(Filter {
+            id: FilterId("filter id".to_string()),
+            title: None,
+            context: vec![],
+            expire_time: None,
+            filter_action: None,
+            keywords: vec![
+               FilterKeyword {
+                  id: FilterKeywordId("filter keyword id1".to_string()),
+                  keyword: None,
+                  whole_word: None,
+               },
+            ],
+            statuses: vec![],
+         }),
+         keyword_matches: vec![],
+         status_matches: vec![],
+      };
+
+      filter_result.clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
