@@ -18,5 +18,6 @@ pub mod account;
 pub mod application;
 pub mod custom_emoji;
 pub mod filter;
+pub mod media_attachment;
 pub mod role;
 pub mod token;
