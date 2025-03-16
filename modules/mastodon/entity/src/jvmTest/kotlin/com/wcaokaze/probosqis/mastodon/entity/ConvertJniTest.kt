@@ -24,6 +24,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.seconds
 
 class ConvertJniTest {
    init {
@@ -425,6 +426,463 @@ class ConvertJniTest {
    }
 
    private external fun `filterResult_nulls_fromRust$createFilterResult`(): FilterResult
+
+   // ==== MediaAttachment =====================================================
+
+   @Test
+   fun mediaAttachment_image_toRust() {
+      val mediaAttachment = MediaAttachment(
+         MediaAttachment.Id("media attachment id"),
+         Url("https://example.com/"),
+         Url("https://example.com/preview"),
+         Url("https://example.com/remote"),
+         MediaAttachment.Metadata.Image(
+            originalSize = MediaAttachment.ImageSize(1000L, 2000L),
+            smallSize = MediaAttachment.ImageSize(100L, 200L),
+            focus = MediaAttachment.ImageFocus(0.1, 0.2),
+         ),
+         "description",
+         "blurhash",
+      )
+
+      `mediaAttachment_image_toRust$assert`(mediaAttachment)
+   }
+
+   private external fun `mediaAttachment_image_toRust$assert`(mediaAttachment: MediaAttachment)
+
+   @Test
+   fun mediaAttachment_video_toRust() {
+      val mediaAttachment = MediaAttachment(
+         MediaAttachment.Id("media attachment id"),
+         Url("https://example.com/"),
+         Url("https://example.com/preview"),
+         Url("https://example.com/remote"),
+         MediaAttachment.Metadata.Video(
+            originalSize = MediaAttachment.VideoSize(
+               width = 1000L,
+               height = 2000L,
+               "frameRate",
+               duration = 1.23.seconds,
+               bitrate = 123L,
+            ),
+            smallSize = MediaAttachment.ImageSize(100L, 200L),
+            "length",
+            fps = 42L,
+            "audioEncode",
+            "audioBitrate",
+            "audioChannels",
+         ),
+         "description",
+         "blurhash",
+      )
+
+      `mediaAttachment_video_toRust$assert`(mediaAttachment)
+   }
+
+   private external fun `mediaAttachment_video_toRust$assert`(mediaAttachment: MediaAttachment)
+
+   @Test
+   fun mediaAttachment_gifv_toRust() {
+      val mediaAttachment = MediaAttachment(
+         MediaAttachment.Id("media attachment id"),
+         Url("https://example.com/"),
+         Url("https://example.com/preview"),
+         Url("https://example.com/remote"),
+         MediaAttachment.Metadata.Gifv(
+            originalSize = MediaAttachment.VideoSize(
+               width = 1000L,
+               height = 2000L,
+               "frameRate",
+               duration = 1.23.seconds,
+               bitrate = 123L,
+            ),
+            smallSize = MediaAttachment.ImageSize(100L, 200L),
+            "length",
+            fps = 42L,
+         ),
+         "description",
+         "blurhash",
+      )
+
+      `mediaAttachment_gifv_toRust$assert`(mediaAttachment)
+   }
+
+   private external fun `mediaAttachment_gifv_toRust$assert`(mediaAttachment: MediaAttachment)
+
+   @Test
+   fun mediaAttachment_audio_toRust() {
+      val mediaAttachment = MediaAttachment(
+         MediaAttachment.Id("media attachment id"),
+         Url("https://example.com/"),
+         Url("https://example.com/preview"),
+         Url("https://example.com/remote"),
+         MediaAttachment.Metadata.Audio(
+            originalSize = MediaAttachment.AudioSize(
+               duration = 1.23.seconds,
+               bitrate = 123L,
+            ),
+            "length",
+            "audioEncode",
+            "audioBitrate",
+            "audioChannels",
+         ),
+         "description",
+         "blurhash",
+      )
+
+      `mediaAttachment_audio_toRust$assert`(mediaAttachment)
+   }
+
+   private external fun `mediaAttachment_audio_toRust$assert`(mediaAttachment: MediaAttachment)
+
+   @Test
+   fun mediaAttachment_nulls_toRust() {
+      val mediaAttachment = MediaAttachment(
+         MediaAttachment.Id("media attachment id"),
+         url = null,
+         previewUrl = null,
+         remoteUrl = null,
+         metadata = null,
+         description = null,
+         blurhash = null,
+      )
+
+      `mediaAttachment_nulls_toRust$assert`(mediaAttachment)
+   }
+
+   private external fun `mediaAttachment_nulls_toRust$assert`(mediaAttachment: MediaAttachment)
+
+   @Test
+   fun mediaAttachment_image_nulls_toRust() {
+      val mediaAttachment = MediaAttachment(
+         MediaAttachment.Id("media attachment id"),
+         url = null,
+         previewUrl = null,
+         remoteUrl = null,
+         metadata = MediaAttachment.Metadata.Image(
+            originalSize = null,
+            smallSize = null,
+            focus = null,
+         ),
+         description = null,
+         blurhash = null,
+      )
+
+      `mediaAttachment_image_nulls_toRust$assert`(mediaAttachment)
+   }
+
+   private external fun `mediaAttachment_image_nulls_toRust$assert`(mediaAttachment: MediaAttachment)
+
+   @Test
+   fun mediaAttachment_video_nulls_toRust() {
+      val mediaAttachment = MediaAttachment(
+         MediaAttachment.Id("media attachment id"),
+         url = null,
+         previewUrl = null,
+         remoteUrl = null,
+         metadata = MediaAttachment.Metadata.Video(
+            originalSize = null,
+            smallSize = null,
+            length = null,
+            fps = null,
+            audioEncode = null,
+            audioBitrate = null,
+            audioChannels = null,
+         ),
+         description = null,
+         blurhash = null,
+      )
+
+      `mediaAttachment_video_nulls_toRust$assert`(mediaAttachment)
+   }
+
+   private external fun `mediaAttachment_video_nulls_toRust$assert`(mediaAttachment: MediaAttachment)
+
+   @Test
+   fun mediaAttachment_gifv_nulls_toRust() {
+      val mediaAttachment = MediaAttachment(
+         MediaAttachment.Id("media attachment id"),
+         url = null,
+         previewUrl = null,
+         remoteUrl = null,
+         metadata = MediaAttachment.Metadata.Gifv(
+            originalSize = null,
+            smallSize = null,
+            length = null,
+            fps = null,
+         ),
+         description = null,
+         blurhash = null,
+      )
+
+      `mediaAttachment_gifv_nulls_toRust$assert`(mediaAttachment)
+   }
+
+   private external fun `mediaAttachment_gifv_nulls_toRust$assert`(mediaAttachment: MediaAttachment)
+
+   @Test
+   fun mediaAttachment_audio_nulls_toRust() {
+      val mediaAttachment = MediaAttachment(
+         MediaAttachment.Id("media attachment id"),
+         url = null,
+         previewUrl = null,
+         remoteUrl = null,
+         metadata = MediaAttachment.Metadata.Audio(
+            originalSize = null,
+            length = null,
+            audioEncode = null,
+            audioBitrate = null,
+            audioChannels = null,
+         ),
+         description = null,
+         blurhash = null,
+      )
+
+      `mediaAttachment_audio_nulls_toRust$assert`(mediaAttachment)
+   }
+
+   private external fun `mediaAttachment_audio_nulls_toRust$assert`(mediaAttachment: MediaAttachment)
+
+   @Test
+   fun mediaAttachment_image_fromRust() {
+      val mediaAttachment = `mediaAttachment_image_fromRust$createMediaAttachment`()
+
+      assertEquals(
+         MediaAttachment(
+            MediaAttachment.Id("media attachment id"),
+            Url("https://example.com/"),
+            Url("https://example.com/preview"),
+            Url("https://example.com/remote"),
+            MediaAttachment.Metadata.Image(
+               originalSize = MediaAttachment.ImageSize(1000L, 2000L),
+               smallSize = MediaAttachment.ImageSize(100L, 200L),
+               focus = MediaAttachment.ImageFocus(0.1, 0.2),
+            ),
+            "description",
+            "blurhash",
+         ),
+         mediaAttachment
+      )
+   }
+
+   private external fun `mediaAttachment_image_fromRust$createMediaAttachment`(): MediaAttachment
+
+   @Test
+   fun mediaAttachment_video_fromRust() {
+      val mediaAttachment = `mediaAttachment_video_fromRust$createMediaAttachment`()
+
+      assertEquals(
+         MediaAttachment(
+            MediaAttachment.Id("media attachment id"),
+            Url("https://example.com/"),
+            Url("https://example.com/preview"),
+            Url("https://example.com/remote"),
+            MediaAttachment.Metadata.Video(
+               originalSize = MediaAttachment.VideoSize(
+                  width = 1000L,
+                  height = 2000L,
+                  "frameRate",
+                  duration = 1.23.seconds,
+                  bitrate = 123L,
+               ),
+               smallSize = MediaAttachment.ImageSize(100L, 200L),
+               "length",
+               fps = 42L,
+               "audioEncode",
+               "audioBitrate",
+               "audioChannels",
+            ),
+            "description",
+            "blurhash",
+         ),
+         mediaAttachment
+      )
+   }
+
+   private external fun `mediaAttachment_video_fromRust$createMediaAttachment`(): MediaAttachment
+
+   @Test
+   fun mediaAttachment_gifv_fromRust() {
+      val mediaAttachment = `mediaAttachment_gifv_fromRust$createMediaAttachment`()
+
+      assertEquals(
+         MediaAttachment(
+            MediaAttachment.Id("media attachment id"),
+            Url("https://example.com/"),
+            Url("https://example.com/preview"),
+            Url("https://example.com/remote"),
+            MediaAttachment.Metadata.Gifv(
+               originalSize = MediaAttachment.VideoSize(
+                  width = 1000L,
+                  height = 2000L,
+                  "frameRate",
+                  duration = 1.23.seconds,
+                  bitrate = 123L,
+               ),
+               smallSize = MediaAttachment.ImageSize(100L, 200L),
+               "length",
+               fps = 42L,
+            ),
+            "description",
+            "blurhash",
+         ),
+         mediaAttachment
+      )
+   }
+
+   private external fun `mediaAttachment_gifv_fromRust$createMediaAttachment`(): MediaAttachment
+
+   @Test
+   fun mediaAttachment_audio_fromRust() {
+      val mediaAttachment = `mediaAttachment_audio_fromRust$createMediaAttachment`()
+
+      assertEquals(
+         MediaAttachment(
+            MediaAttachment.Id("media attachment id"),
+            Url("https://example.com/"),
+            Url("https://example.com/preview"),
+            Url("https://example.com/remote"),
+            MediaAttachment.Metadata.Audio(
+               originalSize = MediaAttachment.AudioSize(
+                  duration = 1.23.seconds,
+                  bitrate = 123L,
+               ),
+               "length",
+               "audioEncode",
+               "audioBitrate",
+               "audioChannels",
+            ),
+            "description",
+            "blurhash",
+         ),
+         mediaAttachment
+      )
+   }
+
+   private external fun `mediaAttachment_audio_fromRust$createMediaAttachment`(): MediaAttachment
+
+   @Test
+   fun mediaAttachment_nulls_fromRust() {
+      val mediaAttachment = `mediaAttachment_nulls_fromRust$createMediaAttachment`()
+
+      assertEquals(
+         MediaAttachment(
+            MediaAttachment.Id("media attachment id"),
+            url = null,
+            previewUrl = null,
+            remoteUrl = null,
+            metadata = null,
+            description = null,
+            blurhash = null,
+         ),
+         mediaAttachment
+      )
+   }
+
+   private external fun `mediaAttachment_nulls_fromRust$createMediaAttachment`(): MediaAttachment
+
+   @Test
+   fun mediaAttachment_image_nulls_fromRust() {
+      val mediaAttachment = `mediaAttachment_image_nulls_fromRust$createMediaAttachment`()
+
+      assertEquals(
+         MediaAttachment(
+            MediaAttachment.Id("media attachment id"),
+            url = null,
+            previewUrl = null,
+            remoteUrl = null,
+            metadata = MediaAttachment.Metadata.Image(
+               originalSize = null,
+               smallSize = null,
+               focus = null,
+            ),
+            description = null,
+            blurhash = null,
+         ),
+         mediaAttachment
+      )
+   }
+
+   private external fun `mediaAttachment_image_nulls_fromRust$createMediaAttachment`(): MediaAttachment
+
+   @Test
+   fun mediaAttachment_video_nulls_fromRust() {
+      val mediaAttachment = `mediaAttachment_video_nulls_fromRust$createMediaAttachment`()
+
+      assertEquals(
+         MediaAttachment(
+            MediaAttachment.Id("media attachment id"),
+            url = null,
+            previewUrl = null,
+            remoteUrl = null,
+            metadata = MediaAttachment.Metadata.Video(
+               originalSize = null,
+               smallSize = null,
+               length = null,
+               fps = null,
+               audioEncode = null,
+               audioBitrate = null,
+               audioChannels = null,
+            ),
+            description = null,
+            blurhash = null,
+         ),
+         mediaAttachment
+      )
+   }
+
+   private external fun `mediaAttachment_video_nulls_fromRust$createMediaAttachment`(): MediaAttachment
+
+   @Test
+   fun mediaAttachment_gifv_nulls_fromRust() {
+      val mediaAttachment = `mediaAttachment_gifv_nulls_fromRust$createMediaAttachment`()
+
+      assertEquals(
+         MediaAttachment(
+            MediaAttachment.Id("media attachment id"),
+            url = null,
+            previewUrl = null,
+            remoteUrl = null,
+            metadata = MediaAttachment.Metadata.Gifv(
+               originalSize = null,
+               smallSize = null,
+               length = null,
+               fps = null,
+            ),
+            description = null,
+            blurhash = null,
+         ),
+         mediaAttachment
+      )
+   }
+
+   private external fun `mediaAttachment_gifv_nulls_fromRust$createMediaAttachment`(): MediaAttachment
+
+   @Test
+   fun mediaAttachment_audio_nulls_fromRust() {
+      val mediaAttachment = `mediaAttachment_audio_nulls_fromRust$createMediaAttachment`()
+
+      assertEquals(
+         MediaAttachment(
+            MediaAttachment.Id("media attachment id"),
+            url = null,
+            previewUrl = null,
+            remoteUrl = null,
+            metadata = MediaAttachment.Metadata.Audio(
+               originalSize = null,
+               length = null,
+               audioEncode = null,
+               audioBitrate = null,
+               audioChannels = null,
+            ),
+            description = null,
+            blurhash = null,
+         ),
+         mediaAttachment
+      )
+   }
+
+   private external fun `mediaAttachment_audio_nulls_fromRust$createMediaAttachment`(): MediaAttachment
 
    // ==== Role ================================================================
 

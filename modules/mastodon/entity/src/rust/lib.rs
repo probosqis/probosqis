@@ -19,6 +19,7 @@ pub mod application;
 pub mod custom_emoji;
 pub mod filter;
 pub mod instance;
+pub mod media_attachment;
 pub mod role;
 pub mod status;
 pub mod token;
@@ -37,8 +38,8 @@ mod jni_tests {
    use crate::account::Account;
    use crate::instance::Instance;
    use crate::jvm_types::{
-      JvmAccount, JvmCustomEmoji, JvmFilterResult, JvmInstance, JvmRole,
-      JvmStatusVisibility,
+      JvmAccount, JvmCustomEmoji, JvmFilterResult, JvmInstance, JvmMediaAttachment,
+      JvmRole, JvmStatusVisibility,
    };
 
    const fn new_instance_repo() -> RepositoryHolder<Instance> {
@@ -722,6 +723,616 @@ mod jni_tests {
       };
 
       filter_result.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1image_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      media_attachment: JvmMediaAttachment<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::media_attachment::{
+         ImageFocus, ImageSize, MediaAttachment, MediaAttachmentId,
+         MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment::clone_from_jvm(&mut env, &media_attachment);
+
+      assert_eq!(
+         MediaAttachment {
+            id: MediaAttachmentId("media attachment id".to_string()),
+            url: Some("https://example.com/".parse().unwrap()),
+            preview_url: Some("https://example.com/preview".parse().unwrap()),
+            remote_url: Some("https://example.com/remote".parse().unwrap()),
+            metadata: Some(MediaAttachmentMetadata::Image {
+               original_size: Some(ImageSize {
+                  width: 1000,
+                  height: 2000,
+               }),
+               small_size: Some(ImageSize {
+                  width: 100,
+                  height: 200,
+               }),
+               focus: Some(ImageFocus {
+                  x: 0.1,
+                  y: 0.2,
+               }),
+            }),
+            description: Some("description".to_string()),
+            blurhash: Some("blurhash".to_string()),
+         },
+         media_attachment
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1video_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      media_attachment: JvmMediaAttachment<'local>
+   ) {
+      use std::time::Duration;
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::media_attachment::{
+         ImageSize, MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+         VideoSize,
+      };
+
+      let media_attachment = MediaAttachment::clone_from_jvm(&mut env, &media_attachment);
+
+      assert_eq!(
+         MediaAttachment {
+            id: MediaAttachmentId("media attachment id".to_string()),
+            url: Some("https://example.com/".parse().unwrap()),
+            preview_url: Some("https://example.com/preview".parse().unwrap()),
+            remote_url: Some("https://example.com/remote".parse().unwrap()),
+            metadata: Some(MediaAttachmentMetadata::Video {
+               original_size: Some(VideoSize {
+                  width: Some(1000),
+                  height: Some(2000),
+                  frame_rate: Some("frameRate".to_string()),
+                  duration: Some(Duration::from_secs_f64(1.23)),
+                  bitrate: Some(123),
+               }),
+               small_size: Some(ImageSize {
+                  width: 100,
+                  height: 200,
+               }),
+               length: Some("length".to_string()),
+               fps: Some(42),
+               audio_encode: Some("audioEncode".to_string()),
+               audio_bitrate: Some("audioBitrate".to_string()),
+               audio_channels: Some("audioChannels".to_string()),
+            }),
+            description: Some("description".to_string()),
+            blurhash: Some("blurhash".to_string()),
+         },
+         media_attachment
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1gifv_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      media_attachment: JvmMediaAttachment<'local>
+   ) {
+      use std::time::Duration;
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::media_attachment::{
+         ImageSize, MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+         VideoSize,
+      };
+
+      let media_attachment = MediaAttachment::clone_from_jvm(&mut env, &media_attachment);
+
+      assert_eq!(
+         MediaAttachment {
+            id: MediaAttachmentId("media attachment id".to_string()),
+            url: Some("https://example.com/".parse().unwrap()),
+            preview_url: Some("https://example.com/preview".parse().unwrap()),
+            remote_url: Some("https://example.com/remote".parse().unwrap()),
+            metadata: Some(MediaAttachmentMetadata::Gifv {
+               original_size: Some(VideoSize {
+                  width: Some(1000),
+                  height: Some(2000),
+                  frame_rate: Some("frameRate".to_string()),
+                  duration: Some(Duration::from_secs_f64(1.23)),
+                  bitrate: Some(123),
+               }),
+               small_size: Some(ImageSize {
+                  width: 100,
+                  height: 200,
+               }),
+               length: Some("length".to_string()),
+               fps: Some(42),
+            }),
+            description: Some("description".to_string()),
+            blurhash: Some("blurhash".to_string()),
+         },
+         media_attachment
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1audio_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      media_attachment: JvmMediaAttachment<'local>
+   ) {
+      use std::time::Duration;
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::media_attachment::{
+         AudioSize, MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment::clone_from_jvm(&mut env, &media_attachment);
+
+      assert_eq!(
+         MediaAttachment {
+            id: MediaAttachmentId("media attachment id".to_string()),
+            url: Some("https://example.com/".parse().unwrap()),
+            preview_url: Some("https://example.com/preview".parse().unwrap()),
+            remote_url: Some("https://example.com/remote".parse().unwrap()),
+            metadata: Some(MediaAttachmentMetadata::Audio {
+               original_size: Some(AudioSize {
+                  duration: Some(Duration::from_secs_f64(1.23)),
+                  bitrate: Some(123),
+               }),
+               length: Some("length".to_string()),
+               audio_encode: Some("audioEncode".to_string()),
+               audio_bitrate: Some("audioBitrate".to_string()),
+               audio_channels: Some("audioChannels".to_string()),
+            }),
+            description: Some("description".to_string()),
+            blurhash: Some("blurhash".to_string()),
+         },
+         media_attachment
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1nulls_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      media_attachment: JvmMediaAttachment<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::media_attachment::{MediaAttachment, MediaAttachmentId};
+
+      let media_attachment = MediaAttachment::clone_from_jvm(&mut env, &media_attachment);
+
+      assert_eq!(
+         MediaAttachment {
+            id: MediaAttachmentId("media attachment id".to_string()),
+            url: None,
+            preview_url: None,
+            remote_url: None,
+            metadata: None,
+            description: None,
+            blurhash: None,
+         },
+         media_attachment
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1image_1nulls_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      media_attachment: JvmMediaAttachment<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::media_attachment::{
+         MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment::clone_from_jvm(&mut env, &media_attachment);
+
+      assert_eq!(
+         MediaAttachment {
+            id: MediaAttachmentId("media attachment id".to_string()),
+            url: None,
+            preview_url: None,
+            remote_url: None,
+            metadata: Some(MediaAttachmentMetadata::Image {
+               original_size: None,
+               small_size: None,
+               focus: None,
+            }),
+            description: None,
+            blurhash: None,
+         },
+         media_attachment
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1video_1nulls_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      media_attachment: JvmMediaAttachment<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::media_attachment::{
+         MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment::clone_from_jvm(&mut env, &media_attachment);
+
+      assert_eq!(
+         MediaAttachment {
+            id: MediaAttachmentId("media attachment id".to_string()),
+            url: None,
+            preview_url: None,
+            remote_url: None,
+            metadata: Some(MediaAttachmentMetadata::Video {
+               original_size: None,
+               small_size: None,
+               length: None,
+               fps: None,
+               audio_encode: None,
+               audio_bitrate: None,
+               audio_channels: None,
+            }),
+            description: None,
+            blurhash: None,
+         },
+         media_attachment
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1gifv_1nulls_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      media_attachment: JvmMediaAttachment<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::media_attachment::{
+         MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment::clone_from_jvm(&mut env, &media_attachment);
+
+      assert_eq!(
+         MediaAttachment {
+            id: MediaAttachmentId("media attachment id".to_string()),
+            url: None,
+            preview_url: None,
+            remote_url: None,
+            metadata: Some(MediaAttachmentMetadata::Gifv {
+               original_size: None,
+               small_size: None,
+               length: None,
+               fps: None,
+            }),
+            description: None,
+            blurhash: None,
+         },
+         media_attachment
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1audio_1nulls_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      media_attachment: JvmMediaAttachment<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::media_attachment::{
+         MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment::clone_from_jvm(&mut env, &media_attachment);
+
+      assert_eq!(
+         MediaAttachment {
+            id: MediaAttachmentId("media attachment id".to_string()),
+            url: None,
+            preview_url: None,
+            remote_url: None,
+            metadata: Some(MediaAttachmentMetadata::Audio {
+               original_size: None,
+               length: None,
+               audio_encode: None,
+               audio_bitrate: None,
+               audio_channels: None,
+            }),
+            description: None,
+            blurhash: None,
+         },
+         media_attachment
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1image_1fromRust_00024createMediaAttachment<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmMediaAttachment<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::media_attachment::{
+         ImageFocus, ImageSize, MediaAttachment, MediaAttachmentId,
+         MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment {
+         id: MediaAttachmentId("media attachment id".to_string()),
+         url: Some("https://example.com/".parse().unwrap()),
+         preview_url: Some("https://example.com/preview".parse().unwrap()),
+         remote_url: Some("https://example.com/remote".parse().unwrap()),
+         metadata: Some(MediaAttachmentMetadata::Image {
+            original_size: Some(ImageSize {
+               width: 1000,
+               height: 2000,
+            }),
+            small_size: Some(ImageSize {
+               width: 100,
+               height: 200,
+            }),
+            focus: Some(ImageFocus {
+               x: 0.1,
+               y: 0.2,
+            }),
+         }),
+         description: Some("description".to_string()),
+         blurhash: Some("blurhash".to_string()),
+      };
+
+      media_attachment.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1video_1fromRust_00024createMediaAttachment<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmMediaAttachment<'local> {
+      use std::time::Duration;
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::media_attachment::{
+         ImageSize, MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+         VideoSize,
+      };
+
+      let media_attachment = MediaAttachment {
+         id: MediaAttachmentId("media attachment id".to_string()),
+         url: Some("https://example.com/".parse().unwrap()),
+         preview_url: Some("https://example.com/preview".parse().unwrap()),
+         remote_url: Some("https://example.com/remote".parse().unwrap()),
+         metadata: Some(MediaAttachmentMetadata::Video {
+            original_size: Some(VideoSize {
+               width: Some(1000),
+               height: Some(2000),
+               frame_rate: Some("frameRate".to_string()),
+               duration: Some(Duration::from_secs_f64(1.23)),
+               bitrate: Some(123),
+            }),
+            small_size: Some(ImageSize {
+               width: 100,
+               height: 200,
+            }),
+            length: Some("length".to_string()),
+            fps: Some(42),
+            audio_encode: Some("audioEncode".to_string()),
+            audio_bitrate: Some("audioBitrate".to_string()),
+            audio_channels: Some("audioChannels".to_string()),
+         }),
+         description: Some("description".to_string()),
+         blurhash: Some("blurhash".to_string()),
+      };
+
+      media_attachment.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1gifv_1fromRust_00024createMediaAttachment<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmMediaAttachment<'local> {
+      use std::time::Duration;
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::media_attachment::{
+         ImageSize, MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+         VideoSize,
+      };
+
+      let media_attachment = MediaAttachment {
+         id: MediaAttachmentId("media attachment id".to_string()),
+         url: Some("https://example.com/".parse().unwrap()),
+         preview_url: Some("https://example.com/preview".parse().unwrap()),
+         remote_url: Some("https://example.com/remote".parse().unwrap()),
+         metadata: Some(MediaAttachmentMetadata::Gifv {
+            original_size: Some(VideoSize {
+               width: Some(1000),
+               height: Some(2000),
+               frame_rate: Some("frameRate".to_string()),
+               duration: Some(Duration::from_secs_f64(1.23)),
+               bitrate: Some(123),
+            }),
+            small_size: Some(ImageSize {
+               width: 100,
+               height: 200,
+            }),
+            length: Some("length".to_string()),
+            fps: Some(42),
+         }),
+         description: Some("description".to_string()),
+         blurhash: Some("blurhash".to_string()),
+      };
+
+      media_attachment.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1audio_1fromRust_00024createMediaAttachment<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmMediaAttachment<'local> {
+      use std::time::Duration;
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::media_attachment::{
+         AudioSize, MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment {
+         id: MediaAttachmentId("media attachment id".to_string()),
+         url: Some("https://example.com/".parse().unwrap()),
+         preview_url: Some("https://example.com/preview".parse().unwrap()),
+         remote_url: Some("https://example.com/remote".parse().unwrap()),
+         metadata: Some(MediaAttachmentMetadata::Audio {
+            original_size: Some(AudioSize {
+               duration: Some(Duration::from_secs_f64(1.23)),
+               bitrate: Some(123),
+            }),
+            length: Some("length".to_string()),
+            audio_encode: Some("audioEncode".to_string()),
+            audio_bitrate: Some("audioBitrate".to_string()),
+            audio_channels: Some("audioChannels".to_string()),
+         }),
+         description: Some("description".to_string()),
+         blurhash: Some("blurhash".to_string()),
+      };
+
+      media_attachment.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1nulls_1fromRust_00024createMediaAttachment<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmMediaAttachment<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::media_attachment::{MediaAttachment, MediaAttachmentId};
+
+      let media_attachment = MediaAttachment {
+         id: MediaAttachmentId("media attachment id".to_string()),
+         url: None,
+         preview_url: None,
+         remote_url: None,
+         metadata: None,
+         description: None,
+         blurhash: None,
+      };
+
+      media_attachment.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1image_1nulls_1fromRust_00024createMediaAttachment<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmMediaAttachment<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::media_attachment::{
+         MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment {
+         id: MediaAttachmentId("media attachment id".to_string()),
+         url: None,
+         preview_url: None,
+         remote_url: None,
+         metadata: Some(MediaAttachmentMetadata::Image {
+            original_size: None,
+            small_size: None,
+            focus: None,
+         }),
+         description: None,
+         blurhash: None,
+      };
+
+      media_attachment.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1video_1nulls_1fromRust_00024createMediaAttachment<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmMediaAttachment<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::media_attachment::{
+         MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment {
+         id: MediaAttachmentId("media attachment id".to_string()),
+         url: None,
+         preview_url: None,
+         remote_url: None,
+         metadata: Some(MediaAttachmentMetadata::Video {
+            original_size: None,
+            small_size: None,
+            length: None,
+            fps: None,
+            audio_encode: None,
+            audio_bitrate: None,
+            audio_channels: None,
+         }),
+         description: None,
+         blurhash: None,
+      };
+
+      media_attachment.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1gifv_1nulls_1fromRust_00024createMediaAttachment<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmMediaAttachment<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::media_attachment::{
+         MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment {
+         id: MediaAttachmentId("media attachment id".to_string()),
+         url: None,
+         preview_url: None,
+         remote_url: None,
+         metadata: Some(MediaAttachmentMetadata::Gifv {
+            original_size: None,
+            small_size: None,
+            length: None,
+            fps: None,
+         }),
+         description: None,
+         blurhash: None,
+      };
+
+      media_attachment.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_mediaAttachment_1audio_1nulls_1fromRust_00024createMediaAttachment<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmMediaAttachment<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::media_attachment::{
+         MediaAttachment, MediaAttachmentId, MediaAttachmentMetadata,
+      };
+
+      let media_attachment = MediaAttachment {
+         id: MediaAttachmentId("media attachment id".to_string()),
+         url: None,
+         preview_url: None,
+         remote_url: None,
+         metadata: Some(MediaAttachmentMetadata::Audio {
+            original_size: None,
+            length: None,
+            audio_encode: None,
+            audio_bitrate: None,
+            audio_channels: None,
+         }),
+         description: None,
+         blurhash: None,
+      };
+
+      media_attachment.clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
