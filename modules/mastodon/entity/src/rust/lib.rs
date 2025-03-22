@@ -20,6 +20,7 @@ pub mod custom_emoji;
 pub mod filter;
 pub mod instance;
 pub mod media_attachment;
+pub mod poll;
 pub mod role;
 pub mod status;
 pub mod token;
@@ -39,8 +40,9 @@ mod jni_tests {
    use crate::instance::Instance;
    use crate::jvm_types::{
       JvmAccount, JvmCustomEmoji, JvmFilterResult, JvmInstance, JvmMediaAttachment,
-      JvmRole, JvmStatusVisibility,
+      JvmPoll, JvmPollNoCredential, JvmRole, JvmStatusVisibility,
    };
+   use crate::poll::NoCredentialPoll;
 
    const fn new_instance_repo() -> RepositoryHolder<Instance> {
       RepositoryHolder::new()
@@ -1333,6 +1335,418 @@ mod jni_tests {
       };
 
       media_attachment.clone_into_jvm(&mut env)
+   }
+
+   #[allow(non_upper_case_globals)]
+   static poll_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+
+   #[allow(non_upper_case_globals)]
+   static poll_toRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll> = RepositoryHolder::new();
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1toRust_00024createInstance<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+
+      save_instance(&mut env, &poll_toRust_instance_repo)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1toRust_00024assertNoCredential<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      no_credential_poll: JvmPollNoCredential<'local>
+   ) {
+      use chrono::{TimeZone, Utc};
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::custom_emoji::CustomEmoji;
+      use crate::poll::{NoCredentialPoll, PollId, PollLocalId, PollOption};
+
+      let no_credential_poll = NoCredentialPoll::clone_from_jvm(
+         &mut env, &no_credential_poll
+      );
+
+      let instance = poll_toRust_instance_repo.read(&mut env).unwrap()
+         .load("https://example.com/instance/url".parse().unwrap()).unwrap();
+
+      let instance_url = instance.get().url.clone();
+
+      assert_eq!(
+         NoCredentialPoll {
+            id: PollId {
+               instance_url: instance_url.clone(),
+               local: PollLocalId("poll id".to_string()),
+            },
+            expire_time: Some(Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap()),
+            is_expired: Some(true),
+            allows_multiple_choices: Some(false),
+            vote_count: Some(123),
+            voter_count: Some(45),
+            poll_options: vec![
+               PollOption {
+                  title: Some("title1".to_string()),
+                  vote_count: Some(1),
+               },
+               PollOption {
+                  title: Some("title2".to_string()),
+                  vote_count: Some(2),
+               },
+               PollOption {
+                  title: Some("title3".to_string()),
+                  vote_count: Some(3),
+               },
+            ],
+            emojis: vec![
+               CustomEmoji {
+                  instance: instance.clone(),
+                  shortcode: "shortcode1".to_string(),
+                  image_url: "https://example.com/image/url/1".parse().unwrap(),
+                  static_image_url:
+                  Some("https://example.com/static/image/url/1".parse().unwrap()),
+                  is_visible_in_picker: Some(true),
+                  category: Some("category1".to_string()),
+               },
+               CustomEmoji {
+                  instance: instance.clone(),
+                  shortcode: "shortcode2".to_string(),
+                  image_url: "https://example.com/image/url/2".parse().unwrap(),
+                  static_image_url:
+                  Some("https://example.com/static/image/url/2".parse().unwrap()),
+                  is_visible_in_picker: Some(false),
+                  category: Some("category2".to_string()),
+               },
+            ],
+         },
+         no_credential_poll
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1toRust_00024saveNoCredential<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      no_credential_poll: JvmPollNoCredential<'local>
+   ) -> JvmCache<'local, JvmPollNoCredential<'local>> {
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+
+      let no_credential_poll = NoCredentialPoll::clone_from_jvm(
+         &mut env, &no_credential_poll
+      );
+
+      let cache = poll_toRust_no_credential_poll_repo
+         .write(&mut env).unwrap()
+         .save(no_credential_poll);
+
+      cache.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      poll: JvmPoll<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::poll::{Poll, PollId, PollLocalId};
+
+      let poll = Poll::clone_from_jvm(&mut env, &poll);
+
+      let instance = save_instance(&mut env, &poll_toRust_instance_repo);
+
+      let poll_id = PollId {
+         instance_url: instance.get().url.clone(),
+         local: PollLocalId("poll id".to_string()),
+      };
+
+      let no_credential = poll_toRust_no_credential_poll_repo
+         .read(&mut env).unwrap()
+         .load(poll_id.clone()).unwrap();
+
+      assert_eq!(
+         Poll {
+            id: poll_id,
+            no_credential,
+            is_voted: Some(true),
+            voted_options: vec![0],
+         },
+         poll
+      );
+   }
+
+   #[allow(non_upper_case_globals)]
+   static poll_nulls_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+
+   #[allow(non_upper_case_globals)]
+   static poll_nulls_toRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll> = RepositoryHolder::new();
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1nulls_1toRust_00024createInstance<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+
+      save_instance(&mut env, &poll_nulls_toRust_instance_repo)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1nulls_1toRust_00024assertNoCredential<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      no_credential_poll: JvmPollNoCredential<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::poll::{NoCredentialPoll, PollId, PollLocalId, PollOption};
+
+      let no_credential_poll = NoCredentialPoll::clone_from_jvm(
+         &mut env, &no_credential_poll
+      );
+
+      let instance = poll_nulls_toRust_instance_repo.read(&mut env).unwrap()
+         .load("https://example.com/instance/url".parse().unwrap()).unwrap();
+
+      let instance_url = instance.get().url.clone();
+
+      assert_eq!(
+         NoCredentialPoll {
+            id: PollId {
+               instance_url: instance_url.clone(),
+               local: PollLocalId("poll id".to_string()),
+            },
+            expire_time: None,
+            is_expired: None,
+            allows_multiple_choices: None,
+            vote_count: None,
+            voter_count: None,
+            poll_options: vec![
+               PollOption {
+                  title: None,
+                  vote_count: None,
+               },
+            ],
+            emojis: vec![],
+         },
+         no_credential_poll
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1nulls_1toRust_00024saveNoCredential<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      no_credential_poll: JvmPollNoCredential<'local>
+   ) -> JvmCache<'local, JvmPollNoCredential<'local>> {
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+
+      let no_credential_poll = NoCredentialPoll::clone_from_jvm(
+         &mut env, &no_credential_poll
+      );
+
+      let cache = poll_nulls_toRust_no_credential_poll_repo
+         .write(&mut env).unwrap()
+         .save(no_credential_poll);
+
+      cache.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1nulls_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      poll: JvmPoll<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::poll::{Poll, PollId, PollLocalId};
+
+      let poll = Poll::clone_from_jvm(&mut env, &poll);
+
+      let instance = save_instance(&mut env, &poll_nulls_toRust_instance_repo);
+
+      let poll_id = PollId {
+         instance_url: instance.get().url.clone(),
+         local: PollLocalId("poll id".to_string()),
+      };
+
+      let no_credential = poll_nulls_toRust_no_credential_poll_repo
+         .read(&mut env).unwrap()
+         .load(poll_id.clone()).unwrap();
+
+      assert_eq!(
+         Poll {
+            id: poll_id,
+            no_credential,
+            is_voted: None,
+            voted_options: vec![],
+         },
+         poll
+      );
+   }
+
+   #[allow(non_upper_case_globals)]
+   static poll_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+
+   #[allow(non_upper_case_globals)]
+   static poll_fromRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll>
+      = RepositoryHolder::new();
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1fromRust_00024createPoll<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmPoll<'local> {
+      use chrono::{TimeZone, Utc};
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::custom_emoji::CustomEmoji;
+      use crate::poll::{Poll, PollId, PollLocalId, PollOption};
+
+      let instance = save_instance(&mut env, &poll_fromRust_instance_repo);
+      let instance_url = instance.get().url.clone();
+
+      let no_credential = NoCredentialPoll {
+         id: PollId {
+            instance_url: instance_url.clone(),
+            local: PollLocalId("poll id".to_string()),
+         },
+         expire_time: Some(Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap()),
+         is_expired: Some(true),
+         allows_multiple_choices: Some(false),
+         vote_count: Some(123),
+         voter_count: Some(45),
+         poll_options: vec![
+            PollOption {
+               title: Some("title1".to_string()),
+               vote_count: Some(1),
+            },
+            PollOption {
+               title: Some("title2".to_string()),
+               vote_count: Some(2),
+            },
+            PollOption {
+               title: Some("title3".to_string()),
+               vote_count: Some(3),
+            },
+         ],
+         emojis: vec![
+            CustomEmoji {
+               instance: instance.clone(),
+               shortcode: "shortcode1".to_string(),
+               image_url: "https://example.com/image/url/1".parse().unwrap(),
+               static_image_url:
+               Some("https://example.com/static/image/url/1".parse().unwrap()),
+               is_visible_in_picker: Some(true),
+               category: Some("category1".to_string()),
+            },
+            CustomEmoji {
+               instance: instance.clone(),
+               shortcode: "shortcode2".to_string(),
+               image_url: "https://example.com/image/url/2".parse().unwrap(),
+               static_image_url:
+               Some("https://example.com/static/image/url/2".parse().unwrap()),
+               is_visible_in_picker: Some(false),
+               category: Some("category2".to_string()),
+            },
+         ],
+      };
+
+      let no_credential = poll_fromRust_no_credential_poll_repo
+         .write(&mut env).unwrap()
+         .save(no_credential);
+
+      let poll = Poll {
+         id: PollId {
+            instance_url: instance_url.clone(),
+            local: PollLocalId("poll id".to_string()),
+         },
+         no_credential,
+         is_voted: Some(true),
+         voted_options: vec![0],
+      };
+
+      poll.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1fromRust_00024getInstanceCache<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+
+      let instance = poll_fromRust_instance_repo.read(&mut env).unwrap()
+         .load("https://example.com/instance/url".parse().unwrap()).unwrap();
+
+      instance.clone_into_jvm(&mut env)
+   }
+
+   #[allow(non_upper_case_globals)]
+   static poll_nulls_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+
+   #[allow(non_upper_case_globals)]
+   static poll_nulls_fromRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll>
+      = RepositoryHolder::new();
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1nulls_1fromRust_00024createPoll<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmPoll<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::poll::{Poll, PollId, PollLocalId, PollOption};
+
+      let instance = save_instance(&mut env, &poll_nulls_fromRust_instance_repo);
+      let instance_url = instance.get().url.clone();
+
+      let no_credential = NoCredentialPoll {
+         id: PollId {
+            instance_url: instance_url.clone(),
+            local: PollLocalId("poll id".to_string()),
+         },
+         expire_time: None,
+         is_expired: None,
+         allows_multiple_choices: None,
+         vote_count: None,
+         voter_count: None,
+         poll_options: vec![
+            PollOption {
+               title: None,
+               vote_count: None,
+            },
+         ],
+         emojis: vec![],
+      };
+
+      let no_credential = poll_nulls_fromRust_no_credential_poll_repo
+         .write(&mut env).unwrap()
+         .save(no_credential);
+
+      let poll = Poll {
+         id: PollId {
+            instance_url: instance_url.clone(),
+            local: PollLocalId("poll id".to_string()),
+         },
+         no_credential,
+         is_voted: None,
+         voted_options: vec![],
+      };
+
+      poll.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1nulls_1fromRust_00024getInstanceCache<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+
+      let instance = poll_nulls_fromRust_instance_repo.read(&mut env).unwrap()
+         .load("https://example.com/instance/url".parse().unwrap()).unwrap();
+
+      instance.clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]

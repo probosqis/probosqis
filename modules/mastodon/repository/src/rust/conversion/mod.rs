@@ -19,6 +19,7 @@ pub(crate) mod application;
 pub(crate) mod custom_emoji;
 pub(crate) mod filter;
 pub(crate) mod media_attachment;
+pub(crate) mod poll;
 pub(crate) mod role;
 pub(crate) mod status;
 pub(crate) mod token;

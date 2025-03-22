@@ -884,6 +884,202 @@ class ConvertJniTest {
 
    private external fun `mediaAttachment_audio_nulls_fromRust$createMediaAttachment`(): MediaAttachment
 
+   // ==== Poll ================================================================
+
+   @Test
+   fun poll_toRust() {
+      val instance = `poll_toRust$createInstance`()
+
+      val noCredential = Poll.NoCredential(
+         Poll.Id(instance.value.url, Poll.LocalId("poll id")),
+         expireTime = LocalDateTime(2000, 1, 1, 0, 0, 0).toInstant(TimeZone.UTC),
+         isExpired = true,
+         allowsMultipleChoices = false,
+         voteCount = 123L,
+         voterCount = 45L,
+         pollOptions = listOf(
+            Poll.Option("title1", 1L),
+            Poll.Option("title2", 2L),
+            Poll.Option("title3", 3L),
+         ),
+         emojis = listOf(
+            CustomEmoji(
+               instance,
+               "shortcode1",
+               Url("https://example.com/image/url/1"),
+               Url("https://example.com/static/image/url/1"),
+               isVisibleInPicker = true,
+               "category1"
+            ),
+            CustomEmoji(
+               instance,
+               "shortcode2",
+               Url("https://example.com/image/url/2"),
+               Url("https://example.com/static/image/url/2"),
+               isVisibleInPicker = false,
+               "category2"
+            ),
+         ),
+      )
+
+      `poll_toRust$assertNoCredential`(noCredential)
+
+      val noCredentialCache = `poll_toRust$saveNoCredential`(noCredential)
+
+      val poll = Poll(
+         Poll.Id(instance.value.url, Poll.LocalId("poll id")),
+         noCredentialCache,
+         isVoted = true,
+         votedOptions = listOf(0),
+      )
+
+      `poll_toRust$assert`(poll)
+   }
+
+   private external fun `poll_toRust$createInstance`(): Cache<Instance>
+
+   private external fun `poll_toRust$assertNoCredential`(
+      noCredentialPoll: Poll.NoCredential
+   )
+
+   private external fun `poll_toRust$saveNoCredential`(
+      noCredentialPoll: Poll.NoCredential
+   ): Cache<Poll.NoCredential>
+
+   private external fun `poll_toRust$assert`(poll: Poll)
+
+   @Test
+   fun poll_nulls_toRust() {
+      val instance = `poll_nulls_toRust$createInstance`()
+
+      val noCredential = Poll.NoCredential(
+         Poll.Id(instance.value.url, Poll.LocalId("poll id")),
+         expireTime = null,
+         isExpired = null,
+         allowsMultipleChoices = null,
+         voteCount = null,
+         voterCount = null,
+         pollOptions = listOf(
+            Poll.Option(null, null),
+         ),
+         emojis = emptyList(),
+      )
+
+      `poll_nulls_toRust$assertNoCredential`(noCredential)
+
+      val noCredentialCache = `poll_nulls_toRust$saveNoCredential`(noCredential)
+
+      val poll = Poll(
+         Poll.Id(instance.value.url, Poll.LocalId("poll id")),
+         noCredentialCache,
+         isVoted = null,
+         votedOptions = listOf(),
+      )
+
+      `poll_nulls_toRust$assert`(poll)
+   }
+
+   private external fun `poll_nulls_toRust$createInstance`(): Cache<Instance>
+
+   private external fun `poll_nulls_toRust$assertNoCredential`(
+      noCredentialPoll: Poll.NoCredential
+   )
+
+   private external fun `poll_nulls_toRust$saveNoCredential`(
+      noCredentialPoll: Poll.NoCredential
+   ): Cache<Poll.NoCredential>
+
+   private external fun `poll_nulls_toRust$assert`(poll: Poll)
+
+   @Test
+   fun poll_fromRust() {
+      val poll = `poll_fromRust$createPoll`()
+      val instance = `poll_fromRust$getInstanceCache`()
+
+      assertEquals(
+         Poll.NoCredential(
+            Poll.Id(instance.value.url, Poll.LocalId("poll id")),
+            expireTime = LocalDateTime(2000, 1, 1, 0, 0, 0).toInstant(TimeZone.UTC),
+            isExpired = true,
+            allowsMultipleChoices = false,
+            voteCount = 123L,
+            voterCount = 45L,
+            pollOptions = listOf(
+               Poll.Option("title1", 1L),
+               Poll.Option("title2", 2L),
+               Poll.Option("title3", 3L),
+            ),
+            emojis = listOf(
+               CustomEmoji(
+                  instance,
+                  "shortcode1",
+                  Url("https://example.com/image/url/1"),
+                  Url("https://example.com/static/image/url/1"),
+                  isVisibleInPicker = true,
+                  "category1"
+               ),
+               CustomEmoji(
+                  instance,
+                  "shortcode2",
+                  Url("https://example.com/image/url/2"),
+                  Url("https://example.com/static/image/url/2"),
+                  isVisibleInPicker = false,
+                  "category2"
+               ),
+            ),
+         ),
+         poll.noCredential.value
+      )
+
+      assertEquals(
+         Poll(
+            Poll.Id(instance.value.url, Poll.LocalId("poll id")),
+            poll.noCredential,
+            isVoted = true,
+            votedOptions = listOf(0),
+         ),
+         poll
+      )
+   }
+
+   private external fun `poll_fromRust$createPoll`(): Poll
+   private external fun `poll_fromRust$getInstanceCache`(): Cache<Instance>
+
+   @Test
+   fun poll_nulls_fromRust() {
+      val poll = `poll_nulls_fromRust$createPoll`()
+      val instance = `poll_nulls_fromRust$getInstanceCache`()
+
+      assertEquals(
+         Poll.NoCredential(
+            Poll.Id(instance.value.url, Poll.LocalId("poll id")),
+            expireTime = null,
+            isExpired = null,
+            allowsMultipleChoices = null,
+            voteCount = null,
+            voterCount = null,
+            pollOptions = listOf(
+               Poll.Option(null, null),
+            ),
+            emojis = emptyList(),
+         ),
+         poll.noCredential.value
+      )
+
+      assertEquals(
+         Poll(
+            Poll.Id(instance.value.url, Poll.LocalId("poll id")),
+            poll.noCredential,
+            isVoted = null,
+            votedOptions = listOf(),
+         ),
+         poll
+      )
+   }
+
+   private external fun `poll_nulls_fromRust$createPoll`(): Poll
+   private external fun `poll_nulls_fromRust$getInstanceCache`(): Cache<Instance>
+
    // ==== Role ================================================================
 
    @Test
