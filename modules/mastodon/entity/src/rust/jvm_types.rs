@@ -39,6 +39,8 @@ jvm_type! {
    JvmPoll,
    JvmPollNoCredential,
    JvmPollOption,
+   JvmPreviewCard,
+   JvmPreviewCardAuthor,
    JvmRelationalAccount,
    JvmRole,
    JvmStatusVisibility,

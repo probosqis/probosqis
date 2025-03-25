@@ -1080,6 +1080,150 @@ class ConvertJniTest {
    private external fun `poll_nulls_fromRust$createPoll`(): Poll
    private external fun `poll_nulls_fromRust$getInstanceCache`(): Cache<Instance>
 
+   // ==== PreviewCard =========================================================
+
+   @Test
+   fun previewCard_toRust() {
+      val instance = `previewCard_toRust$createInstance`()
+
+      val previewCard = PreviewCard(
+         Url("https://example.com/preview/card/url"),
+         "title",
+         "description",
+         PreviewCard.Type.LINK,
+         authors = List(2) { i ->
+            val account = Account(
+               instance,
+               Account.Id(
+                  instance.value.url,
+                  Account.LocalId("account id$i"),
+               ),
+               username = null,
+               acct = null,
+               url = null,
+               displayName = null,
+               profileNote = null,
+               avatarImageUrl = null,
+               avatarStaticImageUrl = null,
+               headerImageUrl = null,
+               headerStaticImageUrl = null,
+               isLocked = null,
+               profileFields = emptyList(),
+               emojisInProfile = emptyList(),
+               isBot = null,
+               isGroup = null,
+               isDiscoverable = null,
+               isNoindex = null,
+               isSuspended = null,
+               isLimited = null,
+               createdTime = null,
+               lastStatusPostTime = null,
+               statusCount = null,
+               followerCount = null,
+               followeeCount = null,
+               movedTo = null,
+            )
+
+            val accountCache = `previewCard_toRust$saveAccount`(account)
+
+            PreviewCard.Author(
+               "author name",
+               Url("https://example.com/author"),
+               accountCache,
+            )
+         },
+         "provider name",
+         Url("https://example.com/provider/url"),
+         "html",
+         width = 123L,
+         height = 456L,
+         Url("https://example.com/image/url/3"),
+         Url("https://example.com/embed/url"),
+         "blurhash",
+      )
+
+      `previewCard_toRust$assert`(previewCard)
+   }
+
+   private external fun `previewCard_toRust$createInstance`(): Cache<Instance>
+   private external fun `previewCard_toRust$saveAccount`(account: Account): Cache<Account>
+   private external fun `previewCard_toRust$assert`(previewCard: PreviewCard)
+
+   @Test
+   fun previewCard_nulls_toRust() {
+      val previewCard = PreviewCard(
+         url = null,
+         title = null,
+         description = null,
+         cardType = null,
+         authors = emptyList(),
+         providerName = null,
+         providerUrl = null,
+         html = null,
+         width = null,
+         height = null,
+         imageUrl = null,
+         embedUrl = null,
+         blurhash = null,
+      )
+
+      `previewCard_nulls_toRust$assert`(previewCard)
+   }
+
+   private external fun `previewCard_nulls_toRust$assert`(previewCard: PreviewCard)
+
+   @Test
+   fun previewCard_fromRust() {
+      val previewCard = `previewCard_fromRust$createPreviewCard`()
+
+      assertEquals(
+         PreviewCard(
+            Url("https://example.com/preview/card/url"),
+            "title",
+            "description",
+            PreviewCard.Type.LINK,
+            previewCard.authors,
+            "provider name",
+            Url("https://example.com/provider/url"),
+            "html",
+            width = 123L,
+            height = 456L,
+            Url("https://example.com/image/url/3"),
+            Url("https://example.com/embed/url"),
+            "blurhash",
+         ),
+         previewCard
+      )
+   }
+
+   private external fun `previewCard_fromRust$createPreviewCard`(): PreviewCard
+
+   @Test
+   fun previewCard_nulls_fromRust() {
+      val previewCard = `previewCard_nulls_fromRust$createPreviewCard`()
+
+      assertEquals(
+         PreviewCard(
+            url = null,
+            title = null,
+            description = null,
+            cardType = null,
+            authors = emptyList(),
+            providerName = null,
+            providerUrl = null,
+            html = null,
+            width = null,
+            height = null,
+            imageUrl = null,
+            embedUrl = null,
+            blurhash = null,
+         ),
+         previewCard
+      )
+   }
+
+   private external fun `previewCard_nulls_fromRust$createPreviewCard`(): PreviewCard
+
    // ==== Role ================================================================
 
    @Test

@@ -21,6 +21,7 @@ pub mod filter;
 pub mod instance;
 pub mod media_attachment;
 pub mod poll;
+pub mod preview_card;
 pub mod role;
 pub mod status;
 pub mod token;
@@ -40,7 +41,7 @@ mod jni_tests {
    use crate::instance::Instance;
    use crate::jvm_types::{
       JvmAccount, JvmCustomEmoji, JvmFilterResult, JvmInstance, JvmMediaAttachment,
-      JvmPoll, JvmPollNoCredential, JvmRole, JvmStatusVisibility,
+      JvmPoll, JvmPollNoCredential, JvmPreviewCard, JvmRole, JvmStatusVisibility,
    };
    use crate::poll::NoCredentialPoll;
 
@@ -1747,6 +1748,225 @@ mod jni_tests {
          .load("https://example.com/instance/url".parse().unwrap()).unwrap();
 
       instance.clone_into_jvm(&mut env)
+   }
+
+   #[allow(non_upper_case_globals)]
+   static previewCard_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+
+   #[allow(non_upper_case_globals)]
+   static previewCard_toRust_account_repo: RepositoryHolder<Account> = new_account_repo();
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1toRust_00024createInstance<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+
+      save_instance(&mut env, &previewCard_toRust_instance_repo)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1toRust_00024saveAccount<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      account: JvmAccount<'local>
+   ) -> JvmCache<'local, JvmAccount<'local>> {
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+
+      let account = Account::clone_from_jvm(&mut env, &account);
+
+      previewCard_toRust_account_repo.write(&mut env).unwrap()
+         .save(account)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      preview_card: JvmPreviewCard<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::account::{AccountId, AccountLocalId};
+      use crate::preview_card::PreviewCard;
+
+      let preview_card = PreviewCard::clone_from_jvm(&mut env, &preview_card);
+
+      assert_eq!(
+         preview_card.authors.iter()
+            .map(|author| author.account.as_ref().map(|a| a.get().id.clone()))
+            .collect::<Vec<_>>(),
+         vec![
+            Some(AccountId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               local: AccountLocalId("account id0".to_string())
+            }),
+            Some(AccountId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               local: AccountLocalId("account id1".to_string())
+            }),
+         ]
+      );
+
+      assert_eq!(
+         PreviewCard {
+            url: Some("https://example.com/preview/card/url".parse().unwrap()),
+            title: Some("title".to_string()),
+            description: Some("description".to_string()),
+            card_type: Some("link".to_string()),
+            authors: preview_card.authors.clone(),
+            provider_name: Some("provider name".to_string()),
+            provider_url: Some("https://example.com/provider/url".parse().unwrap()),
+            html: Some("html".to_string()),
+            width: Some(123),
+            height: Some(456),
+            image_url: Some("https://example.com/image/url/3".parse().unwrap()),
+            embed_url: Some("https://example.com/embed/url".parse().unwrap()),
+            blurhash: Some("blurhash".to_string()),
+         },
+         preview_card
+      );
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1nulls_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      preview_card: JvmPreviewCard<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::preview_card::PreviewCard;
+
+      let preview_card = PreviewCard::clone_from_jvm(&mut env, &preview_card);
+
+      assert_eq!(
+         PreviewCard {
+            url: None,
+            title: None,
+            description: None,
+            card_type: None,
+            authors: vec![],
+            provider_name: None,
+            provider_url: None,
+            html: None,
+            width: None,
+            height: None,
+            image_url: None,
+            embed_url: None,
+            blurhash: None,
+         },
+         preview_card
+      );
+   }
+
+   #[allow(non_upper_case_globals)]
+   static previewCard_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+
+   #[allow(non_upper_case_globals)]
+   static previewCard_fromRust_account_repo: RepositoryHolder<Account> = new_account_repo();
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1fromRust_00024createPreviewCard<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmPreviewCard<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::account::{Account, AccountId, AccountLocalId};
+      use crate::preview_card::{PreviewCard, PreviewCardAuthor};
+
+      let instance = save_instance(&mut env, &previewCard_fromRust_instance_repo);
+      let instance_url = instance.get().url.clone();
+
+      let preview_card = PreviewCard {
+         url: Some("https://example.com/preview/card/url".parse().unwrap()),
+         title: Some("title".to_string()),
+         description: Some("description".to_string()),
+         card_type: Some("link".to_string()),
+         authors: (0..=1)
+            .map(|i| {
+               let account = Account {
+                  instance: instance.clone(),
+                  id: AccountId {
+                     instance_url: instance_url.clone(),
+                     local: AccountLocalId(format!("account id{i}"))
+                  },
+                  username: None,
+                  acct: None,
+                  url: None,
+                  display_name: None,
+                  profile_note: None,
+                  avatar_image_url: None,
+                  avatar_static_image_url: None,
+                  header_image_url: None,
+                  header_static_image_url: None,
+                  is_locked: None,
+                  profile_fields: vec![],
+                  emojis_in_profile: vec![],
+                  is_bot: None,
+                  is_group: None,
+                  is_discoverable: None,
+                  is_noindex: None,
+                  moved_to: None,
+                  is_suspended: None,
+                  is_limited: None,
+                  created_time: None,
+                  last_status_post_time: None,
+                  status_count: None,
+                  follower_count: None,
+                  followee_count: None,
+               };
+
+               let account_cache = previewCard_fromRust_account_repo
+                  .write(&mut env).unwrap()
+                  .save(account);
+
+               PreviewCardAuthor {
+                  name: Some("author name".to_string()),
+                  url: Some("https://example.com/author".parse().unwrap()),
+                  account: Some(account_cache),
+               }
+            })
+            .collect(),
+         provider_name: Some("provider name".to_string()),
+         provider_url: Some("https://example.com/provider/url".parse().unwrap()),
+         html: Some("html".to_string()),
+         width: Some(123),
+         height: Some(456),
+         image_url: Some("https://example.com/image/url/3".parse().unwrap()),
+         embed_url: Some("https://example.com/embed/url".parse().unwrap()),
+         blurhash: Some("blurhash".to_string()),
+      };
+
+      preview_card.clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1nulls_1fromRust_00024createPreviewCard<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmPreviewCard<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::preview_card::PreviewCard;
+
+      let preview_card = PreviewCard {
+         url: None,
+         title: None,
+         description: None,
+         card_type: None,
+         authors: vec![],
+         provider_name: None,
+         provider_url: None,
+         html: None,
+         width: None,
+         height: None,
+         image_url: None,
+         embed_url: None,
+         blurhash: None,
+      };
+
+      preview_card.clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
