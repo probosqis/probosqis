@@ -22,4 +22,5 @@ pub mod media_attachment;
 pub mod poll;
 pub mod preview_card;
 pub mod role;
+pub mod status;
 pub mod token;
