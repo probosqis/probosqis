@@ -548,7 +548,7 @@ mod jni_tests {
          Filter, FilterAction, FilterContext, FilterId, FilterKeyword,
          FilterKeywordId, FilterResult, FilterStatus, FilterStatusId,
       };
-      use crate::status::StatusId;
+      use crate::status::{StatusId, StatusLocalId};
 
       let filter_result = FilterResult::clone_from_jvm(&mut env, &filter_result);
 
@@ -579,11 +579,17 @@ mod jni_tests {
                statuses: vec![
                   FilterStatus {
                      id: FilterStatusId("filter status id1".to_string()),
-                     status_id: StatusId("status id1".to_string()),
+                     status_id: StatusId {
+                        instance_url: "https://example.com/instance/url".parse().unwrap(),
+                        local: StatusLocalId("status id1".to_string())
+                     },
                   },
                   FilterStatus {
                      id: FilterStatusId("filter status id2".to_string()),
-                     status_id: StatusId("status id2".to_string()),
+                     status_id: StatusId {
+                        instance_url: "https://example.com/instance/url".parse().unwrap(),
+                        local: StatusLocalId("status id2".to_string())
+                     },
                   },
                ],
             }),
@@ -591,8 +597,14 @@ mod jni_tests {
                "keyword1".to_string(),
             ],
             status_matches: vec![
-               StatusId("status id1".to_string()),
-               StatusId("status id2".to_string()),
+               StatusId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: StatusLocalId("status id1".to_string())
+               },
+               StatusId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: StatusLocalId("status id2".to_string())
+               },
             ],
          },
          filter_result
@@ -647,7 +659,7 @@ mod jni_tests {
          Filter, FilterAction, FilterContext, FilterId, FilterKeyword,
          FilterKeywordId, FilterResult, FilterStatus, FilterStatusId,
       };
-      use crate::status::StatusId;
+      use crate::status::{StatusId, StatusLocalId};
 
       let filter_result = FilterResult {
          filter: Some(Filter {
@@ -675,11 +687,17 @@ mod jni_tests {
             statuses: vec![
                FilterStatus {
                   id: FilterStatusId("filter status id1".to_string()),
-                  status_id: StatusId("status id1".to_string()),
+                  status_id: StatusId {
+                     instance_url: "https://example.com/instance/url".parse().unwrap(),
+                     local: StatusLocalId("status id1".to_string())
+                  },
                },
                FilterStatus {
                   id: FilterStatusId("filter status id2".to_string()),
-                  status_id: StatusId("status id2".to_string()),
+                  status_id: StatusId {
+                     instance_url: "https://example.com/instance/url".parse().unwrap(),
+                     local: StatusLocalId("status id2".to_string())
+                  },
                },
             ],
          }),
@@ -687,8 +705,14 @@ mod jni_tests {
             "keyword1".to_string(),
          ],
          status_matches: vec![
-            StatusId("status id1".to_string()),
-            StatusId("status id2".to_string()),
+            StatusId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               local: StatusLocalId("status id1".to_string())
+            },
+            StatusId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               local: StatusLocalId("status id2".to_string())
+            },
          ],
       };
 

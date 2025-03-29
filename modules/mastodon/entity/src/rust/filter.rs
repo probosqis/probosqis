@@ -27,7 +27,7 @@ use {
       JvmBoolean, JvmList, JvmLong, JvmNullable, JvmString, JvmUnit,
    },
    crate::jvm_types::{
-      JvmFilter, JvmFilterKeyword, JvmFilterResult, JvmFilterStatus,
+      JvmFilter, JvmFilterKeyword, JvmFilterResult, JvmFilterStatus, JvmStatusId,
    },
 };
 
@@ -248,23 +248,23 @@ convert_jvm_helper! {
          where jvm_constructor: "(\
             Ljava/lang/String;\
             Ljava/lang/String;\
-            Lkotlin/Unit;\
+            Ljava/lang/String;\
          )V";
+
+      fn raw_instance_url<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getRawInstanceUrl",
+               jvm_return_type: "Ljava/lang/String;";
 
       fn raw_id<'local>(..) -> String
          where jvm_type: JvmString<'local>,
                jvm_getter_method: "getRawId",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn raw_status_id<'local>(..) -> String
+      fn raw_local_status_id<'local>(..) -> String
          where jvm_type: JvmString<'local>,
-               jvm_getter_method: "getRawStatusId",
+               jvm_getter_method: "getRawLocalStatusId",
                jvm_return_type: "Ljava/lang/String;";
-
-      fn dummy<'local>(..) -> Option<()>
-         where jvm_type: JvmNullable<'local, JvmUnit<'local>>,
-               jvm_getter_method: "getDummy",
-               jvm_return_type: "Lkotlin/Unit;";
    }
 }
 
@@ -273,9 +273,9 @@ impl<'local> CloneIntoJvm<'local, JvmFilterStatus<'local>> for FilterStatus {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmFilterStatus<'local> {
       FILTER_STATUS_HELPER.clone_into_jvm(
          env,
+         &self.status_id.instance_url.as_str(),
          &self.id.0,
-         &self.status_id.0,
-         &None::<()>,
+         &self.status_id.local.0,
       )
    }
 }
@@ -286,12 +286,18 @@ impl<'local> CloneFromJvm<'local, JvmFilterStatus<'local>> for FilterStatus {
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmFilterStatus<'local>
    ) -> FilterStatus {
-      let raw_id        = FILTER_STATUS_HELPER.raw_id       (env, jvm_instance);
-      let raw_status_id = FILTER_STATUS_HELPER.raw_status_id(env, jvm_instance);
+      use crate::status::StatusLocalId;
+
+      let raw_instance_url    = FILTER_STATUS_HELPER.raw_instance_url   (env, jvm_instance);
+      let raw_id              = FILTER_STATUS_HELPER.raw_id             (env, jvm_instance);
+      let raw_status_local_id = FILTER_STATUS_HELPER.raw_local_status_id(env, jvm_instance);
 
       FilterStatus {
          id: FilterStatusId(raw_id),
-         status_id: StatusId(raw_status_id),
+         status_id: StatusId {
+            instance_url: raw_instance_url.parse().unwrap(),
+            local: StatusLocalId(raw_status_local_id)
+         },
       }
    }
 }
@@ -306,7 +312,6 @@ convert_jvm_helper! {
             Lcom/wcaokaze/probosqis/mastodon/entity/Filter;\
             Ljava/util/List;\
             Ljava/util/List;\
-            Lkotlin/Unit;\
          )V";
 
       fn filter<'local>(..) -> Option<Filter>
@@ -319,15 +324,10 @@ convert_jvm_helper! {
                jvm_getter_method: "getKeywordMatches",
                jvm_return_type: "Ljava/util/List;";
 
-      fn raw_status_matches<'local>(..) -> Vec<String>
-         where jvm_type: JvmList<'local, JvmString<'local>>,
-               jvm_getter_method: "getRawStatusMatches",
+      fn status_matches<'local>(..) -> Vec<StatusId>
+         where jvm_type: JvmList<'local, JvmStatusId<'local>>,
+               jvm_getter_method: "getStatusMatches",
                jvm_return_type: "Ljava/util/List;";
-
-      fn dummy<'local>(..) -> Option<()>
-         where jvm_type: JvmNullable<'local, JvmUnit<'local>>,
-               jvm_getter_method: "getDummy",
-               jvm_return_type: "Lkotlin/Unit;";
    }
 }
 
@@ -338,8 +338,7 @@ impl<'local> CloneIntoJvm<'local, JvmFilterResult<'local>> for FilterResult {
          env,
          &self.filter,
          &self.keyword_matches,
-         &self.status_matches.iter().map(|id| &id.0).collect::<Vec<_>>(),
-         &None::<()>,
+         &self.status_matches,
       )
    }
 }
@@ -350,14 +349,14 @@ impl<'local> CloneFromJvm<'local, JvmFilterResult<'local>> for FilterResult {
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmFilterResult<'local>
    ) -> FilterResult {
-      let filter             = FILTER_RESULT_HELPER.filter            (env, jvm_instance);
-      let keyword_matches    = FILTER_RESULT_HELPER.keyword_matches   (env, jvm_instance);
-      let raw_status_matches = FILTER_RESULT_HELPER.raw_status_matches(env, jvm_instance);
+      let filter          = FILTER_RESULT_HELPER.filter         (env, jvm_instance);
+      let keyword_matches = FILTER_RESULT_HELPER.keyword_matches(env, jvm_instance);
+      let status_matches  = FILTER_RESULT_HELPER.status_matches (env, jvm_instance);
 
       FilterResult {
          filter,
          keyword_matches,
-         status_matches: raw_status_matches.into_iter().map(StatusId).collect(),
+         status_matches,
       }
    }
 }

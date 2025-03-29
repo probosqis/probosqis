@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import kotlinx.datetime.Instant
 
 data class Filter(
@@ -111,23 +112,22 @@ data class Filter(
       val statusId: Status.Id,
    ) {
       constructor(
+         rawInstanceUrl: String,
          rawId: String,
-         rawStatusId: String,
-         @Suppress("UNUSED_PARAMETER")
-         dummy: Unit?
+         rawLocalStatusId: String,
       ) : this(
          Id(rawId),
-         Status.Id(rawStatusId),
+         Status.Id(Url(rawInstanceUrl), Status.LocalId(rawLocalStatusId)),
       )
+
+      val rawInstanceUrl: String
+         get() = statusId.instanceUrl.raw
 
       val rawId: String
          get() = id.raw
 
-      val rawStatusId: String
-         get() = statusId.raw
-
-      val dummy: Unit?
-         get() = null
+      val rawLocalStatusId: String
+         get() = statusId.local.raw
 
       @JvmInline
       value class Id(val raw: String)
@@ -138,22 +138,4 @@ data class FilterResult(
    val filter: Filter?,
    val keywordMatches: List<String>,
    val statusMatches: List<Status.Id>,
-) {
-   constructor(
-      filter: Filter?,
-      keywordMatches: List<String>,
-      rawStatusMatches: List<String>,
-      @Suppress("UNUSED_PARAMETER")
-      dummy: Unit?
-   ) : this(
-      filter,
-      keywordMatches,
-      rawStatusMatches.map(Status::Id),
-   )
-
-   val rawStatusMatches: List<String>
-      get() = statusMatches.map(Status.Id::raw)
-
-   val dummy: Unit?
-      get() = null
-}
+)

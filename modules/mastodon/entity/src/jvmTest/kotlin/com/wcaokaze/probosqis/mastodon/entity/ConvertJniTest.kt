@@ -295,11 +295,17 @@ class ConvertJniTest {
             statuses = listOf(
                Filter.FilterStatus(
                   Filter.FilterStatus.Id("filter status id1"),
-                  Status.Id("status id1"),
+                  Status.Id(
+                     Url("https://example.com/instance/url"),
+                     Status.LocalId("status id1")
+                  ),
                ),
                Filter.FilterStatus(
                   Filter.FilterStatus.Id("filter status id2"),
-                  Status.Id("status id2"),
+                  Status.Id(
+                     Url("https://example.com/instance/url"),
+                     Status.LocalId("status id2")
+                  ),
                ),
             ),
          ),
@@ -307,8 +313,14 @@ class ConvertJniTest {
             "keyword1",
          ),
          statusMatches = listOf(
-            Status.Id("status id1"),
-            Status.Id("status id2"),
+            Status.Id(
+               Url("https://example.com/instance/url"),
+               Status.LocalId("status id1")
+            ),
+            Status.Id(
+               Url("https://example.com/instance/url"),
+               Status.LocalId("status id2")
+            ),
          )
       )
 
@@ -375,11 +387,17 @@ class ConvertJniTest {
                statuses = listOf(
                   Filter.FilterStatus(
                      Filter.FilterStatus.Id("filter status id1"),
-                     Status.Id("status id1"),
+                     Status.Id(
+                        Url("https://example.com/instance/url"),
+                        Status.LocalId("status id1")
+                     ),
                   ),
                   Filter.FilterStatus(
                      Filter.FilterStatus.Id("filter status id2"),
-                     Status.Id("status id2"),
+                     Status.Id(
+                        Url("https://example.com/instance/url"),
+                        Status.LocalId("status id2")
+                     ),
                   ),
                ),
             ),
@@ -387,8 +405,14 @@ class ConvertJniTest {
                "keyword1",
             ),
             statusMatches = listOf(
-               Status.Id("status id1"),
-               Status.Id("status id2"),
+               Status.Id(
+                  Url("https://example.com/instance/url"),
+                  Status.LocalId("status id1")
+               ),
+               Status.Id(
+                  Url("https://example.com/instance/url"),
+                  Status.LocalId("status id2")
+               ),
             )
          ),
          filterResult

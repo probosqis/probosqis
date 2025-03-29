@@ -16,9 +16,35 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
+import com.wcaokaze.probosqis.ext.kotlin.Url
+
 class Status {
+   data class Id(
+      val instanceUrl: Url,
+      val local: LocalId
+   ) {
+      constructor(
+         rawInstanceUrl: String,
+         rawLocalId: String,
+         @Suppress("UNUSED_PARAMETER")
+         dummy: Unit?
+      ) : this(
+         Url(rawInstanceUrl),
+         LocalId(rawLocalId)
+      )
+
+      val rawInstanceUrl: String
+         get() = instanceUrl.raw
+
+      val rawLocalId: String
+         get() = local.raw
+
+      val dummy: Unit?
+         get() = null
+   }
+
    @JvmInline
-   value class Id(val raw: String)
+   value class LocalId(val raw: String)
 
    enum class Visibility(val value: Int) {
       PUBLIC  (0),

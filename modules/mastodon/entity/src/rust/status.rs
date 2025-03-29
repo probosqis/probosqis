@@ -15,17 +15,25 @@
  */
 
 use serde::Deserialize;
+use url::Url;
 
 #[cfg(feature = "jvm")]
 use {
    jni::JNIEnv,
    ext_panoptiqon::convert_jvm_helper,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   crate::jvm_types::JvmStatusVisibility,
+   panoptiqon::jvm_types::{JvmNullable, JvmString, JvmUnit},
+   crate::jvm_types::{JvmStatusId, JvmStatusVisibility},
 };
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
-pub struct StatusId(pub String);
+pub struct StatusId {
+   pub instance_url: Url,
+   pub local: StatusLocalId
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+pub struct StatusLocalId(pub String);
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Deserialize)]
 pub enum StatusVisibility {
@@ -33,6 +41,63 @@ pub enum StatusVisibility {
    Unlisted = 1,
    Private  = 2,
    Direct   = 3,
+}
+
+#[cfg(feature = "jvm")]
+convert_jvm_helper! {
+   static STATUS_ID_HELPER = impl struct StatusIdConvertHelper
+      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Status$Id"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmStatusId<'local>
+         where jvm_constructor: "(\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Lkotlin/Unit;\
+         )V";
+
+      fn raw_instance_url<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getRawInstanceUrl",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn raw_local_id<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getRawLocalId",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn dummy<'local>(..) -> Option<()>
+         where jvm_type: JvmNullable<'local, JvmUnit<'local>>,
+               jvm_getter_method: "getDummy",
+               jvm_return_type: "Lkotlin/Unit;";
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmStatusId<'local>> for StatusId {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmStatusId<'local> {
+      STATUS_ID_HELPER.clone_into_jvm(
+         env,
+         &self.instance_url.as_str(),
+         &self.local.0,
+         &None::<()>
+      )
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmStatusId<'local>> for StatusId {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmStatusId<'local>
+   ) -> StatusId {
+      let raw_instance_url = STATUS_ID_HELPER.raw_instance_url(env, jvm_instance);
+      let raw_local_id     = STATUS_ID_HELPER.raw_local_id    (env, jvm_instance);
+
+      StatusId {
+         instance_url: raw_instance_url.parse().unwrap(),
+         local: StatusLocalId(raw_local_id),
+      }
+   }
 }
 
 #[cfg(feature = "jvm")]
