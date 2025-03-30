@@ -45,14 +45,6 @@ mod jni_tests {
    };
    use crate::poll::NoCredentialPoll;
 
-   const fn new_instance_repo() -> RepositoryHolder<Instance> {
-      RepositoryHolder::new()
-   }
-
-   const fn new_account_repo() -> RepositoryHolder<Account> {
-      RepositoryHolder::new()
-   }
-
    fn save_instance(
       env: &mut JNIEnv,
       instance_repo: &RepositoryHolder<Instance>
@@ -118,10 +110,10 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static account_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static account_toRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[allow(non_upper_case_globals)]
-   static account_toRust_account_repo: RepositoryHolder<Account> = new_account_repo();
+   static account_toRust_account_repo: RepositoryHolder<Account> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1toRust_00024createInstance<'local>(
@@ -243,10 +235,10 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static account_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static account_fromRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[allow(non_upper_case_globals)]
-   static account_fromRust_account_repo: RepositoryHolder<Account> = new_account_repo();
+   static account_fromRust_account_repo: RepositoryHolder<Account> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1fromRust_00024createAccount<'local>(
@@ -393,7 +385,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static customEmoji_toRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1toRust_00024createInstance<'local>(
@@ -431,7 +423,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_nulls_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static customEmoji_nulls_toRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1nulls_1toRust_00024createInstance<'local>(
@@ -469,7 +461,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static customEmoji_fromRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1fromRust_00024createCustomEmoji<'local>(
@@ -503,7 +495,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_nulls_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static customEmoji_nulls_fromRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1nulls_1fromRust_00024createCustomEmoji<'local>(
@@ -1363,7 +1355,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static poll_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static poll_toRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[allow(non_upper_case_globals)]
    static poll_toRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll> = RepositoryHolder::new();
@@ -1502,7 +1494,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static poll_nulls_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static poll_nulls_toRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[allow(non_upper_case_globals)]
    static poll_nulls_toRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll> = RepositoryHolder::new();
@@ -1612,7 +1604,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static poll_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static poll_fromRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[allow(non_upper_case_globals)]
    static poll_fromRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll>
@@ -1708,7 +1700,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static poll_nulls_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static poll_nulls_fromRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[allow(non_upper_case_globals)]
    static poll_nulls_fromRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll>
@@ -1775,10 +1767,10 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static previewCard_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static previewCard_toRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[allow(non_upper_case_globals)]
-   static previewCard_toRust_account_repo: RepositoryHolder<Account> = new_account_repo();
+   static previewCard_toRust_account_repo: RepositoryHolder<Account> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1toRust_00024createInstance<'local>(
@@ -1886,10 +1878,10 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static previewCard_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static previewCard_fromRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[allow(non_upper_case_globals)]
-   static previewCard_fromRust_account_repo: RepositoryHolder<Account> = new_account_repo();
+   static previewCard_fromRust_account_repo: RepositoryHolder<Account> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1fromRust_00024createPreviewCard<'local>(
@@ -1994,7 +1986,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static role_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static role_toRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1toRust_00024createInstance<'local>(
@@ -2032,7 +2024,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static role_nulls_toRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static role_nulls_toRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1nulls_1toRust_00024createInstance<'local>(
@@ -2070,7 +2062,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static role_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static role_fromRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1fromRust_00024createRole<'local>(
@@ -2104,7 +2096,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static role_nulls_fromRust_instance_repo: RepositoryHolder<Instance> = new_instance_repo();
+   static role_nulls_fromRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1nulls_1fromRust_00024createRole<'local>(
