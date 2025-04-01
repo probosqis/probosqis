@@ -102,8 +102,8 @@ pub fn credential_account_from_api(
    mut entity: ApiAccount
 ) -> anyhow::Result<CredentialAccount> {
    use isolang::Language;
+   use mastodon_entity::status::StatusVisibility;
    use crate::conversion::role;
-   use crate::conversion::status;
 
    let source = entity.source.take();
 
@@ -120,8 +120,7 @@ pub fn credential_account_from_api(
          .flatten()
          .flat_map(|f| profile_field_from_api(f))
          .collect();
-      default_post_visibility
-         = source.privacy.and_then(|v| status::visibility_from_api(v).ok());
+      default_post_visibility = source.privacy.map(StatusVisibility);
       default_post_sensitivity = source.sensitive;
       default_post_language
          = source.language.and_then(|code| Language::from_639_1(&code));

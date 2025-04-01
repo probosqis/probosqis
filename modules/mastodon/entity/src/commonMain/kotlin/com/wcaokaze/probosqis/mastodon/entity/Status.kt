@@ -46,15 +46,13 @@ class Status {
    @JvmInline
    value class LocalId(val raw: String)
 
-   enum class Visibility(val value: Int) {
-      PUBLIC  (0),
-      UNLISTED(1),
-      PRIVATE (2),
-      DIRECT  (3),
-      ;
+   @JvmInline
+   value class Visibility(val raw: String) {
       companion object {
-         @JvmStatic
-         fun fromInt(value: Int) = entries.first { it.value == value }
+         val PUBLIC   = Visibility("public")
+         val UNLISTED = Visibility("unlisted")
+         val PRIVATE  = Visibility("private")
+         val DIRECT   = Visibility("direct")
       }
    }
 }
