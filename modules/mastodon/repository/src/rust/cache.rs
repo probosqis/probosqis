@@ -48,3 +48,42 @@ pub mod account_icon {
       &REPO
    }
 }
+
+pub mod poll {
+   use ext_panoptiqon::repository_holder::RepositoryHolder;
+   use mastodon_entity::poll::NoCredentialPoll;
+
+   pub type NoCredentialPollRepository
+      = panoptiqon::repository::Repository<NoCredentialPoll>;
+
+   static NO_CREDENTIAL_POLL_REPO: RepositoryHolder<NoCredentialPoll>
+      = RepositoryHolder::new();
+
+   pub fn no_credential_poll_repo() -> &'static RepositoryHolder<NoCredentialPoll> {
+      &NO_CREDENTIAL_POLL_REPO
+   }
+}
+
+pub mod status {
+   use ext_panoptiqon::repository_holder::RepositoryHolder;
+   use mastodon_entity::status::{NoCredentialStatus, Status};
+
+   pub type StatusRepository = panoptiqon::repository::Repository<Status>;
+
+   pub type NoCredentialStatusRepository
+      = panoptiqon::repository::Repository<NoCredentialStatus>;
+
+   static REPO: RepositoryHolder<Status> = RepositoryHolder::new();
+
+   static NO_CREDENTIAL_REPO: RepositoryHolder<NoCredentialStatus>
+      = RepositoryHolder::new();
+
+   pub fn status_repo() -> &'static RepositoryHolder<Status> {
+      &REPO
+   }
+
+   pub fn no_credential_status_repo(
+   ) -> &'static RepositoryHolder<NoCredentialStatus> {
+      &NO_CREDENTIAL_REPO
+   }
+}

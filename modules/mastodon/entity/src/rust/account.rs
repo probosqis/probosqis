@@ -29,11 +29,11 @@ use {
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    panoptiqon::jvm_types::{
-      JvmBoolean, JvmCache, JvmList, JvmLong, JvmNullable, JvmString,
+      JvmBoolean, JvmCache, JvmList, JvmLong, JvmNullable, JvmString, JvmUnit,
    },
    crate::jvm_types::{
       JvmAccount, JvmAccountProfileField, JvmCredentialAccount, JvmCustomEmoji,
-      JvmInstance, JvmRelationalAccount, JvmRole, JvmStatusVisibility,
+      JvmInstance, JvmRelationalAccount, JvmRole,
    },
 };
 
@@ -388,11 +388,12 @@ convert_jvm_helper! {
             Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
             Ljava/lang/String;\
             Ljava/util/List;\
-            Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;\
+            Ljava/lang/String;\
             Ljava/lang/Boolean;\
             Ljava/lang/String;\
             Ljava/lang/Long;\
             Lcom/wcaokaze/probosqis/mastodon/entity/Role;\
+            Lkotlin/Unit;\
          )V";
 
       fn account<'local>(..) -> Cache<Account>
@@ -410,10 +411,10 @@ convert_jvm_helper! {
                jvm_getter_method: "getRawProfileFields",
                jvm_return_type: "Ljava/util/List;";
 
-      fn default_post_visibility<'local>(..) -> Option<StatusVisibility>
-         where jvm_type: JvmNullable<'local, JvmStatusVisibility<'local>>,
-               jvm_getter_method: "getDefaultPostVisibility",
-               jvm_return_type: "Lcom/wcaokaze/probosqis/mastodon/entity/Status$Visibility;";
+      fn raw_default_post_visibility<'local>(..) -> Option<String>
+         where jvm_type: JvmNullable<'local, JvmString<'local>>,
+               jvm_getter_method: "getRawDefaultPostVisibility",
+               jvm_return_type: "Ljava/lang/String;";
 
       fn default_post_sensitivity<'local>(..) -> Option<bool>
          where jvm_type: JvmNullable<'local, JvmBoolean<'local>>,
@@ -434,6 +435,11 @@ convert_jvm_helper! {
          where jvm_type: JvmNullable<'local, JvmRole<'local>>,
                jvm_getter_method: "getRole",
                jvm_return_type: "Lcom/wcaokaze/probosqis/mastodon/entity/Role;";
+
+      fn dummy<'local>(..) -> Option<()>
+         where jvm_type: JvmNullable<'local, JvmUnit<'local>>,
+               jvm_getter_method: "getDummy",
+               jvm_return_type: "Lkotlin/Unit;";
    }
 }
 
@@ -445,11 +451,12 @@ impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
          &self.account,
          &self.raw_profile_note,
          &self.raw_profile_fields,
-         &self.default_post_visibility,
+         &self.default_post_visibility.as_ref().map(|v| &v.0),
          &self.default_post_sensitivity,
          &self.default_post_language.map(|l| l.to_639_1().unwrap().to_string()),
          &self.follow_request_count.map(|u| u as i64),
          &self.role,
+         &None::<()>,
       )
    }
 }
@@ -460,20 +467,20 @@ impl<'local> CloneFromJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmCredentialAccount<'local>
    ) -> CredentialAccount {
-      let account                  = CREDENTIAL_ACCOUNT_HELPER.account                 (env, jvm_instance);
-      let raw_profile_note         = CREDENTIAL_ACCOUNT_HELPER.raw_profile_note        (env, jvm_instance);
-      let raw_profile_fields       = CREDENTIAL_ACCOUNT_HELPER.raw_profile_fields      (env, jvm_instance);
-      let default_post_visibility  = CREDENTIAL_ACCOUNT_HELPER.default_post_visibility (env, jvm_instance);
-      let default_post_sensitivity = CREDENTIAL_ACCOUNT_HELPER.default_post_sensitivity(env, jvm_instance);
-      let default_post_language    = CREDENTIAL_ACCOUNT_HELPER.default_post_language   (env, jvm_instance);
-      let follow_request_count     = CREDENTIAL_ACCOUNT_HELPER.follow_request_count    (env, jvm_instance);
-      let role                     = CREDENTIAL_ACCOUNT_HELPER.role                    (env, jvm_instance);
+      let account                     = CREDENTIAL_ACCOUNT_HELPER.account                    (env, jvm_instance);
+      let raw_profile_note            = CREDENTIAL_ACCOUNT_HELPER.raw_profile_note           (env, jvm_instance);
+      let raw_profile_fields          = CREDENTIAL_ACCOUNT_HELPER.raw_profile_fields         (env, jvm_instance);
+      let raw_default_post_visibility = CREDENTIAL_ACCOUNT_HELPER.raw_default_post_visibility(env, jvm_instance);
+      let default_post_sensitivity    = CREDENTIAL_ACCOUNT_HELPER.default_post_sensitivity   (env, jvm_instance);
+      let default_post_language       = CREDENTIAL_ACCOUNT_HELPER.default_post_language      (env, jvm_instance);
+      let follow_request_count        = CREDENTIAL_ACCOUNT_HELPER.follow_request_count       (env, jvm_instance);
+      let role                        = CREDENTIAL_ACCOUNT_HELPER.role                       (env, jvm_instance);
 
       CredentialAccount {
          account,
          raw_profile_note,
          raw_profile_fields,
-         default_post_visibility,
+         default_post_visibility: raw_default_post_visibility.map(StatusVisibility),
          default_post_sensitivity,
          default_post_language: default_post_language
             .map(|code| Language::from_639_1(&code).unwrap()),

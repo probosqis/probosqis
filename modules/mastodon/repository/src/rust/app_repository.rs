@@ -413,8 +413,13 @@ mod test {
       Application {
          name: "app name".to_string(),
          website: None,
+         scopes: None,
+         redirect_uris: None,
+         redirect_uri: None,
+         vapid_key: None,
          client_id: None,
-         client_secret: None
+         client_secret: None,
+         client_secret_expires_at: None,
       }
    }
 
@@ -509,6 +514,73 @@ mod test {
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
+   }
+
+   #[test]
+   fn account_conversion_uses_newer_redirect_uris_field() {
+      use chrono::DateTime;
+      use mastodon_entity::instance::Instance;
+      use mastodon_webapi::api::apps;
+      use url::Url;
+
+      let mut repository = AppRepository::new();
+
+      let instance = Instance {
+         url: Url::parse("https://example.com/").unwrap(),
+         version: "0.0.0".to_string(),
+         version_checked_time: DateTime::UNIX_EPOCH,
+      };
+
+      apps::inject_post_apps_v0(|_, _, _, _, _, _| {
+         Ok(
+            Application {
+               redirect_uris: Some(vec![
+                  "https://example.com/callback/newer1".to_string(),
+                  "https://example.com/callback/newer2".to_string(),
+               ]),
+               redirect_uri: Some(
+                  "https://example.com/callback/older1\n\
+                   https://example.com/callback/older2".to_string()
+               ),
+               ..dummy_application()
+            }
+         )
+      });
+
+      let application = repository
+         .post_app(instance.clone(), "https://example.com/callback");
+
+      assert_eq!(
+         vec![
+            "https://example.com/callback/newer1".to_string(),
+            "https://example.com/callback/newer2".to_string(),
+         ],
+         application.unwrap().redirect_uris
+      );
+
+      apps::inject_post_apps_v0(|_, _, _, _, _, _| {
+         Ok(
+            Application {
+               redirect_uris: None,
+               redirect_uri: Some(
+                  "https://example.com/callback/older1\n\
+                   https://example.com/callback/older2".to_string()
+               ),
+               ..dummy_application()
+            }
+         )
+      });
+
+      let application = repository
+         .post_app(instance.clone(), "https://example.com/callback");
+
+      assert_eq!(
+         vec![
+            "https://example.com/callback/older1".to_string(),
+            "https://example.com/callback/older2".to_string(),
+         ],
+         application.unwrap().redirect_uris
+      );
    }
 
    #[test]
@@ -823,7 +895,7 @@ mod test {
                   verified_time: Some(Utc.with_ymd_and_hms(2000, 1, 2, 0, 0, 0).unwrap()),
                },
             ],
-            default_post_visibility: Some(StatusVisibility::Public),
+            default_post_visibility: Some(StatusVisibility("public".to_string())),
             default_post_sensitivity: Some(false),
             default_post_language: Some(Language::from_639_1("ja").unwrap()),
             follow_request_count: Some(1),

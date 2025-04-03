@@ -165,7 +165,35 @@ data class CredentialAccount(
    val defaultPostLanguage: String?,
    val followRequestCount: Long?,
    val role: Role?,
-)
+) {
+   constructor(
+      account: Cache<Account>,
+      rawProfileNote: String?,
+      rawProfileFields: List<ProfileField>,
+      rawDefaultPostVisibility: String?,
+      defaultPostSensitivity: Boolean?,
+      defaultPostLanguage: String?,
+      followRequestCount: Long?,
+      role: Role?,
+      @Suppress("UNUSED_PARAMETER")
+      dummy: Unit?
+   ) : this(
+      account,
+      rawProfileNote,
+      rawProfileFields,
+      rawDefaultPostVisibility?.let(Status::Visibility),
+      defaultPostSensitivity,
+      defaultPostLanguage,
+      followRequestCount,
+      role,
+   )
+
+   val rawDefaultPostVisibility: String?
+      get() = defaultPostVisibility?.raw
+
+   val dummy: Unit?
+      get() = null
+}
 
 data class RelationalAccount(
    val account: Cache<Account>,

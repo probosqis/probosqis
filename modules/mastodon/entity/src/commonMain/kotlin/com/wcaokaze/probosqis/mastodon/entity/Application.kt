@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
@@ -27,28 +28,35 @@ data class Application(
    val instance: Cache<Instance>,
    val name: String,
    val website: Url?,
+   val scopes: List<String>,
+   val redirectUris: List<String>,
    val clientId: String?,
    val clientSecret: String?,
+   val clientSecretExpireTime: Instant?,
 ) {
    constructor(
       instance: Cache<Instance>,
       name: String,
       rawWebsite: String?,
+      scopes: List<String>,
+      redirectUris: List<String>,
       clientId: String?,
       clientSecret: String?,
-      @Suppress("UNUSED_PARAMETER")
-      dummy: Unit?,
+      clientSecretExpireTimeEpochMillis: Long?,
    ) : this(
       instance,
       name,
       rawWebsite?.let(::Url),
+      scopes,
+      redirectUris,
       clientId,
       clientSecret,
+      clientSecretExpireTimeEpochMillis?.let(Instant::fromEpochMilliseconds),
    )
 
    val rawWebsite: String?
       get() = website?.raw
 
-   val dummy: Unit?
-      get() = null
+   val clientSecretExpireTimeEpochMillis: Long?
+      get() = clientSecretExpireTime?.toEpochMilliseconds()
 }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use chrono::{DateTime, Utc};
 use panoptiqon::cache::Cache;
 use serde::Deserialize;
 use url::Url;
@@ -24,17 +25,20 @@ use {
    ext_panoptiqon::convert_jvm_helper,
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   panoptiqon::jvm_types::{ JvmCache, JvmNullable, JvmString, JvmUnit },
+   panoptiqon::jvm_types::{ JvmCache, JvmList, JvmLong, JvmNullable, JvmString},
    crate::jvm_types::{JvmApplication, JvmInstance},
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
 pub struct Application {
    pub instance: Cache<Instance>,
    pub name: String,
    pub website: Option<Url>,
+   pub scopes: Vec<String>,
+   pub redirect_uris: Vec<String>,
    pub client_id: Option<String>,
    pub client_secret: Option<String>,
+   pub client_secret_expire_time: Option<DateTime<Utc>>,
 }
 
 #[cfg(feature = "jvm")]
@@ -47,9 +51,11 @@ convert_jvm_helper! {
             Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
             Ljava/lang/String;\
             Ljava/lang/String;\
+            Ljava/util/List;\
+            Ljava/util/List;\
             Ljava/lang/String;\
             Ljava/lang/String;\
-            Lkotlin/Unit;\
+            Ljava/lang/Long;\
          )V";
 
       fn instance<'local>(..) -> Cache<Instance>
@@ -64,8 +70,18 @@ convert_jvm_helper! {
 
       fn raw_website<'local>(..) -> Option<String>
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
-               jvm_getter_method: "getWebsite",
+               jvm_getter_method: "getRawWebsite",
                jvm_return_type: "Ljava/lang/String;";
+
+      fn scopes<'local>(..) -> Vec<String>
+         where jvm_type: JvmList<'local, JvmString<'local>>,
+               jvm_getter_method: "getScopes",
+               jvm_return_type: "Ljava/util/List;";
+
+      fn redirect_uris<'local>(..) -> Vec<String>
+         where jvm_type: JvmList<'local, JvmString<'local>>,
+               jvm_getter_method: "getRedirectUris",
+               jvm_return_type: "Ljava/util/List;";
 
       fn client_id<'local>(..) -> Option<String>
          where jvm_type: JvmNullable<'local, JvmString<'local>>,
@@ -77,10 +93,10 @@ convert_jvm_helper! {
                jvm_getter_method: "getClientSecret",
                jvm_return_type: "Ljava/lang/String;";
 
-      fn dummy<'local>(..) -> Option<()>
-         where jvm_type: JvmNullable<'local, JvmUnit<'local>>,
-               jvm_getter_method: "getDummy",
-               jvm_return_type: "Lkotlin/Unit;";
+      fn client_secret_expire_time_epoch_millis<'local>(..) -> Option<i64>
+         where jvm_type: JvmNullable<'local, JvmLong<'local>>,
+               jvm_getter_method: "getClientSecretExpireTimeEpochMillis",
+               jvm_return_type: "Ljava/lang/Long;";
    }
 }
 
@@ -92,9 +108,11 @@ impl<'local> CloneIntoJvm<'local, JvmApplication<'local>> for Application {
          &self.instance,
          &self.name,
          &self.website.as_ref().map(Url::as_str),
+         &self.scopes,
+         &self.redirect_uris,
          &self.client_id,
          &self.client_secret,
-         &None::<()>
+         &self.client_secret_expire_time.map(|t| t.timestamp_millis()),
       )
    }
 }
@@ -105,18 +123,24 @@ impl<'local> CloneFromJvm<'local, JvmApplication<'local>> for Application {
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmApplication<'local>
    ) -> Application {
-      let instance      = HELPER.instance     (env, jvm_instance);
-      let name          = HELPER.name         (env, jvm_instance);
-      let raw_website   = HELPER.raw_website  (env, jvm_instance);
-      let client_id     = HELPER.client_id    (env, jvm_instance);
-      let client_secret = HELPER.client_secret(env, jvm_instance);
+      let instance                               = HELPER.instance                              (env, jvm_instance);
+      let name                                   = HELPER.name                                  (env, jvm_instance);
+      let raw_website                            = HELPER.raw_website                           (env, jvm_instance);
+      let scopes                                 = HELPER.scopes                                (env, jvm_instance);
+      let redirect_uris                          = HELPER.redirect_uris                         (env, jvm_instance);
+      let client_id                              = HELPER.client_id                             (env, jvm_instance);
+      let client_secret                          = HELPER.client_secret                         (env, jvm_instance);
+      let client_secret_expire_time_epoch_millis = HELPER.client_secret_expire_time_epoch_millis(env, jvm_instance);
 
       Application {
          instance,
          name,
          website: raw_website.map(|url| url.parse().unwrap()),
+         scopes,
+         redirect_uris,
          client_id,
          client_secret,
+         client_secret_expire_time: client_secret_expire_time_epoch_millis.map(|time| DateTime::from_timestamp_millis(time).unwrap()),
       }
    }
 }
