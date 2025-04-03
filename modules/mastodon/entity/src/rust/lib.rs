@@ -41,9 +41,11 @@ mod jni_tests {
    use crate::instance::Instance;
    use crate::jvm_types::{
       JvmAccount, JvmCustomEmoji, JvmFilterResult, JvmInstance, JvmMediaAttachment,
-      JvmPoll, JvmPollNoCredential, JvmPreviewCard, JvmRole, JvmStatusVisibility,
+      JvmPoll, JvmPollNoCredential, JvmPreviewCard, JvmRole, JvmStatus,
+      JvmStatusNoCredential,
    };
    use crate::poll::NoCredentialPoll;
+   use crate::status::{NoCredentialStatus, Status};
 
    fn save_instance(
       env: &mut JNIEnv,
@@ -353,35 +355,6 @@ mod jni_tests {
 
       save_account(&mut env, &account_fromRust_account_repo, &account_fromRust_instance_repo)
          .clone_into_jvm(&mut env)
-   }
-
-   #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_statusVisibility_1toRust_00024assert<'local>(
-      mut env: JNIEnv<'local>,
-      _obj: JObject<'local>,
-      status_visibility: JvmStatusVisibility<'local>
-   ) {
-      use panoptiqon::convert_jvm::CloneFromJvm;
-      use crate::status::StatusVisibility;
-
-      let status_visibility = StatusVisibility::clone_from_jvm(&mut env, &status_visibility);
-
-      assert_eq!(
-         StatusVisibility::Unlisted,
-         status_visibility
-      );
-   }
-
-   #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_statusVisibility_1fromRust_00024createStatusVisibility<'local>(
-      mut env: JNIEnv<'local>,
-      _obj: JObject<'local>
-   ) -> JvmStatusVisibility<'local> {
-      use panoptiqon::convert_jvm::CloneIntoJvm;
-      use crate::status::StatusVisibility;
-
-      let status_visibility = StatusVisibility::Unlisted;
-      status_visibility.clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
@@ -2127,5 +2100,1108 @@ mod jni_tests {
 
       save_instance(&mut env, &role_nulls_fromRust_instance_repo)
          .clone_into_jvm(&mut env)
+   }
+
+   #[allow(non_upper_case_globals)]
+   static status_toRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_toRust_account_repo: RepositoryHolder<Account> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_toRust_noCredentialStatus_repo: RepositoryHolder<NoCredentialStatus> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_toRust_status_repo: RepositoryHolder<Status> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_toRust_noCredentialPoll_repo: RepositoryHolder<NoCredentialPoll> = RepositoryHolder::new();
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1toRust_00024createInstance<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+
+      save_instance(&mut env, &status_toRust_instance_repo)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1toRust_00024createAccount<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmCache<'local, JvmAccount<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+
+      save_account(&mut env, &status_toRust_account_repo, &status_toRust_instance_repo)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1toRust_00024createBoostedStatus<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmCache<'local, JvmStatus<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::status::{StatusId, StatusLocalId};
+
+      let status = Status {
+         id: StatusId {
+            instance_url: "https://example.com/instance/url".parse().unwrap(),
+            local: StatusLocalId("boosted status id".to_string())
+         },
+         no_credential: status_toRust_noCredentialStatus_repo.write(&mut env).unwrap().save(
+            NoCredentialStatus {
+               id: StatusId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: StatusLocalId("boosted status id".to_string())
+               },
+               uri: None,
+               created_time: None,
+               account: None,
+               content: None,
+               visibility: None,
+               is_sensitive: None,
+               spoiler_text: None,
+               media_attachments: vec![],
+               application: None,
+               mentions: vec![],
+               hashtags: vec![],
+               emojis: vec![],
+               boost_count: None,
+               favorite_count: None,
+               reply_count: None,
+               url: None,
+               replied_status_id: None,
+               replied_account_id: None,
+               boosted_status: None,
+               poll: None,
+               card: None,
+               language: None,
+               text: None,
+               edited_time: None,
+            }
+         ),
+         boosted_status: None,
+         poll: None,
+         is_favorited: None,
+         is_boosted: None,
+         is_muted: None,
+         is_bookmarked: None,
+         is_pinned: None,
+         filter_results: vec![],
+      };
+
+      status_toRust_status_repo.write(&mut env).unwrap().save(status)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1toRust_00024createNoCredentialPoll<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmCache<'local, JvmPollNoCredential<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::poll::{PollId, PollLocalId};
+
+      let no_credential_poll = NoCredentialPoll {
+         id: PollId {
+            instance_url: "https://example.com/instance/url".parse().unwrap(),
+            local: PollLocalId("poll id".to_string())
+         },
+         expire_time: None,
+         is_expired: None,
+         allows_multiple_choices: None,
+         vote_count: None,
+         voter_count: None,
+         poll_options: vec![],
+         emojis: vec![],
+      };
+
+      status_toRust_noCredentialPoll_repo.write(&mut env).unwrap().save(no_credential_poll)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1toRust_00024createPreviewCardAuthorAccount<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmCache<'local, JvmAccount<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::account::{AccountId, AccountLocalId};
+
+      let instance = status_toRust_instance_repo.read(&mut env).unwrap()
+         .load("https://example.com/instance/url".parse().unwrap()).unwrap();
+
+      let instance_url = instance.get().url.clone();
+
+      let account = Account {
+         instance,
+         id: AccountId {
+            instance_url,
+            local: AccountLocalId("account id".to_string()),
+         },
+         username: None,
+         acct: None,
+         url: None,
+         display_name: None,
+         profile_note: None,
+         avatar_image_url: None,
+         avatar_static_image_url: None,
+         header_image_url: None,
+         header_static_image_url: None,
+         is_locked: None,
+         profile_fields: vec![],
+         emojis_in_profile: vec![],
+         is_bot: None,
+         is_group: None,
+         is_discoverable: None,
+         is_noindex: None,
+         moved_to: None,
+         is_suspended: None,
+         is_limited: None,
+         created_time: None,
+         last_status_post_time: None,
+         status_count: None,
+         follower_count: None,
+         followee_count: None,
+      };
+
+      status_toRust_account_repo.write(&mut env).unwrap().save(account)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1toRust_00024assertNoCredential<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      no_credential_status: JvmStatusNoCredential<'local>
+   ) {
+      use std::time::Duration;
+      use chrono::{TimeZone, Utc};
+      use isolang::Language;
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::account::{AccountId, AccountLocalId};
+      use crate::application::Application;
+      use crate::custom_emoji::CustomEmoji;
+      use crate::media_attachment::{
+         ImageFocus, ImageSize, MediaAttachment, MediaAttachmentId,
+         MediaAttachmentMetadata, VideoSize,
+      };
+      use crate::poll::{PollId, PollLocalId};
+      use crate::preview_card::{PreviewCard, PreviewCardAuthor};
+      use crate::status::{
+         StatusHashtag, StatusId, StatusLocalId, StatusMention, StatusVisibility,
+      };
+
+      let no_credential_status = NoCredentialStatus::clone_from_jvm(
+         &mut env, &no_credential_status
+      );
+
+      assert_eq!(
+         NoCredentialStatus {
+            id: StatusId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               local: StatusLocalId("status id".to_string())
+            },
+            uri: Some("uri".to_string()),
+            created_time: Some(Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap()),
+            account: {
+               let id = AccountId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: AccountLocalId("account id".to_string())
+               };
+
+               let account = status_toRust_account_repo
+                  .read(&mut env).unwrap()
+                  .load(id).unwrap();
+
+               Some(account)
+            },
+            content: Some("content".to_string()),
+            visibility: Some(StatusVisibility("public".to_string())),
+            is_sensitive: Some(true),
+            spoiler_text: Some("spoilerText".to_string()),
+            media_attachments: vec![
+               MediaAttachment {
+                  id: MediaAttachmentId("media attachment id1".to_string()),
+                  url: Some("https://example.com/media/attachment/1".parse().unwrap()),
+                  preview_url: Some("https://example.com/preview/1".parse().unwrap()),
+                  remote_url: Some("https://example.com/remote/1".parse().unwrap()),
+                  metadata: Some(MediaAttachmentMetadata::Image {
+                     original_size: Some(ImageSize {
+                        width: 100,
+                        height: 200,
+                     }),
+                     small_size: Some(ImageSize {
+                        width: 10,
+                        height: 20,
+                     }),
+                     focus: Some(ImageFocus {
+                        x: 0.1,
+                        y: 0.2,
+                     }),
+                  }),
+                  description: Some("description".to_string()),
+                  blurhash: Some("blurhash".to_string()),
+               },
+               MediaAttachment {
+                  id: MediaAttachmentId("media attachment id2".to_string()),
+                  url: Some("https://example.com/media/attachment/2".parse().unwrap()),
+                  preview_url: Some("https://example.com/preview/2".parse().unwrap()),
+                  remote_url: Some("https://example.com/remote/2".parse().unwrap()),
+                  metadata: Some(MediaAttachmentMetadata::Gifv {
+                     original_size: Some(VideoSize {
+                        width: Some(100),
+                        height: Some(200),
+                        frame_rate: Some("frameRate".to_string()),
+                        duration: Some(Duration::from_secs(12)),
+                        bitrate: Some(34),
+                     }),
+                     small_size: Some(ImageSize {
+                        width: 10,
+                        height: 20,
+                     }),
+                     length: Some("length".to_string()),
+                     fps: Some(30),
+                  }),
+                  description: Some("description".to_string()),
+                  blurhash: Some("blurhash".to_string()),
+               },
+            ],
+            application: Some(Application {
+               instance: {
+                  let instance_url
+                     = "https://example.com/instance/url".parse().unwrap();
+
+                  status_toRust_instance_repo.read(&mut env).unwrap()
+                     .load(instance_url).unwrap()
+               },
+               name: "app name".to_string(),
+               website: Some("https://example.com/app".parse().unwrap()),
+               scopes: vec!["read".to_string(), "write".to_string()],
+               redirect_uris: vec!["redirectUri".to_string()],
+               client_id: Some("clientId".to_string()),
+               client_secret: Some("clientSecret".to_string()),
+               client_secret_expire_time:
+                  Some(Utc.with_ymd_and_hms(2000, 1, 2, 0, 0, 0).unwrap()),
+            }),
+            mentions: vec![
+               StatusMention {
+                  mentioned_account_id: Some(AccountId {
+                     instance_url: "https://example.com/instance/url".parse().unwrap(),
+                     local: AccountLocalId("mentioned account id1".to_string())
+                  }),
+                  mentioned_account_username:
+                     Some("mentioned account username1".to_string()),
+                  mentioned_account_url:
+                     Some("https://example.com/mentioned/account/1".parse().unwrap()),
+                  mentioned_account_acct: Some("mentioned account acct1".to_string()),
+               },
+               StatusMention {
+                  mentioned_account_id: Some(AccountId {
+                     instance_url: "https://example.com/instance/url".parse().unwrap(),
+                     local: AccountLocalId("mentioned account id2".to_string())
+                  }),
+                  mentioned_account_username:
+                     Some("mentioned account username2".to_string()),
+                  mentioned_account_url:
+                     Some("https://example.com/mentioned/account/2".parse().unwrap()),
+                  mentioned_account_acct: Some("mentioned account acct2".to_string()),
+               },
+            ],
+            hashtags: vec![
+               StatusHashtag {
+                  name: Some("hashtag1".to_string()),
+                  url: Some("https://example.com/hashtag1".parse().unwrap()),
+               },
+               StatusHashtag {
+                  name: Some("hashtag2".to_string()),
+                  url: Some("https://example.com/hashtag2".parse().unwrap()),
+               },
+            ],
+            emojis: vec![
+               CustomEmoji {
+                  instance: {
+                     let instance_url
+                        = "https://example.com/instance/url".parse().unwrap();
+
+                     status_toRust_instance_repo.read(&mut env).unwrap()
+                        .load(instance_url).unwrap()
+                  },
+                  shortcode: "shortcode".to_string(),
+                  image_url: "https://example.com/image/url".parse().unwrap(),
+                  static_image_url:
+                     Some("https://example.com/static/image/url".parse().unwrap()),
+                  is_visible_in_picker: Some(true),
+                  category: Some("category".to_string()),
+               },
+            ],
+            boost_count: Some(1),
+            favorite_count: Some(2),
+            reply_count: Some(3),
+            url: Some("https://example.com/status".parse().unwrap()),
+            replied_status_id: Some(StatusId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               local: StatusLocalId("replied status id".to_string())
+            }),
+            replied_account_id: Some(AccountId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               local: AccountLocalId("replied account id".to_string())
+            }),
+            boosted_status: {
+               let id = StatusId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: StatusLocalId("boosted status id".to_string())
+               };
+
+               let boosted_status = status_toRust_noCredentialStatus_repo
+                  .read(&mut env).unwrap()
+                  .load(id).unwrap();
+
+               Some(boosted_status)
+            },
+            poll: {
+               let id = PollId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: PollLocalId("poll id".to_string())
+               };
+
+               let no_credential_poll = status_toRust_noCredentialPoll_repo
+                  .read(&mut env).unwrap()
+                  .load(id).unwrap();
+
+               Some(no_credential_poll)
+            },
+            card: Some(PreviewCard {
+               url: Some("https://example.com/preview/card/url".parse().unwrap()),
+               title: Some("title".to_string()),
+               description: Some("description".to_string()),
+               card_type: Some("link".to_string()),
+               authors: {
+                  let id = AccountId {
+                     instance_url: "https://example.com/instance/url".parse().unwrap(),
+                     local: AccountLocalId("account id".to_string()),
+                  };
+
+                  let account = status_toRust_account_repo
+                     .read(&mut env).unwrap()
+                     .load(id).unwrap();
+
+                  vec![
+                     PreviewCardAuthor {
+                        name: Some("author name".to_string()),
+                        url: Some("https://example.com/author".parse().unwrap()),
+                        account: Some(account),
+                     }
+                  ]
+               },
+               provider_name: Some("provider name".to_string()),
+               provider_url: Some("https://example.com/provider/url".parse().unwrap()),
+               html: Some("html".to_string()),
+               width: Some(123),
+               height: Some(456),
+               image_url: Some("https://example.com/image/url/3".parse().unwrap()),
+               embed_url: Some("https://example.com/embed/url".parse().unwrap()),
+               blurhash: Some("blurhash".to_string()),
+            }),
+            language: Some(Language::from_639_1("ja").unwrap()),
+            text: Some("text".to_string()),
+            edited_time: Some(Utc.with_ymd_and_hms(2000, 1, 4, 0, 0, 0).unwrap()),
+         },
+         no_credential_status
+      )
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1toRust_00024saveNoCredential<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      no_credential_status: JvmStatusNoCredential<'local>
+   ) -> JvmCache<'local, JvmStatusNoCredential<'local>> {
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+
+      let no_credential_status = NoCredentialStatus::clone_from_jvm(
+         &mut env, &no_credential_status
+      );
+
+      status_toRust_noCredentialStatus_repo.write(&mut env).unwrap()
+         .save(no_credential_status)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      status: JvmStatus<'local>
+   ) {
+      use chrono::{TimeZone, Utc};
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::filter::{
+         Filter, FilterAction, FilterContext, FilterId, FilterKeyword,
+         FilterKeywordId, FilterResult, FilterStatus, FilterStatusId,
+      };
+      use crate::poll::{Poll, PollId, PollLocalId};
+      use crate::status::{StatusId, StatusLocalId};
+
+      let status = Status::clone_from_jvm(&mut env, &status);
+
+      assert_eq!(
+         Status {
+            id: StatusId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               local: StatusLocalId("status id".to_string())
+            },
+            no_credential: {
+               let id = StatusId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: StatusLocalId("status id".to_string())
+               };
+
+               status_toRust_noCredentialStatus_repo.read(&mut env).unwrap()
+                  .load(id).unwrap()
+            },
+            boosted_status: {
+               let id = StatusId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: StatusLocalId("boosted status id".to_string())
+               };
+
+               let status = status_toRust_status_repo.read(&mut env).unwrap()
+                  .load(id).unwrap();
+
+               Some(status)
+            },
+            poll: Some(Poll {
+               id: PollId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: PollLocalId("poll id".to_string())
+               },
+               no_credential: {
+                  let id = PollId {
+                     instance_url: "https://example.com/instance/url".parse().unwrap(),
+                     local: PollLocalId("poll id".to_string())
+                  };
+
+                  status_toRust_noCredentialPoll_repo
+                     .read(&mut env).unwrap()
+                     .load(id).unwrap()
+               },
+               is_voted: Some(true),
+               voted_options: vec![0],
+            }),
+            is_favorited: Some(true),
+            is_boosted: Some(false),
+            is_muted: Some(true),
+            is_bookmarked: Some(false),
+            is_pinned: Some(true),
+            filter_results: vec![
+               FilterResult {
+                  filter: Some(Filter {
+                     id: FilterId("filter id".to_string()),
+                     title: Some("title".to_string()),
+                     context: vec![FilterContext("home".to_string())],
+                     expire_time:
+                        Some(Utc.with_ymd_and_hms(2000, 1, 5, 0, 0, 0).unwrap()),
+                     filter_action: Some(FilterAction("hide".to_string())),
+                     keywords: vec![
+                        FilterKeyword {
+                           id: FilterKeywordId("filter keyword id".to_string()),
+                           keyword: Some("keyword".to_string()),
+                           whole_word: Some(false),
+                        },
+                     ],
+                     statuses: vec![
+                        FilterStatus {
+                           id: FilterStatusId("filter status id".to_string()),
+                           status_id: StatusId {
+                              instance_url: "https://example.com/instance/url".parse().unwrap(),
+                              local: StatusLocalId("filtered status id".to_string())
+                           },
+                        }
+                     ],
+                  }),
+                  keyword_matches: vec!["keyword".to_string()],
+                  status_matches: vec![
+                     StatusId {
+                        instance_url: "https://example.com/instance/url".parse().unwrap(),
+                        local: StatusLocalId("filtered status id".to_string())
+                     },
+                  ],
+               }
+            ],
+         },
+         status
+      );
+   }
+
+   #[allow(non_upper_case_globals)]
+   static status_nulls_toRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_nulls_toRust_account_repo: RepositoryHolder<Account> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_nulls_toRust_noCredentialStatus_repo: RepositoryHolder<NoCredentialStatus> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_nulls_toRust_status_repo: RepositoryHolder<Status> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_nulls_toRust_noCredentialPoll_repo: RepositoryHolder<NoCredentialPoll> = RepositoryHolder::new();
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1nulls_1toRust_00024createInstance<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+
+      save_instance(&mut env, &status_nulls_toRust_instance_repo)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1nulls_1toRust_00024assertNoCredential<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      no_credential_status: JvmStatusNoCredential<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::status::{StatusId, StatusLocalId};
+
+      let no_credential_status = NoCredentialStatus::clone_from_jvm(
+         &mut env, &no_credential_status
+      );
+
+      assert_eq!(
+         NoCredentialStatus {
+            id: StatusId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               local: StatusLocalId("status id".to_string())
+            },
+            uri: None,
+            created_time: None,
+            account: None,
+            content: None,
+            visibility: None,
+            is_sensitive: None,
+            spoiler_text: None,
+            media_attachments: vec![],
+            application: None,
+            mentions: vec![],
+            hashtags: vec![],
+            emojis: vec![],
+            boost_count: None,
+            favorite_count: None,
+            reply_count: None,
+            url: None,
+            replied_status_id: None,
+            replied_account_id: None,
+            boosted_status: None,
+            poll: None,
+            card: None,
+            language: None,
+            text: None,
+            edited_time: None,
+         },
+         no_credential_status
+      )
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1nulls_1toRust_00024saveNoCredential<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      no_credential_status: JvmStatusNoCredential<'local>
+   ) -> JvmCache<'local, JvmStatusNoCredential<'local>> {
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+
+      let no_credential_status = NoCredentialStatus::clone_from_jvm(
+         &mut env, &no_credential_status
+      );
+
+      status_nulls_toRust_noCredentialStatus_repo.write(&mut env).unwrap()
+         .save(no_credential_status)
+         .clone_into_jvm(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1nulls_1toRust_00024assert<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      status: JvmStatus<'local>
+   ) {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use crate::status::{StatusId, StatusLocalId};
+
+      let status = Status::clone_from_jvm(&mut env, &status);
+
+      assert_eq!(
+         Status {
+            id: StatusId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               local: StatusLocalId("status id".to_string())
+            },
+            no_credential: {
+               let id = StatusId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: StatusLocalId("status id".to_string())
+               };
+
+               status_nulls_toRust_noCredentialStatus_repo.read(&mut env).unwrap()
+                  .load(id).unwrap()
+            },
+            boosted_status: None,
+            poll: None,
+            is_favorited: None,
+            is_boosted: None,
+            is_muted: None,
+            is_bookmarked: None,
+            is_pinned: None,
+            filter_results: vec![],
+         },
+         status
+      );
+   }
+
+   #[allow(non_upper_case_globals)]
+   static status_fromRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_fromRust_account_repo: RepositoryHolder<Account> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_fromRust_noCredentialStatus_repo: RepositoryHolder<NoCredentialStatus> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_fromRust_status_repo: RepositoryHolder<Status> = RepositoryHolder::new();
+
+   #[allow(non_upper_case_globals)]
+   static status_fromRust_noCredentialPoll_repo: RepositoryHolder<NoCredentialPoll> = RepositoryHolder::new();
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1fromRust_00024createStatus<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmStatus<'local> {
+      use std::time::Duration;
+      use chrono::{TimeZone, Utc};
+      use isolang::Language;
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::account::{AccountId, AccountLocalId};
+      use crate::application::Application;
+      use crate::custom_emoji::CustomEmoji;
+      use crate::filter::{
+         Filter, FilterAction, FilterContext, FilterId, FilterKeyword,
+         FilterKeywordId, FilterResult, FilterStatus, FilterStatusId,
+      };
+      use crate::media_attachment::{
+         ImageFocus, ImageSize, MediaAttachment, MediaAttachmentId,
+         MediaAttachmentMetadata, VideoSize,
+      };
+      use crate::poll::{Poll, PollId, PollLocalId};
+      use crate::preview_card::{PreviewCard, PreviewCardAuthor};
+      use crate::status::{
+         StatusHashtag, StatusId, StatusLocalId, StatusMention, StatusVisibility,
+      };
+
+      let instance = save_instance(&mut env, &status_fromRust_instance_repo);
+
+      let boosted_status = Status {
+         id: StatusId {
+            instance_url: "https://example.com/instance/url".parse().unwrap(),
+            local: StatusLocalId("boosted status id".to_string())
+         },
+         no_credential: status_toRust_noCredentialStatus_repo.write(&mut env).unwrap().save(
+            NoCredentialStatus {
+               id: StatusId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: StatusLocalId("boosted status id".to_string())
+               },
+               uri: None,
+               created_time: None,
+               account: None,
+               content: None,
+               visibility: None,
+               is_sensitive: None,
+               spoiler_text: None,
+               media_attachments: vec![],
+               application: None,
+               mentions: vec![],
+               hashtags: vec![],
+               emojis: vec![],
+               boost_count: None,
+               favorite_count: None,
+               reply_count: None,
+               url: None,
+               replied_status_id: None,
+               replied_account_id: None,
+               boosted_status: None,
+               poll: None,
+               card: None,
+               language: None,
+               text: None,
+               edited_time: None,
+            }
+         ),
+         boosted_status: None,
+         poll: None,
+         is_favorited: None,
+         is_boosted: None,
+         is_muted: None,
+         is_bookmarked: None,
+         is_pinned: None,
+         filter_results: vec![],
+      };
+
+      let no_credential_poll = status_fromRust_noCredentialPoll_repo
+         .write(&mut env).unwrap()
+         .save(
+            NoCredentialPoll {
+               id: PollId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: PollLocalId("poll id".to_string())
+               },
+               expire_time: None,
+               is_expired: None,
+               allows_multiple_choices: None,
+               vote_count: None,
+               voter_count: None,
+               poll_options: vec![],
+               emojis: vec![],
+            }
+         );
+
+      let no_credential = NoCredentialStatus {
+         id: StatusId {
+            instance_url: "https://example.com/instance/url".parse().unwrap(),
+            local: StatusLocalId("status id".to_string())
+         },
+         uri: Some("uri".to_string()),
+         created_time: Some(Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap()),
+         account: Some(
+            save_account(
+               &mut env,
+               &status_fromRust_account_repo,
+               &status_fromRust_instance_repo
+            )
+         ),
+         content: Some("content".to_string()),
+         visibility: Some(StatusVisibility("public".to_string())),
+         is_sensitive: Some(true),
+         spoiler_text: Some("spoilerText".to_string()),
+         media_attachments: vec![
+            MediaAttachment {
+               id: MediaAttachmentId("media attachment id1".to_string()),
+               url: Some("https://example.com/media/attachment/1".parse().unwrap()),
+               preview_url: Some("https://example.com/preview/1".parse().unwrap()),
+               remote_url: Some("https://example.com/remote/1".parse().unwrap()),
+               metadata: Some(MediaAttachmentMetadata::Image {
+                  original_size: Some(ImageSize {
+                     width: 100,
+                     height: 200,
+                  }),
+                  small_size: Some(ImageSize {
+                     width: 10,
+                     height: 20,
+                  }),
+                  focus: Some(ImageFocus {
+                     x: 0.1,
+                     y: 0.2,
+                  }),
+               }),
+               description: Some("description".to_string()),
+               blurhash: Some("blurhash".to_string()),
+            },
+            MediaAttachment {
+               id: MediaAttachmentId("media attachment id2".to_string()),
+               url: Some("https://example.com/media/attachment/2".parse().unwrap()),
+               preview_url: Some("https://example.com/preview/2".parse().unwrap()),
+               remote_url: Some("https://example.com/remote/2".parse().unwrap()),
+               metadata: Some(MediaAttachmentMetadata::Gifv {
+                  original_size: Some(VideoSize {
+                     width: Some(100),
+                     height: Some(200),
+                     frame_rate: Some("frameRate".to_string()),
+                     duration: Some(Duration::from_secs(12)),
+                     bitrate: Some(34),
+                  }),
+                  small_size: Some(ImageSize {
+                     width: 10,
+                     height: 20,
+                  }),
+                  length: Some("length".to_string()),
+                  fps: Some(30),
+               }),
+               description: Some("description".to_string()),
+               blurhash: Some("blurhash".to_string()),
+            },
+         ],
+         application: Some(Application {
+            instance: instance.clone(),
+            name: "app name".to_string(),
+            website: Some("https://example.com/app".parse().unwrap()),
+            scopes: vec!["read".to_string(), "write".to_string()],
+            redirect_uris: vec!["redirectUri".to_string()],
+            client_id: Some("clientId".to_string()),
+            client_secret: Some("clientSecret".to_string()),
+            client_secret_expire_time:
+            Some(Utc.with_ymd_and_hms(2000, 1, 2, 0, 0, 0).unwrap()),
+         }),
+         mentions: vec![
+            StatusMention {
+               mentioned_account_id: Some(AccountId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: AccountLocalId("mentioned account id1".to_string())
+               }),
+               mentioned_account_username:
+               Some("mentioned account username1".to_string()),
+               mentioned_account_url:
+               Some("https://example.com/mentioned/account/1".parse().unwrap()),
+               mentioned_account_acct: Some("mentioned account acct1".to_string()),
+            },
+            StatusMention {
+               mentioned_account_id: Some(AccountId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  local: AccountLocalId("mentioned account id2".to_string())
+               }),
+               mentioned_account_username:
+               Some("mentioned account username2".to_string()),
+               mentioned_account_url:
+               Some("https://example.com/mentioned/account/2".parse().unwrap()),
+               mentioned_account_acct: Some("mentioned account acct2".to_string()),
+            },
+         ],
+         hashtags: vec![
+            StatusHashtag {
+               name: Some("hashtag1".to_string()),
+               url: Some("https://example.com/hashtag1".parse().unwrap()),
+            },
+            StatusHashtag {
+               name: Some("hashtag2".to_string()),
+               url: Some("https://example.com/hashtag2".parse().unwrap()),
+            },
+         ],
+         emojis: vec![
+            CustomEmoji {
+               instance: instance.clone(),
+               shortcode: "shortcode".to_string(),
+               image_url: "https://example.com/image/url".parse().unwrap(),
+               static_image_url:
+               Some("https://example.com/static/image/url".parse().unwrap()),
+               is_visible_in_picker: Some(true),
+               category: Some("category".to_string()),
+            },
+         ],
+         boost_count: Some(1),
+         favorite_count: Some(2),
+         reply_count: Some(3),
+         url: Some("https://example.com/status".parse().unwrap()),
+         replied_status_id: Some(StatusId {
+            instance_url: "https://example.com/instance/url".parse().unwrap(),
+            local: StatusLocalId("replied status id".to_string())
+         }),
+         replied_account_id: Some(AccountId {
+            instance_url: "https://example.com/instance/url".parse().unwrap(),
+            local: AccountLocalId("replied account id".to_string())
+         }),
+         boosted_status: Some(boosted_status.no_credential.clone()),
+         poll: Some(no_credential_poll.clone()),
+         card: Some(PreviewCard {
+            url: Some("https://example.com/preview/card/url".parse().unwrap()),
+            title: Some("title".to_string()),
+            description: Some("description".to_string()),
+            card_type: Some("link".to_string()),
+            authors: {
+               let account = Account {
+                  instance: instance.clone(),
+                  id: AccountId {
+                     instance_url: "https://example.com/instance/url".parse().unwrap(),
+                     local: AccountLocalId("account id".to_string()),
+                  },
+                  username: None,
+                  acct: None,
+                  url: None,
+                  display_name: None,
+                  profile_note: None,
+                  avatar_image_url: None,
+                  avatar_static_image_url: None,
+                  header_image_url: None,
+                  header_static_image_url: None,
+                  is_locked: None,
+                  profile_fields: vec![],
+                  emojis_in_profile: vec![],
+                  is_bot: None,
+                  is_group: None,
+                  is_discoverable: None,
+                  is_noindex: None,
+                  moved_to: None,
+                  is_suspended: None,
+                  is_limited: None,
+                  created_time: None,
+                  last_status_post_time: None,
+                  status_count: None,
+                  follower_count: None,
+                  followee_count: None,
+               };
+
+               let account_cache = status_fromRust_account_repo
+                  .write(&mut env).unwrap()
+                  .save(account);
+
+               vec![
+                  PreviewCardAuthor {
+                     name: Some("author name".to_string()),
+                     url: Some("https://example.com/author".parse().unwrap()),
+                     account: Some(account_cache),
+                  }
+               ]
+            },
+            provider_name: Some("provider name".to_string()),
+            provider_url: Some("https://example.com/provider/url".parse().unwrap()),
+            html: Some("html".to_string()),
+            width: Some(123),
+            height: Some(456),
+            image_url: Some("https://example.com/image/url/3".parse().unwrap()),
+            embed_url: Some("https://example.com/embed/url".parse().unwrap()),
+            blurhash: Some("blurhash".to_string()),
+         }),
+         language: Some(Language::from_639_1("ja").unwrap()),
+         text: Some("text".to_string()),
+         edited_time: Some(Utc.with_ymd_and_hms(2000, 1, 4, 0, 0, 0).unwrap()),
+      };
+
+      let status = Status {
+         id: StatusId {
+            instance_url: "https://example.com/instance/url".parse().unwrap(),
+            local: StatusLocalId("status id".to_string())
+         },
+         no_credential: status_fromRust_noCredentialStatus_repo
+            .write(&mut env).unwrap()
+            .save(no_credential),
+         boosted_status: Some(
+            status_fromRust_status_repo
+               .write(&mut env).unwrap()
+               .save(boosted_status)
+         ),
+         poll: Some(Poll {
+            id: PollId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               local: PollLocalId("poll id".to_string())
+            },
+            no_credential: no_credential_poll.clone(),
+            is_voted: Some(true),
+            voted_options: vec![0],
+         }),
+         is_favorited: Some(true),
+         is_boosted: Some(false),
+         is_muted: Some(true),
+         is_bookmarked: Some(false),
+         is_pinned: Some(true),
+         filter_results: vec![
+            FilterResult {
+               filter: Some(Filter {
+                  id: FilterId("filter id".to_string()),
+                  title: Some("title".to_string()),
+                  context: vec![FilterContext("home".to_string())],
+                  expire_time:
+                  Some(Utc.with_ymd_and_hms(2000, 1, 5, 0, 0, 0).unwrap()),
+                  filter_action: Some(FilterAction("hide".to_string())),
+                  keywords: vec![
+                     FilterKeyword {
+                        id: FilterKeywordId("filter keyword id".to_string()),
+                        keyword: Some("keyword".to_string()),
+                        whole_word: Some(false),
+                     },
+                  ],
+                  statuses: vec![
+                     FilterStatus {
+                        id: FilterStatusId("filter status id".to_string()),
+                        status_id: StatusId {
+                           instance_url: "https://example.com/instance/url".parse().unwrap(),
+                           local: StatusLocalId("filtered status id".to_string())
+                        },
+                     }
+                  ],
+               }),
+               keyword_matches: vec!["keyword".to_string()],
+               status_matches: vec![
+                  StatusId {
+                     instance_url: "https://example.com/instance/url".parse().unwrap(),
+                     local: StatusLocalId("filtered status id".to_string())
+                  },
+               ],
+            }
+         ],
+      };
+
+      status.clone_into_jvm(&mut env)
+   }
+
+   #[allow(non_upper_case_globals)]
+   static status_nulls_fromRust_noCredentialStatus_repo: RepositoryHolder<NoCredentialStatus> = RepositoryHolder::new();
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1nulls_1fromRust_00024createStatus<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmStatus<'local> {
+      use panoptiqon::convert_jvm::CloneIntoJvm;
+      use crate::status::{StatusId, StatusLocalId};
+
+      let no_credential = NoCredentialStatus {
+         id: StatusId {
+            instance_url: "https://example.com/instance/url".parse().unwrap(),
+            local: StatusLocalId("status id".to_string())
+         },
+         uri: None,
+         created_time: None,
+         account: None,
+         content: None,
+         visibility: None,
+         is_sensitive: None,
+         spoiler_text: None,
+         media_attachments: vec![],
+         application: None,
+         mentions: vec![],
+         hashtags: vec![],
+         emojis: vec![],
+         boost_count: None,
+         favorite_count: None,
+         reply_count: None,
+         url: None,
+         replied_status_id: None,
+         replied_account_id: None,
+         boosted_status: None,
+         poll: None,
+         card: None,
+         language: None,
+         text: None,
+         edited_time: None,
+      };
+
+      let status = Status {
+         id: StatusId {
+            instance_url: "https://example.com/instance/url".parse().unwrap(),
+            local: StatusLocalId("status id".to_string())
+         },
+         no_credential: status_nulls_fromRust_noCredentialStatus_repo
+            .write(&mut env).unwrap()
+            .save(no_credential),
+         boosted_status: None,
+         poll: None,
+         is_favorited: None,
+         is_boosted: None,
+         is_muted: None,
+         is_bookmarked: None,
+         is_pinned: None,
+         filter_results: vec![],
+      };
+
+      status.clone_into_jvm(&mut env)
    }
 }

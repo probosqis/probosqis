@@ -167,28 +167,6 @@ class ConvertJniTest {
    private external fun `account_fromRust$createInstance`(): Cache<Instance>
    private external fun `account_fromRust$createMovedTo`(): Cache<Account>
 
-   // ==== Status.Visibility ===================================================
-
-   @Test
-   fun statusVisibility_toRust() {
-      val statusVisibility = Status.Visibility.UNLISTED
-      `statusVisibility_toRust$assert`(statusVisibility)
-   }
-
-   private external fun `statusVisibility_toRust$assert`(statusVisibility: Status.Visibility)
-
-   @Test
-   fun statusVisibility_fromRust() {
-      val statusVisibility = `statusVisibility_fromRust$createStatusVisibility`()
-
-      assertEquals(
-         Status.Visibility.UNLISTED,
-         statusVisibility
-      )
-   }
-
-   private external fun `statusVisibility_fromRust$createStatusVisibility`(): Status.Visibility
-
    // ==== CustomEmoji =========================================================
 
    @Test
@@ -1323,4 +1301,504 @@ class ConvertJniTest {
 
    private external fun `role_nulls_fromRust$createRole`(): Role
    private external fun `role_nulls_fromRust$createInstance`(): Cache<Instance>
+
+   // ==== Status ==============================================================
+
+   @Test
+   fun status_toRust() {
+      val instance = `status_toRust$createInstance`()
+      val account = `status_toRust$createAccount`()
+      val boostedStatus = `status_toRust$createBoostedStatus`()
+
+      val noCredential = Status.NoCredential(
+         Status.Id(instance.value.url, Status.LocalId("status id")),
+         "uri",
+         createdTime = LocalDateTime(2000, 1, 1, 0, 0, 0).toInstant(TimeZone.UTC),
+         account,
+         "content",
+         Status.Visibility.PUBLIC,
+         isSensitive = true,
+         "spoilerText",
+         mediaAttachments = listOf(
+            MediaAttachment(
+               MediaAttachment.Id("media attachment id1"),
+               Url("https://example.com/media/attachment/1"),
+               Url("https://example.com/preview/1"),
+               Url("https://example.com/remote/1"),
+               MediaAttachment.Metadata.Image(
+                  originalSize = MediaAttachment.ImageSize(100L, 200L),
+                  smallSize = MediaAttachment.ImageSize(10L, 20L),
+                  focus = MediaAttachment.ImageFocus(0.1, 0.2),
+               ),
+               "description",
+               "blurhash",
+            ),
+            MediaAttachment(
+               MediaAttachment.Id("media attachment id2"),
+               Url("https://example.com/media/attachment/2"),
+               Url("https://example.com/preview/2"),
+               Url("https://example.com/remote/2"),
+               MediaAttachment.Metadata.Gifv(
+                  originalSize = MediaAttachment.VideoSize(
+                     width = 100L,
+                     height = 200L,
+                     "frameRate",
+                     duration = 12.seconds,
+                     bitrate = 34L,
+                  ),
+                  smallSize = MediaAttachment.ImageSize(10L, 20L),
+                  "length",
+                  fps = 30L,
+               ),
+               "description",
+               "blurhash",
+            ),
+         ),
+         Application(
+            instance,
+            "app name",
+            website = Url("https://example.com/app"),
+            scopes = listOf("read", "write"),
+            redirectUris = listOf("redirectUri"),
+            "clientId",
+            "clientSecret",
+            clientSecretExpireTime = LocalDateTime(2000, 1, 2, 0, 0, 0).toInstant(TimeZone.UTC),
+         ),
+         mentions = listOf(
+            Status.Mention(
+               Account.Id(instance.value.url, Account.LocalId("mentioned account id1")),
+               "mentioned account username1",
+               Url("https://example.com/mentioned/account/1"),
+               "mentioned account acct1",
+            ),
+            Status.Mention(
+               Account.Id(instance.value.url, Account.LocalId("mentioned account id2")),
+               "mentioned account username2",
+               Url("https://example.com/mentioned/account/2"),
+               "mentioned account acct2",
+            ),
+         ),
+         hashtags = listOf(
+            Status.Hashtag(
+               "hashtag1",
+               Url("https://example.com/hashtag1"),
+            ),
+            Status.Hashtag(
+               "hashtag2",
+               Url("https://example.com/hashtag2"),
+            ),
+         ),
+         emojis = listOf(
+            CustomEmoji(
+               instance,
+               "shortcode",
+               Url("https://example.com/image/url"),
+               Url("https://example.com/static/image/url"),
+               isVisibleInPicker = true,
+               "category",
+            ),
+         ),
+         boostCount = 1L,
+         favoriteCount = 2L,
+         replyCount = 3L,
+         Url("https://example.com/status"),
+         repliedStatusId = Status.Id(instance.value.url, Status.LocalId("replied status id")),
+         repliedAccountId = Account.Id(instance.value.url, Account.LocalId("replied account id")),
+         boostedStatus = boostedStatus.value.noCredential,
+         poll = `status_toRust$createNoCredentialPoll`(),
+         PreviewCard(
+            Url("https://example.com/preview/card/url"),
+            "title",
+            "description",
+            PreviewCard.Type.LINK,
+            authors = listOf(
+               PreviewCard.Author(
+                  "author name",
+                  Url("https://example.com/author"),
+                  `status_toRust$createPreviewCardAuthorAccount`(),
+               )
+            ),
+            "provider name",
+            Url("https://example.com/provider/url"),
+            "html",
+            width = 123L,
+            height = 456L,
+            Url("https://example.com/image/url/3"),
+            Url("https://example.com/embed/url"),
+            "blurhash",
+         ),
+         language = "ja",
+         "text",
+         editedTime = LocalDateTime(2000, 1, 4, 0, 0, 0).toInstant(TimeZone.UTC),
+      )
+
+      `status_toRust$assertNoCredential`(noCredential)
+
+      val noCredentialCache = `status_toRust$saveNoCredential`(noCredential)
+
+      val status = Status(
+         Status.Id(instance.value.url, Status.LocalId("status id")),
+         noCredentialCache,
+         boostedStatus,
+         Poll(
+            Poll.Id(instance.value.url, Poll.LocalId("poll id")),
+            noCredential.poll!!,
+            isVoted = true,
+            votedOptions = listOf(0L),
+         ),
+         isFavorited = true,
+         isBoosted = false,
+         isMuted = true,
+         isBookmarked = false,
+         isPinned = true,
+         filterResults = listOf(
+            FilterResult(
+               Filter(
+                  Filter.Id("filter id"),
+                  "title",
+                  listOf(Filter.Context.HOME),
+                  expireTime = LocalDateTime(2000, 1, 5, 0, 0, 0).toInstant(TimeZone.UTC),
+                  Filter.Action.HIDE,
+                  listOf(
+                     Filter.Keyword(
+                        Filter.Keyword.Id("filter keyword id"),
+                        "keyword",
+                        wholeWord = false,
+                     )
+                  ),
+                  listOf(
+                     Filter.FilterStatus(
+                        Filter.FilterStatus.Id("filter status id"),
+                        Status.Id(instance.value.url, Status.LocalId("filtered status id")),
+                     ),
+                  ),
+               ),
+               listOf("keyword"),
+               listOf(
+                  Status.Id(instance.value.url, Status.LocalId("filtered status id")),
+               ),
+            ),
+         ),
+      )
+
+      `status_toRust$assert`(status)
+   }
+
+   private external fun `status_toRust$createInstance`(): Cache<Instance>
+   private external fun `status_toRust$createAccount`(): Cache<Account>
+   private external fun `status_toRust$createBoostedStatus`(): Cache<Status>
+   private external fun `status_toRust$createNoCredentialPoll`(): Cache<Poll.NoCredential>
+   private external fun `status_toRust$createPreviewCardAuthorAccount`(): Cache<Account>
+
+   private external fun `status_toRust$assertNoCredential`(
+      noCredentialStatus: Status.NoCredential
+   )
+
+   private external fun `status_toRust$saveNoCredential`(
+      noCredentialStatus: Status.NoCredential
+   ): Cache<Status.NoCredential>
+
+   private external fun `status_toRust$assert`(noCredentialStatus: Status)
+
+   @Test
+   fun status_nulls_toRust() {
+      val instance = `status_nulls_toRust$createInstance`()
+
+      val noCredential = Status.NoCredential(
+         Status.Id(instance.value.url, Status.LocalId("status id")),
+         uri = null,
+         createdTime = null,
+         account = null,
+         content = null,
+         visibility = null,
+         isSensitive = null,
+         spoilerText = null,
+         mediaAttachments = emptyList(),
+         application = null,
+         mentions = emptyList(),
+         hashtags = emptyList(),
+         emojis = emptyList(),
+         boostCount = null,
+         favoriteCount = null,
+         replyCount = null,
+         url = null,
+         repliedStatusId = null,
+         repliedAccountId = null,
+         boostedStatus = null,
+         poll = null,
+         card = null,
+         language = null,
+         text = null,
+         editedTime = null,
+      )
+
+      `status_nulls_toRust$assertNoCredential`(noCredential)
+
+      val noCredentialCache = `status_nulls_toRust$saveNoCredential`(noCredential)
+
+      val status = Status(
+         Status.Id(instance.value.url, Status.LocalId("status id")),
+         noCredentialCache,
+         boostedStatus = null,
+         poll = null,
+         isFavorited = null,
+         isBoosted = null,
+         isMuted = null,
+         isBookmarked = null,
+         isPinned = null,
+         filterResults = emptyList(),
+      )
+
+      `status_nulls_toRust$assert`(status)
+   }
+
+   private external fun `status_nulls_toRust$createInstance`(): Cache<Instance>
+
+   private external fun `status_nulls_toRust$assertNoCredential`(
+      noCredentialStatus: Status.NoCredential
+   )
+
+   private external fun `status_nulls_toRust$saveNoCredential`(
+      noCredentialStatus: Status.NoCredential
+   ): Cache<Status.NoCredential>
+
+   private external fun `status_nulls_toRust$assert`(noCredentialStatus: Status)
+
+   @Test
+   fun status_fromRust() {
+      val status = `status_fromRust$createStatus`()
+
+      val instanceUrl = status.id.instanceUrl
+
+      assertEquals(
+         Status.NoCredential(
+            Status.Id(instanceUrl, Status.LocalId("status id")),
+            "uri",
+            createdTime = LocalDateTime(2000, 1, 1, 0, 0, 0).toInstant(TimeZone.UTC),
+            account = status.noCredential.value.account,
+            "content",
+            Status.Visibility.PUBLIC,
+            isSensitive = true,
+            "spoilerText",
+            mediaAttachments = listOf(
+               MediaAttachment(
+                  MediaAttachment.Id("media attachment id1"),
+                  Url("https://example.com/media/attachment/1"),
+                  Url("https://example.com/preview/1"),
+                  Url("https://example.com/remote/1"),
+                  MediaAttachment.Metadata.Image(
+                     originalSize = MediaAttachment.ImageSize(100L, 200L),
+                     smallSize = MediaAttachment.ImageSize(10L, 20L),
+                     focus = MediaAttachment.ImageFocus(0.1, 0.2),
+                  ),
+                  "description",
+                  "blurhash",
+               ),
+               MediaAttachment(
+                  MediaAttachment.Id("media attachment id2"),
+                  Url("https://example.com/media/attachment/2"),
+                  Url("https://example.com/preview/2"),
+                  Url("https://example.com/remote/2"),
+                  MediaAttachment.Metadata.Gifv(
+                     originalSize = MediaAttachment.VideoSize(
+                        width = 100L,
+                        height = 200L,
+                        "frameRate",
+                        duration = 12.seconds,
+                        bitrate = 34L,
+                     ),
+                     smallSize = MediaAttachment.ImageSize(10L, 20L),
+                     "length",
+                     fps = 30L,
+                  ),
+                  "description",
+                  "blurhash",
+               ),
+            ),
+            Application(
+               instance = status.noCredential.value.application!!.instance,
+               "app name",
+               website = Url("https://example.com/app"),
+               scopes = listOf("read", "write"),
+               redirectUris = listOf("redirectUri"),
+               "clientId",
+               "clientSecret",
+               clientSecretExpireTime = LocalDateTime(2000, 1, 2, 0, 0, 0).toInstant(TimeZone.UTC),
+            ),
+            mentions = listOf(
+               Status.Mention(
+                  Account.Id(instanceUrl, Account.LocalId("mentioned account id1")),
+                  "mentioned account username1",
+                  Url("https://example.com/mentioned/account/1"),
+                  "mentioned account acct1",
+               ),
+               Status.Mention(
+                  Account.Id(instanceUrl, Account.LocalId("mentioned account id2")),
+                  "mentioned account username2",
+                  Url("https://example.com/mentioned/account/2"),
+                  "mentioned account acct2",
+               ),
+            ),
+            hashtags = listOf(
+               Status.Hashtag(
+                  "hashtag1",
+                  Url("https://example.com/hashtag1"),
+               ),
+               Status.Hashtag(
+                  "hashtag2",
+                  Url("https://example.com/hashtag2"),
+               ),
+            ),
+            emojis = listOf(
+               CustomEmoji(
+                  instance = status.noCredential.value.emojis[0].instance,
+                  "shortcode",
+                  Url("https://example.com/image/url"),
+                  Url("https://example.com/static/image/url"),
+                  isVisibleInPicker = true,
+                  "category",
+               ),
+            ),
+            boostCount = 1L,
+            favoriteCount = 2L,
+            replyCount = 3L,
+            Url("https://example.com/status"),
+            repliedStatusId = Status.Id(instanceUrl, Status.LocalId("replied status id")),
+            repliedAccountId = Account.Id(instanceUrl, Account.LocalId("replied account id")),
+            boostedStatus = status.noCredential.value.boostedStatus,
+            poll = status.noCredential.value.poll,
+            PreviewCard(
+               Url("https://example.com/preview/card/url"),
+               "title",
+               "description",
+               PreviewCard.Type.LINK,
+               authors = listOf(
+                  PreviewCard.Author(
+                     "author name",
+                     Url("https://example.com/author"),
+                     account = status.noCredential.value.card!!.authors[0].account,
+                  )
+               ),
+               "provider name",
+               Url("https://example.com/provider/url"),
+               "html",
+               width = 123L,
+               height = 456L,
+               Url("https://example.com/image/url/3"),
+               Url("https://example.com/embed/url"),
+               "blurhash",
+            ),
+            language = "ja",
+            "text",
+            editedTime = LocalDateTime(2000, 1, 4, 0, 0, 0).toInstant(TimeZone.UTC),
+         ),
+         status.noCredential.value
+      )
+
+      assertEquals(
+         Status(
+            Status.Id(instanceUrl, Status.LocalId("status id")),
+            status.noCredential,
+            status.boostedStatus,
+            Poll(
+               Poll.Id(instanceUrl, Poll.LocalId("poll id")),
+               status.noCredential.value.poll!!,
+               isVoted = true,
+               votedOptions = listOf(0L),
+            ),
+            isFavorited = true,
+            isBoosted = false,
+            isMuted = true,
+            isBookmarked = false,
+            isPinned = true,
+            filterResults = listOf(
+               FilterResult(
+                  Filter(
+                     Filter.Id("filter id"),
+                     "title",
+                     listOf(Filter.Context.HOME),
+                     expireTime = LocalDateTime(2000, 1, 5, 0, 0, 0).toInstant(TimeZone.UTC),
+                     Filter.Action.HIDE,
+                     listOf(
+                        Filter.Keyword(
+                           Filter.Keyword.Id("filter keyword id"),
+                           "keyword",
+                           wholeWord = false,
+                        )
+                     ),
+                     listOf(
+                        Filter.FilterStatus(
+                           Filter.FilterStatus.Id("filter status id"),
+                           Status.Id(instanceUrl, Status.LocalId("filtered status id")),
+                        ),
+                     ),
+                  ),
+                  listOf("keyword"),
+                  listOf(
+                     Status.Id(instanceUrl, Status.LocalId("filtered status id")),
+                  ),
+               ),
+            ),
+         ),
+         status
+      )
+   }
+
+   private external fun `status_fromRust$createStatus`(): Status
+
+   @Test
+   fun status_nulls_fromRust() {
+      val status = `status_nulls_fromRust$createStatus`()
+
+      val instanceUrl = status.id.instanceUrl
+
+      assertEquals(
+         Status.NoCredential(
+            Status.Id(instanceUrl, Status.LocalId("status id")),
+            uri = null,
+            createdTime = null,
+            account = null,
+            content = null,
+            visibility = null,
+            isSensitive = null,
+            spoilerText = null,
+            mediaAttachments = emptyList(),
+            application = null,
+            mentions = emptyList(),
+            hashtags = emptyList(),
+            emojis = emptyList(),
+            boostCount = null,
+            favoriteCount = null,
+            replyCount = null,
+            url = null,
+            repliedStatusId = null,
+            repliedAccountId = null,
+            boostedStatus = null,
+            poll = null,
+            card = null,
+            language = null,
+            text = null,
+            editedTime = null,
+         ),
+         status.noCredential.value
+      )
+
+      assertEquals(
+         Status(
+            Status.Id(instanceUrl, Status.LocalId("status id")),
+            status.noCredential,
+            boostedStatus = null,
+            poll = null,
+            isFavorited = null,
+            isBoosted = null,
+            isMuted = null,
+            isBookmarked = null,
+            isPinned = null,
+            filterResults = emptyList(),
+         ),
+         status
+      )
+   }
+
+   private external fun `status_nulls_fromRust$createStatus`(): Status
 }

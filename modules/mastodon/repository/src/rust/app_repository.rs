@@ -895,7 +895,7 @@ mod test {
                   verified_time: Some(Utc.with_ymd_and_hms(2000, 1, 2, 0, 0, 0).unwrap()),
                },
             ],
-            default_post_visibility: Some(StatusVisibility::Public),
+            default_post_visibility: Some(StatusVisibility("public".to_string())),
             default_post_sensitivity: Some(false),
             default_post_language: Some(Language::from_639_1("ja").unwrap()),
             follow_request_count: Some(1),

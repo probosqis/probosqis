@@ -43,7 +43,10 @@ jvm_type! {
    JvmPreviewCardAuthor,
    JvmRelationalAccount,
    JvmRole,
+   JvmStatus,
+   JvmStatusHashtag,
    JvmStatusId,
-   JvmStatusVisibility,
+   JvmStatusMention,
+   JvmStatusNoCredential,
    JvmToken,
 }

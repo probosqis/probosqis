@@ -29,7 +29,7 @@ use {
    crate::jvm_types::{JvmApplication, JvmInstance},
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
 pub struct Application {
    pub instance: Cache<Instance>,
    pub name: String,
