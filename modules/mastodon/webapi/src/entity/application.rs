@@ -40,5 +40,12 @@ pub struct Application {
    /// mastodon 4.3.0以降CredentialApplicationの場合のみ
    pub client_secret: Option<String>,
    /// since mastodon 4.3.0
-   pub client_secret_expires_at: Option<String>,
+   pub client_secret_expires_at: Option<ApplicationClientSecretExpiresAt>,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum ApplicationClientSecretExpiresAt {
+   ExpiresAt(String),
+   Never(i64)
 }
