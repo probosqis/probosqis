@@ -32,7 +32,7 @@ pub struct Application {
    pub redirect_uri: Option<String>,
    /// since mastodon 2.8.0
    /// mastodon 4.3.0以降非推奨(Instance.configuration.vapid.public_key推奨)
-   pub vapid_key: Option<Vec<String>>,
+   pub vapid_key: Option<String>,
    /// since mastodon 0.9.9
    /// mastodon 4.3.0以降CredentialApplicationの場合のみ
    pub client_id: Option<String>,
