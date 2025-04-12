@@ -2642,16 +2642,7 @@ mod jni_tests {
    static status_nulls_toRust_instance_repo: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    #[allow(non_upper_case_globals)]
-   static status_nulls_toRust_account_repo: RepositoryHolder<Account> = RepositoryHolder::new();
-
-   #[allow(non_upper_case_globals)]
    static status_nulls_toRust_noCredentialStatus_repo: RepositoryHolder<NoCredentialStatus> = RepositoryHolder::new();
-
-   #[allow(non_upper_case_globals)]
-   static status_nulls_toRust_status_repo: RepositoryHolder<Status> = RepositoryHolder::new();
-
-   #[allow(non_upper_case_globals)]
-   static status_nulls_toRust_noCredentialPoll_repo: RepositoryHolder<NoCredentialPoll> = RepositoryHolder::new();
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1nulls_1toRust_00024createInstance<'local>(
