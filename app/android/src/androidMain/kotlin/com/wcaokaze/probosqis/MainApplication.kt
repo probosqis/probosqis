@@ -26,7 +26,9 @@ import com.wcaokaze.probosqis.error.errorSerializer
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
+import com.wcaokaze.probosqis.mastodon.repository.AndroidTimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.AndroidNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.page.PPageSwitcherState
@@ -62,6 +64,7 @@ class MainApplication : Application() {
       testNotePageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.callbackWaiterPageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.urlInputPageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.timeline.home.homeTimelinePageComposable,
    )
 
    private val allPageSerializers = persistentListOf(
@@ -70,6 +73,7 @@ class MainApplication : Application() {
       pageSerializer<TestNotePage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage>(),
    )
 
    private val allErrorItemComposables = persistentListOf(
@@ -129,6 +133,7 @@ class MainApplication : Application() {
       single<AppRepository> { AndroidAppRepository(context = get()) }
       single<AccountRepository> { AndroidAccountRepository() }
       single<NodeInfoRepository> { AndroidNodeInfoRepository() }
+      single<TimelineRepository> { AndroidTimelineRepository() }
    }
 
    private val appKoinModule = module {

@@ -33,6 +33,8 @@ import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAppRepository
+import com.wcaokaze.probosqis.mastodon.repository.DesktopTimelineRepository
+import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.DesktopNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.page.PPageSwitcherState
@@ -69,6 +71,7 @@ object Main {
       testNotePageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.callbackWaiterPageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.urlInputPageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.timeline.home.homeTimelinePageComposable,
    )
 
    private val allPageSerializers = persistentListOf(
@@ -77,6 +80,7 @@ object Main {
       pageSerializer<TestNotePage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage>(),
    )
 
    private val allErrorItemComposables = persistentListOf(
@@ -138,6 +142,7 @@ object Main {
       single<AppRepository> { DesktopAppRepository(probosqisDataDir) }
       single<AccountRepository> { DesktopAccountRepository() }
       single<NodeInfoRepository> { DesktopNodeInfoRepository() }
+      single<TimelineRepository> { DesktopTimelineRepository() }
    }
 
    @JvmStatic

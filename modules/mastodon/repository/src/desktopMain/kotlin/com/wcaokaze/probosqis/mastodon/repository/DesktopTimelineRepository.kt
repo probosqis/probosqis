@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 wcaokaze
+ * Copyright 2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-pub mod account_repository;
-pub mod app_repository;
-pub mod timeline_repository;
-pub(crate) mod cache;
-pub(crate) mod conversion;
+package com.wcaokaze.probosqis.mastodon.repository
+
+import com.wcaokaze.probosqis.mastodon.entity.Status
+import com.wcaokaze.probosqis.mastodon.entity.Token
+
+class DesktopTimelineRepository : TimelineRepository {
+   external override fun getHomeTimeline(token: Token): List<Status>
+}
