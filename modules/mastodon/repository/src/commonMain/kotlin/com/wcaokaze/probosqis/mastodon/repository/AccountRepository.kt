@@ -25,5 +25,5 @@ interface AccountRepository {
    /**
     * @throws IOException
     */
-   fun getAccountIcon(account: Account): Cache<Image>
+   fun getAccountIcon(account: Account): Cache<Image?>
 }

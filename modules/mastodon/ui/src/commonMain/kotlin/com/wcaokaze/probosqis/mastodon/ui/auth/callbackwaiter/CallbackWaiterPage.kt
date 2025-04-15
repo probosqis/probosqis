@@ -52,7 +52,7 @@ internal sealed class CredentialAccountLoadState {
 
    class Success(
       val credentialAccount: CredentialAccount,
-      val credentialAccountIcon: Cache<Image>
+      val credentialAccountIcon: Cache<Image?>
    ) : CredentialAccountLoadState()
 }
 

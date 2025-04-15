@@ -181,11 +181,10 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                      val verifiedAccount = credentialAccountLoadState
                         .credentialAccount.account.value
                      val verifiedAccountIcon = credentialAccountLoadState
-                        .credentialAccountIcon.value.composeImageBitmap
+                        .credentialAccountIcon.value?.composeImageBitmap
 
                      val slideInOffset = with (density) { -32.dp.roundToPx() }
 
-                     @OptIn(ExperimentalAnimationApi::class)
                      VerifiedAccount(
                         verifiedAccount, verifiedAccountIcon,
                         modifier = Modifier
