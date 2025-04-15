@@ -20,5 +20,8 @@ import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.nodeinfo.entity.FediverseSoftware
 
 class AndroidNodeInfoRepository : NodeInfoRepository {
-   external override fun getServerSoftware(serverUrl: Url): FediverseSoftware
+   override fun getServerSoftware(serverUrl: Url): FediverseSoftware
+      = getServerSoftware(serverUrl.raw)
+
+   private external fun getServerSoftware(serverUrl: String): FediverseSoftware
 }
