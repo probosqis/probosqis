@@ -23,9 +23,11 @@ import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.entity.Image
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
+import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
+import com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
@@ -71,10 +73,12 @@ abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>(
       credentialAccountLoadState = CredentialAccountLoadState.Loading
 
       pageStateScope.launch {
+         val token: Token
+
          try {
             credentialAccountLoadState = withContext(Dispatchers.IO) {
                val application = appRepository.loadAppCache(page.instanceBaseUrl)
-               val token = appRepository.getToken(application.value, code)
+               token = appRepository.getToken(application.value, code)
                val credentialAccount = appRepository.getCredentialAccount(token)
                val credentialAccountIcon
                   = accountRepository.getAccountIcon(credentialAccount.account.value)
@@ -91,6 +95,7 @@ abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>(
          delay(3.seconds)
 
          finishAuthPages()
+         startPage(HomeTimelinePage(token))
       }
    }
 
