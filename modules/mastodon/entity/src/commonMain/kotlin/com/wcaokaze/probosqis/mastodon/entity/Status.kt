@@ -268,3 +268,13 @@ data class Status(
          get() = null
    }
 }
+
+tailrec fun Status.resolveBoostedStatus(): Status {
+   if (boostedStatus == null) { return this }
+   return boostedStatus.value.resolveBoostedStatus()
+}
+
+tailrec fun Status.NoCredential.resolveBoostedStatus(): Status.NoCredential {
+   if (boostedStatus == null) { return this }
+   return boostedStatus.value.resolveBoostedStatus()
+}
