@@ -16,23 +16,32 @@
 
 package com.wcaokaze.probosqis.mastodon.ui.timeline.home
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.ext.panoptiqon.getValue
 import com.wcaokaze.probosqis.mastodon.entity.Status
 import com.wcaokaze.probosqis.mastodon.entity.Token
+import com.wcaokaze.probosqis.mastodon.entity.resolveBoostedStatus
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
+import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPage
 import com.wcaokaze.probosqis.page.PPageComposable
 import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.panoptiqon.compose.asState
+import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -70,17 +79,36 @@ class HomeTimelinePageState : PPageState<HomeTimelinePage>() {
 val homeTimelinePageComposable = PPageComposable<HomeTimelinePage, HomeTimelinePageState>(
    PageStateFactory { _, _ -> HomeTimelinePageState() },
    header = { _, _ ->
+      Text(
+         Strings.Mastodon.homeTimeline.appBar,
+         maxLines = 1,
+         overflow = TextOverflow.Ellipsis
+      )
    },
    content = { _, state, _ ->
       LazyColumn(
          modifier = Modifier.fillMaxWidth()
       ) {
          items(state.statuses) { status ->
-            val noCredentialStatus by status.noCredential.asState()
+            val originalStatus = remember(status) {
+               status.resolveBoostedStatus()
+            }
 
-            Text(
-               text = noCredentialStatus.content ?: ""
-            )
+            val noCredentialStatus by originalStatus.noCredential.asState()
+            val account by noCredentialStatus.account?.asState()
+
+            Column {
+               Text(
+                  text = account?.displayName ?: account?.username ?: "",
+                  fontWeight = FontWeight.Bold
+               )
+
+               Text(
+                  text = noCredentialStatus.content ?: ""
+               )
+
+               HorizontalDivider()
+            }
          }
       }
    },
