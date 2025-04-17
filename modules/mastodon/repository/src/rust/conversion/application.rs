@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-use chrono::DateTime;
 use mastodon_entity::application::Application;
 use mastodon_entity::instance::Instance;
 use panoptiqon::cache::Cache;
@@ -25,6 +24,9 @@ pub fn from_api(
    entity: ApiApplication,
    instance_cache: Cache<Instance>
 ) -> anyhow::Result<Application> {
+   use chrono::{DateTime, Utc};
+   use mastodon_webapi::entity::application::ApplicationClientSecretExpiresAt;
+
    let ApiApplication {
       name, website, scopes, redirect_uris, redirect_uri, vapid_key: _,
       client_id, client_secret, client_secret_expires_at,
@@ -47,8 +49,14 @@ pub fn from_api(
       client_id,
       client_secret,
       client_secret_expire_time: client_secret_expires_at
-         .and_then(|time| DateTime::parse_from_rfc3339(&time).ok())
-         .map(|time| time.to_utc()),
+         .and_then(|time| {
+            match time {
+               ApplicationClientSecretExpiresAt::ExpiresAt(time)
+                  => DateTime::parse_from_rfc3339(&time).map(|t| t.to_utc()).ok(),
+               ApplicationClientSecretExpiresAt::Never(_)
+                  => Some(DateTime::<Utc>::MAX_UTC)
+            }
+         }),
    };
 
    Ok(application)

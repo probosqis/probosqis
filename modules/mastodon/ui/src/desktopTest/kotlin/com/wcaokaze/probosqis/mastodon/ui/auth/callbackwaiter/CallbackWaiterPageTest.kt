@@ -296,6 +296,7 @@ class CallbackWaiterPageTest {
       val pageState = mockk<PPageState.Interface> {
          every { pageStack } returns pageStack(DummyPage(), page)
          every { pageStack = capture(pageStackSlot) } just runs
+         every { startPage(any()) } just runs
       }
 
       rule.setContent {
@@ -358,6 +359,7 @@ class CallbackWaiterPageTest {
       val pageState = mockk<PPageState.Interface> {
          every { pageStack } returns pageStack(DummyPage(), UrlInputPage(), page)
          every { pageStack = capture(pageStackSlot) } just runs
+         every { startPage(any()) } just runs
       }
 
       rule.setContent {
@@ -417,6 +419,7 @@ class CallbackWaiterPageTest {
       val pageState = mockk<PPageState.Interface> {
          every { pageStack } returns pageStack(page)
          every { removeFromDeck() } just runs
+         every { startPage(any()) } just runs
       }
 
       rule.setContent {
@@ -477,6 +480,7 @@ class CallbackWaiterPageTest {
       val pageState = mockk<PPageState.Interface> {
          every { pageStack } returns pageStack(UrlInputPage(), page)
          every { removeFromDeck() } just runs
+         every { startPage(any()) } just runs
       }
 
       rule.setContent {

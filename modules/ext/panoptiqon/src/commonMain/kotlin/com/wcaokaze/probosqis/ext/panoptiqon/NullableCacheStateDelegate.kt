@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.mastodon.repository
+package com.wcaokaze.probosqis.ext.panoptiqon
 
-import com.wcaokaze.probosqis.entity.Image
-import com.wcaokaze.probosqis.mastodon.entity.Account
-import com.wcaokaze.probosqis.panoptiqon.Cache
+import com.wcaokaze.probosqis.panoptiqon.compose.CacheState
+import kotlin.reflect.KProperty
 
-class DesktopAccountRepository : AccountRepository {
-   external override fun getAccountIcon(account: Account): Cache<Image?>
+@Suppress("NOTHING_TO_INLINE")
+inline operator fun <T> CacheState<T>?.getValue(thisRef: Any?, property: KProperty<*>): T? {
+   return this?.value
 }

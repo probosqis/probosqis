@@ -57,8 +57,13 @@ interface MastodonStrings {
       )
    }
 
+   class HomeTimeline(
+      val appBar: String,
+   )
+
    val authUrlInput: AuthUrlInput
    val callbackWaiter: CallbackWaiter
+   val homeTimeline: HomeTimeline
 }
 
 val Strings.Companion.Mastodon: MastodonStrings
@@ -94,6 +99,10 @@ val Strings.Companion.Mastodon: MastodonStrings
                verifySucceedMessage = "Verified successfully",
             ),
          )
+
+         override val homeTimeline = MastodonStrings.HomeTimeline(
+            appBar = "Home",
+         )
       }
 
       Strings.Language.JAPANESE -> object : MastodonStrings {
@@ -124,6 +133,10 @@ val Strings.Companion.Mastodon: MastodonStrings
                errorMessage = "認証に失敗しました。もう一度お試しください。",
                verifySucceedMessage = "認証に成功しました",
             ),
+         )
+
+         override val homeTimeline = MastodonStrings.HomeTimeline(
+            appBar = "ホーム",
          )
       }
    }

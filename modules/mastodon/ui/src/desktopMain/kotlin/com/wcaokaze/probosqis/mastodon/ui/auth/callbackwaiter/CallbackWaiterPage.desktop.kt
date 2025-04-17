@@ -165,7 +165,7 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                val verifiedAccount = credentialAccountLoadState
                   .credentialAccount.account.value
                val verifiedAccountIcon = credentialAccountLoadState
-                  .credentialAccountIcon.value.composeImageBitmap
+                  .credentialAccountIcon.value?.composeImageBitmap
 
                VerifiedAccount(
                   verifiedAccount, verifiedAccountIcon, windowInsets
@@ -243,7 +243,7 @@ private fun CallbackWaiterPageContent(
 @Composable
 private fun VerifiedAccount(
    verifiedAccount: Account,
-   verifiedAccountIcon: ImageBitmap,
+   verifiedAccountIcon: ImageBitmap?,
    windowInsets: WindowInsets
 ) {
    Column(

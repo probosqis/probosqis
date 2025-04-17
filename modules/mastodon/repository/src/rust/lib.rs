@@ -16,5 +16,6 @@
 
 pub mod account_repository;
 pub mod app_repository;
+pub mod timeline_repository;
 pub(crate) mod cache;
 pub(crate) mod conversion;

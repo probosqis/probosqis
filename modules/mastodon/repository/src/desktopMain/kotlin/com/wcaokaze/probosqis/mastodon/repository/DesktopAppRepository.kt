@@ -67,13 +67,15 @@ class DesktopAppRepository(directory: File) : AppRepository {
    }
 
    override fun getAuthorizeUrl(application: Application): Url {
-      return getAuthorizeUrl(
+      val rawAuthorizeUrl = getAuthorizeUrl(
          application.instance,
          application.clientId ?: throw IOException()
       )
+
+      return Url(rawAuthorizeUrl)
    }
 
-   private external fun getAuthorizeUrl(instance: Cache<Instance>, clientId: String): Url
+   private external fun getAuthorizeUrl(instance: Cache<Instance>, clientId: String): String
 
    override fun getToken(application: Application, code: String): Token {
       return getToken(

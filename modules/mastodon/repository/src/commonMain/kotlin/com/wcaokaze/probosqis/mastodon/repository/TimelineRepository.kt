@@ -16,10 +16,9 @@
 
 package com.wcaokaze.probosqis.mastodon.repository
 
-import com.wcaokaze.probosqis.entity.Image
-import com.wcaokaze.probosqis.mastodon.entity.Account
-import com.wcaokaze.probosqis.panoptiqon.Cache
+import com.wcaokaze.probosqis.mastodon.entity.Status
+import com.wcaokaze.probosqis.mastodon.entity.Token
 
-class DesktopAccountRepository : AccountRepository {
-   external override fun getAccountIcon(account: Account): Cache<Image?>
+interface TimelineRepository {
+   fun getHomeTimeline(token: Token): List<Status>
 }

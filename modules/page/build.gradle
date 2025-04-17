@@ -34,6 +34,7 @@ kotlin {
       commonMain.dependencies {
          api project(':panoptiqon')
          api project(':panoptiqon-compose')
+         api project(':modules:ext:panoptiqon')
          api project(':capsiqum-page')
          api project(':capsiqum-transition')
          api project(':modules:error')
