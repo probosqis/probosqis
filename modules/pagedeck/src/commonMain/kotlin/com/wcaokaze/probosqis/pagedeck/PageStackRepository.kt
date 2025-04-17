@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,16 @@ package com.wcaokaze.probosqis.pagedeck
 
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.panoptiqon.Cache
+import com.wcaokaze.probosqis.panoptiqon.RepositoryCacheSerializer
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import com.wcaokaze.probosqis.panoptiqon.WritableRepositoryCacheSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.PolymorphicModuleBuilder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 
@@ -62,6 +66,11 @@ abstract class AbstractPageStackRepository
             for (s in allPageSerializers) {
                subclass(s)
             }
+         }
+
+         polymorphic(Cache::class) {
+            subclass(RepositoryCacheSerializer)
+            subclass(WritableRepositoryCacheSerializer)
          }
       }
    }
