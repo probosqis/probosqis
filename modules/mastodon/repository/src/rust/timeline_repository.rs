@@ -73,8 +73,7 @@ impl TimelineRepository<'_> {
          .write(#[cfg(feature = "jvm")] &mut self.env)?;
 
       let timeline = api_timeline.into_iter()
-         .enumerate()
-         .flat_map(|(i, api_status)|
+         .flat_map(|api_status|
             conversion::status::from_api(
                #[cfg(feature = "jvm")] &mut self.env,
                token.instance.clone(),
@@ -141,7 +140,6 @@ mod jvm {
 #[cfg(all(test, not(feature = "jvm")))]
 mod test {
    use std::time::Duration;
-   use chrono::TimeZone;
    use isolang::Language;
    use super::TimelineRepository;
 
