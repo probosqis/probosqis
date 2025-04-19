@@ -25,6 +25,7 @@ kotlin {
    sourceSets {
       commonMain.dependencies {
          implementation project(':panoptiqon')
+         implementation project(':modules:credential')
          implementation project(':modules:entity')
          implementation project(':modules:ext:panoptiqon')
       }

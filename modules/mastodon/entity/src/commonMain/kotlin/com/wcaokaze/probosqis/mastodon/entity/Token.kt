@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
+import com.wcaokaze.probosqis.credential.Credential
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -27,7 +28,7 @@ data class Token(
    val tokenType: String,
    val scope: String,
    val createdAt: Instant,
-) {
+): Credential() {
    constructor(
       instance: Cache<Instance>,
       accessToken: String,
