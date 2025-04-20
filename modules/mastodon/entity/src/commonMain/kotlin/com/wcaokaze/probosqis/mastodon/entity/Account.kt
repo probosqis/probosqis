@@ -157,6 +157,7 @@ data class Account(
 }
 
 data class CredentialAccount(
+   val id: Account.Id,
    val account: Cache<Account>,
    val rawProfileNote: String?,
    val rawProfileFields: List<ProfileField>,
@@ -167,6 +168,8 @@ data class CredentialAccount(
    val role: Role?,
 ) {
    constructor(
+      rawInstanceUrl: String,
+      rawLocalId: String,
       account: Cache<Account>,
       rawProfileNote: String?,
       rawProfileFields: List<ProfileField>,
@@ -178,6 +181,7 @@ data class CredentialAccount(
       @Suppress("UNUSED_PARAMETER")
       dummy: Unit?
    ) : this(
+      Account.Id(Url(rawInstanceUrl), Account.LocalId(rawLocalId)),
       account,
       rawProfileNote,
       rawProfileFields,
@@ -187,6 +191,12 @@ data class CredentialAccount(
       followRequestCount,
       role,
    )
+
+   val rawInstanceUrl: String
+      get() = id.instanceUrl.raw
+
+   val rawLocalId: String
+      get() = id.local.value
 
    val rawDefaultPostVisibility: String?
       get() = defaultPostVisibility?.raw

@@ -156,6 +156,7 @@ class CallbackWaiterPageTest {
 
    private fun credentialAccount(instance: Cache<Instance>): CredentialAccount {
       return CredentialAccount(
+         Account.Id(Url("https://example.com/"), Account.LocalId("id")),
          Cache(Account(
             instance,
             Account.Id(Url("https://example.com/"), Account.LocalId("id")),

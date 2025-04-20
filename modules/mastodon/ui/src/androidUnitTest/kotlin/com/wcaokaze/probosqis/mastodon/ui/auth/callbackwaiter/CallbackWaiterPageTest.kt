@@ -104,6 +104,10 @@ class CallbackWaiterPageTest {
          val state = rememberPageState().also {
             it.credentialAccountLoadState = CredentialAccountLoadState.Success(
                CredentialAccount(
+                  id = Account.Id(
+                     instanceUrl = Url("https://example.com/"),
+                     Account.LocalId("account id"),
+                  ),
                   Cache(Account(
                      instance = Cache(Instance(
                         Url("https://example.com/"),
@@ -168,6 +172,10 @@ class CallbackWaiterPageTest {
          val state = rememberPageState().also {
             it.credentialAccountLoadState = CredentialAccountLoadState.Success(
                CredentialAccount(
+                  id = Account.Id(
+                     instanceUrl = Url("https://example.com/"),
+                     Account.LocalId("account id"),
+                  ),
                   Cache(Account(
                      instance = Cache(Instance(
                         Url("https://example.com/"),
@@ -242,6 +250,10 @@ class CallbackWaiterPageTest {
 
       state.credentialAccountLoadState = CredentialAccountLoadState.Success(
          CredentialAccount(
+            id = Account.Id(
+               instanceUrl = Url("https://example.com/"),
+               Account.LocalId("account id"),
+            ),
             Cache(Account(
                instance = Cache(Instance(
                   Url("https://example.com/"),

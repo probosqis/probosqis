@@ -69,6 +69,7 @@ pub struct Account {
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
 pub struct CredentialAccount {
+   pub id: AccountId,
    pub account: Cache<Account>,
    pub raw_profile_note: Option<String>,
    pub raw_profile_fields: Vec<AccountProfileField>,
@@ -385,6 +386,8 @@ convert_jvm_helper! {
    {
       fn clone_into_jvm<'local>(..) -> JvmCredentialAccount<'local>
          where jvm_constructor: "(\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
             Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
             Ljava/lang/String;\
             Ljava/util/List;\
@@ -395,6 +398,16 @@ convert_jvm_helper! {
             Lcom/wcaokaze/probosqis/mastodon/entity/Role;\
             Lkotlin/Unit;\
          )V";
+
+      fn raw_instance_url<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getRawInstanceUrl",
+               jvm_return_type: "Ljava/lang/String;";
+
+      fn raw_local_id<'local>(..) -> String
+         where jvm_type: JvmString<'local>,
+               jvm_getter_method: "getRawLocalId",
+               jvm_return_type: "Ljava/lang/String;";
 
       fn account<'local>(..) -> Cache<Account>
          where jvm_type: JvmCache<'local, JvmAccount<'local>>,
@@ -448,6 +461,8 @@ impl<'local> CloneIntoJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmCredentialAccount<'local> {
       CREDENTIAL_ACCOUNT_HELPER.clone_into_jvm(
          env,
+         self.id.instance_url.as_str(),
+         &self.id.local.0,
          &self.account,
          &self.raw_profile_note,
          &self.raw_profile_fields,
@@ -467,6 +482,8 @@ impl<'local> CloneFromJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmCredentialAccount<'local>
    ) -> CredentialAccount {
+      let raw_instance_url            = CREDENTIAL_ACCOUNT_HELPER.raw_instance_url           (env, jvm_instance);
+      let raw_local_id                = CREDENTIAL_ACCOUNT_HELPER.raw_local_id               (env, jvm_instance);
       let account                     = CREDENTIAL_ACCOUNT_HELPER.account                    (env, jvm_instance);
       let raw_profile_note            = CREDENTIAL_ACCOUNT_HELPER.raw_profile_note           (env, jvm_instance);
       let raw_profile_fields          = CREDENTIAL_ACCOUNT_HELPER.raw_profile_fields         (env, jvm_instance);
@@ -477,6 +494,10 @@ impl<'local> CloneFromJvm<'local, JvmCredentialAccount<'local>> for CredentialAc
       let role                        = CREDENTIAL_ACCOUNT_HELPER.role                       (env, jvm_instance);
 
       CredentialAccount {
+         id: AccountId {
+            instance_url: raw_instance_url.parse().unwrap(),
+            local: AccountLocalId(raw_local_id),
+         },
          account,
          raw_profile_note,
          raw_profile_fields,
