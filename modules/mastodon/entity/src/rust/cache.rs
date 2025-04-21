@@ -16,14 +16,15 @@
 
 use url::Url;
 use panoptiqon::cache::CacheContent;
-use crate::account::{Account, AccountId};
+use crate::account::{Account, AccountId, CredentialAccount};
 use crate::instance::Instance;
 use crate::poll::{NoCredentialPoll, PollId};
 use crate::status::{NoCredentialStatus, Status, StatusId};
 
 #[cfg(feature = "jvm")]
 use crate::jvm_types::{
-   JvmAccount, JvmInstance, JvmPollNoCredential, JvmStatus, JvmStatusNoCredential,
+   JvmAccount, JvmCredentialAccount, JvmInstance, JvmPollNoCredential, JvmStatus,
+   JvmStatusNoCredential,
 };
 
 impl CacheContent for Instance {
@@ -42,6 +43,17 @@ impl CacheContent for Account {
 
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmAccount<'local>;
+
+   fn key(&self) -> AccountId {
+      self.id.clone()
+   }
+}
+
+impl CacheContent for CredentialAccount {
+   type Key = AccountId;
+
+   #[cfg(feature = "jvm")]
+   type JvmType<'local> = JvmCredentialAccount<'local>;
 
    fn key(&self) -> AccountId {
       self.id.clone()
