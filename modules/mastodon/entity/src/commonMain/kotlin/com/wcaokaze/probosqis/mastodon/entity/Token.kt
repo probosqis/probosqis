@@ -17,13 +17,38 @@
 package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.credential.Credential
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.NothingSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+
+private object AccountCacheSerializer : KSerializer<Cache<CredentialAccount>?> {
+   override val descriptor = SerialDescriptor(
+      "CredentialAccountCache",
+      @OptIn(ExperimentalSerializationApi::class)
+      NothingSerializer().descriptor
+   )
+
+   override fun serialize(encoder: Encoder, value: Cache<CredentialAccount>?) {
+   }
+
+   override fun deserialize(decoder: Decoder): Cache<CredentialAccount>? {
+      return null
+   }
+}
 
 @Serializable
 data class Token(
    val instance: Cache<Instance>,
+   @Serializable(with = AccountCacheSerializer::class)
+   val account: Cache<CredentialAccount>?,
+   val accountId: Account.Id,
    val accessToken: String,
    val tokenType: String,
    val scope: String,
@@ -31,14 +56,28 @@ data class Token(
 ): Credential() {
    constructor(
       instance: Cache<Instance>,
+      account: Cache<CredentialAccount>?,
+      rawInstanceUrl: String,
+      rawLocalId: String,
       accessToken: String,
       tokenType: String,
       scope: String,
       createdAtEpochMillis: Long,
    ) : this(
-      instance, accessToken, tokenType, scope,
-      Instant.fromEpochMilliseconds(createdAtEpochMillis)
+      instance,
+      account,
+      Account.Id(Url(rawInstanceUrl), Account.LocalId(rawLocalId)),
+      accessToken,
+      tokenType,
+      scope,
+      Instant.fromEpochMilliseconds(createdAtEpochMillis),
    )
+
+   val rawInstanceUrl: String
+      get() = accountId.instanceUrl.raw
+
+   val rawLocalId: String
+      get() = accountId.local.value
 
    val createdAtEpochMillis: Long
       get() = createdAt.toEpochMilliseconds()

@@ -147,6 +147,8 @@ class CallbackWaiterPageTest {
    private fun token(instance: Cache<Instance>): Token {
       return Token(
          instance,
+         account = null,
+         Account.Id(Url("https://example.com/"), Account.LocalId("account id")),
          "access token",
          "token type",
          "scope",

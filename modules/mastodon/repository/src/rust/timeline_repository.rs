@@ -730,6 +730,11 @@ mod test {
 
       let token = Token {
          instance: instance_cache.clone(),
+         account: None,
+         account_id: AccountId {
+            instance_url: instance_cache.get().url.clone(),
+            local: AccountLocalId("credential account id".to_string()),
+         },
          access_token: "access token".to_string(),
          token_type: "token type".to_string(),
          scope: "scope".to_string(),

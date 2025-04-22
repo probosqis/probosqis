@@ -20,6 +20,7 @@ import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account.ProfileField
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 
 data class Account(
    val instance: Cache<Instance>,
@@ -106,8 +107,10 @@ data class Account(
       followeeCount,
    )
 
+   @Serializable
    data class Id(val instanceUrl: Url, val local: LocalId)
 
+   @Serializable
    @JvmInline
    value class LocalId(val value: String)
 
