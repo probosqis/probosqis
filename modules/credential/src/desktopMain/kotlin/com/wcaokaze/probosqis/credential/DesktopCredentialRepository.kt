@@ -21,6 +21,8 @@ import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
 import com.wcaokaze.probosqis.panoptiqon.loadCache
 import com.wcaokaze.probosqis.panoptiqon.saveCache
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
@@ -29,6 +31,8 @@ class DesktopCredentialRepository(
    allCredentialSerializers: List<CredentialRepository.CredentialSerializer<*>>,
    directory: File
 ) : AbstractCredentialRepository(allCredentialSerializers) {
+   private val mutex = Mutex()
+
    private val dir = File(directory, "YeNl4QfY6KDSixTZ")
       .also { dir ->
          if (dir.exists()) {
@@ -44,14 +48,16 @@ class DesktopCredentialRepository(
    @TemporaryCacheApi
    override suspend fun saveCredential(credential: Credential) {
       withContext(Dispatchers.IO) {
-         val fileName = getFileNameFor(credential)
-         val file = File(dir, fileName)
-         saveCache(credential, file, json)
+         mutex.withLock {
+            val fileName = getFileNameFor(credential)
+            val file = File(dir, fileName)
+            saveCache(credential, file, json)
 
-         if (!credentialListFile.exists() || credentialListFile.length() == 0L) {
-            credentialListFile.writeText(fileName)
-         } else {
-            credentialListFile.appendText("\n" + fileName)
+            if (!credentialListFile.exists() || credentialListFile.length() == 0L) {
+               credentialListFile.writeText(fileName)
+            } else {
+               credentialListFile.appendText("\n" + fileName)
+            }
          }
       }
    }
@@ -60,11 +66,13 @@ class DesktopCredentialRepository(
    @TemporaryCacheApi
    override suspend fun loadAllCredentials(): List<Cache<Credential>> {
       return withContext(Dispatchers.IO) {
-         val fileNames = credentialListFile.readLines()
+         mutex.withLock {
+            val fileNames = credentialListFile.readLines()
 
-         fileNames.map {
-            val file = File(dir, it)
-            loadCache<Credential>(file, json).asCache()
+            fileNames.map {
+               val file = File(dir, it)
+               loadCache<Credential>(file, json).asCache()
+            }
          }
       }
    }
