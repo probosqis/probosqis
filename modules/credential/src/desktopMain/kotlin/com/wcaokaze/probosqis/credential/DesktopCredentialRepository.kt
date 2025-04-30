@@ -40,7 +40,7 @@ class DesktopCredentialRepository(
 
    /** @throws IOException */
    @TemporaryCacheApi
-   override fun saveCredential(credential: Credential) {
+   override suspend fun saveCredential(credential: Credential) {
       val fileName = getFileNameFor(credential)
       val file = File(dir, fileName)
       saveCache(credential, file, json)
@@ -54,7 +54,7 @@ class DesktopCredentialRepository(
 
    /** @throws IOException */
    @TemporaryCacheApi
-   override fun loadAllCredentials(): List<Cache<Credential>> {
+   override suspend fun loadAllCredentials(): List<Cache<Credential>> {
       val fileNames = credentialListFile.readLines()
 
       return fileNames.map {
