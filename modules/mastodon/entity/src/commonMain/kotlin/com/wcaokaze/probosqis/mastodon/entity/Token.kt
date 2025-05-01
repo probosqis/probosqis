@@ -50,10 +50,13 @@ private object AccountCacheSerializer : KSerializer<Cache<CredentialAccount>?> {
    )
 
    override fun serialize(encoder: Encoder, value: Cache<CredentialAccount>?) {
+      @OptIn(ExperimentalSerializationApi::class)
+      encoder.encodeNull()
    }
 
    override fun deserialize(decoder: Decoder): Cache<CredentialAccount>? {
-      return null
+      @OptIn(ExperimentalSerializationApi::class)
+      return decoder.decodeNull()
    }
 }
 
