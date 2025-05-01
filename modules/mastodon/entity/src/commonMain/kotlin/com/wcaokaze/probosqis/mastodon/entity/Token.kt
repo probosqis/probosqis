@@ -28,6 +28,20 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
+private object InstanceCacheSerializer : KSerializer<Cache<Instance>> {
+   override val descriptor = SerialDescriptor(
+      "InstanceCache", Instance.serializer().descriptor
+   )
+
+   override fun serialize(encoder: Encoder, value: Cache<Instance>) {
+      Instance.serializer().serialize(encoder, value.value)
+   }
+
+   override fun deserialize(decoder: Decoder): Cache<Instance> {
+      return Cache(Instance.serializer().deserialize(decoder))
+   }
+}
+
 private object AccountCacheSerializer : KSerializer<Cache<CredentialAccount>?> {
    override val descriptor = SerialDescriptor(
       "CredentialAccountCache",
@@ -45,6 +59,7 @@ private object AccountCacheSerializer : KSerializer<Cache<CredentialAccount>?> {
 
 @Serializable
 data class Token(
+   @Serializable(with = InstanceCacheSerializer::class)
    val instance: Cache<Instance>,
    @Serializable(with = AccountCacheSerializer::class)
    val account: Cache<CredentialAccount>?,
