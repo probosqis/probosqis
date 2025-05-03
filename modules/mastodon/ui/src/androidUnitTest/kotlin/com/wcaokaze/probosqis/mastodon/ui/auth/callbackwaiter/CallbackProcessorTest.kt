@@ -22,10 +22,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
+import com.wcaokaze.probosqis.credential.CredentialRepository
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -78,11 +81,16 @@ class CallbackProcessorTest {
          every { getAccountIcon(any()) } returns Cache(mockk())
       }
 
+      val credentialRepository: CredentialRepository = mockk {
+         coEvery { saveCredential(any()) } just runs
+      }
+
       startKoin {
          modules(
             module {
                single { appRepository }
                single { accountRepository }
+               single { credentialRepository }
             }
          )
       }
@@ -113,6 +121,7 @@ class CallbackProcessorTest {
          verify { appRepository.getToken(any(), "abcdefghijk") }
          verify { appRepository.getCredentialAccount(any()) }
          verify { accountRepository.getAccountIcon(any()) }
+         coVerify { credentialRepository.saveCredential(any()) }
       }
    }
 

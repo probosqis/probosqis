@@ -33,6 +33,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
+import com.wcaokaze.probosqis.credential.CredentialRepository
 import com.wcaokaze.probosqis.entity.Image
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account
@@ -46,6 +47,7 @@ import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -92,6 +94,7 @@ class CallbackWaiterPageTest {
       pageState: CallbackWaiterPageState,
       appRepository: AppRepository = mockk(),
       accountRepository: AccountRepository = mockk(),
+      credentialRepository: CredentialRepository = mockk(),
    ) {
       val koinApplication = remember {
          koinApplication {
@@ -99,6 +102,7 @@ class CallbackWaiterPageTest {
                module {
                   single { appRepository }
                   single { accountRepository }
+                  single { credentialRepository }
                }
             )
          }
@@ -293,6 +297,10 @@ class CallbackWaiterPageTest {
          }
       }
 
+      val credentialRepository: CredentialRepository = mockk {
+         coEvery { saveCredential(any()) } just runs
+      }
+
       val page = CallbackWaiterPage(Url("https://mastodon.social/"))
       val pageStackSlot = slot<PageStack>()
 
@@ -304,7 +312,7 @@ class CallbackWaiterPageTest {
 
       rule.setContent {
          state = rememberPageState(page, pageState)
-         CallbackWaiterPage(state, appRepository, accountRepository)
+         CallbackWaiterPage(state, appRepository, accountRepository, credentialRepository)
       }
 
       rule.runOnIdle {
@@ -356,6 +364,10 @@ class CallbackWaiterPageTest {
          }
       }
 
+      val credentialRepository: CredentialRepository = mockk {
+         coEvery { saveCredential(any()) } just runs
+      }
+
       val page = CallbackWaiterPage(Url("https://mastodon.social/"))
       val pageStackSlot = slot<PageStack>()
 
@@ -367,7 +379,7 @@ class CallbackWaiterPageTest {
 
       rule.setContent {
          state = rememberPageState(page, pageState)
-         CallbackWaiterPage(state, appRepository, accountRepository)
+         CallbackWaiterPage(state, appRepository, accountRepository, credentialRepository)
       }
 
       rule.runOnIdle {
@@ -417,6 +429,10 @@ class CallbackWaiterPageTest {
          }
       }
 
+      val credentialRepository: CredentialRepository = mockk {
+         coEvery { saveCredential(any()) } just runs
+      }
+
       val page = CallbackWaiterPage(Url("https://mastodon.social/"))
 
       val pageState = mockk<PPageState.Interface> {
@@ -427,7 +443,7 @@ class CallbackWaiterPageTest {
 
       rule.setContent {
          state = rememberPageState(page, pageState)
-         CallbackWaiterPage(state, appRepository, accountRepository)
+         CallbackWaiterPage(state, appRepository, accountRepository, credentialRepository)
       }
 
       rule.runOnIdle {
@@ -478,6 +494,10 @@ class CallbackWaiterPageTest {
          }
       }
 
+      val credentialRepository: CredentialRepository = mockk {
+         coEvery { saveCredential(any()) } just runs
+      }
+
       val page = CallbackWaiterPage(Url("https://mastodon.social/"))
 
       val pageState = mockk<PPageState.Interface> {
@@ -488,7 +508,7 @@ class CallbackWaiterPageTest {
 
       rule.setContent {
          state = rememberPageState(page, pageState)
-         CallbackWaiterPage(state, appRepository, accountRepository)
+         CallbackWaiterPage(state, appRepository, accountRepository, credentialRepository)
       }
 
       rule.runOnIdle {
