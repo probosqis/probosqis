@@ -184,7 +184,6 @@ mod jvm {
    use mastodon_entity::jvm_types::{
       JvmApplication, JvmCredentialAccount, JvmInstance, JvmToken,
    };
-   use panoptiqon::cache::Cache;
    use panoptiqon::jvm_types::{JvmCache, JvmString};
 
    #[no_mangle]
@@ -263,11 +262,12 @@ mod jvm {
       redirect_uri: &str
    ) -> anyhow::Result<JvmString<'local>> {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use crate::cache;
       use super::AppRepository;
 
       let app_repository = AppRepository::new(env);
 
-      let instance_cache = get_instance_cache_from_jni(env, &instance)?;
+      let instance_cache = cache::instance::clone_from_jvm(env, &instance)?;
       let client_id = String::clone_from_jvm(env, &client_id);
 
       let authorize_url = app_repository
@@ -318,11 +318,12 @@ mod jvm {
       redirect_uri: &str
    ) -> anyhow::Result<JvmToken<'local>> {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use crate::cache;
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
 
-      let instance_cache = get_instance_cache_from_jni(env, &instance)?;
+      let instance_cache = cache::instance::clone_from_jvm(env, &instance)?;
 
       let code = String::clone_from_jvm(env, &code);
       let client_id = String::clone_from_jvm(env, &client_id);
@@ -365,43 +366,16 @@ mod jvm {
    ) -> anyhow::Result<JvmCredentialAccount<'local>> {
       use mastodon_entity::token::Token;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use crate::cache;
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
 
-      let token = Token::clone_from_jvm(env, &token);
+      let instance = token.instance(env);
+      let instance = cache::instance::clone_from_jvm(env, &instance)?;
+      let token = Token::clone_from_jvm(env, &token, instance);
       let credential_account = app_repository.get_credential_account(&token)?;
       Ok(credential_account.clone_into_jvm(env))
-   }
-
-   fn get_instance_cache_from_jni<'local>(
-      env: &mut JNIEnv<'local>,
-      java_instance: &JvmCache<'local, JvmInstance<'local>>,
-   ) -> anyhow::Result<Cache<Instance>> {
-      use panoptiqon::convert_jvm::CloneFromJvm;
-      use panoptiqon::jvm_type::JvmType;
-      use crate::cache;
-
-      if env.is_instance_of(
-         java_instance.j_object(),
-         "com/wcaokaze/probosqis/panoptiqon/RepositoryCache"
-      )? {
-         Ok(Cache::<Instance>::clone_from_jvm(env, &java_instance))
-      } else {
-         let instance_java_instance = env.call_method(
-            java_instance.j_object(),
-            "getValue", "()Ljava/lang/Object;", &[]
-         )?.l()?;
-
-         let jvm_instance = unsafe {
-            JvmInstance::from_j_object(instance_java_instance)
-         };
-
-         let instance = Instance::clone_from_jvm(env, &jvm_instance);
-
-         let mut repo = cache::instance::repo().write(env)?;
-         Ok(repo.save(instance))
-      }
    }
 }
 

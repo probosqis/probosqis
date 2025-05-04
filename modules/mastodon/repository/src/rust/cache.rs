@@ -17,11 +17,49 @@
 pub mod instance {
    use ext_panoptiqon::repository_holder::RepositoryHolder;
    use mastodon_entity::instance::Instance;
+   use panoptiqon::cache::Cache;
+   
+   #[cfg(feature = "jvm")]
+   use {
+      jni::JNIEnv,
+      mastodon_entity::jvm_types::JvmInstance,
+      panoptiqon::jvm_types::JvmCache,
+   };
 
    static REPO: RepositoryHolder<Instance> = RepositoryHolder::new();
 
    pub fn repo() -> &'static RepositoryHolder<Instance> {
       &REPO
+   }
+
+   #[cfg(feature = "jvm")]
+   pub(crate) fn clone_from_jvm<'local>(
+      env: &mut JNIEnv<'local>,
+      java_instance: &JvmCache<'local, JvmInstance<'local>>,
+   ) -> anyhow::Result<Cache<Instance>> {
+      use panoptiqon::convert_jvm::CloneFromJvm;
+      use panoptiqon::jvm_type::JvmType;
+
+      if env.is_instance_of(
+         java_instance.j_object(),
+         "com/wcaokaze/probosqis/panoptiqon/RepositoryCache"
+      )? {
+         Ok(Cache::<Instance>::clone_from_jvm(env, &java_instance))
+      } else {
+         let instance_java_instance = env.call_method(
+            java_instance.j_object(),
+            "getValue", "()Ljava/lang/Object;", &[]
+         )?.l()?;
+
+         let jvm_instance = unsafe {
+            JvmInstance::from_j_object(instance_java_instance)
+         };
+
+         let instance = Instance::clone_from_jvm(env, &jvm_instance);
+
+         let mut repo = REPO.write(env)?;
+         Ok(repo.save(instance))
+      }
    }
 }
 
