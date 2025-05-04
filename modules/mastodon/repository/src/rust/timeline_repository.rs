@@ -96,6 +96,7 @@ mod jvm {
    use jni::objects::JObject;
    use mastodon_entity::jvm_types::{JvmStatus, JvmToken};
    use panoptiqon::jvm_types::JvmList;
+   use crate::cache;
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidTimelineRepository_getHomeTimeline<'local>(
@@ -131,7 +132,9 @@ mod jvm {
 
       let mut status_repository = TimelineRepository::new(env);
 
-      let token = Token::clone_from_jvm(env, &token);
+      let instance = token.instance(env);
+      let instance = cache::instance::clone_from_jvm(env, &instance)?;
+      let token = Token::clone_from_jvm(env, &token, instance);
       let timeline = status_repository.get_home_timeline(&token)?;
       Ok(timeline.clone_into_jvm(env))
    }

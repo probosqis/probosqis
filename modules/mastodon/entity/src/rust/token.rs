@@ -116,14 +116,26 @@ impl<'local> CloneIntoJvm<'local, JvmToken<'local>> for Token {
 }
 
 #[cfg(feature = "jvm")]
-impl<'local> CloneFromJvm<'local, JvmToken<'local>> for Token {
-   fn clone_from_jvm(
+impl<'local> JvmToken<'local> {
+   pub fn instance(
+      &self,
+      env: &mut JNIEnv<'local>
+   ) -> JvmCache<'local, JvmInstance<'local>> {
+      HELPER.instance_jvm_type(env, self)
+   }
+}
+
+#[cfg(feature = "jvm")]
+// impl<'local> CloneFromJvm<'local, JvmToken<'local>> for Token {
+impl<'local> Token {
+   pub fn clone_from_jvm(
       env: &mut JNIEnv<'local>,
-      jvm_instance: &JvmToken<'local>
+      jvm_instance: &JvmToken<'local>,
+      instance: Cache<Instance>
    ) -> Token {
       use crate::account::AccountLocalId;
-      
-      let instance                = HELPER.instance               (env, jvm_instance);
+
+   // let instance                = HELPER.instance               (env, jvm_instance);
       let account                 = HELPER.account                (env, jvm_instance);
       let raw_instance_url        = HELPER.raw_instance_url       (env, jvm_instance);
       let raw_local_id            = HELPER.raw_local_id           (env, jvm_instance);
