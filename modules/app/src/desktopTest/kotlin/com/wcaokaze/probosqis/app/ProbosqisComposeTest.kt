@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -161,7 +161,10 @@ class ProbosqisComposeTest {
 
       rule.setContent {
          KoinIsolatedContext {
-            SingleColumnProbosqis(probosqisState)
+            SingleColumnProbosqis(
+               probosqisState,
+               onRequestCloseWindow = {}
+            )
          }
       }
 
@@ -176,7 +179,10 @@ class ProbosqisComposeTest {
 
       rule.setContent {
          KoinIsolatedContext {
-            MultiColumnProbosqis(probosqisState)
+            MultiColumnProbosqis(
+               probosqisState,
+               onRequestCloseWindow = {}
+            )
          }
       }
 
@@ -194,9 +200,15 @@ class ProbosqisComposeTest {
       rule.setContent {
          KoinIsolatedContext {
             if (isMultiColumn) {
-               MultiColumnProbosqis(probosqisState)
+               MultiColumnProbosqis(
+                  probosqisState,
+                  onRequestCloseWindow = {}
+               )
             } else {
-               SingleColumnProbosqis(probosqisState)
+               SingleColumnProbosqis(
+                  probosqisState,
+                  onRequestCloseWindow = {}
+               )
             }
          }
       }

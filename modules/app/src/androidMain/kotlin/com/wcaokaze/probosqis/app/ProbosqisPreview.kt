@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -135,6 +135,7 @@ private fun SingleColumnProbosqisPreview(
       ProbosqisTheme {
          SingleColumnProbosqis(
             remember { ProbosqisState() },
+            onRequestCloseWindow = {},
             safeDrawingWindowInsets = safeDrawingWindowInsets
          )
       }
@@ -151,6 +152,7 @@ private fun MultiColumnProbosqisPreview(
       ProbosqisTheme {
          MultiColumnProbosqis(
             remember { ProbosqisState() },
+            onRequestCloseWindow = {},
             safeDrawingWindowInsets = safeDrawingWindowInsets
          )
       }
@@ -163,7 +165,8 @@ private fun ProbosqisFontScalePreview() {
    KoinIsolatedContext {
       ProbosqisTheme {
          MultiColumnProbosqis(
-            remember { ProbosqisState() }
+            remember { ProbosqisState() },
+            onRequestCloseWindow = {}
          )
       }
    }
@@ -175,7 +178,8 @@ private fun ProbosqisLanguagePreview() {
    KoinIsolatedContext {
       ProbosqisTheme {
          MultiColumnProbosqis(
-            remember { ProbosqisState() }
+            remember { ProbosqisState() },
+            onRequestCloseWindow = {}
          )
       }
    }
