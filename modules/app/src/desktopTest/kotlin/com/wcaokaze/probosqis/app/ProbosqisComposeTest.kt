@@ -24,6 +24,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageId
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
@@ -108,7 +112,23 @@ class ProbosqisComposeTest {
 
    @Test
    fun loadPageDeck() {
-      val pageDeck = PageDeck()
+      class PageImpl : Page()
+
+      val pageDeck = PageDeck(
+         Deck.Card(
+            LazyPageStackState(
+               PageStack.Id(0L),
+               WritableCache(PageStack(
+                  PageStack.Id(0L),
+                  SavedPageState(
+                     PageId(0L),
+                     PageImpl()
+                  )
+               )),
+               initialVisibility = false
+            )
+         )
+      )
 
       val pageDeckRepository = mockk<PageDeckRepository> {
          every { loadPageDeck() } returns WritableCache(pageDeck)
@@ -122,7 +142,7 @@ class ProbosqisComposeTest {
    }
 
    @Test
-   fun loadPageDeck_default() {
+   fun loadPageDeck_defaultIfLoadFailed() {
       val pageDeckRepository = mockk<PageDeckRepository> {
          every { loadPageDeck() } throws IOException()
          every { savePageDeck(any()) } answers { WritableCache(firstArg()) }
@@ -153,6 +173,21 @@ class ProbosqisComposeTest {
       assertIs<TestPage>(pageStack2.head.page)
       assertNull(pageStack2.tailOrNull())
       verify { pageStackRepository.savePageStack(pageStack2) }
+   }
+
+   @Test
+   fun loadPageDeck_defaultIfLoadEmpty() {
+      val pageDeckRepository = mockk<PageDeckRepository> {
+         every { loadPageDeck() } returns WritableCache(PageDeck())
+      }
+
+      val pageStackRepository = mockk<PageStackRepository> {
+         every { savePageStack(any()) } answers { WritableCache(firstArg()) }
+      }
+
+      loadPageDeckOrDefault(pageDeckRepository, pageStackRepository)
+
+      verify(exactly = 2) { pageStackRepository.savePageStack(any()) }
    }
 
    @Test

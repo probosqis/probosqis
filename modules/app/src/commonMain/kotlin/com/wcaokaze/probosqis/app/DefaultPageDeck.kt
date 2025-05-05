@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,16 +34,26 @@ fun loadPageDeckOrDefault(
    pageStackRepository: PageStackRepository
 ): WritableCache<PageDeck> {
    return try {
-      pageDeckRepository.loadPageDeck()
-   } catch (e: Exception) {
+      pageDeckRepository.loadPageDeck().also {
+         if (it.value.rootRow.childCount == 0) {
+            it.value = createDefaultPageDeck(pageStackRepository)
+         }
+      }
+   } catch (_: Exception) {
       pageStackRepository.deleteAllPageStacks()
 
-      val rootRow = Deck.Row(
-         createDefaultPageStacks(pageStackRepository)
-      )
-      val pageDeck = Deck(rootRow)
+      val pageDeck = createDefaultPageDeck(pageStackRepository)
       pageDeckRepository.savePageDeck(pageDeck)
    }
+}
+
+private fun createDefaultPageDeck(
+   pageStackRepository: PageStackRepository
+): PageDeck {
+   val rootRow = Deck.Row(
+      createDefaultPageStacks(pageStackRepository)
+   )
+   return Deck(rootRow)
 }
 
 private fun createDefaultPageStacks(
