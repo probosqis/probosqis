@@ -20,6 +20,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.wcaokaze.probosqis.credential.CredentialRepository
 import com.wcaokaze.probosqis.entity.Image
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
@@ -61,6 +62,7 @@ internal sealed class CredentialAccountLoadState {
 abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
    private val appRepository: AppRepository by inject()
    private val accountRepository: AccountRepository by inject()
+   private val credentialRepository: CredentialRepository by inject()
 
    internal var credentialAccountLoadState: CredentialAccountLoadState
       by mutableStateOf(CredentialAccountLoadState.Unloading)
@@ -83,11 +85,14 @@ abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>(
                val credentialAccountIcon
                   = accountRepository.getAccountIcon(credentialAccount.account.value)
 
+               credentialRepository.saveCredential(token)
+
                CredentialAccountLoadState.Success(
                   credentialAccount, credentialAccountIcon
                )
             }
          } catch (e: Exception) {
+            e.printStackTrace()
             credentialAccountLoadState = CredentialAccountLoadState.Error
             return@launch
          }

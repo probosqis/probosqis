@@ -19,6 +19,9 @@ package com.wcaokaze.probosqis
 import android.app.Application
 import com.wcaokaze.probosqis.app.loadErrorListOrDefault
 import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
+import com.wcaokaze.probosqis.credential.AndroidCredentialRepository
+import com.wcaokaze.probosqis.credential.CredentialRepository
+import com.wcaokaze.probosqis.credential.credentialSerializer
 import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
@@ -52,6 +55,7 @@ import kotlinx.coroutines.MainScope
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
+import java.net.URLEncoder
 
 class MainApplication : Application() {
    init {
@@ -127,6 +131,19 @@ class MainApplication : Application() {
             context = get(),
             allErrorSerializers,
             allPageSerializers
+         )
+      }
+
+      single<CredentialRepository> {
+         AndroidCredentialRepository(
+            context = get(),
+            allCredentialSerializers = listOf(
+               credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token> { token ->
+                  val encodedUrl = URLEncoder.encode(token.accountId.instanceUrl.raw, "UTF-8")
+                  val localId = token.accountId.local.value
+                  "mastodon_${encodedUrl}_$localId"
+               },
+            ),
          )
       }
 

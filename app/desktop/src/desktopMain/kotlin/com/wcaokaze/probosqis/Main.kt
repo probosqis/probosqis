@@ -25,6 +25,9 @@ import com.wcaokaze.probosqis.app.MultiColumnProbosqis
 import com.wcaokaze.probosqis.app.ProbosqisState
 import com.wcaokaze.probosqis.app.loadErrorListOrDefault
 import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
+import com.wcaokaze.probosqis.credential.CredentialRepository
+import com.wcaokaze.probosqis.credential.DesktopCredentialRepository
+import com.wcaokaze.probosqis.credential.credentialSerializer
 import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
@@ -59,6 +62,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.koin.compose.KoinApplication
 import org.koin.dsl.module
 import java.io.File
+import java.net.URLEncoder
 
 object Main {
    init {
@@ -135,6 +139,19 @@ object Main {
          DesktopPErrorListRepository(
             allErrorSerializers,
             allPageSerializers,
+            probosqisDataDir
+         )
+      }
+
+      single<CredentialRepository> {
+         DesktopCredentialRepository(
+            allCredentialSerializers = listOf(
+               credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token> { token ->
+                  val encodedUrl = URLEncoder.encode(token.accountId.instanceUrl.raw, "UTF-8")
+                  val localId = token.accountId.local.value
+                  "mastodon_${encodedUrl}_$localId"
+               },
+            ),
             probosqisDataDir
          )
       }

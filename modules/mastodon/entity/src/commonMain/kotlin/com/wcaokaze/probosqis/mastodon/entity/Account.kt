@@ -20,6 +20,7 @@ import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account.ProfileField
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 
 data class Account(
    val instance: Cache<Instance>,
@@ -106,8 +107,10 @@ data class Account(
       followeeCount,
    )
 
+   @Serializable
    data class Id(val instanceUrl: Url, val local: LocalId)
 
+   @Serializable
    @JvmInline
    value class LocalId(val value: String)
 
@@ -157,6 +160,7 @@ data class Account(
 }
 
 data class CredentialAccount(
+   val id: Account.Id,
    val account: Cache<Account>,
    val rawProfileNote: String?,
    val rawProfileFields: List<ProfileField>,
@@ -167,6 +171,8 @@ data class CredentialAccount(
    val role: Role?,
 ) {
    constructor(
+      rawInstanceUrl: String,
+      rawLocalId: String,
       account: Cache<Account>,
       rawProfileNote: String?,
       rawProfileFields: List<ProfileField>,
@@ -178,6 +184,7 @@ data class CredentialAccount(
       @Suppress("UNUSED_PARAMETER")
       dummy: Unit?
    ) : this(
+      Account.Id(Url(rawInstanceUrl), Account.LocalId(rawLocalId)),
       account,
       rawProfileNote,
       rawProfileFields,
@@ -187,6 +194,12 @@ data class CredentialAccount(
       followRequestCount,
       role,
    )
+
+   val rawInstanceUrl: String
+      get() = id.instanceUrl.raw
+
+   val rawLocalId: String
+      get() = id.local.value
 
    val rawDefaultPostVisibility: String?
       get() = defaultPostVisibility?.raw

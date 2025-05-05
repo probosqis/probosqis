@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 wcaokaze
+ * Copyright 2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,9 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
-}
+package com.wcaokaze.probosqis.credential
 
-apply from: rootProject.file('gradle/setupModule.gradle')
+import kotlinx.serialization.Serializable
 
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         implementation project(':panoptiqon')
-         implementation project(':modules:credential')
-         implementation project(':modules:entity')
-         implementation project(':modules:ext:panoptiqon')
-      }
-   }
-}
+@Serializable
+abstract class Credential

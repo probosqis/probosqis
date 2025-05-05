@@ -141,9 +141,11 @@ pub fn credential_account_from_api(
       .write(#[cfg(feature="jvm")] env)?;
 
    let account = from_api(#[cfg(feature="jvm")] env, instance, entity, &mut account_cache_repo)?;
+   let id = account.id.clone();
    let account = account_cache_repo.save(account);
 
    let credential_account = CredentialAccount {
+      id,
       account,
       raw_profile_note,
       raw_profile_fields,
