@@ -50,9 +50,15 @@ class MainActivity : ComponentActivity() {
                val windowSizeClass = calculateWindowSizeClass(activity = this@MainActivity)
 
                if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
-                  MultiColumnProbosqis(probosqisState)
+                  MultiColumnProbosqis(
+                     probosqisState,
+                     onRequestCloseWindow = { finishAffinity() }
+                  )
                } else {
-                  SingleColumnProbosqis(probosqisState)
+                  SingleColumnProbosqis(
+                     probosqisState,
+                     onRequestCloseWindow = { finishAffinity() }
+                  )
                }
 
                NavigationBarScrim()

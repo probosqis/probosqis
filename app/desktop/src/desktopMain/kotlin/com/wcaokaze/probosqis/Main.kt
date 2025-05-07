@@ -182,7 +182,10 @@ object Main {
                   onCloseRequest = { exitApplication() }
                ) {
                   val probosqisState = remember { ProbosqisState() }
-                  MultiColumnProbosqis(probosqisState)
+                  MultiColumnProbosqis(
+                     probosqisState,
+                     onRequestCloseWindow = { exitApplication() }
+                  )
                }
             }
          }

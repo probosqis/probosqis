@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -81,11 +82,24 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 fun SingleColumnProbosqis(
    state: ProbosqisState,
+   onRequestCloseWindow: () -> Unit,
    colorScheme: SingleColumnProbosqisColorScheme = rememberSingleColumnProbosqisColorScheme(),
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
    val pageDeckState = koinInject<SingleColumnPageDeckState>()
       .also { state.pageDeckState = it }
+
+   val isDeckEmpty by remember {
+      derivedStateOf {
+         pageDeckState.deck.rootRow.childCount == 0
+      }
+   }
+
+   LaunchedEffect(isDeckEmpty) {
+      if (isDeckEmpty) {
+         onRequestCloseWindow()
+      }
+   }
 
    // 現状Desktopで動作しないため自前実装する
    // val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -58,6 +60,7 @@ import org.koin.compose.koinInject
 @Composable
 fun MultiColumnProbosqis(
    state: ProbosqisState,
+   onRequestCloseWindow: () -> Unit,
    colorScheme: MultiColumnProbosqisColorScheme = rememberMultiColumnProbosqisColorScheme(),
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
@@ -78,6 +81,18 @@ fun MultiColumnProbosqis(
 
          val pageDeckState = koinInject<MultiColumnPageDeckState>()
             .also { state.pageDeckState = it }
+
+         val isDeckEmpty by remember {
+            derivedStateOf {
+               pageDeckState.deck.rootRow.childCount == 0
+            }
+         }
+
+         LaunchedEffect(isDeckEmpty) {
+            if (isDeckEmpty) {
+               onRequestCloseWindow()
+            }
+         }
 
          @OptIn(ExperimentalMaterial3Api::class)
          MultiColumnPageDeck(
