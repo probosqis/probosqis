@@ -40,7 +40,7 @@ kotlin {
          implementation project(':capsiqum-page')
          implementation project(':capsiqum-deck')
          implementation project(':capsiqum-transition')
-         implementation project(':modules:app')
+         implementation project(':modules:app:core')
          implementation project(':modules:error')
          implementation project(':modules:page')
          implementation project(':modules:pagedeck')
