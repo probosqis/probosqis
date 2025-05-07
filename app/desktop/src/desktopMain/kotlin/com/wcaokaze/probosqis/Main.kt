@@ -20,11 +20,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import com.wcaokaze.probosqis.app.App
-import com.wcaokaze.probosqis.app.MultiColumnProbosqis
-import com.wcaokaze.probosqis.app.ProbosqisState
-import com.wcaokaze.probosqis.app.loadErrorListOrDefault
-import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
+import com.wcaokaze.probosqis.app.core.App
+import com.wcaokaze.probosqis.app.core.MultiColumnProbosqis
+import com.wcaokaze.probosqis.app.core.ProbosqisState
+import com.wcaokaze.probosqis.app.core.loadErrorListOrDefault
+import com.wcaokaze.probosqis.app.core.loadPageDeckOrDefault
 import com.wcaokaze.probosqis.credential.CredentialRepository
 import com.wcaokaze.probosqis.credential.DesktopCredentialRepository
 import com.wcaokaze.probosqis.credential.credentialSerializer
@@ -198,7 +198,7 @@ object Main {
          osName.startsWith("linux") -> {
             val lib = File(
                System.getProperty("user.dir").split('/').dropLast(2).joinToString("/"),
-               "target/debug/libapp.so"
+               "target/debug/libapp_core.so"
             )
             System.load(lib.absolutePath)
          }

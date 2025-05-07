@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app
+package com.wcaokaze.probosqis.app.core
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package com.wcaokaze.probosqis.main
 
 import androidx.compose.ui.window.Window
-import com.wcaokaze.probosqis.app.Probosqis
+import com.wcaokaze.probosqis.app.core.Probosqis
 import org.jetbrains.skiko.wasm.onWasmReady
 
 fun main() {

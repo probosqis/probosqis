@@ -17,8 +17,8 @@
 package com.wcaokaze.probosqis
 
 import android.app.Application
-import com.wcaokaze.probosqis.app.loadErrorListOrDefault
-import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
+import com.wcaokaze.probosqis.app.core.loadErrorListOrDefault
+import com.wcaokaze.probosqis.app.core.loadPageDeckOrDefault
 import com.wcaokaze.probosqis.credential.AndroidCredentialRepository
 import com.wcaokaze.probosqis.credential.CredentialRepository
 import com.wcaokaze.probosqis.credential.credentialSerializer
@@ -59,7 +59,7 @@ import java.net.URLEncoder
 
 class MainApplication : Application() {
    init {
-      System.loadLibrary("app")
+      System.loadLibrary("app_core")
    }
 
    private val allPageComposables = persistentListOf(

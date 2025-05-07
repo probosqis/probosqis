@@ -13,7 +13,7 @@
 # limitations under the License.
 
 [package]
-name = "app"
+name = "app_core"
 edition = "2021"
 
 [lib]
