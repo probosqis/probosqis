@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,20 +26,5 @@ plugins {
 apply from: rootProject.file('gradle/setupModule.gradle')
 
 android {
-   namespace 'com.wcaokaze.probosqis.page'
-}
-
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         api project(':panoptiqon')
-         api project(':panoptiqon-compose')
-         api project(':modules:ext:panoptiqon')
-         api project(':capsiqum-page')
-         api project(':capsiqum-transition')
-         api project(':modules:error')
-         api project(':modules:foundation:resources')
-         implementation project(':modules:pagedeck')
-      }
-   }
+   namespace 'com.wcaokaze.probosqis.foundation.resources'
 }

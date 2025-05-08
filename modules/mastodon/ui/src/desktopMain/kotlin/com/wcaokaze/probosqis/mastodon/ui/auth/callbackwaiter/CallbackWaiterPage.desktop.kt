@@ -69,11 +69,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.CircularProgressCompleteIcon
+import com.wcaokaze.probosqis.foundation.resources.Strings
+import com.wcaokaze.probosqis.foundation.resources.icons.Error
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.resources.Strings
-import com.wcaokaze.probosqis.resources.icons.Error
 import kotlinx.coroutines.delay
 import kotlinx.serialization.builtins.serializer
 import kotlin.math.PI

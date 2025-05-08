@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
-import com.wcaokaze.probosqis.resources.Strings
+import com.wcaokaze.probosqis.foundation.resources.Strings
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt

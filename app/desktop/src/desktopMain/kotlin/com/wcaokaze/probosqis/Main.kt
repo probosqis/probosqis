@@ -32,6 +32,8 @@ import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListRepository
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
+import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAccountRepository
@@ -48,8 +50,6 @@ import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.pageSerializer
-import com.wcaokaze.probosqis.resources.ProbosqisTheme
-import com.wcaokaze.probosqis.resources.Strings
 import com.wcaokaze.probosqis.testpages.TestError
 import com.wcaokaze.probosqis.testpages.TestNotePage
 import com.wcaokaze.probosqis.testpages.TestPage

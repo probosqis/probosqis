@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageComposable
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageSwitcher
-import com.wcaokaze.probosqis.resources.Strings
+import com.wcaokaze.probosqis.foundation.resources.Strings
 import kotlinx.collections.immutable.toImmutableList
 
 @ExperimentalMaterial3Api

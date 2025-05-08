@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import com.wcaokaze.probosqis.resources.Strings
-import com.wcaokaze.probosqis.resources.icons.Error
+import com.wcaokaze.probosqis.foundation.resources.Strings
+import com.wcaokaze.probosqis.foundation.resources.icons.Error
 
 @Composable
 fun PErrorActionButton(

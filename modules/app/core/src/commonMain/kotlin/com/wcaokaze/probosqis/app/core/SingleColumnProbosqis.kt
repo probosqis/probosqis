@@ -68,12 +68,12 @@ import com.wcaokaze.probosqis.error.PErrorActionButton
 import com.wcaokaze.probosqis.error.PErrorList
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.navigateToPage
-import com.wcaokaze.probosqis.resources.Strings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject

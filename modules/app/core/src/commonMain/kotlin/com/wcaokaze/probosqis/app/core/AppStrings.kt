@@ -18,8 +18,8 @@ package com.wcaokaze.probosqis.app.core
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import com.wcaokaze.probosqis.resources.LocalLanguage
-import com.wcaokaze.probosqis.resources.Strings
+import com.wcaokaze.probosqis.foundation.resources.LocalLanguage
+import com.wcaokaze.probosqis.foundation.resources.Strings
 
 interface AppStrings {
    val topAppBar: String

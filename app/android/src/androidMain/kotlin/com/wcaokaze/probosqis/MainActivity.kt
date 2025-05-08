@@ -29,8 +29,8 @@ import com.wcaokaze.probosqis.app.core.MultiColumnProbosqis
 import com.wcaokaze.probosqis.app.core.ProbosqisState
 import com.wcaokaze.probosqis.app.core.SingleColumnProbosqis
 import com.wcaokaze.probosqis.app.core.allVisiblePageStates
+import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackProcessor
-import com.wcaokaze.probosqis.resources.ProbosqisTheme
 
 class MainActivity : ComponentActivity() {
    private val probosqisState = ProbosqisState()
