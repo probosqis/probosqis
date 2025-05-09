@@ -27,9 +27,9 @@ import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.app.pagedeck.PPageStackState
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
-import com.wcaokaze.probosqis.error.PError
-import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.kotlin.annotation.UsingAppScope
+import com.wcaokaze.probosqis.foundation.error.PError
+import com.wcaokaze.probosqis.foundation.error.PErrorListState
 import kotlinx.coroutines.CoroutineScope
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

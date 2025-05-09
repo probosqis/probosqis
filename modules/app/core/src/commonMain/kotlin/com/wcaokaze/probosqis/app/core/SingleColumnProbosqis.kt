@@ -69,10 +69,10 @@ import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.app.pagedeck.navigateToPage
-import com.wcaokaze.probosqis.error.PErrorActionButton
-import com.wcaokaze.probosqis.error.PErrorList
-import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
+import com.wcaokaze.probosqis.foundation.error.PErrorActionButton
+import com.wcaokaze.probosqis.foundation.error.PErrorList
+import com.wcaokaze.probosqis.foundation.error.PErrorListState
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

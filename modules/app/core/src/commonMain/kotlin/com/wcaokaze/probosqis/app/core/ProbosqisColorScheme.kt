@@ -28,7 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.PageStackColors
-import com.wcaokaze.probosqis.error.PErrorListColors
+import com.wcaokaze.probosqis.foundation.error.PErrorListColors
 
 @Composable
 fun rememberSingleColumnProbosqisColorScheme(): SingleColumnProbosqisColorScheme {

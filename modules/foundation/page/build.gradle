@@ -37,7 +37,7 @@ kotlin {
          api project(':modules:ext:panoptiqon')
          api project(':capsiqum-page')
          api project(':capsiqum-transition')
-         api project(':modules:error')
+         api project(':modules:foundation:error')
          api project(':modules:foundation:resources')
          implementation project(':modules:app:pagedeck')
       }

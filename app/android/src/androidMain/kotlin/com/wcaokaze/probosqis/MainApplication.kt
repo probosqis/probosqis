@@ -29,10 +29,10 @@ import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.credential.AndroidCredentialRepository
 import com.wcaokaze.probosqis.credential.CredentialRepository
 import com.wcaokaze.probosqis.credential.credentialSerializer
-import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.foundation.error.AndroidPErrorListRepository
+import com.wcaokaze.probosqis.foundation.error.PErrorListRepository
+import com.wcaokaze.probosqis.foundation.error.PErrorListState
+import com.wcaokaze.probosqis.foundation.error.errorSerializer
 import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAccountRepository

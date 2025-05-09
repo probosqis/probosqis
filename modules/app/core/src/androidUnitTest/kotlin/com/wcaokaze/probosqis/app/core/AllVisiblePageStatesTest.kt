@@ -36,7 +36,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
-import com.wcaokaze.probosqis.error.PErrorListState
+import com.wcaokaze.probosqis.foundation.error.PErrorListState
 import com.wcaokaze.probosqis.foundation.page.PPage
 import com.wcaokaze.probosqis.foundation.page.PPageComposable
 import com.wcaokaze.probosqis.foundation.page.PPageState

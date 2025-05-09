@@ -50,10 +50,10 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
-import com.wcaokaze.probosqis.error.PError
-import com.wcaokaze.probosqis.error.PErrorItemComposable
-import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.error.RaisedError
+import com.wcaokaze.probosqis.foundation.error.PError
+import com.wcaokaze.probosqis.foundation.error.PErrorItemComposable
+import com.wcaokaze.probosqis.foundation.error.PErrorListState
+import com.wcaokaze.probosqis.foundation.error.RaisedError
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.mockk
