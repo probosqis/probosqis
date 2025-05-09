@@ -84,7 +84,7 @@ pub mod account {
 }
 
 pub mod account_icon {
-   use entity::image_bytes::ImageBytes;
+   use foundation_entity::image_bytes::ImageBytes;
    use ext_panoptiqon::repository_holder::RepositoryHolder;
 
    static REPO: RepositoryHolder<ImageBytes> = RepositoryHolder::new();

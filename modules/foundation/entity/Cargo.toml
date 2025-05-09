@@ -13,7 +13,7 @@
 # limitations under the License.
 
 [package]
-name = "entity"
+name = "foundation_entity"
 edition = "2021"
 
 [lib]
