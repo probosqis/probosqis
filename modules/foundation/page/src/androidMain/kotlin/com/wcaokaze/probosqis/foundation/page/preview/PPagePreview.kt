@@ -18,11 +18,11 @@ package com.wcaokaze.probosqis.foundation.page.preview
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
+import com.wcaokaze.probosqis.app.pagedeck.preview.PagePreview
 import com.wcaokaze.probosqis.foundation.page.PPage
 import com.wcaokaze.probosqis.foundation.page.PPageComposable
 import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.foundation.page.asCombinedPageComposable
-import com.wcaokaze.probosqis.pagedeck.preview.PagePreview
 
 @Composable
 fun <P : PPage, S : PPageState<P>> PPagePreview(

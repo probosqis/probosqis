@@ -16,8 +16,8 @@
 
 package com.wcaokaze.probosqis.foundation.page
 
-import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
-import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
+import com.wcaokaze.probosqis.app.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.app.pagedeck.CombinedPageSwitcherState
 
 fun PPageSwitcherState(
    allPageComposables: List<PPageComposable<*, *>>

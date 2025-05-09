@@ -26,6 +26,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.wcaokaze.probosqis.app.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.app.pagedeck.PageDeck
+import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.deck.get
 import com.wcaokaze.probosqis.capsiqum.deck.sequence
@@ -38,9 +41,6 @@ import com.wcaokaze.probosqis.foundation.page.PPage
 import com.wcaokaze.probosqis.foundation.page.PPageComposable
 import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
-import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
-import com.wcaokaze.probosqis.pagedeck.PageDeck
-import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.every
 import io.mockk.mockk

@@ -64,9 +64,9 @@ kotlin {
          implementation project(':capsiqum-deck')
          implementation project(':capsiqum-transition')
          implementation project(':modules:app:core')
+         implementation project(':modules:app:pagedeck')
          implementation project(':modules:error')
          implementation project(':modules:foundation:page')
-         implementation project(':modules:pagedeck')
 
          implementation project(':modules:credential')
 

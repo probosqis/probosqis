@@ -16,8 +16,8 @@
 
 package com.wcaokaze.probosqis.foundation.page
 
+import com.wcaokaze.probosqis.app.pagedeck.GlobalLayoutIds
 import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
-import com.wcaokaze.probosqis.pagedeck.GlobalLayoutIds
 
 /**
  * [LayoutId][PageLayoutInfo.LayoutId]をまとめたもの。

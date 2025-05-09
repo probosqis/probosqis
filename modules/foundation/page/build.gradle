@@ -39,7 +39,7 @@ kotlin {
          api project(':capsiqum-transition')
          api project(':modules:error')
          api project(':modules:foundation:resources')
-         implementation project(':modules:pagedeck')
+         implementation project(':modules:app:pagedeck')
       }
    }
 }

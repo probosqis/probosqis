@@ -17,12 +17,12 @@
 package com.wcaokaze.probosqis.foundation.page.preview
 
 import androidx.compose.runtime.Composable
+import com.wcaokaze.probosqis.app.pagedeck.preview.PageTransitionPreview
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.foundation.page.PPage
 import com.wcaokaze.probosqis.foundation.page.PPageComposable
 import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.foundation.page.asCombinedPageComposable
-import com.wcaokaze.probosqis.pagedeck.preview.PageTransitionPreview
 
 @Composable
 fun <P : PPage, C : PPage, PS : PPageState<P>, CS : PPageState<C>>

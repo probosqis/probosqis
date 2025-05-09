@@ -17,7 +17,7 @@
 package com.wcaokaze.probosqis.error
 
 import android.content.Context
-import com.wcaokaze.probosqis.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.loadCache

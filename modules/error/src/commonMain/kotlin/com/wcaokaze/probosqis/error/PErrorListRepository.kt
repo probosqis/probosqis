@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.wcaokaze.probosqis.error
 
+import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.capsiqum.page.Page
-import com.wcaokaze.probosqis.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json

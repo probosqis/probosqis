@@ -37,6 +37,12 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.wcaokaze.probosqis.app.pagedeck.CombinedPageComposable
+import com.wcaokaze.probosqis.app.pagedeck.CombinedPageSwitcherState
+import com.wcaokaze.probosqis.app.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.PageDeck
+import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
@@ -49,12 +55,6 @@ import com.wcaokaze.probosqis.error.PErrorItemComposable
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.error.RaisedError
 import com.wcaokaze.probosqis.foundation.resources.Strings
-import com.wcaokaze.probosqis.pagedeck.CombinedPageComposable
-import com.wcaokaze.probosqis.pagedeck.CombinedPageSwitcherState
-import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
-import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.PageDeck
-import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf

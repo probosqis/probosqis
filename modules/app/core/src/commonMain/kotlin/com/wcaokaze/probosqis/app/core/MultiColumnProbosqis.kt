@@ -46,14 +46,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeck
+import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.navigateToPage
 import com.wcaokaze.probosqis.error.PErrorActionButton
 import com.wcaokaze.probosqis.error.PErrorList
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.foundation.resources.Strings
-import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeck
-import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.navigateToPage
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 

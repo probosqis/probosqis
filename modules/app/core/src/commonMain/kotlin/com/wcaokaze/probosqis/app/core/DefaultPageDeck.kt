@@ -16,14 +16,14 @@
 
 package com.wcaokaze.probosqis.app.core
 
+import com.wcaokaze.probosqis.app.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.app.pagedeck.PageDeck
+import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
-import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
-import com.wcaokaze.probosqis.pagedeck.PageDeck
-import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
-import com.wcaokaze.probosqis.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.testpages.TestPage
 import kotlinx.collections.immutable.ImmutableList

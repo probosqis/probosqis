@@ -20,6 +20,10 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import com.wcaokaze.probosqis.app.pagedeck.LazyPageStackState
+import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
@@ -29,12 +33,8 @@ import com.wcaokaze.probosqis.ext.compose.layout.MultiDevicePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
-import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
-import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
-import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.PageStackRepository
-import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
+import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.testpages.TestPage
 import com.wcaokaze.probosqis.testpages.testPageComposable
