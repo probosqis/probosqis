@@ -40,7 +40,7 @@ import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage
 import com.wcaokaze.probosqis.nodeinfo.entity.FediverseSoftware
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
-import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PPageState
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk

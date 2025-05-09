@@ -34,7 +34,7 @@ import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.AndroidNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
-import com.wcaokaze.probosqis.page.PPageSwitcherState
+import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState

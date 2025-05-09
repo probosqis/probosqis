@@ -30,7 +30,7 @@ import com.wcaokaze.probosqis.ext.compose.layout.MultiFontScalePreview
 import com.wcaokaze.probosqis.ext.compose.layout.MultiLanguagePreview
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
 import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
-import com.wcaokaze.probosqis.page.PPageSwitcherState
+import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageStackRepository

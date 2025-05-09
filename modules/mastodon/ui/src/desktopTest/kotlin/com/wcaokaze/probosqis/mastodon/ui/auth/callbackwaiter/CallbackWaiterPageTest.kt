@@ -45,7 +45,7 @@ import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
-import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import io.mockk.coEvery
 import io.mockk.every

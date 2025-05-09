@@ -14,17 +14,27 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.mastodon.ui.auth.urlinput
+package com.wcaokaze.probosqis.foundation.page
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import com.wcaokaze.probosqis.foundation.page.preview.PPagePreview
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 
-@Preview
 @Composable
-private fun UrlInputPagePreview() {
-   PPagePreview(
-      UrlInputPage(),
-      urlInputPageComposable
-   )
+inline fun FooterButton(
+   noinline onClick: () -> Unit,
+   modifier: Modifier = Modifier,
+   content: @Composable () -> Unit
+) {
+   Box(
+      contentAlignment = Alignment.Center,
+      modifier = modifier
+         .fillMaxHeight()
+         .clickable(onClick = onClick)
+   ) {
+      content()
+   }
 }

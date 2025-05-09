@@ -14,26 +14,10 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
-   alias libs.plugins.android.library
-   alias libs.plugins.compose.jb
-   alias libs.plugins.compose.compiler
-   alias libs.plugins.roborazzi
-}
+package com.wcaokaze.probosqis.foundation.page
 
-apply from: rootProject.file('gradle/setupModule.gradle')
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import kotlinx.serialization.Serializable
 
-android {
-   namespace 'com.wcaokaze.probosqis.testpages'
-}
-
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         implementation project(':modules:foundation:page')
-         implementation project(':modules:mastodon:ui')
-      }
-   }
-}
+@Serializable
+abstract class PPage : Page()

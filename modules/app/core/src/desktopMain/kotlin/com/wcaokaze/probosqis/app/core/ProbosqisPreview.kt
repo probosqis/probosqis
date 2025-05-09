@@ -25,7 +25,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PErrorListState
 import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
-import com.wcaokaze.probosqis.page.PPageSwitcherState
+import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.pagedeck.PageStackRepository

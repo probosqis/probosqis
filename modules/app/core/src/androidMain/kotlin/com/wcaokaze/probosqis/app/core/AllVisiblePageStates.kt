@@ -17,7 +17,7 @@
 package com.wcaokaze.probosqis.app.core
 
 import com.wcaokaze.probosqis.capsiqum.deck.sequence
-import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PPageState
 
 val ProbosqisState.allVisiblePageStates: Sequence<PPageState<*>>
    get() = pageDecks

@@ -42,7 +42,7 @@ kotlin {
          implementation project(':capsiqum-transition')
          implementation project(':modules:app:core')
          implementation project(':modules:error')
-         implementation project(':modules:page')
+         implementation project(':modules:foundation:page')
          implementation project(':modules:pagedeck')
 
          implementation project(':modules:credential')

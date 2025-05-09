@@ -32,9 +32,9 @@ import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PError
 import com.wcaokaze.probosqis.error.PErrorItemComposable
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
-import com.wcaokaze.probosqis.page.PPage
-import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PPage
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
+import com.wcaokaze.probosqis.foundation.page.PPageState
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone

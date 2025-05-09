@@ -62,7 +62,7 @@ import com.wcaokaze.probosqis.ext.compose.CircularProgressCompleteIcon
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.foundation.resources.icons.Error
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
-import com.wcaokaze.probosqis.page.PPageComposable
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
 import kotlin.time.Duration.Companion.milliseconds
 
 @Stable

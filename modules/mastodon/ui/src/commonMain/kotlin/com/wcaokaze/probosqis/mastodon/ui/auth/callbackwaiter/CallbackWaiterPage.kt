@@ -29,9 +29,9 @@ import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage
-import com.wcaokaze.probosqis.page.PPage
-import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PPage
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
+import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

@@ -17,7 +17,7 @@
 package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 
 import android.content.Intent
-import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PPageState
 
 object CallbackProcessor {
    fun onNewIntent(

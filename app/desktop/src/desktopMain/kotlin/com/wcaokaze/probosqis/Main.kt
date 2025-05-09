@@ -42,7 +42,7 @@ import com.wcaokaze.probosqis.mastodon.repository.DesktopTimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.DesktopNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
-import com.wcaokaze.probosqis.page.PPageSwitcherState
+import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
 import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
 import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState

@@ -62,11 +62,11 @@ import com.wcaokaze.probosqis.capsiqum.transition.animatePosition
 import com.wcaokaze.probosqis.capsiqum.transition.animateScale
 import com.wcaokaze.probosqis.capsiqum.transition.sharedElement
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
-import com.wcaokaze.probosqis.page.FooterButton
-import com.wcaokaze.probosqis.page.PPage
-import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
-import com.wcaokaze.probosqis.page.PageLayoutIds
+import com.wcaokaze.probosqis.foundation.page.FooterButton
+import com.wcaokaze.probosqis.foundation.page.PPage
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
+import com.wcaokaze.probosqis.foundation.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PageLayoutIds
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer

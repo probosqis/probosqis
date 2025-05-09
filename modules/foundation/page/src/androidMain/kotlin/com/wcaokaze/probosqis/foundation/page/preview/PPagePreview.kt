@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.mastodon.ui.auth.urlinput
+package com.wcaokaze.probosqis.foundation.page.preview
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import com.wcaokaze.probosqis.foundation.page.preview.PPagePreview
+import com.wcaokaze.probosqis.foundation.page.PPage
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
+import com.wcaokaze.probosqis.foundation.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.asCombinedPageComposable
+import com.wcaokaze.probosqis.pagedeck.preview.PagePreview
 
-@Preview
 @Composable
-private fun UrlInputPagePreview() {
-   PPagePreview(
-      UrlInputPage(),
-      urlInputPageComposable
+fun <P : PPage, S : PPageState<P>> PPagePreview(
+   page: P,
+   pageComposable: PPageComposable<P, S>,
+   windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
+) {
+   PagePreview(
+      page, pageComposable.asCombinedPageComposable(), windowInsets
    )
 }

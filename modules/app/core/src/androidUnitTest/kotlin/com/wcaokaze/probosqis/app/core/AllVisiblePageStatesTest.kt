@@ -34,10 +34,10 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.page.PPage
-import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
-import com.wcaokaze.probosqis.page.PPageSwitcherState
+import com.wcaokaze.probosqis.foundation.page.PPage
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
+import com.wcaokaze.probosqis.foundation.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
 import com.wcaokaze.probosqis.pagedeck.LazyPageStackState
 import com.wcaokaze.probosqis.pagedeck.PageDeck
 import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState

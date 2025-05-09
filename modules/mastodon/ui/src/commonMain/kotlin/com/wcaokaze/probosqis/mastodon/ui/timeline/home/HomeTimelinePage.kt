@@ -38,9 +38,9 @@ import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.entity.resolveBoostedStatus
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
-import com.wcaokaze.probosqis.page.PPage
-import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PPage
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
+import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.panoptiqon.compose.asState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf

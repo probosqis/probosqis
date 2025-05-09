@@ -68,9 +68,9 @@ import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage
 import com.wcaokaze.probosqis.nodeinfo.entity.FediverseSoftware
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
-import com.wcaokaze.probosqis.page.PPage
-import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PPage
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
+import com.wcaokaze.probosqis.foundation.page.PPageState
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers

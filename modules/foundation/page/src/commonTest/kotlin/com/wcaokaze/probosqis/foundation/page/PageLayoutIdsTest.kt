@@ -14,26 +14,18 @@
  * limitations under the License.
  */
 
-plugins {
-   alias libs.plugins.kotlin.multiplatform
-   alias libs.plugins.kotlinx.serialization
-   alias libs.plugins.android.library
-   alias libs.plugins.compose.jb
-   alias libs.plugins.compose.compiler
-   alias libs.plugins.roborazzi
-}
+package com.wcaokaze.probosqis.foundation.page
 
-apply from: rootProject.file('gradle/setupModule.gradle')
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
-android {
-   namespace 'com.wcaokaze.probosqis.testpages'
-}
+class PageLayoutInfoTest {
+   @Test
+   fun globalIds_companionObjectEqualsSubclasses() {
+      val someLayoutIds = object : PageLayoutIds() {}
 
-kotlin {
-   sourceSets {
-      commonMain.dependencies {
-         implementation project(':modules:foundation:page')
-         implementation project(':modules:mastodon:ui')
-      }
+      assertEquals(someLayoutIds.root,       PageLayoutIds.root)
+      assertEquals(someLayoutIds.background, PageLayoutIds.background)
+      assertEquals(someLayoutIds.content,    PageLayoutIds.content)
    }
 }
