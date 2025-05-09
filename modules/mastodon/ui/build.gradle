@@ -33,7 +33,7 @@ kotlin {
    sourceSets {
       commonMain.dependencies {
          implementation project(':modules:foundation:page')
-         implementation project(':modules:credential')
+         implementation project(':modules:foundation:credential')
          implementation project(':modules:foundation:entity')
          implementation project(':modules:nodeinfo:entity')
          implementation project(':modules:nodeinfo:repository')

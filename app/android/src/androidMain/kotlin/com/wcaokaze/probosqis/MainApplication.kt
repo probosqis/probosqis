@@ -26,9 +26,9 @@ import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
 import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
-import com.wcaokaze.probosqis.credential.AndroidCredentialRepository
-import com.wcaokaze.probosqis.credential.CredentialRepository
-import com.wcaokaze.probosqis.credential.credentialSerializer
+import com.wcaokaze.probosqis.foundation.credential.AndroidCredentialRepository
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
+import com.wcaokaze.probosqis.foundation.credential.credentialSerializer
 import com.wcaokaze.probosqis.foundation.error.AndroidPErrorListRepository
 import com.wcaokaze.probosqis.foundation.error.PErrorListRepository
 import com.wcaokaze.probosqis.foundation.error.PErrorListState

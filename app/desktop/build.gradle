@@ -45,7 +45,7 @@ kotlin {
          implementation project(':modules:foundation:error')
          implementation project(':modules:foundation:page')
 
-         implementation project(':modules:credential')
+         implementation project(':modules:foundation:credential')
 
          implementation project(':modules:testpages')
 
