@@ -33,9 +33,10 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
-import com.wcaokaze.probosqis.credential.CredentialRepository
 import com.wcaokaze.probosqis.entity.Image
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
+import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.Application
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
@@ -45,7 +46,6 @@ import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
-import com.wcaokaze.probosqis.page.PPageState
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import io.mockk.coEvery
 import io.mockk.every

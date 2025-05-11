@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.wcaokaze.probosqis.ext.compose.layout.SafeDrawingWindowInsetsProvider
-import com.wcaokaze.probosqis.page.preview.PPagePreview
-import com.wcaokaze.probosqis.page.preview.PPageTransitionPreview
+import com.wcaokaze.probosqis.foundation.page.preview.PPagePreview
+import com.wcaokaze.probosqis.foundation.page.preview.PPageTransitionPreview
 
 @Preview
 @Composable

@@ -1,4 +1,4 @@
-# Copyright 2024 wcaokaze
+# Copyright 2024-2025 wcaokaze
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 
 [workspace]
 members = [
-    "modules/app",
-    "modules/entity",
+    "modules/app/core",
+    "modules/foundation/entity",
     "modules/ext/kotlinTest",
     "modules/ext/panoptiqon",
     "modules/ext/reqwest",
@@ -46,7 +46,7 @@ reqwest.version = "0.12.7"
 reqwest.default-features = false
 reqwest.features = ["rustls-tls", "charset", "http2", "blocking", "json"]
 
-entity = { path = "modules/entity" }
+foundation_entity = { path = "modules/foundation/entity" }
 ext_kotlintest = { path = "modules/ext/kotlinTest" }
 ext_panoptiqon = { path = "modules/ext/panoptiqon" }
 ext_reqwest = { path = "modules/ext/reqwest" }

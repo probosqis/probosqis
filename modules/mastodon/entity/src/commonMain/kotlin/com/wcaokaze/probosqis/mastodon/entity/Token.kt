@@ -16,8 +16,8 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
-import com.wcaokaze.probosqis.credential.Credential
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.foundation.credential.Credential
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
 import kotlinx.serialization.ExperimentalSerializationApi

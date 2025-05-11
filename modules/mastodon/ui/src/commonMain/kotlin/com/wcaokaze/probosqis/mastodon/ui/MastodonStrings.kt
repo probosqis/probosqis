@@ -19,9 +19,9 @@ package com.wcaokaze.probosqis.mastodon.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
-import com.wcaokaze.probosqis.resources.LocalLanguage
-import com.wcaokaze.probosqis.resources.Strings
-import com.wcaokaze.probosqis.resources.appName
+import com.wcaokaze.probosqis.foundation.resources.LocalLanguage
+import com.wcaokaze.probosqis.foundation.resources.Strings
+import com.wcaokaze.probosqis.foundation.resources.appName
 
 interface MastodonStrings {
    interface AuthUrlInput {

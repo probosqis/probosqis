@@ -25,12 +25,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import com.wcaokaze.probosqis.app.MultiColumnProbosqis
-import com.wcaokaze.probosqis.app.ProbosqisState
-import com.wcaokaze.probosqis.app.SingleColumnProbosqis
-import com.wcaokaze.probosqis.app.allVisiblePageStates
+import com.wcaokaze.probosqis.app.core.MultiColumnProbosqis
+import com.wcaokaze.probosqis.app.core.ProbosqisState
+import com.wcaokaze.probosqis.app.core.SingleColumnProbosqis
+import com.wcaokaze.probosqis.app.core.allVisiblePageStates
+import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackProcessor
-import com.wcaokaze.probosqis.resources.ProbosqisTheme
 
 class MainActivity : ComponentActivity() {
    private val probosqisState = ProbosqisState()

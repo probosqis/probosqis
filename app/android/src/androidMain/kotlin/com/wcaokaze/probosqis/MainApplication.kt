@@ -17,15 +17,23 @@
 package com.wcaokaze.probosqis
 
 import android.app.Application
-import com.wcaokaze.probosqis.app.loadErrorListOrDefault
-import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
-import com.wcaokaze.probosqis.credential.AndroidCredentialRepository
-import com.wcaokaze.probosqis.credential.CredentialRepository
-import com.wcaokaze.probosqis.credential.credentialSerializer
-import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.app.core.loadErrorListOrDefault
+import com.wcaokaze.probosqis.app.core.loadPageDeckOrDefault
+import com.wcaokaze.probosqis.app.pagedeck.AndroidPageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.AndroidPageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
+import com.wcaokaze.probosqis.foundation.credential.AndroidCredentialRepository
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
+import com.wcaokaze.probosqis.foundation.credential.credentialSerializer
+import com.wcaokaze.probosqis.foundation.error.AndroidPErrorListRepository
+import com.wcaokaze.probosqis.foundation.error.PErrorListRepository
+import com.wcaokaze.probosqis.foundation.error.PErrorListState
+import com.wcaokaze.probosqis.foundation.error.errorSerializer
+import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
@@ -34,14 +42,6 @@ import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.AndroidNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
-import com.wcaokaze.probosqis.page.PPageSwitcherState
-import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
-import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
-import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
-import com.wcaokaze.probosqis.pagedeck.PageStackRepository
-import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.pageSerializer
 import com.wcaokaze.probosqis.testpages.TestError
 import com.wcaokaze.probosqis.testpages.TestNotePage
 import com.wcaokaze.probosqis.testpages.TestPage
@@ -59,7 +59,7 @@ import java.net.URLEncoder
 
 class MainApplication : Application() {
    init {
-      System.loadLibrary("app")
+      System.loadLibrary("app_core")
    }
 
    private val allPageComposables = persistentListOf(

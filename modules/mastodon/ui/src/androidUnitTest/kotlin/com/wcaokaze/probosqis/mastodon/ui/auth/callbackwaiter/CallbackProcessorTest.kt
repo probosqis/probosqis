@@ -22,8 +22,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
-import com.wcaokaze.probosqis.credential.CredentialRepository
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.panoptiqon.Cache

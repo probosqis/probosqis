@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use entity::image_bytes::ImageBytes;
+use foundation_entity::image_bytes::ImageBytes;
 use ext_reqwest::CLIENT;
 use mastodon_entity::account::Account;
 
@@ -74,7 +74,7 @@ impl AccountRepository<'_> {
 mod jvm {
    use jni::JNIEnv;
    use jni::objects::JObject;
-   use entity::jvm_types::JvmImage;
+   use foundation_entity::jvm_types::JvmImage;
    use mastodon_entity::jvm_types::JvmAccount;
    use panoptiqon::jvm_types::{JvmCache, JvmNullable};
 

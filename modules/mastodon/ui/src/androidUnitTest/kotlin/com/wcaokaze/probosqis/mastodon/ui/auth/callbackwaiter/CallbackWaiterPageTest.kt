@@ -29,7 +29,7 @@ import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.entity.Status
-import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import io.mockk.mockk
 import kotlinx.datetime.Instant

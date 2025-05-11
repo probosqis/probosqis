@@ -29,7 +29,7 @@ android {
 kotlin {
    sourceSets {
       commonMain.dependencies {
-         implementation project(':modules:entity')
+         implementation project(':modules:foundation:entity')
          implementation project(':modules:mastodon:entity')
          implementation project(':panoptiqon')
       }

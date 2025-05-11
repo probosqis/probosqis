@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package com.wcaokaze.probosqis.mastodon.ui.auth.urlinput
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.wcaokaze.probosqis.page.preview.PPagePreview
+import com.wcaokaze.probosqis.foundation.page.preview.PPagePreview
 
 @Preview
 @Composable

@@ -20,18 +20,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import com.wcaokaze.probosqis.app.App
-import com.wcaokaze.probosqis.app.MultiColumnProbosqis
-import com.wcaokaze.probosqis.app.ProbosqisState
-import com.wcaokaze.probosqis.app.loadErrorListOrDefault
-import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
-import com.wcaokaze.probosqis.credential.CredentialRepository
-import com.wcaokaze.probosqis.credential.DesktopCredentialRepository
-import com.wcaokaze.probosqis.credential.credentialSerializer
-import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.app.core.App
+import com.wcaokaze.probosqis.app.core.MultiColumnProbosqis
+import com.wcaokaze.probosqis.app.core.ProbosqisState
+import com.wcaokaze.probosqis.app.core.loadErrorListOrDefault
+import com.wcaokaze.probosqis.app.core.loadPageDeckOrDefault
+import com.wcaokaze.probosqis.app.pagedeck.DesktopPageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.DesktopPageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
+import com.wcaokaze.probosqis.foundation.credential.DesktopCredentialRepository
+import com.wcaokaze.probosqis.foundation.credential.credentialSerializer
+import com.wcaokaze.probosqis.foundation.error.DesktopPErrorListRepository
+import com.wcaokaze.probosqis.foundation.error.PErrorListRepository
+import com.wcaokaze.probosqis.foundation.error.PErrorListState
+import com.wcaokaze.probosqis.foundation.error.errorSerializer
+import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
+import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
+import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAccountRepository
@@ -40,16 +50,6 @@ import com.wcaokaze.probosqis.mastodon.repository.DesktopTimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.DesktopNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
-import com.wcaokaze.probosqis.page.PPageSwitcherState
-import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
-import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
-import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
-import com.wcaokaze.probosqis.pagedeck.PageStackRepository
-import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.pageSerializer
-import com.wcaokaze.probosqis.resources.ProbosqisTheme
-import com.wcaokaze.probosqis.resources.Strings
 import com.wcaokaze.probosqis.testpages.TestError
 import com.wcaokaze.probosqis.testpages.TestNotePage
 import com.wcaokaze.probosqis.testpages.TestPage
@@ -198,7 +198,7 @@ object Main {
          osName.startsWith("linux") -> {
             val lib = File(
                System.getProperty("user.dir").split('/').dropLast(2).joinToString("/"),
-               "target/debug/libapp.so"
+               "target/debug/libapp_core.so"
             )
             System.load(lib.absolutePath)
          }
