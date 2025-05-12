@@ -107,6 +107,14 @@ fun SingleColumnProbosqis(
    val coroutineScope = rememberCoroutineScope()
    val drawerState = rememberDrawerState(DrawerValue.Closed)
 
+   if (drawerState.isOpen) {
+      BackHandler {
+         coroutineScope.launch {
+            drawerState.close()
+         }
+      }
+   }
+
    ModalNavigationDrawer(
       drawerContent = {
          HamburgerMenu()
