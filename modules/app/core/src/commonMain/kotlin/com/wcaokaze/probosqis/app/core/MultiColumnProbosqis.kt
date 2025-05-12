@@ -28,12 +28,15 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -64,65 +67,78 @@ fun MultiColumnProbosqis(
    colorScheme: MultiColumnProbosqisColorScheme = rememberMultiColumnProbosqisColorScheme(),
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
-   BoxWithConstraints(
-      modifier = Modifier
-         .background(colorScheme.background)
+   val coroutineScope = rememberCoroutineScope()
+   val drawerState = rememberDrawerState(DrawerValue.Closed)
+
+   ModalNavigationDrawer(
+      drawerContent = {
+         HamburgerMenu()
+      },
+      drawerState = drawerState
    ) {
-      val errorListState: PErrorListState = koinInject()
+      BoxWithConstraints(
+         modifier = Modifier
+            .background(colorScheme.background)
+      ) {
+         val errorListState: PErrorListState = koinInject()
 
-      val pageStackCount = (maxWidth / 330.dp).toInt().coerceAtLeast(1)
+         val pageStackCount = (maxWidth / 330.dp).toInt().coerceAtLeast(1)
 
-      Column {
-         AppBar(
+         Column {
+            AppBar(
+               errorListState,
+               safeDrawingWindowInsets,
+               onHamburgerButtonClick = {
+                  coroutineScope.launch {
+                     drawerState.open()
+                  }
+               },
+               onErrorButtonClick = { errorListState.show() }
+            )
+
+            val pageDeckState = koinInject<MultiColumnPageDeckState>()
+               .also { state.pageDeckState = it }
+
+            val isDeckEmpty by remember {
+               derivedStateOf {
+                  pageDeckState.deck.rootRow.childCount == 0
+               }
+            }
+
+            LaunchedEffect(isDeckEmpty) {
+               if (isDeckEmpty) {
+                  onRequestCloseWindow()
+               }
+            }
+
+            @OptIn(ExperimentalMaterial3Api::class)
+            MultiColumnPageDeck(
+               pageDeckState,
+               pageSwitcherState = koinInject(),
+               pageStackCount,
+               colorScheme.activePageStackAppBar,
+               colorScheme.inactivePageStackAppBar,
+               colorScheme.pageStack,
+               windowInsets = safeDrawingWindowInsets
+                  .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+               modifier = Modifier
+                  .fillMaxSize()
+            )
+         }
+
+         PErrorList(
             errorListState,
-            safeDrawingWindowInsets,
-            onErrorButtonClick = { errorListState.show() }
-         )
-
-         val pageDeckState = koinInject<MultiColumnPageDeckState>()
-            .also { state.pageDeckState = it }
-
-         val isDeckEmpty by remember {
-            derivedStateOf {
-               pageDeckState.deck.rootRow.childCount == 0
+            colorScheme.errorListColors,
+            onRequestNavigateToPage = { pageId, fallbackPage ->
+               coroutineScope.launch {
+                  state.pageDeckState.navigateToPage(
+                     pageId,
+                     fallbackPage
+                  )
+               }
             }
-         }
-
-         LaunchedEffect(isDeckEmpty) {
-            if (isDeckEmpty) {
-               onRequestCloseWindow()
-            }
-         }
-
-         @OptIn(ExperimentalMaterial3Api::class)
-         MultiColumnPageDeck(
-            pageDeckState,
-            pageSwitcherState = koinInject(),
-            pageStackCount,
-            colorScheme.activePageStackAppBar,
-            colorScheme.inactivePageStackAppBar,
-            colorScheme.pageStack,
-            windowInsets = safeDrawingWindowInsets
-               .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
-            modifier = Modifier
-               .fillMaxSize()
          )
       }
-
-      val coroutineScope = rememberCoroutineScope()
-
-      PErrorList(
-         errorListState,
-         colorScheme.errorListColors,
-         onRequestNavigateToPage = { pageId, fallbackPage ->
-            coroutineScope.launch {
-               state.pageDeckState.navigateToPage(
-                  pageId,
-                  fallbackPage
-               )
-            }
-         }
-      )
    }
 }
 
@@ -131,6 +147,7 @@ fun MultiColumnProbosqis(
 private fun AppBar(
    errorListState: PErrorListState,
    safeDrawingWindowInsets: WindowInsets,
+   onHamburgerButtonClick: () -> Unit,
    onErrorButtonClick: () -> Unit
 ) {
    val anim = remember { Animatable(0.dp, Dp.VectorConverter) }
@@ -150,7 +167,7 @@ private fun AppBar(
       },
       navigationIcon = {
          MenuButton(
-            onClick = {}
+            onClick = onHamburgerButtonClick
          )
       },
       actions = {
