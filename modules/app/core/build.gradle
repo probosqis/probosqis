@@ -40,6 +40,7 @@ kotlin {
          implementation project(':modules:foundation:error')
          implementation project(':modules:foundation:page')
          implementation project(':modules:app:pagedeck')
+         implementation project(':modules:app:setting')
          implementation project(':modules:testpages')
          implementation project(':modules:foundation:resources')
       }

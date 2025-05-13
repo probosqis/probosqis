@@ -72,6 +72,7 @@ import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.app.pagedeck.navigateToPage
+import com.wcaokaze.probosqis.app.setting.account.list.AccountListPage
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.foundation.error.PErrorActionButton
 import com.wcaokaze.probosqis.foundation.error.PErrorList
@@ -117,7 +118,14 @@ fun SingleColumnProbosqis(
 
    ModalNavigationDrawer(
       drawerContent = {
-         HamburgerMenu()
+         HamburgerMenu(
+            onSettingItemClick = {
+               coroutineScope.launch {
+                  pageDeckState.addColumn(AccountListPage())
+                  drawerState.close()
+               }
+            }
+         )
       },
       drawerState = drawerState
    ) {

@@ -381,4 +381,36 @@ class ProbosqisTest {
       rule.onNodeWithText(topAppBarText)
          .assertTopPositionInRootIsEqualTo(initialTop)
    }
+
+   @Test
+   fun singleColumn_hamburgerMenu() {
+      rule.setContent {
+         KoinIsolatedContext {
+            SingleColumnProbosqis(
+               state = remember { ProbosqisState() },
+               onRequestCloseWindow = {}
+            )
+         }
+      }
+
+      rule.onNodeWithContentDescription("Menu").performClick()
+
+      rule.onRoot().captureRoboImage("test/hamburgerMenu/singleColumn.png")
+   }
+
+   @Test
+   fun multiColumn_hamburgerMenu() {
+      rule.setContent {
+         KoinIsolatedContext {
+            MultiColumnProbosqis(
+               state = remember { ProbosqisState() },
+               onRequestCloseWindow = {}
+            )
+         }
+      }
+
+      rule.onNodeWithContentDescription("Menu").performClick()
+
+      rule.onRoot().captureRoboImage("test/hamburgerMenu/multiColumn.png")
+   }
 }

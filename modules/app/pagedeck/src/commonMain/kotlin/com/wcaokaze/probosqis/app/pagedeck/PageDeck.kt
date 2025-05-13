@@ -37,7 +37,10 @@ import com.wcaokaze.probosqis.capsiqum.deck.get
 import com.wcaokaze.probosqis.capsiqum.deck.inserted
 import com.wcaokaze.probosqis.capsiqum.deck.removed
 import com.wcaokaze.probosqis.capsiqum.deck.sequence
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import kotlinx.coroutines.CoroutineScope
@@ -117,6 +120,17 @@ sealed class PageDeckState(
    val activePageStackState: PPageStackState get() {
       val lazy = deck[activeCardIndex].content
       return lazy.get(this)
+   }
+
+   fun addColumn(page: Page) {
+      val pageStack = PageStack(
+         SavedPageState(
+            PageId(),
+            page
+         )
+      )
+
+      addColumn(activeCardIndex + 1, pageStack)
    }
 
    fun addColumn(index: Int, pageStack: PageStack): Job {

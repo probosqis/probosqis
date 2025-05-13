@@ -24,6 +24,7 @@ import com.wcaokaze.probosqis.foundation.resources.Strings
 interface AppStrings {
    val topAppBar: String
    val topAppBarNavigationContentDescription: String
+   val hamburgerMenuSettingItem: String
 }
 
 val Strings.Companion.App: AppStrings
@@ -33,11 +34,12 @@ val Strings.Companion.App: AppStrings
       Strings.Language.ENGLISH -> object : AppStrings {
          override val topAppBar = "Probosqis"
          override val topAppBarNavigationContentDescription = "Menu"
-
+         override val hamburgerMenuSettingItem = "Settings"
       }
 
       Strings.Language.JAPANESE -> object : AppStrings {
          override val topAppBar = "Probosqis"
          override val topAppBarNavigationContentDescription = "メニュー"
+         override val hamburgerMenuSettingItem = "設定"
       }
    }

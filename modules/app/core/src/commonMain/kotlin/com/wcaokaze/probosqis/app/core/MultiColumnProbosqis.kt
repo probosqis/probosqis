@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.app.pagedeck.navigateToPage
+import com.wcaokaze.probosqis.app.setting.account.list.AccountListPage
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.foundation.error.PErrorActionButton
 import com.wcaokaze.probosqis.foundation.error.PErrorList
@@ -80,7 +81,14 @@ fun MultiColumnProbosqis(
 
    ModalNavigationDrawer(
       drawerContent = {
-         HamburgerMenu()
+         HamburgerMenu(
+            onSettingItemClick = {
+               coroutineScope.launch {
+                  state.pageDeckState.addColumn(AccountListPage())
+                  drawerState.close()
+               }
+            }
+         )
       },
       drawerState = drawerState
    ) {
