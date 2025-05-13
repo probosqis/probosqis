@@ -249,7 +249,7 @@ private fun AppBar(
             )
          },
          navigationIcon = {
-            MenuButton(
+            HamburgerButton(
                onClick = onHamburgerButtonClick
             )
          },
@@ -278,7 +278,7 @@ private fun AppBar(
 }
 
 @Composable
-private fun MenuButton(
+private fun HamburgerButton(
    onClick: () -> Unit
 ) {
    IconButton(onClick) {
