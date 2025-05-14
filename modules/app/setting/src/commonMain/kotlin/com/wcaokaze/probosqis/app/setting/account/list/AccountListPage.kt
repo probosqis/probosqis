@@ -16,13 +16,34 @@
 
 package com.wcaokaze.probosqis.app.setting.account.list
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
+import com.wcaokaze.probosqis.app.setting.Setting
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.ext.compose.LoadState
+import com.wcaokaze.probosqis.foundation.credential.Credential
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.page.PPage
 import com.wcaokaze.probosqis.foundation.page.PPageComposable
 import com.wcaokaze.probosqis.foundation.page.PPageState
+import com.wcaokaze.probosqis.foundation.resources.Strings
+import com.wcaokaze.probosqis.mastodon.entity.Token
+import com.wcaokaze.probosqis.panoptiqon.Cache
+import com.wcaokaze.probosqis.panoptiqon.compose.asState
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.koin.core.component.inject
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.app.setting.account.list.AccountListPage")
@@ -30,13 +51,60 @@ class AccountListPage : PPage()
 
 @Stable
 class AccountListPageState : PPageState<AccountListPage>() {
+   private val credentialRepository: CredentialRepository by inject()
+
+   var credentialLoadState: LoadState<List<Cache<Credential>>>
+      by mutableStateOf(LoadState.Loading)
+      private set
+
+   init {
+      pageStateScope.launch {
+         credentialLoadState = try {
+            val credentials = credentialRepository.loadAllCredentials()
+            LoadState.Success(credentials)
+         } catch (e: Exception) {
+            LoadState.Error(e)
+         }
+      }
+   }
 }
 
 val accountListPageComposable = PPageComposable<AccountListPage, AccountListPageState>(
    PageStateFactory { _, _ -> AccountListPageState() },
-   header = { _, _ -> },
-   content = { _, _, _ -> },
+   header = { _, _ ->
+      Text(
+         Strings.Setting.accountList.appBar,
+         maxLines = 1,
+         overflow = TextOverflow.Ellipsis
+      )
+   },
+   content = { _, pageState, _ ->
+      AccountListPageContent(
+         pageState.credentialLoadState
+      )
+   },
    footer = null,
    pageTransitions = {
    }
 )
+
+@Composable
+private fun AccountListPageContent(
+   credentialLoadState: LoadState<List<Cache<Credential>>>
+) {
+   LazyColumn(
+      modifier = Modifier.fillMaxSize()
+   ) {
+      if (credentialLoadState is LoadState.Success) {
+         items(credentialLoadState.data) { credentialCache ->
+            val credential by credentialCache.asState()
+            val accountId = (credential as Token).accountId
+
+            Text(
+               accountId.toString(),
+               modifier = Modifier.fillMaxWidth()
+            )
+         }
+      }
+   }
+}
