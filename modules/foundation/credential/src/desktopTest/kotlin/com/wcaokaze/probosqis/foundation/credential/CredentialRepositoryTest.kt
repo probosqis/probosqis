@@ -23,7 +23,6 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
 
 class CredentialRepositoryTest {
    private val testDir = File(".pageStackRepositoryTest")
@@ -59,13 +58,19 @@ class CredentialRepositoryTest {
    }
 
    @Test
-   fun loadAllCredentials_failsIfFileNotFound() = runTest {
-      assertFails { credentialRepository.loadAllCredentials() }
+   fun loadAllCredentials_emptyIfFileNotFound() = runTest {
+      assertEquals(
+         emptyList(),
+         credentialRepository.loadAllCredentials()
+      )
    }
 
    @Test
    fun saveLoad() = runTest {
-      assertFails { credentialRepository.loadAllCredentials() }
+      assertEquals(
+         emptyList(),
+         credentialRepository.loadAllCredentials()
+      )
 
       credentialRepository.saveCredential(StringCredential("1"))
       assertEquals(

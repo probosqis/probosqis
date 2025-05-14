@@ -68,6 +68,8 @@ class AndroidCredentialRepository(
    override suspend fun loadAllCredentials(): List<Cache<Credential>> {
       return withContext(Dispatchers.IO) {
          mutex.withLock {
+            if (!credentialListFile.exists()) { return@withLock emptyList() }
+
             val fileNames = credentialListFile.readLines()
 
             fileNames.map {
