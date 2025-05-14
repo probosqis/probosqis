@@ -16,31 +16,36 @@
 
 package com.wcaokaze.probosqis.app.setting.account.list
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import com.wcaokaze.probosqis.app.setting.Setting
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.LoadState
-import com.wcaokaze.probosqis.foundation.credential.Credential
 import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.page.PPage
 import com.wcaokaze.probosqis.foundation.page.PPageComposable
 import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.entity.Token
-import com.wcaokaze.probosqis.panoptiqon.Cache
-import com.wcaokaze.probosqis.panoptiqon.compose.asState
+import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.koin.core.component.inject
@@ -52,18 +57,32 @@ class AccountListPage : PPage()
 @Stable
 class AccountListPageState : PPageState<AccountListPage>() {
    private val credentialRepository: CredentialRepository by inject()
+   private val appRepository: AppRepository by inject()
 
-   var credentialLoadState: LoadState<List<Cache<Credential>>>
+   var credentialLoadState: LoadState<List<Token>>
       by mutableStateOf(LoadState.Loading)
       private set
 
    init {
       pageStateScope.launch {
-         credentialLoadState = try {
-            val credentials = credentialRepository.loadAllCredentials()
-            LoadState.Success(credentials)
-         } catch (e: Exception) {
-            LoadState.Error(e)
+         credentialLoadState = withContext (Dispatchers.IO) {
+            try {
+               val credentials = credentialRepository.loadAllCredentials()
+                  .map { credentialCache ->
+                     val credential = credentialCache.value as Token
+
+                     val credentialAccount
+                        = appRepository.getCredentialAccount(credential)
+
+                     credential.copy(
+                        account = credentialAccount,
+                     )
+                  }
+
+               LoadState.Success(credentials)
+            } catch (e: Exception) {
+               LoadState.Error(e)
+            }
          }
       }
    }
@@ -90,20 +109,41 @@ val accountListPageComposable = PPageComposable<AccountListPage, AccountListPage
 
 @Composable
 private fun AccountListPageContent(
-   credentialLoadState: LoadState<List<Cache<Credential>>>
+   credentialLoadState: LoadState<List<Token>>
 ) {
-   LazyColumn(
-      modifier = Modifier.fillMaxSize()
-   ) {
-      if (credentialLoadState is LoadState.Success) {
-         items(credentialLoadState.data) { credentialCache ->
-            val credential by credentialCache.asState()
-            val accountId = (credential as Token).accountId
+   Crossfade(credentialLoadState) { state ->
+      when (state) {
+         is LoadState.Loading -> {
+            Box(Modifier.fillMaxSize()) {
+               CircularProgressIndicator(
+                  modifier = Modifier.align(Alignment.Center)
+               )
+            }
+         }
+         is LoadState.Success -> {
+            LazyColumn(
+               modifier = Modifier.fillMaxSize()
+            ) {
+               items(state.data) { token ->
+                  Column(Modifier.fillMaxWidth()) {
+                     val credentialAccount = token.account!!.value
+                     val account = credentialAccount.account.value
 
-            Text(
-               accountId.toString(),
-               modifier = Modifier.fillMaxWidth()
-            )
+                     val displayName = account.displayName ?: account.username
+                     if (displayName != null) {
+                        Text(displayName)
+                     }
+
+                     val username = account.username
+                     if (username != null) {
+                        Text(username)
+                     }
+                  }
+               }
+            }
+         }
+         is LoadState.Error -> {
+            Text("エラーだよ")
          }
       }
    }
