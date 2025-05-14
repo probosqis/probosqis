@@ -129,9 +129,7 @@ impl AppRepository<'_> {
       redirect_uri: &str
    ) -> anyhow::Result<Token> {
       use ext_reqwest::CLIENT;
-      use mastodon_webapi::api::accounts;
       use mastodon_webapi::api::oauth;
-      use crate::cache;
       use crate::conversion;
 
       let api_token = oauth::post_token(
@@ -144,23 +142,10 @@ impl AppRepository<'_> {
          redirect_uri,
          /* scope = */ Some("read write push")
       )?;
-      
-      let api_credential_account = accounts::get_verify_credentials(
-         &CLIENT,
-         /* instance_base_url */ &instance_cache.get().url,
-         &api_token.access_token
-      )?;
 
-      let credential_account = conversion::account::credential_account_from_api(
-         #[cfg(feature = "jvm")] &mut self.env,
-         instance_cache.clone(),
-         api_credential_account
-      )?;
-      
-      let credential_account = cache::account::credential_account_repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?
-         .save(credential_account);
-      
+      let credential_account = self
+         .get_credential_account_impl(instance_cache, &api_token.access_token)?;
+
       let token = conversion::token::from_api(
          api_token, instance_cache.clone(), credential_account
       )?;
@@ -171,8 +156,37 @@ impl AppRepository<'_> {
    pub fn get_credential_account(
       &mut self,
       token: &Token
-   ) -> anyhow::Result<CredentialAccount> {
-      Ok(CredentialAccount::clone(&token.account.as_ref().unwrap().get()))
+   ) -> anyhow::Result<Cache<CredentialAccount>> {
+      self.get_credential_account_impl(&token.instance, &token.access_token)
+   }
+
+   fn get_credential_account_impl(
+      &mut self,
+      instance: &Cache<Instance>,
+      access_token: &str
+   ) -> anyhow::Result<Cache<CredentialAccount>> {
+      use ext_reqwest::CLIENT;
+      use mastodon_webapi::api::accounts;
+      use crate::cache;
+      use crate::conversion;
+
+      let api_credential_account = accounts::get_verify_credentials(
+         &CLIENT,
+         /* instance_base_url = */ &instance.get().url,
+         access_token
+      )?;
+
+      let credential_account = conversion::account::credential_account_from_api(
+         #[cfg(feature = "jvm")] &mut self.env,
+         Cache::clone(&instance),
+         api_credential_account
+      )?;
+
+      let credential_account = cache::account::credential_account_repo()
+         .write(#[cfg(feature = "jvm")] &mut self.env)?
+         .save(credential_account);
+
+      Ok(credential_account)
    }
 }
 
@@ -341,7 +355,7 @@ mod jvm {
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
       token: JvmToken<'local>
-   ) -> JvmCredentialAccount<'local> {
+   ) -> JvmCache<'local, JvmCredentialAccount<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
       get_credential_account(&mut env, token)
@@ -353,7 +367,7 @@ mod jvm {
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
       token: JvmToken<'local>
-   ) -> JvmCredentialAccount<'local> {
+   ) -> JvmCache<'local, JvmCredentialAccount<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
       get_credential_account(&mut env, token)
@@ -363,7 +377,7 @@ mod jvm {
    fn get_credential_account<'local>(
       env: &mut JNIEnv<'local>,
       token: JvmToken<'local>
-   ) -> anyhow::Result<JvmCredentialAccount<'local>> {
+   ) -> anyhow::Result<JvmCache<'local, JvmCredentialAccount<'local>>> {
       use mastodon_entity::token::Token;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
       use crate::cache;

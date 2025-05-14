@@ -72,9 +72,9 @@ class CallbackProcessorTest {
       val appRepository: AppRepository = mockk {
          every { loadAppCache(any()) } returns Cache(mockk())
          every { getToken(any(), any()) } returns mockk()
-         every { getCredentialAccount(any()) } returns mockk {
+         every { getCredentialAccount(any()) } returns Cache(mockk {
             every { account } returns Cache(mockk())
-         }
+         })
       }
 
       val accountRepository: AccountRepository = mockk {

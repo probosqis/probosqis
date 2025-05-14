@@ -87,5 +87,5 @@ class AndroidAppRepository(context: Context) : AppRepository {
       clientSecret: String
    ): Token
 
-   external override fun getCredentialAccount(token: Token): CredentialAccount
+   external override fun getCredentialAccount(token: Token): Cache<CredentialAccount>
 }

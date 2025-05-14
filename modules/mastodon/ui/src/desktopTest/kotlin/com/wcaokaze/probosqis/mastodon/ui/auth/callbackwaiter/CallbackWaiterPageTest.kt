@@ -283,7 +283,7 @@ class CallbackWaiterPageTest {
          }
 
          every { getCredentialAccount(any()) } answers {
-            credentialAccount(firstArg<Token>().instance)
+            Cache(credentialAccount(firstArg<Token>().instance))
          }
       }
 
@@ -350,7 +350,7 @@ class CallbackWaiterPageTest {
          }
 
          every { getCredentialAccount(any()) } answers {
-            credentialAccount(firstArg<Token>().instance)
+            Cache(credentialAccount(firstArg<Token>().instance))
          }
       }
 
@@ -415,7 +415,7 @@ class CallbackWaiterPageTest {
          }
 
          every { getCredentialAccount(any()) } answers {
-            credentialAccount(firstArg<Token>().instance)
+            Cache(credentialAccount(firstArg<Token>().instance))
          }
       }
 
@@ -480,7 +480,7 @@ class CallbackWaiterPageTest {
          }
 
          every { getCredentialAccount(any()) } answers {
-            credentialAccount(firstArg<Token>().instance)
+            Cache(credentialAccount(firstArg<Token>().instance))
          }
       }
 
