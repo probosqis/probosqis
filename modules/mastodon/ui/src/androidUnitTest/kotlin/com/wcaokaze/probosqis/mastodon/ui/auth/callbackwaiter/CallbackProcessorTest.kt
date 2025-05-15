@@ -27,8 +27,6 @@ import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.panoptiqon.Cache
-import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -82,7 +80,7 @@ class CallbackProcessorTest {
       }
 
       val credentialRepository: CredentialRepository = mockk {
-         coEvery { saveCredential(any()) } just runs
+         every { saveCredential(any()) } just runs
       }
 
       startKoin {
@@ -121,7 +119,7 @@ class CallbackProcessorTest {
          verify { appRepository.getToken(any(), "abcdefghijk") }
          verify { appRepository.getCredentialAccount(any()) }
          verify { accountRepository.getAccountIcon(any()) }
-         coVerify { credentialRepository.saveCredential(any()) }
+         verify { credentialRepository.saveCredential(any()) }
       }
    }
 

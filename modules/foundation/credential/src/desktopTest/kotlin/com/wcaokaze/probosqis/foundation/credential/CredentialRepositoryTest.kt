@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.foundation.credential
 
-import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import java.io.File
 import kotlin.test.AfterTest
@@ -58,7 +57,7 @@ class CredentialRepositoryTest {
    }
 
    @Test
-   fun loadAllCredentials_emptyIfFileNotFound() = runTest {
+   fun loadAllCredentials_emptyIfFileNotFound() {
       assertEquals(
          emptyList(),
          credentialRepository.loadAllCredentials()
@@ -66,7 +65,7 @@ class CredentialRepositoryTest {
    }
 
    @Test
-   fun saveLoad() = runTest {
+   fun saveLoad() {
       assertEquals(
          emptyList(),
          credentialRepository.loadAllCredentials()
