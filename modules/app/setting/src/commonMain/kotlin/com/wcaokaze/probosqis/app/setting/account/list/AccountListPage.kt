@@ -21,8 +21,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,6 +32,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -139,19 +142,37 @@ private fun AccountListPageContent(
                modifier = Modifier.fillMaxSize()
             ) {
                items(state.data) { token ->
-                  Column(Modifier.fillMaxWidth()) {
-                     val credentialAccount = token.account!!.value
-                     val account = credentialAccount.account.value
+                  Column {
+                     Column(
+                        modifier = Modifier
+                           .fillMaxWidth()
+                           .padding(horizontal = 16.dp, vertical = 8.dp)
+                     ) {
+                        val credentialAccount = token.account!!.value
+                        val account = credentialAccount.account.value
+                        val username = account.username
 
-                     val displayName = account.displayName ?: account.username
-                     if (displayName != null) {
-                        Text(displayName)
+                        val displayName = account.displayName ?: account.username
+                        if (displayName != null) {
+                           Text(
+                              displayName,
+                              style = MaterialTheme.typography.titleMedium
+                           )
+                        }
+
+                        if (displayName != null && username != null) {
+                           Spacer(Modifier.height(4.dp))
+                        }
+
+                        if (username != null) {
+                           Text(
+                              "@$username",
+                              style = MaterialTheme.typography.bodyMedium
+                           )
+                        }
                      }
 
-                     val username = account.username
-                     if (username != null) {
-                        Text(username)
-                     }
+                     HorizontalDivider()
                   }
                }
 
