@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.app.core
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Settings
@@ -138,49 +139,55 @@ private fun AccountList(
             LazyColumn(
                modifier = modifier
             ) {
-               items(state.data) { token ->
-                  DropdownMenuItem(
-                     text = {
-                        Row(
-                           verticalAlignment = Alignment.CenterVertically
-                        ) {
-                           val credentialAccount = token.account!!.value
-                           val account = credentialAccount.account.value
-                           val username = account.username
+               itemsIndexed(state.data) { index, token ->
+                  Column {
+                     DropdownMenuItem(
+                        text = {
+                           Row(
+                              verticalAlignment = Alignment.CenterVertically
+                           ) {
+                              val credentialAccount = token.account!!.value
+                              val account = credentialAccount.account.value
+                              val username = account.username
 
-                           val displayName = account.displayName ?: account.username
-                           if (displayName != null) {
-                              Text(
-                                 displayName,
-                                 overflow = TextOverflow.Ellipsis,
-                                 maxLines = 1,
-                                 style = MaterialTheme.typography.titleMedium
-                              )
-                           }
+                              val displayName = account.displayName ?: account.username
+                              if (displayName != null) {
+                                 Text(
+                                    displayName,
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = 1,
+                                    style = MaterialTheme.typography.titleMedium
+                                 )
+                              }
 
-                           if (displayName != null && username != null) {
-                              Spacer(Modifier.width(4.dp))
-                           }
+                              if (displayName != null && username != null) {
+                                 Spacer(Modifier.width(4.dp))
+                              }
 
-                           if (username != null) {
-                              Text(
-                                 "@$username",
-                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                 overflow = TextOverflow.Ellipsis,
-                                 maxLines = 1,
-                                 style = MaterialTheme.typography.bodyMedium
-                              )
+                              if (username != null) {
+                                 Text(
+                                    "@$username",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = 1,
+                                    style = MaterialTheme.typography.bodyMedium
+                                 )
+                              }
                            }
-                        }
-                     },
-                     trailingIcon = {
-                        Icon(
-                           Icons.Default.KeyboardArrowDown,
-                           contentDescription = null
-                        )
-                     },
-                     onClick = {}
-                  )
+                        },
+                        trailingIcon = {
+                           Icon(
+                              Icons.Default.KeyboardArrowDown,
+                              contentDescription = null
+                           )
+                        },
+                        onClick = {}
+                     )
+
+                     if (index < state.data.lastIndex) {
+                        HorizontalDivider()
+                     }
+                  }
                }
             }
          }
