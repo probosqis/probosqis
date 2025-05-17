@@ -82,6 +82,7 @@ fun MultiColumnProbosqis(
    ModalNavigationDrawer(
       drawerContent = {
          HamburgerMenu(
+            state.hamburgerMenuState,
             onSettingItemClick = {
                coroutineScope.launch {
                   state.pageDeckState.addColumn(AccountListPage())

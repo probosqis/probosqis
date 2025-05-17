@@ -119,6 +119,7 @@ fun SingleColumnProbosqis(
    ModalNavigationDrawer(
       drawerContent = {
          HamburgerMenu(
+            state.hamburgerMenuState,
             onSettingItemClick = {
                coroutineScope.launch {
                   pageDeckState.addColumn(AccountListPage())

@@ -25,6 +25,8 @@ import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
 @Stable
 class ProbosqisState {
+   internal val hamburgerMenuState = HamburgerMenuState()
+
    private var _pageDeckState: PageDeckState? = null
    var pageDeckState: PageDeckState
       get() {

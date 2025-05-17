@@ -26,12 +26,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.foundation.resources.Strings
 
+@Stable
+internal class HamburgerMenuState
+
 @Composable
-internal fun HamburgerMenu(onSettingItemClick: () -> Unit) {
+internal fun HamburgerMenu(
+   state: HamburgerMenuState,
+   onSettingItemClick: () -> Unit
+) {
    ModalDrawerSheet {
       Spacer(Modifier.weight(1f))
 
