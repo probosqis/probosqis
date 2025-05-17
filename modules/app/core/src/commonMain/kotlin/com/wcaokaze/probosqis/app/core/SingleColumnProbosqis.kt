@@ -35,12 +35,15 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -69,6 +72,7 @@ import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckAppBar
 import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
 import com.wcaokaze.probosqis.app.pagedeck.navigateToPage
+import com.wcaokaze.probosqis.app.setting.account.list.AccountListPage
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.foundation.error.PErrorActionButton
 import com.wcaokaze.probosqis.foundation.error.PErrorList
@@ -101,65 +105,91 @@ fun SingleColumnProbosqis(
       }
    }
 
-   // 現状Desktopで動作しないため自前実装する
-   // val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-   val appBarScrollState = remember { AppBarScrollState() }
-   val nestedScrollConnection = remember(appBarScrollState) {
-      AppBarNestedScrollConnection(appBarScrollState)
+   val coroutineScope = rememberCoroutineScope()
+   val drawerState = rememberDrawerState(DrawerValue.Closed)
+
+   if (drawerState.isOpen) {
+      BackHandler {
+         coroutineScope.launch {
+            drawerState.close()
+         }
+      }
    }
 
-   Box {
-      val errorListState: PErrorListState = koinInject()
-      val pageSwitcherState: CombinedPageSwitcherState = koinInject()
-
-      Column(
-         modifier = Modifier
-            .background(colorScheme.background)
-            .nestedScroll(nestedScrollConnection)
-      ) {
-         val coroutineScope = rememberCoroutineScope()
-
-         AppBar(
-            appBarScrollState,
-            errorListState,
-            pageDeckState,
-            pageSwitcherState,
-            backgroundColor = colorScheme.appBar,
-            windowInsets = safeDrawingWindowInsets
-               .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-            onErrorButtonClick = {
+   ModalNavigationDrawer(
+      drawerContent = {
+         HamburgerMenu(
+            onSettingItemClick = {
                coroutineScope.launch {
-                  appBarScrollState.show()
-                  errorListState.show()
+                  pageDeckState.addColumn(AccountListPage())
+                  drawerState.close()
                }
             }
          )
-
-         SingleColumnPageDeck(
-            pageDeckState,
-            pageSwitcherState,
-            colorScheme.pageStack,
-            windowInsets = safeDrawingWindowInsets
-               .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
-            modifier = Modifier
-               .fillMaxSize()
-         )
+      },
+      drawerState = drawerState
+   ) {
+      // 現状Desktopで動作しないため自前実装する
+      // val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+      val appBarScrollState = remember { AppBarScrollState() }
+      val nestedScrollConnection = remember(appBarScrollState) {
+         AppBarNestedScrollConnection(appBarScrollState)
       }
 
-      val coroutineScope = rememberCoroutineScope()
+      Box {
+         val errorListState: PErrorListState = koinInject()
+         val pageSwitcherState: CombinedPageSwitcherState = koinInject()
 
-      PErrorList(
-         errorListState,
-         colorScheme.errorListColors,
-         onRequestNavigateToPage = { pageId, fallbackPage ->
-            coroutineScope.launch {
-               state.pageDeckState.navigateToPage(
-                  pageId,
-                  fallbackPage
-               )
-            }
+         Column(
+            modifier = Modifier
+               .background(colorScheme.background)
+               .nestedScroll(nestedScrollConnection)
+         ) {
+            AppBar(
+               appBarScrollState,
+               errorListState,
+               pageDeckState,
+               pageSwitcherState,
+               backgroundColor = colorScheme.appBar,
+               windowInsets = safeDrawingWindowInsets
+                  .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+               onHamburgerButtonClick = {
+                  coroutineScope.launch {
+                     drawerState.open()
+                  }
+               },
+               onErrorButtonClick = {
+                  coroutineScope.launch {
+                     appBarScrollState.show()
+                     errorListState.show()
+                  }
+               }
+            )
+
+            SingleColumnPageDeck(
+               pageDeckState,
+               pageSwitcherState,
+               colorScheme.pageStack,
+               windowInsets = safeDrawingWindowInsets
+                  .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
+               modifier = Modifier
+                  .fillMaxSize()
+            )
          }
-      )
+
+         PErrorList(
+            errorListState,
+            colorScheme.errorListColors,
+            onRequestNavigateToPage = { pageId, fallbackPage ->
+               coroutineScope.launch {
+                  state.pageDeckState.navigateToPage(
+                     pageId,
+                     fallbackPage
+                  )
+               }
+            }
+         )
+      }
    }
 }
 
@@ -172,6 +202,7 @@ private fun AppBar(
    pageSwitcherState: CombinedPageSwitcherState,
    backgroundColor: Color,
    windowInsets: WindowInsets,
+   onHamburgerButtonClick: () -> Unit,
    onErrorButtonClick: () -> Unit
 ) {
    val anim = remember { Animatable(0.dp, Dp.VectorConverter) }
@@ -218,8 +249,8 @@ private fun AppBar(
             )
          },
          navigationIcon = {
-            MenuButton(
-               onClick = {}
+            HamburgerButton(
+               onClick = onHamburgerButtonClick
             )
          },
          actions = {
@@ -247,7 +278,7 @@ private fun AppBar(
 }
 
 @Composable
-private fun MenuButton(
+private fun HamburgerButton(
    onClick: () -> Unit
 ) {
    IconButton(onClick) {

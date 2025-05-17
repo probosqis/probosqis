@@ -47,7 +47,6 @@ import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import com.wcaokaze.probosqis.panoptiqon.Cache
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -283,7 +282,7 @@ class CallbackWaiterPageTest {
          }
 
          every { getCredentialAccount(any()) } answers {
-            credentialAccount(firstArg<Token>().instance)
+            Cache(credentialAccount(firstArg<Token>().instance))
          }
       }
 
@@ -298,7 +297,7 @@ class CallbackWaiterPageTest {
       }
 
       val credentialRepository: CredentialRepository = mockk {
-         coEvery { saveCredential(any()) } just runs
+         every { saveCredential(any()) } just runs
       }
 
       val page = CallbackWaiterPage(Url("https://mastodon.social/"))
@@ -350,7 +349,7 @@ class CallbackWaiterPageTest {
          }
 
          every { getCredentialAccount(any()) } answers {
-            credentialAccount(firstArg<Token>().instance)
+            Cache(credentialAccount(firstArg<Token>().instance))
          }
       }
 
@@ -365,7 +364,7 @@ class CallbackWaiterPageTest {
       }
 
       val credentialRepository: CredentialRepository = mockk {
-         coEvery { saveCredential(any()) } just runs
+         every { saveCredential(any()) } just runs
       }
 
       val page = CallbackWaiterPage(Url("https://mastodon.social/"))
@@ -415,7 +414,7 @@ class CallbackWaiterPageTest {
          }
 
          every { getCredentialAccount(any()) } answers {
-            credentialAccount(firstArg<Token>().instance)
+            Cache(credentialAccount(firstArg<Token>().instance))
          }
       }
 
@@ -430,7 +429,7 @@ class CallbackWaiterPageTest {
       }
 
       val credentialRepository: CredentialRepository = mockk {
-         coEvery { saveCredential(any()) } just runs
+         every { saveCredential(any()) } just runs
       }
 
       val page = CallbackWaiterPage(Url("https://mastodon.social/"))
@@ -480,7 +479,7 @@ class CallbackWaiterPageTest {
          }
 
          every { getCredentialAccount(any()) } answers {
-            credentialAccount(firstArg<Token>().instance)
+            Cache(credentialAccount(firstArg<Token>().instance))
          }
       }
 
@@ -495,7 +494,7 @@ class CallbackWaiterPageTest {
       }
 
       val credentialRepository: CredentialRepository = mockk {
-         coEvery { saveCredential(any()) } just runs
+         every { saveCredential(any()) } just runs
       }
 
       val page = CallbackWaiterPage(Url("https://mastodon.social/"))

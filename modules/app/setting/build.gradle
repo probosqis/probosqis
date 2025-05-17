@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2025 wcaokaze
+ * Copyright 2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,23 +26,24 @@ plugins {
 apply from: rootProject.file('gradle/setupModule.gradle')
 
 android {
-   namespace 'com.wcaokaze.probosqis.app.core'
+   namespace 'com.wcaokaze.probosqis.mastodon.ui'
 }
 
 kotlin {
    sourceSets {
       commonMain.dependencies {
-         implementation project(':panoptiqon')
-         implementation project(':panoptiqon-compose')
-         implementation project(':capsiqum-page')
-         implementation project(':capsiqum-deck')
-         implementation project(':capsiqum-transition')
-         implementation project(':modules:foundation:error')
          implementation project(':modules:foundation:page')
-         implementation project(':modules:app:pagedeck')
-         implementation project(':modules:app:setting')
-         implementation project(':modules:testpages')
-         implementation project(':modules:foundation:resources')
+         implementation project(':modules:foundation:credential')
+         implementation project(':modules:foundation:entity')
+         implementation project(':modules:nodeinfo:entity')
+         implementation project(':modules:nodeinfo:repository')
+         implementation project(':modules:mastodon:entity')
+         implementation project(':modules:mastodon:repository')
+         implementation project(':modules:mastodon:ui')
+      }
+
+      commonTest.dependencies {
+         implementation project(':capsiqum-page-test')
       }
    }
 }

@@ -78,5 +78,5 @@ interface AppRepository {
    /**
     * @throws IOException
     */
-   fun getCredentialAccount(token: Token): CredentialAccount
+   fun getCredentialAccount(token: Token): Cache<CredentialAccount>
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2025 wcaokaze
+ * Copyright 2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,32 +14,37 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.app.core
+package com.wcaokaze.probosqis.app.setting
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import com.wcaokaze.probosqis.foundation.resources.LocalLanguage
 import com.wcaokaze.probosqis.foundation.resources.Strings
 
-interface AppStrings {
-   val topAppBar: String
-   val topAppBarNavigationContentDescription: String
-   val hamburgerMenuSettingItem: String
+interface SettingStrings {
+   interface AccountList {
+      val appBar: String
+      val addAccountItem: String
+   }
+
+   val accountList: AccountList
 }
 
-val Strings.Companion.App: AppStrings
+val Strings.Companion.Setting: SettingStrings
    @Composable
    @ReadOnlyComposable
    get() = when (LocalLanguage.current) {
-      Strings.Language.ENGLISH -> object : AppStrings {
-         override val topAppBar = "Probosqis"
-         override val topAppBarNavigationContentDescription = "Menu"
-         override val hamburgerMenuSettingItem = "Settings"
+      Strings.Language.ENGLISH -> object : SettingStrings {
+         override val accountList = object : SettingStrings.AccountList {
+            override val appBar = "Accounts"
+            override val addAccountItem = "Add an account"
+         }
       }
 
-      Strings.Language.JAPANESE -> object : AppStrings {
-         override val topAppBar = "Probosqis"
-         override val topAppBarNavigationContentDescription = "メニュー"
-         override val hamburgerMenuSettingItem = "設定"
+      Strings.Language.JAPANESE -> object : SettingStrings {
+         override val accountList = object : SettingStrings.AccountList {
+            override val appBar = "アカウント"
+            override val addAccountItem = "アカウントを追加"
+         }
       }
    }

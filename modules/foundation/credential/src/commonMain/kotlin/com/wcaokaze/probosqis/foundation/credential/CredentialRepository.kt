@@ -42,8 +42,8 @@ interface CredentialRepository {
       val fileNameSupplier: (C) -> String
    )
 
-   suspend fun saveCredential(credential: Credential)
-   suspend fun loadAllCredentials(): List<Cache<Credential>>
+   fun saveCredential(credential: Credential)
+   fun loadAllCredentials(): List<Cache<Credential>>
 }
 
 abstract class AbstractCredentialRepository
