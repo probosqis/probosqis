@@ -24,6 +24,7 @@ import com.wcaokaze.probosqis.foundation.resources.Strings
 interface SettingStrings {
    interface AccountList {
       val appBar: String
+      val addAccountItem: String
    }
 
    val accountList: AccountList
@@ -36,12 +37,14 @@ val Strings.Companion.Setting: SettingStrings
       Strings.Language.ENGLISH -> object : SettingStrings {
          override val accountList = object : SettingStrings.AccountList {
             override val appBar = "Accounts"
+            override val addAccountItem = "Add an account"
          }
       }
 
       Strings.Language.JAPANESE -> object : SettingStrings {
          override val accountList = object : SettingStrings.AccountList {
             override val appBar = "アカウント"
+            override val addAccountItem = "アカウントを追加"
          }
       }
    }

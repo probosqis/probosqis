@@ -17,13 +17,21 @@
 package com.wcaokaze.probosqis.app.setting.account.list
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -33,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.setting.Setting
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.LoadState
@@ -43,6 +52,7 @@ import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -99,7 +109,10 @@ val accountListPageComposable = PPageComposable<AccountListPage, AccountListPage
    },
    content = { _, pageState, _ ->
       AccountListPageContent(
-         pageState.credentialLoadState
+         pageState.credentialLoadState,
+         onAddAccountItemClick = {
+            pageState.startPage(UrlInputPage())
+         }
       )
    },
    footer = null,
@@ -109,7 +122,8 @@ val accountListPageComposable = PPageComposable<AccountListPage, AccountListPage
 
 @Composable
 private fun AccountListPageContent(
-   credentialLoadState: LoadState<List<Token>>
+   credentialLoadState: LoadState<List<Token>>,
+   onAddAccountItemClick: () -> Unit
 ) {
    Crossfade(credentialLoadState) { state ->
       when (state) {
@@ -140,11 +154,46 @@ private fun AccountListPageContent(
                      }
                   }
                }
+
+               item {
+                  AddAccountItem(onClick = onAddAccountItemClick)
+               }
             }
          }
          is LoadState.Error -> {
             Text("エラーだよ")
          }
       }
+   }
+}
+
+@Composable
+private fun AddAccountItem(
+   onClick: () -> Unit
+) {
+   Row(
+      modifier = Modifier
+         .fillMaxWidth()
+         .heightIn(min = 48.dp)
+         .clickable(onClick = onClick)
+         .padding(4.dp)
+   ) {
+      Icon(
+         Icons.Default.Add,
+         contentDescription = null,
+         modifier = Modifier
+            .padding(4.dp)
+            .align(Alignment.CenterVertically)
+      )
+
+      Text(
+         Strings.Setting.accountList.addAccountItem,
+         maxLines = 1,
+         overflow = TextOverflow.Ellipsis,
+         style = MaterialTheme.typography.labelLarge,
+         modifier = Modifier
+            .padding(8.dp)
+            .align(Alignment.CenterVertically)
+      )
    }
 }
