@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,17 +56,21 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
+import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.foundation.resources.Strings
+import com.wcaokaze.probosqis.foundation.resources.icons.Error
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
 import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage
-import com.wcaokaze.probosqis.page.PPage
-import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
-import com.wcaokaze.probosqis.resources.Strings
-import com.wcaokaze.probosqis.resources.icons.Error
+import com.wcaokaze.probosqis.nodeinfo.entity.FediverseSoftware
+import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
+import com.wcaokaze.probosqis.foundation.page.PPage
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
+import com.wcaokaze.probosqis.foundation.page.PPageState
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -84,20 +87,17 @@ import org.koin.core.component.inject
 @SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage")
 class UrlInputPage : PPage()
 
+internal class UnsupportedServerSoftwareException(
+   val software: FediverseSoftware.Unsupported
+) : Exception()
+
 @Stable
 class UrlInputPageState : PPageState<UrlInputPage>() {
    private val appRepository: AppRepository by inject()
+   private val nodeInfoRepository: NodeInfoRepository by inject()
 
-   private var authorizeUrlLoadState: LoadState<Unit>
-       by mutableStateOf(LoadState.Success(Unit))
-
-   val isLoading: Boolean by derivedStateOf {
-      authorizeUrlLoadState is LoadState.Loading
-   }
-
-   val isError: Boolean by derivedStateOf {
-      authorizeUrlLoadState is LoadState.Error
-   }
+   var authorizeUrlLoadState: LoadState<Unit> by mutableStateOf(LoadState.Success(Unit))
+      internal set
 
    var hasKeyboardShown by save(
       "has_keyboard_shown", Boolean.serializer(),
@@ -111,7 +111,7 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
    /**
     * @return (authorizeUrl, instanceBaseUrl)
     */
-   fun getAuthorizeUrl(): Deferred<Result<Pair<String, String>>> {
+   fun getAuthorizeUrl(): Deferred<Result<Pair<Url, Url>>> {
       if (authorizeUrlLoadState is LoadState.Loading) {
          val e = IllegalStateException(
             "attempt to get authorize url but an old job is running yet."
@@ -124,12 +124,22 @@ class UrlInputPageState : PPageState<UrlInputPage>() {
 
       return pageStateScope.async {
          try {
-            val instanceBaseUrl = inputUrl.text
-            val authorizeUrl = withContext(Dispatchers.IO) {
-               appRepository.getAuthorizeUrl(instanceBaseUrl)
+            val result = withContext(Dispatchers.IO) {
+               val software = nodeInfoRepository
+                  .getServerSoftware(Url(inputUrl.text))
+
+               when (software) {
+                  is FediverseSoftware.Mastodon -> {
+                     val authorizeUrl = appRepository.getAuthorizeUrl(software.instance)
+                     Pair(authorizeUrl, software.instance.url)
+                  }
+                  is FediverseSoftware.Unsupported -> {
+                     throw UnsupportedServerSoftwareException(software)
+                  }
+               }
             }
             authorizeUrlLoadState = LoadState.Success(Unit)
-            Result.success(Pair(authorizeUrl, instanceBaseUrl))
+            Result.success(result)
          } catch (e: Exception) {
             authorizeUrlLoadState = LoadState.Error(e)
             Result.failure(e)
@@ -172,15 +182,13 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
 
             browserLauncher.launchBrowser(authorizeUrl)
 
-            state.finishPage()
             state.startPage(CallbackWaiterPage(instanceBaseUrl))
          }
       }
 
       UrlInputPageContent(
          state.inputUrl,
-         state.isLoading,
-         state.isError,
+         state.authorizeUrlLoadState,
          onInputUrlChange = { newValue ->
             state.inputUrl = newValue
          },
@@ -201,8 +209,7 @@ val urlInputPageComposable = PPageComposable<UrlInputPage, UrlInputPageState>(
 @Composable
 private fun UrlInputPageContent(
    inputUrl: TextFieldValue,
-   isLoading: Boolean,
-   isError: Boolean,
+   authorizeUrlLoadState: LoadState<Unit>,
    onInputUrlChange: (TextFieldValue) -> Unit,
    onUrlTextFieldKeyboardActionGo: KeyboardActionScope.() -> Unit,
    onGoButtonClick: () -> Unit,
@@ -215,13 +222,14 @@ private fun UrlInputPageContent(
    ) {
       Text(
          Strings.Mastodon.authUrlInput.description,
+         fontSize = 15.sp,
          modifier = Modifier.padding(8.dp)
       )
 
       Spacer(Modifier.height(24.dp))
 
       UrlTextField(
-         inputUrl, onInputUrlChange, isLoading, isError,
+         inputUrl, authorizeUrlLoadState, onInputUrlChange,
          onUrlTextFieldKeyboardActionGo, focusRequester
       )
 
@@ -231,6 +239,8 @@ private fun UrlInputPageContent(
             .align(Alignment.End)
             .padding(horizontal = 8.dp)
       ) {
+         val isLoading = authorizeUrlLoadState is LoadState.Loading
+
          if (isLoading) {
             CircularProgressIndicator(
                strokeWidth = 2.dp,
@@ -256,16 +266,28 @@ private fun UrlInputPageContent(
 @Composable
 private fun UrlTextField(
    inputUrl: TextFieldValue,
+   authorizeUrlLoadState: LoadState<Unit>,
    onInputUrlChange: (TextFieldValue) -> Unit,
-   isLoading: Boolean,
-   isError: Boolean,
    onKeyboardActionGo: KeyboardActionScope.() -> Unit,
    focusRequester: FocusRequester,
 ) {
+   val errorMessage = if (authorizeUrlLoadState !is LoadState.Error) {
+      null
+   } else {
+      val exception = authorizeUrlLoadState.exception
+      if (exception is UnsupportedServerSoftwareException) {
+         Strings.Mastodon.authUrlInput.unsupportedServerSoftwareError(
+            exception.software.name
+         )
+      } else {
+         Strings.Mastodon.authUrlInput.serverUrlGettingError
+      }
+   }
+
    OutlinedTextField(
       inputUrl,
       onValueChange = onInputUrlChange,
-      enabled = !isLoading,
+      enabled = authorizeUrlLoadState !is LoadState.Loading,
       label = {
          Text(Strings.Mastodon.authUrlInput.serverUrlTextFieldLabel)
       },
@@ -276,7 +298,7 @@ private fun UrlTextField(
       supportingText = {
          Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = if (isError) {
+            modifier = if (errorMessage != null) {
                Modifier
             } else {
                Modifier.alpha(0.0f)
@@ -289,12 +311,12 @@ private fun UrlTextField(
             )
 
             Text(
-               Strings.Mastodon.authUrlInput.serverUrlGettingError,
+               errorMessage ?: "",
                modifier = Modifier.padding(horizontal = 4.dp)
             )
          }
       },
-      isError = isError,
+      isError = authorizeUrlLoadState is LoadState.Error,
       keyboardOptions = KeyboardOptions(
          keyboardType = KeyboardType.Uri,
          imeAction = ImeAction.Go,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
+import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
+import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import io.mockk.every
@@ -67,12 +70,25 @@ class CallbackProcessorTest {
       val appRepository: AppRepository = mockk {
          every { loadAppCache(any()) } returns Cache(mockk())
          every { getToken(any(), any()) } returns mockk()
+         every { getCredentialAccount(any()) } returns Cache(mockk {
+            every { account } returns Cache(mockk())
+         })
+      }
+
+      val accountRepository: AccountRepository = mockk {
+         every { getAccountIcon(any()) } returns Cache(mockk())
+      }
+
+      val credentialRepository: CredentialRepository = mockk {
+         every { saveCredential(any()) } just runs
       }
 
       startKoin {
          modules(
             module {
                single { appRepository }
+               single { accountRepository }
+               single { credentialRepository }
             }
          )
       }
@@ -80,7 +96,7 @@ class CallbackProcessorTest {
       lateinit var pageState: CallbackWaiterPageState
 
       rule.setContent {
-         val page = CallbackWaiterPage("https://example.com/")
+         val page = CallbackWaiterPage(Url("https://example.com/"))
          pageState = callbackWaiterPageComposable.pageStateFactory
             .rememberTestPageState(page)
 
@@ -94,21 +110,17 @@ class CallbackProcessorTest {
          CallbackProcessor.onNewIntent(intent, sequenceOf(pageState))
       }
 
+      rule.waitUntil {
+         pageState.credentialAccountLoadState is CredentialAccountLoadState.Success
+      }
+
       rule.runOnIdle {
-         verify { appRepository.loadAppCache("https://example.com/") }
+         verify { appRepository.loadAppCache(Url("https://example.com/")) }
          verify { appRepository.getToken(any(), "abcdefghijk") }
+         verify { appRepository.getCredentialAccount(any()) }
+         verify { accountRepository.getAccountIcon(any()) }
+         verify { credentialRepository.saveCredential(any()) }
       }
-   }
-
-   @Test
-   fun doNothing_intentIsNull() {
-      val pageState: CallbackWaiterPageState = mockk {
-         every { saveAuthorizedAccountByCode(any()) } just runs
-      }
-
-      CallbackProcessor.onNewIntent(intent = null, sequenceOf(pageState))
-
-      verify(exactly = 0) { pageState.saveAuthorizedAccountByCode(any()) }
    }
 
    @Test

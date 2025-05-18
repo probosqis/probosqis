@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,29 +20,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import com.wcaokaze.probosqis.app.App
-import com.wcaokaze.probosqis.app.MultiColumnProbosqis
-import com.wcaokaze.probosqis.app.ProbosqisState
-import com.wcaokaze.probosqis.app.loadErrorListOrDefault
-import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
-import com.wcaokaze.probosqis.error.DesktopPErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.app.core.App
+import com.wcaokaze.probosqis.app.core.MultiColumnProbosqis
+import com.wcaokaze.probosqis.app.core.ProbosqisState
+import com.wcaokaze.probosqis.app.core.loadErrorListOrDefault
+import com.wcaokaze.probosqis.app.core.loadPageDeckOrDefault
+import com.wcaokaze.probosqis.app.pagedeck.DesktopPageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.DesktopPageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
+import com.wcaokaze.probosqis.foundation.credential.DesktopCredentialRepository
+import com.wcaokaze.probosqis.foundation.credential.credentialSerializer
+import com.wcaokaze.probosqis.foundation.error.DesktopPErrorListRepository
+import com.wcaokaze.probosqis.foundation.error.PErrorListRepository
+import com.wcaokaze.probosqis.foundation.error.PErrorListState
+import com.wcaokaze.probosqis.foundation.error.errorSerializer
+import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
+import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
+import com.wcaokaze.probosqis.foundation.resources.Strings
+import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.repository.DesktopAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAppRepository
-import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
-import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
-import com.wcaokaze.probosqis.page.PPageSwitcherState
-import com.wcaokaze.probosqis.pagedeck.DesktopPageDeckRepository
-import com.wcaokaze.probosqis.pagedeck.DesktopPageStackRepository
-import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
-import com.wcaokaze.probosqis.pagedeck.PageStackRepository
-import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.pageSerializer
-import com.wcaokaze.probosqis.resources.ProbosqisTheme
-import com.wcaokaze.probosqis.resources.Strings
+import com.wcaokaze.probosqis.mastodon.repository.DesktopTimelineRepository
+import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
+import com.wcaokaze.probosqis.nodeinfo.repository.DesktopNodeInfoRepository
+import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.testpages.TestError
 import com.wcaokaze.probosqis.testpages.TestNotePage
 import com.wcaokaze.probosqis.testpages.TestPage
@@ -55,6 +62,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.koin.compose.KoinApplication
 import org.koin.dsl.module
 import java.io.File
+import java.net.URLEncoder
 
 object Main {
    init {
@@ -65,18 +73,20 @@ object Main {
       testPageComposable,
       testTimelinePageComposable,
       testNotePageComposable,
+      com.wcaokaze.probosqis.app.setting.account.list.accountListPageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.callbackWaiterPageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.urlInputPageComposable,
-      mastodonTestPageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.timeline.home.homeTimelinePageComposable,
    )
 
    private val allPageSerializers = persistentListOf(
       pageSerializer<TestPage>(),
       pageSerializer<TestTimelinePage>(),
       pageSerializer<TestNotePage>(),
+      pageSerializer<com.wcaokaze.probosqis.app.setting.account.list.AccountListPage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage>(),
-      pageSerializer<MastodonTestPage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage>(),
    )
 
    private val allErrorItemComposables = persistentListOf(
@@ -95,7 +105,8 @@ object Main {
       factory {
          val pageDeckCache = loadPageDeckOrDefault(
             pageDeckRepository = get(),
-            pageStackRepository = get()
+            pageStackRepository = get(),
+            credentialRepository = get()
          )
 
          MultiColumnPageDeckState(pageDeckCache, pageStackRepository = get())
@@ -104,7 +115,8 @@ object Main {
       factory {
          val pageDeckCache = loadPageDeckOrDefault(
             pageDeckRepository = get(),
-            pageStackRepository = get()
+            pageStackRepository = get(),
+            credentialRepository = get()
          )
 
          SingleColumnPageDeckState(pageDeckCache, pageStackRepository = get())
@@ -135,7 +147,23 @@ object Main {
          )
       }
 
+      single<CredentialRepository> {
+         DesktopCredentialRepository(
+            allCredentialSerializers = listOf(
+               credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token> { token ->
+                  val encodedUrl = URLEncoder.encode(token.accountId.instanceUrl.raw, "UTF-8")
+                  val localId = token.accountId.local.value
+                  "mastodon_${encodedUrl}_$localId"
+               },
+            ),
+            probosqisDataDir
+         )
+      }
+
       single<AppRepository> { DesktopAppRepository(probosqisDataDir) }
+      single<AccountRepository> { DesktopAccountRepository() }
+      single<NodeInfoRepository> { DesktopNodeInfoRepository() }
+      single<TimelineRepository> { DesktopTimelineRepository() }
    }
 
    @JvmStatic
@@ -158,7 +186,10 @@ object Main {
                   onCloseRequest = { exitApplication() }
                ) {
                   val probosqisState = remember { ProbosqisState() }
-                  MultiColumnProbosqis(probosqisState)
+                  MultiColumnProbosqis(
+                     probosqisState,
+                     onRequestCloseWindow = { exitApplication() }
+                  )
                }
             }
          }
@@ -171,7 +202,7 @@ object Main {
          osName.startsWith("linux") -> {
             val lib = File(
                System.getProperty("user.dir").split('/').dropLast(2).joinToString("/"),
-               "target/debug/libapp.so"
+               "target/debug/libapp_core.so"
             )
             System.load(lib.absolutePath)
          }

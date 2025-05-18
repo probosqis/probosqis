@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use std::cell::LazyCell;
 
-use reqwest::blocking::Client;
-
-const CLIENT: LazyCell<Client> = LazyCell::new(
-   || Client::builder().build().unwrap()
-);
-
-mod app_repository;
+pub mod account_repository;
+pub mod app_repository;
+pub mod timeline_repository;
+pub(crate) mod cache;
+pub(crate) mod conversion;

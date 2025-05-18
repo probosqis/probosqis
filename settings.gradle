@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 wcaokaze
+ * Copyright 2023-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,17 +34,17 @@ dependencyResolutionManagement {
 
    versionCatalogs {
       libs {
-         version('kotlin', '2.0.20')
-         version('rust-android-plugin', '0.9.4')
-         version('android-plugin', '8.5.0')
-         version('android-ndk', '27.1.12297006')
-         version('compose-jb', '1.6.11')
-         version('compose-androidx', '1.6.8')
+         version('kotlin', '2.1.10')
+         version('rust-android-plugin', '0.9.6')
+         version('android-plugin', '8.7.0')
+         version('android-ndk', '27.2.12479018')
+         version('compose-jb', '1.7.3')
+         version('compose-androidx', '1.7.7')
          version('compose-compiler', '1.5.15')
-         version('compose-material3', '1.2.1')
-         version('accompanist', '0.34.0')
-         version('koin', '3.5.6')
-         version('roborazzi', '1.26.0')
+         version('compose-material3', '1.3.1')
+         version('accompanist', '0.36.0')
+         version('koin', '4.0.2')
+         version('roborazzi', '1.41.0')
 
          plugin('kotlin-multiplatform', 'org.jetbrains.kotlin.multiplatform').versionRef('kotlin')
          plugin('rust-android', 'org.mozilla.rust-android-gradle.rust-android').versionRef('rust-android-plugin')
@@ -56,24 +56,24 @@ dependencyResolutionManagement {
          plugin('roborazzi', 'io.github.takahirom.roborazzi').versionRef('roborazzi')
 
          library('kotlinx-collections-immutable', 'org.jetbrains.kotlinx', 'kotlinx-collections-immutable').version('0.3.8')
-         library('kotlinx-datetime', 'org.jetbrains.kotlinx', 'kotlinx-datetime').version('0.6.1')
-         library('androidx-annotation', 'androidx.annotation', 'annotation').version('1.8.2')
+         library('kotlinx-datetime', 'org.jetbrains.kotlinx', 'kotlinx-datetime').version('0.6.2')
+         library('androidx-annotation', 'androidx.annotation', 'annotation').version('1.9.1')
 
-         library('android-desugaring-jdk', 'com.android.tools', 'desugar_jdk_libs').version('2.1.2')
+         library('android-desugaring-jdk', 'com.android.tools', 'desugar_jdk_libs').version('2.1.4')
 
-         library('androidx-activity-compose', 'androidx.activity', 'activity-compose').version('1.8.2')
+         library('androidx-activity-compose', 'androidx.activity', 'activity-compose').version('1.10.0')
          library('androidx-compose-material3-window-size', 'androidx.compose.material3', 'material3-window-size-class').versionRef('compose-material3')
          library('accompanist-pager', 'com.google.accompanist', 'accompanist-pager').versionRef('accompanist')
 
-         library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.6.2')
+         library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.8.0')
 
          library('koin-core', 'io.insert-koin', 'koin-core').versionRef('koin')
          library('koin-android', 'io.insert-koin', 'koin-android').versionRef('koin')
-         library('koin-compose', 'io.insert-koin', 'koin-compose').version('1.1.5')
+         library('koin-compose', 'io.insert-koin', 'koin-compose').versionRef('koin')
 
          library('kotlin-test-junit', 'org.jetbrains.kotlin', 'kotlin-test-junit').versionRef('kotlin')
-         library('mockk', 'io.mockk', 'mockk').version('1.13.12')
-         library('robolectric', 'org.robolectric', 'robolectric').version('4.13')
+         library('mockk', 'io.mockk', 'mockk').version('1.13.16')
+         library('robolectric', 'org.robolectric', 'robolectric').version('4.14.1')
          library('roborazzi-core', 'io.github.takahirom.roborazzi', 'roborazzi').versionRef('roborazzi')
          library('roborazzi-compose', 'io.github.takahirom.roborazzi', 'roborazzi-compose').versionRef('roborazzi')
          library('androidx-test-ext', 'androidx.test.ext', 'junit').version('1.2.1')
@@ -97,8 +97,14 @@ includeSubmodule ':capsiqum-page', 'modules/capsiqum/capsiqum-page'
 includeSubmodule ':capsiqum-page-test', 'modules/capsiqum/capsiqum-page-test'
 includeSubmodule ':capsiqum-deck', 'modules/capsiqum/capsiqum-deck'
 includeSubmodule ':capsiqum-transition', 'modules/capsiqum/capsiqum-transition'
-include ':modules:app'
-include ':modules:error'
+include ':modules:app:core'
+include ':modules:app:pagedeck'
+include ':modules:app:setting'
+include ':modules:foundation:credential'
+include ':modules:foundation:entity'
+include ':modules:foundation:error'
+include ':modules:foundation:page'
+include ':modules:foundation:resources'
 include ':modules:ext:kotlin'
 include ':modules:ext:kotlinTest'
 include ':modules:ext:android'
@@ -107,7 +113,6 @@ include ':modules:ext:panoptiqon'
 include ':modules:mastodon:entity'
 include ':modules:mastodon:repository'
 include ':modules:mastodon:ui'
-include ':modules:page'
-include ':modules:pagedeck'
-include ':modules:resources'
+include ':modules:nodeinfo:entity'
+include ':modules:nodeinfo:repository'
 include ':modules:testpages'

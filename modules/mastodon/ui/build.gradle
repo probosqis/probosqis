@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,11 @@ android {
 kotlin {
    sourceSets {
       commonMain.dependencies {
-         implementation project(':modules:page')
+         implementation project(':modules:foundation:page')
+         implementation project(':modules:foundation:credential')
+         implementation project(':modules:foundation:entity')
+         implementation project(':modules:nodeinfo:entity')
+         implementation project(':modules:nodeinfo:repository')
          implementation project(':modules:mastodon:entity')
          implementation project(':modules:mastodon:repository')
       }

@@ -41,10 +41,10 @@ import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.transition.PageLayoutInfo
 import com.wcaokaze.probosqis.capsiqum.transition.transitionElement
-import com.wcaokaze.probosqis.page.PPage
-import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
-import com.wcaokaze.probosqis.page.PageLayoutIds
+import com.wcaokaze.probosqis.foundation.page.PPage
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
+import com.wcaokaze.probosqis.foundation.page.PPageState
+import com.wcaokaze.probosqis.foundation.page.PageLayoutIds
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

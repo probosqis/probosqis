@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,24 +17,31 @@
 package com.wcaokaze.probosqis
 
 import android.app.Application
-import com.wcaokaze.probosqis.app.loadErrorListOrDefault
-import com.wcaokaze.probosqis.app.loadPageDeckOrDefault
-import com.wcaokaze.probosqis.error.AndroidPErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListRepository
-import com.wcaokaze.probosqis.error.PErrorListState
-import com.wcaokaze.probosqis.error.errorSerializer
+import com.wcaokaze.probosqis.app.core.loadErrorListOrDefault
+import com.wcaokaze.probosqis.app.core.loadPageDeckOrDefault
+import com.wcaokaze.probosqis.app.pagedeck.AndroidPageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.AndroidPageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
+import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
+import com.wcaokaze.probosqis.app.pagedeck.SingleColumnPageDeckState
+import com.wcaokaze.probosqis.app.pagedeck.pageSerializer
+import com.wcaokaze.probosqis.foundation.credential.AndroidCredentialRepository
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
+import com.wcaokaze.probosqis.foundation.credential.credentialSerializer
+import com.wcaokaze.probosqis.foundation.error.AndroidPErrorListRepository
+import com.wcaokaze.probosqis.foundation.error.PErrorListRepository
+import com.wcaokaze.probosqis.foundation.error.PErrorListState
+import com.wcaokaze.probosqis.foundation.error.errorSerializer
+import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
+import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
+import com.wcaokaze.probosqis.mastodon.repository.AndroidAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
+import com.wcaokaze.probosqis.mastodon.repository.AndroidTimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
-import com.wcaokaze.probosqis.mastodon.ui.MastodonTestPage
-import com.wcaokaze.probosqis.mastodon.ui.mastodonTestPageComposable
-import com.wcaokaze.probosqis.page.PPageSwitcherState
-import com.wcaokaze.probosqis.pagedeck.AndroidPageDeckRepository
-import com.wcaokaze.probosqis.pagedeck.AndroidPageStackRepository
-import com.wcaokaze.probosqis.pagedeck.MultiColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.PageDeckRepository
-import com.wcaokaze.probosqis.pagedeck.PageStackRepository
-import com.wcaokaze.probosqis.pagedeck.SingleColumnPageDeckState
-import com.wcaokaze.probosqis.pagedeck.pageSerializer
+import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
+import com.wcaokaze.probosqis.nodeinfo.repository.AndroidNodeInfoRepository
+import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.testpages.TestError
 import com.wcaokaze.probosqis.testpages.TestNotePage
 import com.wcaokaze.probosqis.testpages.TestPage
@@ -48,28 +55,31 @@ import kotlinx.coroutines.MainScope
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
+import java.net.URLEncoder
 
 class MainApplication : Application() {
    init {
-      System.loadLibrary("app")
+      System.loadLibrary("app_core")
    }
 
    private val allPageComposables = persistentListOf(
       testPageComposable,
       testTimelinePageComposable,
       testNotePageComposable,
+      com.wcaokaze.probosqis.app.setting.account.list.accountListPageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.callbackWaiterPageComposable,
       com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.urlInputPageComposable,
-      mastodonTestPageComposable,
+      com.wcaokaze.probosqis.mastodon.ui.timeline.home.homeTimelinePageComposable,
    )
 
    private val allPageSerializers = persistentListOf(
       pageSerializer<TestPage>(),
       pageSerializer<TestTimelinePage>(),
       pageSerializer<TestNotePage>(),
+      pageSerializer<com.wcaokaze.probosqis.app.setting.account.list.AccountListPage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage>(),
       pageSerializer<com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage>(),
-      pageSerializer<MastodonTestPage>(),
+      pageSerializer<com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage>(),
    )
 
    private val allErrorItemComposables = persistentListOf(
@@ -86,7 +96,8 @@ class MainApplication : Application() {
       factory {
          val pageDeckCache = loadPageDeckOrDefault(
             pageDeckRepository = get(),
-            pageStackRepository = get()
+            pageStackRepository = get(),
+            credentialRepository = get()
          )
 
          MultiColumnPageDeckState(pageDeckCache, pageStackRepository = get())
@@ -95,7 +106,8 @@ class MainApplication : Application() {
       factory {
          val pageDeckCache = loadPageDeckOrDefault(
             pageDeckRepository = get(),
-            pageStackRepository = get()
+            pageStackRepository = get(),
+            credentialRepository = get()
          )
 
          SingleColumnPageDeckState(pageDeckCache, pageStackRepository = get())
@@ -126,7 +138,23 @@ class MainApplication : Application() {
          )
       }
 
+      single<CredentialRepository> {
+         AndroidCredentialRepository(
+            context = get(),
+            allCredentialSerializers = listOf(
+               credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token> { token ->
+                  val encodedUrl = URLEncoder.encode(token.accountId.instanceUrl.raw, "UTF-8")
+                  val localId = token.accountId.local.value
+                  "mastodon_${encodedUrl}_$localId"
+               },
+            ),
+         )
+      }
+
       single<AppRepository> { AndroidAppRepository(context = get()) }
+      single<AccountRepository> { AndroidAccountRepository() }
+      single<NodeInfoRepository> { AndroidNodeInfoRepository() }
+      single<TimelineRepository> { AndroidTimelineRepository() }
    }
 
    private val appKoinModule = module {

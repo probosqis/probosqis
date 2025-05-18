@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,25 +18,52 @@ package com.wcaokaze.probosqis.mastodon.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import com.wcaokaze.probosqis.resources.LocalLanguage
-import com.wcaokaze.probosqis.resources.Strings
-import com.wcaokaze.probosqis.resources.appName
+import androidx.compose.runtime.Stable
+import com.wcaokaze.probosqis.foundation.resources.LocalLanguage
+import com.wcaokaze.probosqis.foundation.resources.Strings
+import com.wcaokaze.probosqis.foundation.resources.appName
 
 interface MastodonStrings {
-   class AuthUrlInput(
-      val appBar: String,
-      val description: String,
-      val serverUrlTextFieldLabel: String,
-      val startAuthButton: String,
-      val serverUrlGettingError: String,
-   )
+   interface AuthUrlInput {
+      val appBar: String
+      val description: String
+      val serverUrlTextFieldLabel: String
+      val startAuthButton: String
+      val serverUrlGettingError: String
+
+      @Stable
+      fun unsupportedServerSoftwareError(softwareName: String): String
+   }
+
    class CallbackWaiter(
+      val android: Android,
+      val desktop: Desktop,
+   ) {
+      class Android(
+         val appBar: String,
+         val initialMessage: String,
+         val tokenLoadingMessage: String,
+         val errorMessage: String,
+         val verifySucceedMessage: String,
+      )
+
+      class Desktop(
+         val appBar: String,
+         val message: String,
+         val authorizationCodeInputFieldLabel: String,
+         val verifyButton: String,
+         val errorMessage: String,
+         val verifySucceedMessage: String,
+      )
+   }
+
+   class HomeTimeline(
       val appBar: String,
-      val message: String,
    )
 
    val authUrlInput: AuthUrlInput
    val callbackWaiter: CallbackWaiter
+   val homeTimeline: HomeTimeline
 }
 
 val Strings.Companion.Mastodon: MastodonStrings
@@ -44,30 +71,72 @@ val Strings.Companion.Mastodon: MastodonStrings
    @ReadOnlyComposable
    get() = when (LocalLanguage.current) {
       Strings.Language.ENGLISH -> object : MastodonStrings {
-         override val authUrlInput = MastodonStrings.AuthUrlInput(
-            appBar = "Add an account",
-            description = "Add an existing account to $appName.",
-            serverUrlTextFieldLabel = "Server URL",
-            startAuthButton = "GO",
-            serverUrlGettingError = "Cannot connect to server.",
-         )
+         override val authUrlInput = object : MastodonStrings.AuthUrlInput {
+            override val appBar = "Add an account"
+            override val description = "Add an existing account to $appName."
+            override val serverUrlTextFieldLabel = "Server URL"
+            override val startAuthButton = "GO"
+            override val serverUrlGettingError = "Cannot connect to server."
+
+            override fun unsupportedServerSoftwareError(softwareName: String)
+               = "Unsupported server: $softwareName"
+         }
+
          override val callbackWaiter = MastodonStrings.CallbackWaiter(
-            appBar = "Add an account",
-            message = "Wait…",
+            MastodonStrings.CallbackWaiter.Android(
+               appBar = "Add an account",
+               initialMessage = "Please authorize $appName to access your account on your browser app.",
+               tokenLoadingMessage = "Verifying your credential…",
+               errorMessage = "Unfortunately, $appName failed to verify your account. Please try again.",
+               verifySucceedMessage = "Verified successfully",
+            ),
+            MastodonStrings.CallbackWaiter.Desktop(
+               appBar = "Add an account",
+               message = "Please authorize $appName to access your account. And paste the authorization code.",
+               authorizationCodeInputFieldLabel = "Authorization Code",
+               verifyButton = "Verify the Code",
+               errorMessage = "Cannot verify your account. Please try again.",
+               verifySucceedMessage = "Verified successfully",
+            ),
+         )
+
+         override val homeTimeline = MastodonStrings.HomeTimeline(
+            appBar = "Home",
          )
       }
 
       Strings.Language.JAPANESE -> object : MastodonStrings {
-         override val authUrlInput = MastodonStrings.AuthUrlInput(
-            appBar = "アカウントを追加",
-            description = "作成済みのアカウントを${appName}に追加します",
-            serverUrlTextFieldLabel = "サーバーURL",
-            startAuthButton = "GO",
-            serverUrlGettingError = "サーバーに接続できません",
-         )
+         override val authUrlInput = object : MastodonStrings.AuthUrlInput {
+            override val appBar = "アカウントを追加"
+            override val description = "作成済みのアカウントを${appName}に追加します"
+            override val serverUrlTextFieldLabel = "サーバーURL"
+            override val startAuthButton = "GO"
+            override val serverUrlGettingError = "サーバーに接続できません"
+
+            override fun unsupportedServerSoftwareError(softwareName: String)
+                = "サポートされていないサーバーです: $softwareName"
+         }
+
          override val callbackWaiter = MastodonStrings.CallbackWaiter(
-            appBar = "アカウントを追加",
-            message = "お待ちください…",
+            MastodonStrings.CallbackWaiter.Android(
+               appBar = "アカウントを追加",
+               initialMessage = "ブラウザアプリで${appName}からのアカウントへのアクセスを許可してください。",
+               tokenLoadingMessage = "認証情報を確認しています…",
+               errorMessage = "認証に失敗しました。お手数ですが、もう一度お試しください。",
+               verifySucceedMessage = "認証に成功しました",
+            ),
+            MastodonStrings.CallbackWaiter.Desktop(
+               appBar = "アカウントを追加",
+               message = "${appName}からのアカウントへのアクセスを許可し、発行された認証コードを貼り付けてください。",
+               authorizationCodeInputFieldLabel = "認証コード",
+               verifyButton = "確認",
+               errorMessage = "認証に失敗しました。もう一度お試しください。",
+               verifySucceedMessage = "認証に成功しました",
+            ),
+         )
+
+         override val homeTimeline = MastodonStrings.HomeTimeline(
+            appBar = "ホーム",
          )
       }
    }

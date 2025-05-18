@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,5 +14,13 @@
  * limitations under the License.
  */
 
+pub mod account;
 pub mod application;
+pub mod custom_emoji;
+pub mod filter;
+pub mod media_attachment;
+pub mod poll;
+pub mod preview_card;
+pub mod role;
+pub mod status;
 pub mod token;

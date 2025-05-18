@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,105 +16,118 @@
 
 package com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
+import com.wcaokaze.probosqis.foundation.page.PPage
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
+import com.wcaokaze.probosqis.foundation.page.PPageState
+import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Token
+import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
-import com.wcaokaze.probosqis.mastodon.ui.Mastodon
-import com.wcaokaze.probosqis.page.PPage
-import com.wcaokaze.probosqis.page.PPageComposable
-import com.wcaokaze.probosqis.page.PPageState
-import com.wcaokaze.probosqis.resources.Strings
+import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
+import com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage
+import com.wcaokaze.probosqis.panoptiqon.Cache
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 @SerialName("com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage")
 class CallbackWaiterPage(
-   val instanceBaseUrl: String
+   val instanceBaseUrl: Url
 ) : PPage()
 
-@Stable
-class CallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
-   private val appRepository: AppRepository by inject()
+internal sealed class CredentialAccountLoadState {
+   data object Unloading : CredentialAccountLoadState()
+   data object Loading   : CredentialAccountLoadState()
+   data object Error     : CredentialAccountLoadState()
 
-   var token by mutableStateOf<Token?>(null)
-      private set
+   class Success(
+      val credentialAccount: CredentialAccount,
+      val credentialAccountIcon: Cache<Image?>
+   ) : CredentialAccountLoadState()
+}
+
+abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
+   private val appRepository: AppRepository by inject()
+   private val accountRepository: AccountRepository by inject()
+   private val credentialRepository: CredentialRepository by inject()
+
+   internal var credentialAccountLoadState: CredentialAccountLoadState
+      by mutableStateOf(CredentialAccountLoadState.Unloading)
 
    fun saveAuthorizedAccountByCode(code: String) {
-      pageStateScope.launch {
-         val application = appRepository.loadAppCache(page.instanceBaseUrl)
-         token = appRepository.getToken(application.value, code)
+      if (credentialAccountLoadState is CredentialAccountLoadState.Loading) {
+         return
       }
+
+      credentialAccountLoadState = CredentialAccountLoadState.Loading
+
+      pageStateScope.launch {
+         val token: Token
+
+         try {
+            credentialAccountLoadState = withContext(Dispatchers.IO) {
+               val application = appRepository.loadAppCache(page.instanceBaseUrl)
+               token = appRepository.getToken(application.value, code)
+               // TODO: Token.accountが非nullになったあとRepositoryを叩く必要はなくなる
+               val credentialAccount = appRepository.getCredentialAccount(token).value
+               val credentialAccountIcon
+                  = accountRepository.getAccountIcon(credentialAccount.account.value)
+
+               credentialRepository.saveCredential(token)
+
+               CredentialAccountLoadState.Success(
+                  credentialAccount, credentialAccountIcon
+               )
+            }
+         } catch (e: Exception) {
+            e.printStackTrace()
+            credentialAccountLoadState = CredentialAccountLoadState.Error
+            return@launch
+         }
+
+         delay(3.seconds)
+
+         finishAuthPages()
+         startPage(HomeTimelinePage(token))
+      }
+   }
+
+   private fun finishAuthPages() {
+      var pageStack = pageStack.tailOrNull()
+      if (pageStack == null) {
+         removeFromDeck()
+         return
+      }
+
+      if (pageStack.head.page !is UrlInputPage) {
+         this.pageStack = pageStack
+         return
+      }
+
+      pageStack = pageStack.tailOrNull()
+      if (pageStack == null) {
+         removeFromDeck()
+         return
+      }
+
+      this.pageStack = pageStack
    }
 }
 
-val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, CallbackWaiterPageState>(
-   PageStateFactory { _, _ -> CallbackWaiterPageState() },
-   header = { _, _ ->
-      Text(
-         Strings.Mastodon.callbackWaiter.appBar,
-         maxLines = 1,
-         overflow = TextOverflow.Ellipsis
-      )
-   },
-   content = { _, state, windowInsets ->
-      Box(
-         modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .windowInsetsPadding(windowInsets)
-      ) {
-         val token = state.token
-         if (token == null) {
-            Text(
-               Strings.Mastodon.callbackWaiter.message,
-               modifier = Modifier.padding(16.dp)
-            )
-         } else {
-            val format = remember(token) {
-               buildString {
-                  append("instance url: ")
-                  append(token.instanceBaseUrl)
-                  appendLine()
-                  append("token type: ")
-                  append(token.tokenType)
-                  appendLine()
-                  append("scope: ")
-                  append(token.scope)
-                  appendLine()
-                  append("created at: ")
-                  append(token.createdAt)
-                  appendLine()
-                  append("access token: ")
-                  repeat(token.accessToken.length) {
-                     append("x")
-                  }
-               }
-            }
+@Stable
+expect class CallbackWaiterPageState : AbstractCallbackWaiterPageState
 
-            Text(
-               format,
-               modifier = Modifier.padding(16.dp)
-            )
-         }
-      }
-   },
-   footer = null,
-   pageTransitions = {
-   }
-)
+expect val callbackWaiterPageComposable: PPageComposable<CallbackWaiterPage, CallbackWaiterPageState>

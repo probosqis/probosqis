@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.ext.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.wcaokaze.probosqis.ext.kotlin.Url
 
 val LocalBrowserLauncher = staticCompositionLocalOf<BrowserLauncher> {
    throw NoSuchElementException()
@@ -27,5 +28,5 @@ val LocalBrowserLauncher = staticCompositionLocalOf<BrowserLauncher> {
 expect fun rememberBrowserLauncher(): BrowserLauncher
 
 interface BrowserLauncher {
-   fun launchBrowser(url: String)
+   fun launchBrowser(url: Url)
 }

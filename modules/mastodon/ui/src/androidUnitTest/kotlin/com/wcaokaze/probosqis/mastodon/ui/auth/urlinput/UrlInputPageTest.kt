@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,17 +27,26 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
 import com.wcaokaze.probosqis.ext.compose.BrowserLauncher
+import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.compose.LocalBrowserLauncher
+import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.callbackwaiter.CallbackWaiterPage
-import com.wcaokaze.probosqis.page.PPageState
+import com.wcaokaze.probosqis.nodeinfo.entity.FediverseSoftware
+import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
+import com.wcaokaze.probosqis.foundation.page.PPageState
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
+import kotlinx.datetime.Instant
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.koin.compose.KoinIsolatedContext
@@ -48,10 +57,12 @@ import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.GraphicsMode
 import java.io.IOException
-import java.util.concurrent.Semaphore
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -78,12 +89,14 @@ class UrlInputPageTest {
    private fun UrlInputPage(
       pageState: UrlInputPageState,
       browserLauncher: BrowserLauncher = mockk(),
+      nodeInfoRepository: NodeInfoRepository = mockk(),
       appRepository: AppRepository = mockk(),
    ) {
       val koinApplication = remember {
          koinApplication {
             modules(
                module {
+                  single { nodeInfoRepository }
                   single { appRepository }
                }
             )
@@ -146,17 +159,29 @@ class UrlInputPageTest {
    fun goButton_repositoryCalled() {
       lateinit var state: UrlInputPageState
 
+      val nodeInfoRepository = mockk<NodeInfoRepository> {
+         every { getServerSoftware(any()) } answers {
+            FediverseSoftware.Mastodon(
+               Instance(
+                  url = Url(firstArg<String>()),
+                  version = "1.0.0",
+                  versionCheckedTime = Instant.fromEpochMilliseconds(0L),
+               )
+            )
+         }
+      }
+
       val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<String>()) } returns "https://auth.wcaokaze.com/"
+         every { getAuthorizeUrl(any<Instance>()) } returns
+             Url("https://auth.wcaokaze.com/")
       }
 
       val browserLauncher = mockk<BrowserLauncher> {
-         every { launchBrowser(any()) } returns Unit
+         every { launchBrowser(any()) } just runs
       }
 
       val pageState = mockk<PPageState.Interface> {
-         every { finishPage() } returns Unit
-         every { startPage(any()) } returns Unit
+         every { startPage(any()) } just runs
       }
 
       rule.setContent {
@@ -165,6 +190,7 @@ class UrlInputPageTest {
          UrlInputPage(
             state,
             browserLauncher = browserLauncher,
+            nodeInfoRepository = nodeInfoRepository,
             appRepository = appRepository
          )
       }
@@ -176,7 +202,21 @@ class UrlInputPageTest {
       rule.onNodeWithText("GO").performClick()
 
       rule.runOnIdle {
-         verify { appRepository.getAuthorizeUrl("https://example.wcaokaze.com/") }
+         verify {
+            nodeInfoRepository.getServerSoftware(
+               Url("https://example.wcaokaze.com/")
+            )
+         }
+
+         verify {
+            appRepository.getAuthorizeUrl(
+               Instance(
+                  url = Url("https://example.wcaokaze.com/"),
+                  version = "1.0.0",
+                  versionCheckedTime = Instant.fromEpochMilliseconds(0L),
+               )
+            )
+         }
       }
    }
 
@@ -184,17 +224,29 @@ class UrlInputPageTest {
    fun goButton_browserLaunchedAndPageFinished() {
       lateinit var state: UrlInputPageState
 
+      val nodeInfoRepository = mockk<NodeInfoRepository> {
+         every { getServerSoftware(any()) } answers {
+            FediverseSoftware.Mastodon(
+               Instance(
+                  url = Url(firstArg<String>()),
+                  version = "1.0.0",
+                  versionCheckedTime = Instant.fromEpochMilliseconds(0L),
+               )
+            )
+         }
+      }
+
       val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<String>()) } returns "https://auth.wcaokaze.com/"
+         every { getAuthorizeUrl(any<Instance>()) } returns
+             Url("https://auth.wcaokaze.com/")
       }
 
       val browserLauncher = mockk<BrowserLauncher> {
-         every { launchBrowser(any()) } returns Unit
+         every { launchBrowser(any()) } just runs
       }
 
       val pageState = mockk<PPageState.Interface> {
-         every { finishPage() } returns Unit
-         every { startPage(any()) } returns Unit
+         every { startPage(any()) } just runs
       }
 
       rule.setContent {
@@ -203,6 +255,7 @@ class UrlInputPageTest {
          UrlInputPage(
             state,
             browserLauncher = browserLauncher,
+            nodeInfoRepository = nodeInfoRepository,
             appRepository = appRepository
          )
       }
@@ -210,8 +263,7 @@ class UrlInputPageTest {
       rule.onNodeWithText("GO").performClick()
 
       rule.runOnIdle {
-         verify { browserLauncher.launchBrowser("https://auth.wcaokaze.com/") }
-         verify { pageState.finishPage() }
+         verify { browserLauncher.launchBrowser(Url("https://auth.wcaokaze.com/")) }
          verify { pageState.startPage(ofType<CallbackWaiterPage>()) }
       }
    }
@@ -220,22 +272,34 @@ class UrlInputPageTest {
    fun goButton_disabled_whileGettingAuthUrl() {
       lateinit var state: UrlInputPageState
 
-      val semaphore = Semaphore(1)
+      val lock = ReentrantLock()
+
+      val nodeInfoRepository = mockk<NodeInfoRepository> {
+         every { getServerSoftware(any()) } answers {
+            FediverseSoftware.Mastodon(
+               Instance(
+                  url = Url(firstArg<String>()),
+                  version = "1.0.0",
+                  versionCheckedTime = Instant.fromEpochMilliseconds(0L),
+               )
+            )
+         }
+      }
 
       val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<String>()) } answers {
-            semaphore.acquire()
-            "https://auth.wcaokaze.com/"
+         every { getAuthorizeUrl(any<Instance>()) } answers {
+            lock.withLock {
+               Url("https://auth.wcaokaze.com/")
+            }
          }
       }
 
       val browserLauncher = mockk<BrowserLauncher> {
-         every { launchBrowser(any()) } returns Unit
+         every { launchBrowser(any()) } just runs
       }
 
       val pageState = mockk<PPageState.Interface> {
-         every { finishPage() } returns Unit
-         every { startPage(any()) } returns Unit
+         every { startPage(any()) } just runs
       }
 
       rule.setContent {
@@ -244,26 +308,46 @@ class UrlInputPageTest {
          UrlInputPage(
             state,
             browserLauncher = browserLauncher,
+            nodeInfoRepository = nodeInfoRepository,
             appRepository = appRepository
          )
       }
 
-      rule.runOnIdle {
+      lock.withLock {
          state.inputUrl = TextFieldValue("https://example.wcaokaze.com/")
-         semaphore.acquire()
-      }
 
-      rule.onNodeWithText("GO").performClick()
+         rule.onNodeWithText("GO").performClick()
 
-      rule.onNodeWithText("GO").assertIsNotEnabled()
-      rule.onNodeWithText("https://example.wcaokaze.com/").assertIsNotEnabled()
-
-      rule.runOnIdle {
-         semaphore.release()
+         rule.onNodeWithText("GO").assertIsNotEnabled()
+         rule.onNodeWithText("https://example.wcaokaze.com/").assertIsNotEnabled()
       }
 
       rule.onNodeWithText("GO").assertIsEnabled()
       rule.onNodeWithText("https://example.wcaokaze.com/").assertIsEnabled()
+   }
+
+   @Test
+   fun errorState_whenRepositoryThrows() {
+      val appRepository = mockk<AppRepository> {
+         every { getAuthorizeUrl(any<Instance>()) } throws IOException()
+      }
+
+      lateinit var state: UrlInputPageState
+
+      rule.setContent {
+         state = rememberPageState()
+
+         UrlInputPage(
+            state,
+            appRepository = appRepository
+         )
+      }
+
+      rule.onNodeWithText("GO").performClick()
+
+      rule.runOnIdle {
+         assertIs<LoadState.Error>(state.authorizeUrlLoadState)
+      }
    }
 
    @Test
@@ -278,64 +362,49 @@ class UrlInputPageTest {
 
    @Test
    fun screenshot_loading() {
-      val semaphore = Semaphore(1)
-
-      val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<String>()) } answers {
-            semaphore.acquire()
-            "https://auth.wcaokaze.com/"
-         }
-      }
-
-      val browserLauncher = mockk<BrowserLauncher> {
-         every { launchBrowser(any()) } returns Unit
-      }
-
-      val pageState = mockk<PPageState.Interface> {
-         every { finishPage() } returns Unit
-         every { startPage(any()) } returns Unit
-      }
-
       rule.setContent {
-         val state = rememberPageState(pageStateBase = pageState)
+         val state = rememberPageState().also {
+            it.authorizeUrlLoadState = LoadState.Loading
+         }
 
-         UrlInputPage(
-            state,
-            browserLauncher = browserLauncher,
-            appRepository = appRepository
-         )
+         UrlInputPage(state)
       }
-
-      rule.runOnIdle {
-         semaphore.acquire()
-      }
-
-      rule.onNodeWithText("GO").performClick()
 
       rule.onRoot().captureRoboImage("urlInputPage/loading.png")
-
-      rule.runOnIdle {
-         semaphore.release()
-      }
    }
 
    @Test
    fun screenshot_error() {
-      val appRepository = mockk<AppRepository> {
-         every { getAuthorizeUrl(any<String>()) } throws IOException()
-      }
-
       rule.setContent {
-         val state = rememberPageState()
+         val state = rememberPageState().also {
+            it.authorizeUrlLoadState = LoadState.Error(Exception())
+         }
 
-         UrlInputPage(
-            state,
-            appRepository = appRepository
-         )
+         UrlInputPage(state)
       }
-
-      rule.onNodeWithText("GO").performClick()
 
       rule.onRoot().captureRoboImage("urlInputPage/error.png")
+   }
+
+   @Test
+   fun screenshot_error_unsupportedServerSoftware() {
+      rule.setContent {
+         val state = rememberPageState().also {
+            it.inputUrl = TextFieldValue(
+               "https://twitter.com/",
+               selection = TextRange(20)
+            )
+
+            it.authorizeUrlLoadState = LoadState.Error(
+               UnsupportedServerSoftwareException(
+                  FediverseSoftware.Unsupported("Twitter", "0.0.0")
+               )
+            )
+         }
+
+         UrlInputPage(state)
+      }
+
+      rule.onRoot().captureRoboImage("urlInputPage/unsupportedServer.png")
    }
 }
