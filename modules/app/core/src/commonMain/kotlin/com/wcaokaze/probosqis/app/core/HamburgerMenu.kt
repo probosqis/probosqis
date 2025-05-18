@@ -158,78 +158,15 @@ private fun AccountList(
             ) {
                itemsIndexed(state.data) { index, accountItemState ->
                   Column {
-                     DropdownMenuItem(
-                        text = {
-                           Row(
-                              verticalAlignment = Alignment.CenterVertically
-                           ) {
-                              val credentialAccount
-                                 = accountItemState.credential.account!!.value
-                              val account = credentialAccount.account.value
-                              val username = account.username
-
-                              val displayName = account.displayName ?: account.username
-                              if (displayName != null) {
-                                 Text(
-                                    displayName,
-                                    overflow = TextOverflow.Ellipsis,
-                                    maxLines = 1,
-                                    style = MaterialTheme.typography.titleMedium
-                                 )
-                              }
-
-                              if (displayName != null && username != null) {
-                                 Spacer(Modifier.width(4.dp))
-                              }
-
-                              if (username != null) {
-                                 Text(
-                                    "@$username",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    overflow = TextOverflow.Ellipsis,
-                                    maxLines = 1,
-                                    style = MaterialTheme.typography.bodyMedium
-                                 )
-                              }
-                           }
-                        },
-                        trailingIcon = {
-                           val rotate by animateFloatAsState(
-                              if (accountItemState.isExpanded) { 180f } else { 0f },
-                              label = "account item expand icon rotation"
-                           )
-
-                           Icon(
-                              Icons.Default.KeyboardArrowDown,
-                              contentDescription = null,
-                              modifier = Modifier.rotate(rotate)
-                           )
-                        },
-                        onClick = {
-                           accountItemState.isExpanded = !accountItemState.isExpanded
-                        }
-                     )
+                     // TODO :modules:mastodon:uiとかにあるべき
+                     AccountItem(accountItemState)
 
                      AnimatedVisibility(
                         visible = accountItemState.isExpanded,
                         label = "account subitem expansion"
                      ) {
                         HorizontalDivider()
-
-                        // TODO :modules:mastodon:uiとかにあるべき
-                        DropdownMenuItem(
-                           contentPadding = PaddingValues(start = 24.dp, end = 12.dp),
-                           leadingIcon = {
-                              Icon(
-                                 Icons.Default.Home,
-                                 contentDescription = null
-                              )
-                           },
-                           text = {
-                              Text(Strings.App.hamburgerMenuHomeTimelineItem)
-                           },
-                           onClick = {}
-                        )
+                        HomeTimelineItem()
                      }
 
                      if (index < state.data.lastIndex) {
@@ -244,4 +181,73 @@ private fun AccountList(
          }
       }
    }
+}
+
+@Composable
+private fun AccountItem(state: AccountItemState) {
+      DropdownMenuItem(
+         text = {
+            Row(
+               verticalAlignment = Alignment.CenterVertically
+            ) {
+               val credentialAccount = state.credential.account!!.value
+               val account = credentialAccount.account.value
+               val username = account.username
+
+               val displayName = account.displayName ?: account.username
+               if (displayName != null) {
+                  Text(
+                     displayName,
+                     overflow = TextOverflow.Ellipsis,
+                     maxLines = 1,
+                     style = MaterialTheme.typography.titleMedium
+                  )
+               }
+
+               if (displayName != null && username != null) {
+                  Spacer(Modifier.width(4.dp))
+               }
+
+               if (username != null) {
+                  Text(
+                     "@$username",
+                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                     overflow = TextOverflow.Ellipsis,
+                     maxLines = 1,
+                     style = MaterialTheme.typography.bodyMedium
+                  )
+               }
+            }
+         },
+         trailingIcon = {
+            val rotate by animateFloatAsState(
+               if (state.isExpanded) { 180f } else { 0f },
+               label = "account item expand icon rotation"
+            )
+
+            Icon(
+               Icons.Default.KeyboardArrowDown,
+               contentDescription = null,
+               modifier = Modifier.rotate(rotate)
+            )
+         },
+         onClick = { state.isExpanded = !state.isExpanded }
+      )
+}
+
+@Composable
+private fun HomeTimelineItem() {
+   DropdownMenuItem(
+      contentPadding = PaddingValues(start = 24.dp, end = 12.dp),
+      leadingIcon = {
+         Icon(
+            Icons.Default.Home,
+            contentDescription = null
+         )
+      },
+      text = {
+         Text(Strings.App.hamburgerMenuHomeTimelineItem)
+      },
+      onClick = {}
+   )
 }
