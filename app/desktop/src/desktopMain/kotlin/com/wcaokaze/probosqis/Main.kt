@@ -105,7 +105,8 @@ object Main {
       factory {
          val pageDeckCache = loadPageDeckOrDefault(
             pageDeckRepository = get(),
-            pageStackRepository = get()
+            pageStackRepository = get(),
+            credentialRepository = get()
          )
 
          MultiColumnPageDeckState(pageDeckCache, pageStackRepository = get())
@@ -114,7 +115,8 @@ object Main {
       factory {
          val pageDeckCache = loadPageDeckOrDefault(
             pageDeckRepository = get(),
-            pageStackRepository = get()
+            pageStackRepository = get(),
+            credentialRepository = get()
          )
 
          SingleColumnPageDeckState(pageDeckCache, pageStackRepository = get())

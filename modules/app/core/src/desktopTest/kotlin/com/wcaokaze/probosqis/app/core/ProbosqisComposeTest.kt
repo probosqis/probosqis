@@ -35,9 +35,13 @@ import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.error.PErrorListState
+import com.wcaokaze.probosqis.mastodon.entity.Token
+import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
+import com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage
+import com.wcaokaze.probosqis.panoptiqon.Cache
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.testpages.TestPage
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -135,7 +139,9 @@ class ProbosqisComposeTest {
       }
 
       val loadedCache = loadPageDeckOrDefault(
-         pageDeckRepository, pageStackRepository = mockk()
+         pageDeckRepository,
+         pageStackRepository = mockk(),
+         credentialRepository = mockk()
       )
 
       assertSame(pageDeck, loadedCache.value)
@@ -153,26 +159,16 @@ class ProbosqisComposeTest {
          every { deleteAllPageStacks() } returns Unit
       }
 
-      val loadedCache = loadPageDeckOrDefault(pageDeckRepository, pageStackRepository)
+      val credentialRepository = mockk<CredentialRepository> {
+         every { loadAllCredentials() } returns emptyList()
+      }
+
+      loadPageDeckOrDefault(
+         pageDeckRepository, pageStackRepository, credentialRepository
+      )
 
       verify { pageStackRepository.deleteAllPageStacks() }
-      assertEquals(2, loadedCache.value.rootRow.childCount)
-
-      val pageStack1 = loadedCache.value
-         .let { assertIs<Deck.Card<*>>(it.rootRow[0]) }
-         .let { assertIs<LazyPageStackState>(it.content) }
-         .pageStack
-      assertIs<TestPage>(pageStack1.head.page)
-      assertNull(pageStack1.tailOrNull())
-      verify { pageStackRepository.savePageStack(pageStack1) }
-
-      val pageStack2 = loadedCache.value
-         .let { assertIs<Deck.Card<*>>(it.rootRow[1]) }
-         .let { assertIs<LazyPageStackState>(it.content) }
-         .pageStack
-      assertIs<TestPage>(pageStack2.head.page)
-      assertNull(pageStack2.tailOrNull())
-      verify { pageStackRepository.savePageStack(pageStack2) }
+      verify(exactly = 1) { pageStackRepository.savePageStack(any()) }
    }
 
    @Test
@@ -185,9 +181,66 @@ class ProbosqisComposeTest {
          every { savePageStack(any()) } answers { WritableCache(firstArg()) }
       }
 
-      loadPageDeckOrDefault(pageDeckRepository, pageStackRepository)
+      val credentialRepository = mockk<CredentialRepository> {
+         every { loadAllCredentials() } returns emptyList()
+      }
 
-      verify(exactly = 2) { pageStackRepository.savePageStack(any()) }
+      loadPageDeckOrDefault(
+         pageDeckRepository, pageStackRepository, credentialRepository
+      )
+
+      verify(exactly = 1) { pageStackRepository.savePageStack(any()) }
+   }
+
+   @Test
+   fun createDefaultPageDeck_noCredentials() {
+      val pageStackRepository = mockk<PageStackRepository> {
+         every { savePageStack(any()) } answers { WritableCache(firstArg()) }
+      }
+
+      val credentialRepository = mockk<CredentialRepository> {
+         every { loadAllCredentials() } returns emptyList()
+      }
+
+      val pageDeck = createDefaultPageDeck(pageStackRepository, credentialRepository)
+
+      assertEquals(1, pageDeck.rootRow.childCount)
+
+      val card = assertIs<Deck.Card<*>>(pageDeck.rootRow[0])
+      val lazyPageStackState = assertIs<LazyPageStackState>(card.content)
+
+      val pageStack = lazyPageStackState.pageStack
+      assertIs<UrlInputPage>(pageStack.head.page)
+      assertNull(pageStack.tailOrNull())
+
+      verify { pageStackRepository.savePageStack(pageStack) }
+   }
+
+   @Test
+   fun createDefaultPageDeck_withCredentials() {
+      val mockToken = mockk<Token>()
+
+      val pageStackRepository = mockk<PageStackRepository> {
+         every { savePageStack(any()) } answers { WritableCache(firstArg()) }
+      }
+
+      val credentialRepository = mockk<CredentialRepository> {
+         every { loadAllCredentials() } returns listOf(Cache(mockToken))
+      }
+
+      val pageDeck = createDefaultPageDeck(pageStackRepository, credentialRepository)
+
+      assertEquals(1, pageDeck.rootRow.childCount)
+
+      val card = assertIs<Deck.Card<*>>(pageDeck.rootRow[0])
+      val lazyPageStackState = assertIs<LazyPageStackState>(card.content)
+
+      val pageStack = lazyPageStackState.pageStack
+      val page = assertIs<HomeTimelinePage>(pageStack.head.page)
+      assertSame(mockToken, page.token)
+      assertNull(pageStack.tailOrNull())
+
+      verify { pageStackRepository.savePageStack(pageStack) }
    }
 
    @Test
