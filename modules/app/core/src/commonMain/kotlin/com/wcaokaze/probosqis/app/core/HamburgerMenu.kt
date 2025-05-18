@@ -109,6 +109,7 @@ internal class AccountItemState(
 @Composable
 internal fun HamburgerMenu(
    state: HamburgerMenuState,
+   onHomeTimelineItemClick: (Token) -> Unit,
    onSettingItemClick: () -> Unit
 ) {
    LaunchedEffect(Unit) {
@@ -118,6 +119,7 @@ internal fun HamburgerMenu(
    ModalDrawerSheet {
       AccountList(
          state.credentialLoadState,
+         onHomeTimelineItemClick,
          modifier = Modifier
             .fillMaxWidth()
             .weight(1f)
@@ -138,6 +140,7 @@ internal fun HamburgerMenu(
 @Composable
 private fun AccountList(
    credentialLoadState: LoadState<ImmutableList<AccountItemState>>,
+   onHomeTimelineItemClick: (Token) -> Unit,
    modifier: Modifier = Modifier
 ) {
    Crossfade(
@@ -166,7 +169,12 @@ private fun AccountList(
                         label = "account subitem expansion"
                      ) {
                         HorizontalDivider()
-                        HomeTimelineItem()
+
+                        HomeTimelineItem(
+                           onClick = {
+                              onHomeTimelineItemClick(accountItemState.credential)
+                           }
+                        )
                      }
 
                      if (index < state.data.lastIndex) {
@@ -236,7 +244,7 @@ private fun AccountItem(state: AccountItemState) {
 }
 
 @Composable
-private fun HomeTimelineItem() {
+private fun HomeTimelineItem(onClick: () -> Unit) {
    DropdownMenuItem(
       contentPadding = PaddingValues(start = 24.dp, end = 12.dp),
       leadingIcon = {
@@ -248,6 +256,6 @@ private fun HomeTimelineItem() {
       text = {
          Text(Strings.App.hamburgerMenuHomeTimelineItem)
       },
-      onClick = {}
+      onClick = onClick
    )
 }
