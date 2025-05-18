@@ -21,60 +21,83 @@ import com.wcaokaze.probosqis.app.pagedeck.PageDeck
 import com.wcaokaze.probosqis.app.pagedeck.PageDeckRepository
 import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
+import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
+import com.wcaokaze.probosqis.mastodon.entity.Token
+import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
+import com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.testpages.TestPage
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 fun loadPageDeckOrDefault(
    pageDeckRepository: PageDeckRepository,
-   pageStackRepository: PageStackRepository
+   pageStackRepository: PageStackRepository,
+   credentialRepository: CredentialRepository
 ): WritableCache<PageDeck> {
    return try {
       pageDeckRepository.loadPageDeck().also {
          if (it.value.rootRow.childCount == 0) {
-            it.value = createDefaultPageDeck(pageStackRepository)
+            it.value = createDefaultPageDeck(
+               pageStackRepository, credentialRepository
+            )
          }
       }
    } catch (_: Exception) {
       pageStackRepository.deleteAllPageStacks()
 
-      val pageDeck = createDefaultPageDeck(pageStackRepository)
+      val pageDeck = createDefaultPageDeck(
+         pageStackRepository, credentialRepository
+      )
       pageDeckRepository.savePageDeck(pageDeck)
    }
 }
 
-private fun createDefaultPageDeck(
-   pageStackRepository: PageStackRepository
+internal fun createDefaultPageDeck(
+   pageStackRepository: PageStackRepository,
+   credentialRepository: CredentialRepository
 ): PageDeck {
-   val rootRow = Deck.Row(
-      createDefaultPageStacks(pageStackRepository)
-   )
+   val allCredentials = try {
+      credentialRepository.loadAllCredentials()
+   } catch (_: Exception) {
+      emptyList()
+   }
+
+   val defaultCredential = allCredentials.firstOrNull()
+
+   val defaultPageStacks = if (defaultCredential != null) {
+      createPageStacks(
+         pages = sequenceOf(HomeTimelinePage(defaultCredential.value as Token)),
+         pageStackRepository
+      )
+   } else {
+      createPageStacks(
+         pages = sequenceOf(UrlInputPage()),
+         pageStackRepository
+      )
+   }
+
+   val rootRow = Deck.Row(defaultPageStacks)
    return Deck(rootRow)
 }
 
-private fun createDefaultPageStacks(
+private fun createPageStacks(
+   pages: Sequence<Page>,
    pageStackRepository: PageStackRepository
 ): ImmutableList<Deck.Layout<LazyPageStackState>> {
-   return sequenceOf(
+   return pages
+      .mapIndexed { index, page ->
          PageStack(
-            PageStack.Id(0L),
+            PageStack.Id(index.toLong()),
             SavedPageState(
-               PageId(0L),
-               TestPage(0)
+               PageId(index.toLong()),
+               page
             )
-         ),
-         PageStack(
-            PageStack.Id(1L),
-            SavedPageState(
-               PageId(1L),
-               TestPage(1)
-            )
-         ),
-      )
+         )
+      }
       .map { pageStackRepository.savePageStack(it) }
       .map { LazyPageStackState(it.value.id, it, initialVisibility = true) }
       .map { Deck.Card(it) }
