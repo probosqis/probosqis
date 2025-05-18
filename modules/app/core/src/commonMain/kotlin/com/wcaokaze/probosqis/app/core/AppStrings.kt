@@ -25,6 +25,7 @@ interface AppStrings {
    val topAppBar: String
    val topAppBarNavigationContentDescription: String
    val hamburgerMenuSettingItem: String
+   val hamburgerMenuHomeTimelineItem: String
 }
 
 val Strings.Companion.App: AppStrings
@@ -35,11 +36,13 @@ val Strings.Companion.App: AppStrings
          override val topAppBar = "Probosqis"
          override val topAppBarNavigationContentDescription = "Menu"
          override val hamburgerMenuSettingItem = "Settings"
+         override val hamburgerMenuHomeTimelineItem = "Home Timeline"
       }
 
       Strings.Language.JAPANESE -> object : AppStrings {
          override val topAppBar = "Probosqis"
          override val topAppBarNavigationContentDescription = "メニュー"
          override val hamburgerMenuSettingItem = "設定"
+         override val hamburgerMenuHomeTimelineItem = "ホームタイムライン"
       }
    }

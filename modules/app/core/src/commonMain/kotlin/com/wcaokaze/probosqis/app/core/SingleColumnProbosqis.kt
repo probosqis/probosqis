@@ -78,6 +78,7 @@ import com.wcaokaze.probosqis.foundation.error.PErrorActionButton
 import com.wcaokaze.probosqis.foundation.error.PErrorList
 import com.wcaokaze.probosqis.foundation.error.PErrorListState
 import com.wcaokaze.probosqis.foundation.resources.Strings
+import com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -119,6 +120,13 @@ fun SingleColumnProbosqis(
    ModalNavigationDrawer(
       drawerContent = {
          HamburgerMenu(
+            state.hamburgerMenuState,
+            onHomeTimelineItemClick = { token ->
+               coroutineScope.launch {
+                  pageDeckState.addColumn(HomeTimelinePage(token))
+                  drawerState.close()
+               }
+            },
             onSettingItemClick = {
                coroutineScope.launch {
                   pageDeckState.addColumn(AccountListPage())

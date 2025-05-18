@@ -50,12 +50,16 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.foundation.credential.Credential
+import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.error.PError
 import com.wcaokaze.probosqis.foundation.error.PErrorItemComposable
 import com.wcaokaze.probosqis.foundation.error.PErrorListState
 import com.wcaokaze.probosqis.foundation.error.RaisedError
 import com.wcaokaze.probosqis.foundation.resources.Strings
+import com.wcaokaze.probosqis.panoptiqon.Cache
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
@@ -117,6 +121,7 @@ class ProbosqisTest {
          errorListCache = WritableCache(emptyList()),
          itemComposables = emptyList()
       ),
+      credentials: List<Credential> = emptyList(),
       content: @Composable () -> Unit
    ) {
       val coroutineScope = rememberCoroutineScope()
@@ -163,6 +168,14 @@ class ProbosqisTest {
                   }
 
                   single { errorListState }
+
+                  single<CredentialRepository> {
+                     mockk {
+                        every { loadAllCredentials() } returns (
+                            credentials.map { Cache(it) }
+                        )
+                     }
+                  }
                }
             )
          }
