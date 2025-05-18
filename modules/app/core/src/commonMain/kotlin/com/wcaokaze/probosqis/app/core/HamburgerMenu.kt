@@ -16,9 +16,12 @@
 
 package com.wcaokaze.probosqis.app.core
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +31,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,6 +49,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.ext.compose.LoadState
@@ -52,6 +57,8 @@ import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
@@ -62,7 +69,7 @@ internal class HamburgerMenuState : KoinComponent {
    private val credentialRepository: CredentialRepository by inject()
    private val appRepository: AppRepository by inject()
 
-   var credentialLoadState: LoadState<List<Token>>
+   var credentialLoadState: LoadState<ImmutableList<AccountItemState>>
       by mutableStateOf(LoadState.Loading)
       private set
 
@@ -76,10 +83,13 @@ internal class HamburgerMenuState : KoinComponent {
                   val credentialAccount
                       = appRepository.getCredentialAccount(credential)
 
-                  credential.copy(
-                     account = credentialAccount,
+                  AccountItemState(
+                     credential.copy(
+                        account = credentialAccount,
+                     )
                   )
                }
+               .toImmutableList()
 
             LoadState.Success(credentials)
          } catch (e: Exception) {
@@ -87,6 +97,13 @@ internal class HamburgerMenuState : KoinComponent {
          }
       }
    }
+}
+
+@Stable
+internal class AccountItemState(
+   val credential: Token
+) {
+   var isExpanded by mutableStateOf(false)
 }
 
 @Composable
@@ -120,7 +137,7 @@ internal fun HamburgerMenu(
 
 @Composable
 private fun AccountList(
-   credentialLoadState: LoadState<List<Token>>,
+   credentialLoadState: LoadState<ImmutableList<AccountItemState>>,
    modifier: Modifier = Modifier
 ) {
    Crossfade(
@@ -139,14 +156,15 @@ private fun AccountList(
             LazyColumn(
                modifier = modifier
             ) {
-               itemsIndexed(state.data) { index, token ->
+               itemsIndexed(state.data) { index, accountItemState ->
                   Column {
                      DropdownMenuItem(
                         text = {
                            Row(
                               verticalAlignment = Alignment.CenterVertically
                            ) {
-                              val credentialAccount = token.account!!.value
+                              val credentialAccount
+                                 = accountItemState.credential.account!!.value
                               val account = credentialAccount.account.value
                               val username = account.username
 
@@ -176,13 +194,43 @@ private fun AccountList(
                            }
                         },
                         trailingIcon = {
+                           val rotate by animateFloatAsState(
+                              if (accountItemState.isExpanded) { 180f } else { 0f },
+                              label = "account item expand icon rotation"
+                           )
+
                            Icon(
                               Icons.Default.KeyboardArrowDown,
-                              contentDescription = null
+                              contentDescription = null,
+                              modifier = Modifier.rotate(rotate)
                            )
                         },
-                        onClick = {}
+                        onClick = {
+                           accountItemState.isExpanded = !accountItemState.isExpanded
+                        }
                      )
+
+                     AnimatedVisibility(
+                        visible = accountItemState.isExpanded,
+                        label = "account subitem expansion"
+                     ) {
+                        HorizontalDivider()
+
+                        // TODO :modules:mastodon:uiとかにあるべき
+                        DropdownMenuItem(
+                           contentPadding = PaddingValues(start = 24.dp, end = 12.dp),
+                           leadingIcon = {
+                              Icon(
+                                 Icons.Default.Home,
+                                 contentDescription = null
+                              )
+                           },
+                           text = {
+                              Text(Strings.App.hamburgerMenuHomeTimelineItem)
+                           },
+                           onClick = {}
+                        )
+                     }
 
                      if (index < state.data.lastIndex) {
                         HorizontalDivider()
