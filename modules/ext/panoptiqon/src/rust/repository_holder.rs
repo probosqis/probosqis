@@ -30,7 +30,7 @@ pub struct RepositoryHolder<T: CacheContent> {
 
 enum LazyInitRepository<T: CacheContent> {
    Repository(Repository<T>),
-   None
+   None(&'static str)
 }
 
 impl<T: CacheContent> LazyInitRepository<T> {
@@ -40,9 +40,9 @@ impl<T: CacheContent> LazyInitRepository<T> {
 
    #[cfg(not(feature="jvm"))]
    fn initialize(&mut self) {
-      if self.is_initialized() { return; }
+      let LazyInitRepository::None(dir_name) = self else { return; };
 
-      let repository = Repository::new();
+      let repository = Repository::new(dir_name);
       *self = LazyInitRepository::Repository(repository);
    }
 
@@ -53,9 +53,9 @@ impl<T: CacheContent> LazyInitRepository<T> {
    )
       where T: CloneIntoJvm<'local, T::JvmType<'local>> + CloneIntoJvmHelper
    {
-      if self.is_initialized() { return; }
+      let LazyInitRepository::None(dir_name) = self else { return; };
 
-      let repository = Repository::new(env);
+      let repository = Repository::new(env, dir_name);
       *self = LazyInitRepository::Repository(repository);
    }
 }
@@ -103,9 +103,9 @@ impl<'a, T: CacheContent> DerefMut for RepositoryWriteGuard<'a, T> {
 }
 
 impl<T: CacheContent> RepositoryHolder<T> {
-   pub const fn new() -> Self {
+   pub const fn new(dir_name: &'static str) -> Self {
       RepositoryHolder {
-         lock: RwLock::new(LazyInitRepository::None)
+         lock: RwLock::new(LazyInitRepository::None(dir_name))
       }
    }
 
@@ -227,9 +227,9 @@ mod jni_tests {
       mut env: JNIEnv,
       _obj: JObject
    ) {
-      let holder = RepositoryHolder::<Content>::new();
+      let holder = RepositoryHolder::<Content>::new("RepositoryHolderTest_initializeRepositoryByReading");
       {
-         assert!(matches!(*holder.lock.read().unwrap(), LazyInitRepository::None));
+         assert!(matches!(*holder.lock.read().unwrap(), LazyInitRepository::None(_)));
       }
 
       {
@@ -245,9 +245,9 @@ mod jni_tests {
       mut env: JNIEnv,
       _obj: JObject
    ) {
-      let holder = RepositoryHolder::<Content>::new();
+      let holder = RepositoryHolder::<Content>::new("RepositoryHolderTest_initializeRepositoryByWriting");
       {
-         assert!(matches!(*holder.lock.read().unwrap(), LazyInitRepository::None));
+         assert!(matches!(*holder.lock.read().unwrap(), LazyInitRepository::None(_)));
       }
 
       {
@@ -259,7 +259,7 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static readBlocks_repository_holder: RepositoryHolder<Content> = RepositoryHolder::new();
+   static readBlocks_repository_holder: RepositoryHolder<Content> = RepositoryHolder::new("RepositoryHolderTest_readBlocks");
    struct ReadBlocksState {
       thread1_read_repository: bool,
       thread1_write_repository: bool,

@@ -26,7 +26,8 @@ pub mod instance {
       panoptiqon::jvm_types::JvmCache,
    };
 
-   static REPO: RepositoryHolder<Instance> = RepositoryHolder::new();
+   static REPO: RepositoryHolder<Instance>
+      = RepositoryHolder::new("mastodon/Instance");
 
    pub fn repo() -> &'static RepositoryHolder<Instance> {
       &REPO
@@ -69,10 +70,11 @@ pub mod account {
 
    pub type Repository = panoptiqon::repository::Repository<Account>;
 
-   static REPO: RepositoryHolder<Account> = RepositoryHolder::new();
+   static REPO: RepositoryHolder<Account>
+      = RepositoryHolder::new("mastodon/Account");
    
    static CREDENTIAL_ACCOUNT_REPO: RepositoryHolder<CredentialAccount>
-      = RepositoryHolder::new();
+      = RepositoryHolder::new("mastodon/CredentialAccount");
 
    pub fn repo() -> &'static RepositoryHolder<Account> {
       &REPO
@@ -87,7 +89,8 @@ pub mod account_icon {
    use foundation_entity::image_bytes::ImageBytes;
    use ext_panoptiqon::repository_holder::RepositoryHolder;
 
-   static REPO: RepositoryHolder<ImageBytes> = RepositoryHolder::new();
+   static REPO: RepositoryHolder<ImageBytes>
+      = RepositoryHolder::new("mastodon/AccountIcon");
 
    pub fn repo() -> &'static RepositoryHolder<ImageBytes> {
       &REPO
@@ -102,7 +105,7 @@ pub mod poll {
       = panoptiqon::repository::Repository<NoCredentialPoll>;
 
    static NO_CREDENTIAL_POLL_REPO: RepositoryHolder<NoCredentialPoll>
-      = RepositoryHolder::new();
+      = RepositoryHolder::new("mastodon/NoCredentialPoll");
 
    pub fn no_credential_poll_repo() -> &'static RepositoryHolder<NoCredentialPoll> {
       &NO_CREDENTIAL_POLL_REPO
@@ -118,10 +121,11 @@ pub mod status {
    pub type NoCredentialStatusRepository
       = panoptiqon::repository::Repository<NoCredentialStatus>;
 
-   static REPO: RepositoryHolder<Status> = RepositoryHolder::new();
+   static REPO: RepositoryHolder<Status>
+      = RepositoryHolder::new("mastodon/Status");
 
    static NO_CREDENTIAL_REPO: RepositoryHolder<NoCredentialStatus>
-      = RepositoryHolder::new();
+      = RepositoryHolder::new("mastodon/NoCredentialStatus");
 
    pub fn status_repo() -> &'static RepositoryHolder<Status> {
       &REPO
