@@ -29,7 +29,7 @@ pub struct RepositoryHolder<T: CacheContent> {
 }
 
 enum LazyInitRepository<T: CacheContent> {
-   Repository(Repository<'static, T>),
+   Repository(Repository<T>),
    None(&'static str)
 }
 
@@ -69,9 +69,9 @@ pub struct RepositoryWriteGuard<'a, T: CacheContent> {
 }
 
 impl<'a, T: CacheContent> Deref for RepositoryReadGuard<'a, T> {
-   type Target = Repository<'static, T>;
+   type Target = Repository<T>;
    
-   fn deref(&self) -> &Repository<'static, T> {
+   fn deref(&self) -> &Repository<T> {
       if let LazyInitRepository::Repository(ref repo) = *self.lock_guard {
          return repo;
       } else {
@@ -81,9 +81,9 @@ impl<'a, T: CacheContent> Deref for RepositoryReadGuard<'a, T> {
 }
 
 impl<'a, T: CacheContent> Deref for RepositoryWriteGuard<'a, T> {
-   type Target = Repository<'static, T>;
+   type Target = Repository<T>;
 
-   fn deref(&self) -> &Repository<'static, T> {
+   fn deref(&self) -> &Repository<T> {
       if let LazyInitRepository::Repository(ref repo) = *self.lock_guard {
          return repo;
       } else {
@@ -93,7 +93,7 @@ impl<'a, T: CacheContent> Deref for RepositoryWriteGuard<'a, T> {
 }
 
 impl<'a, T: CacheContent> DerefMut for RepositoryWriteGuard<'a, T> {
-   fn deref_mut(&mut self) -> &mut Repository<'static, T> {
+   fn deref_mut(&mut self) -> &mut Repository<T> {
       if let LazyInitRepository::Repository(ref mut repo) = *self.lock_guard {
          return repo;
       } else {

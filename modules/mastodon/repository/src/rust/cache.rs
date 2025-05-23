@@ -69,7 +69,7 @@ pub mod account {
    use mastodon_entity::account::{Account, CredentialAccount};
 
    pub type Repository
-      = panoptiqon::repository::Repository<'static, Account>;
+      = panoptiqon::repository::Repository<Account>;
 
    static REPO: RepositoryHolder<Account>
       = RepositoryHolder::new("mastodon/Account");
@@ -103,7 +103,7 @@ pub mod poll {
    use mastodon_entity::poll::NoCredentialPoll;
 
    pub type NoCredentialPollRepository
-      = panoptiqon::repository::Repository<'static, NoCredentialPoll>;
+      = panoptiqon::repository::Repository<NoCredentialPoll>;
 
    static NO_CREDENTIAL_POLL_REPO: RepositoryHolder<NoCredentialPoll>
       = RepositoryHolder::new("mastodon/NoCredentialPoll");
@@ -118,10 +118,10 @@ pub mod status {
    use mastodon_entity::status::{NoCredentialStatus, Status};
 
    pub type StatusRepository
-      = panoptiqon::repository::Repository<'static, Status>;
+      = panoptiqon::repository::Repository<Status>;
 
    pub type NoCredentialStatusRepository
-      = panoptiqon::repository::Repository<'static, NoCredentialStatus>;
+      = panoptiqon::repository::Repository<NoCredentialStatus>;
 
    static REPO: RepositoryHolder<Status>
       = RepositoryHolder::new("mastodon/Status");
