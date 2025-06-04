@@ -16,7 +16,7 @@
 use chrono::{DateTime, Utc};
 use isolang::Language;
 use panoptiqon::cache::Cache;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 use crate::custom_emoji::CustomEmoji;
 use crate::instance::Instance;
@@ -37,7 +37,7 @@ use {
    },
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Account {
    pub instance: Cache<Instance>,
    pub id: AccountId,
@@ -67,7 +67,7 @@ pub struct Account {
    pub followee_count: Option<u64>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct CredentialAccount {
    pub id: AccountId,
    pub account: Cache<Account>,
@@ -80,22 +80,22 @@ pub struct CredentialAccount {
    pub role: Option<Role>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct RelationalAccount {
    pub account: Cache<Account>,
    pub mute_expire_time: Option<DateTime<Utc>>,
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub struct AccountId {
    pub instance_url: Url,
    pub local: AccountLocalId,
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub struct AccountLocalId(pub String);
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct AccountProfileField {
    pub name: Option<String>,
    pub value: Option<String>,

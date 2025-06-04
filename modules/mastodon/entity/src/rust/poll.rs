@@ -15,7 +15,7 @@
  */
 
 use chrono::{DateTime, Utc};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 use panoptiqon::cache::Cache;
 use crate::custom_emoji::CustomEmoji;
@@ -33,7 +33,7 @@ use {
    },
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Poll {
    pub id: PollId,
    pub no_credential: Cache<NoCredentialPoll>,
@@ -41,7 +41,7 @@ pub struct Poll {
    pub voted_options: Vec<i64>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct NoCredentialPoll {
    pub id: PollId,
    pub expire_time: Option<DateTime<Utc>>,
@@ -53,16 +53,16 @@ pub struct NoCredentialPoll {
    pub emojis: Vec<CustomEmoji>,
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub struct PollId {
    pub instance_url: Url,
    pub local: PollLocalId,
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub struct PollLocalId(pub String);
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct PollOption {
    pub title: Option<String>,
    pub vote_count: Option<i64>,

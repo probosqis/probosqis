@@ -16,7 +16,7 @@
 
 use chrono::{DateTime, Utc};
 use panoptiqon::cache::Cache;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 use crate::instance::Instance;
 
@@ -29,7 +29,7 @@ use {
    crate::jvm_types::{JvmApplication, JvmInstance},
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Application {
    pub instance: Cache<Instance>,
    pub name: String,
