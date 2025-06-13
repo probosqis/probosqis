@@ -18,11 +18,13 @@ package com.wcaokaze.probosqis.mastodon.repository
 
 import android.content.Context
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.Application
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import com.wcaokaze.probosqis.panoptiqon.Repository
 import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
 import com.wcaokaze.probosqis.panoptiqon.loadCache
 import com.wcaokaze.probosqis.panoptiqon.saveCache
@@ -76,7 +78,8 @@ class AndroidAppRepository(context: Context) : AppRepository {
          application.instance,
          code,
          application.clientId     ?: throw IOException(),
-         application.clientSecret ?: throw IOException()
+         application.clientSecret ?: throw IOException(),
+         TODO()
       )
    }
 
@@ -84,8 +87,16 @@ class AndroidAppRepository(context: Context) : AppRepository {
       instance: Cache<Instance>,
       code: String,
       clientId: String,
-      clientSecret: String
+      clientSecret: String,
+      accountCacheRepo: Repository<Account>
    ): Token
 
-   external override fun getCredentialAccount(token: Token): Cache<CredentialAccount>
+   override fun getCredentialAccount(token: Token): Cache<CredentialAccount> {
+      return getCredentialAccount(token, TODO())
+   }
+
+   private external fun getCredentialAccount(
+      token: Token,
+      accountCacheRepo: Repository<Account>
+   ): Cache<CredentialAccount>
 }

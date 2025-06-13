@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+use mastodon_entity::account::Account;
 use mastodon_entity::status::Status;
 use mastodon_entity::token::Token;
+use panoptiqon::repository::Repository;
 
 #[cfg(not(feature = "jvm"))]
 use std::marker::PhantomData;
@@ -47,7 +49,8 @@ impl TimelineRepository<'_> {
 
    pub fn get_home_timeline(
       &mut self,
-      token: &Token
+      token: &Token,
+      account_cache_repo: &mut Repository<Account>
    ) -> anyhow::Result<Vec<Status>> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::timelines;
@@ -59,9 +62,6 @@ impl TimelineRepository<'_> {
          &token.instance.get().url,
          &token.access_token
       )?;
-
-      let mut account_repo = cache::account::repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?;
 
       let mut status_repo = cache::status::status_repo()
          .write(#[cfg(feature = "jvm")] &mut self.env)?;
@@ -78,7 +78,7 @@ impl TimelineRepository<'_> {
                #[cfg(feature = "jvm")] &mut self.env,
                token.instance.clone(),
                api_status,
-               &mut account_repo,
+               account_cache_repo,
                &mut status_repo,
                &mut no_credential_status_repo,
                &mut no_credential_poll_repo
@@ -94,19 +94,21 @@ impl TimelineRepository<'_> {
 mod jvm {
    use jni::JNIEnv;
    use jni::objects::JObject;
-   use mastodon_entity::jvm_types::{JvmStatus, JvmToken};
-   use panoptiqon::jvm_types::JvmList;
+   use mastodon_entity::jvm_types::{JvmAccount, JvmStatus, JvmToken};
+   use panoptiqon::jvm_types::{JvmList, JvmRepository};
+   use panoptiqon::repository::Repository;
    use crate::cache;
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidTimelineRepository_getHomeTimeline<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      token: JvmToken<'local>
+      token: JvmToken<'local>,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_home_time_line(&mut env, token)
+      get_home_time_line(&mut env, token, account_cache_repo)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -114,28 +116,32 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopTimelineRepository_getHomeTimeline<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      token: JvmToken<'local>
+      token: JvmToken<'local>,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_home_time_line(&mut env, token)
+      get_home_time_line(&mut env, token, account_cache_repo)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_home_time_line<'local>(
       env: &mut JNIEnv<'local>,
-      token: JvmToken<'local>
+      token: JvmToken<'local>,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
    ) -> anyhow::Result<JvmList<'local, JvmStatus<'local>>> {
       use mastodon_entity::token::Token;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
       use super::TimelineRepository;
 
       let mut status_repository = TimelineRepository::new(env);
+      let account_cache_repo = Repository::of(env, &account_cache_repo);
 
       let instance = token.instance(env);
       let instance = cache::instance::clone_from_jvm(env, &instance)?;
       let token = Token::clone_from_jvm(env, &token, instance);
-      let timeline = status_repository.get_home_timeline(&token)?;
+      let timeline = status_repository
+         .get_home_timeline(&token, account_cache_repo)?;
       Ok(timeline.clone_into_jvm(env))
    }
 }
@@ -144,6 +150,7 @@ mod jvm {
 mod test {
    use std::time::Duration;
    use isolang::Language;
+   use panoptiqon::repository::Repository;
    use super::TimelineRepository;
 
    #[test]
@@ -210,6 +217,9 @@ mod test {
       use crate::cache;
 
       let mut repository = TimelineRepository::new();
+      let mut account_cache_repo = Repository::new(
+         "test/TimelineRepository/get_home_timeline"
+      );
 
       timelines::inject_get_verify_credentials(|_, _, _|
          Ok(vec![
@@ -744,7 +754,8 @@ mod test {
          created_at: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let statuses = repository.get_home_timeline(&token).unwrap();
+      let statuses = repository
+         .get_home_timeline(&token, &mut account_cache_repo).unwrap();
 
       assert_eq!(
          vec![
@@ -858,8 +869,7 @@ mod test {
                                           .moved_to.as_ref().unwrap().get()
                                     );
 
-                                    let moved_to = cache::account::repo()
-                                       .read().unwrap()
+                                    let moved_to = account_cache_repo
                                        .load(id).unwrap();
 
                                     Some(moved_to)
@@ -876,8 +886,7 @@ mod test {
                                  .account.as_ref().unwrap().get()
                            );
 
-                           let account = cache::account::repo()
-                              .read().unwrap()
+                           let account = account_cache_repo
                               .load(id).unwrap();
 
                            Some(account)
@@ -1158,8 +1167,7 @@ mod test {
                                           .account.as_ref().unwrap().get()
                                     );
 
-                                    let account = cache::account::repo()
-                                       .read().unwrap()
+                                    let account = account_cache_repo
                                        .load(id).unwrap();
 
                                     Some(account)
@@ -1209,8 +1217,7 @@ mod test {
                                           .account.as_ref().unwrap().get()
                                     );
 
-                                    let account = cache::account::repo()
-                                       .read().unwrap()
+                                    let account = account_cache_repo
                                        .load(id).unwrap();
 
                                     Some(account)

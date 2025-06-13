@@ -18,7 +18,7 @@ pub mod instance {
    use ext_panoptiqon::repository_holder::RepositoryHolder;
    use mastodon_entity::instance::Instance;
    use panoptiqon::cache::Cache;
-   
+
    #[cfg(feature = "jvm")]
    use {
       jni::JNIEnv,
@@ -73,13 +73,13 @@ pub mod account {
 
    static REPO: RepositoryHolder<Account>
       = RepositoryHolder::new("mastodon/Account");
-   
+
    static CREDENTIAL_ACCOUNT_REPO: RepositoryHolder<CredentialAccount>
       = RepositoryHolder::new("mastodon/CredentialAccount");
 
-   pub fn repo() -> &'static RepositoryHolder<Account> {
-      &REPO
-   }
+   //pub fn repo() -> &'static RepositoryHolder<Account> {
+   //   &REPO
+   //}
 
    pub fn credential_account_repo() -> &'static RepositoryHolder<CredentialAccount> {
       &CREDENTIAL_ACCOUNT_REPO
