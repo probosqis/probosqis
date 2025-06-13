@@ -34,7 +34,10 @@ import java.io.File
 import java.io.IOException
 import java.net.URLEncoder
 
-class DesktopAppRepository(directory: File) : AppRepository {
+class DesktopAppRepository(
+   directory: File,
+   private val accountCacheRepository: Repository<Account>
+) : AppRepository {
    private val dir = File(directory, "fFDFXHfgze7i3Ihs")
       .also { dir ->
          if (dir.exists()) {
@@ -85,7 +88,7 @@ class DesktopAppRepository(directory: File) : AppRepository {
          code,
          application.clientId     ?: throw IOException(),
          application.clientSecret ?: throw IOException(),
-         TODO()
+         accountCacheRepository
       )
    }
 
@@ -98,7 +101,7 @@ class DesktopAppRepository(directory: File) : AppRepository {
    ): Token
 
    override fun getCredentialAccount(token: Token): Cache<CredentialAccount> {
-      return getCredentialAccount(token, TODO())
+      return getCredentialAccount(token, accountCacheRepository)
    }
 
    private external fun getCredentialAccount(

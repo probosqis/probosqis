@@ -35,7 +35,10 @@ import java.io.File
 import java.io.IOException
 import java.net.URLEncoder
 
-class AndroidAppRepository(context: Context) : AppRepository {
+class AndroidAppRepository(
+   context: Context,
+   private val accountCacheRepository: Repository<Account>
+) : AppRepository {
    private val dir = File(context.filesDir, "fFDFXHfgze7i3Ihs")
 
    private val json = Json {
@@ -79,7 +82,7 @@ class AndroidAppRepository(context: Context) : AppRepository {
          code,
          application.clientId     ?: throw IOException(),
          application.clientSecret ?: throw IOException(),
-         TODO()
+         accountCacheRepository
       )
    }
 
@@ -92,7 +95,7 @@ class AndroidAppRepository(context: Context) : AppRepository {
    ): Token
 
    override fun getCredentialAccount(token: Token): Cache<CredentialAccount> {
-      return getCredentialAccount(token, TODO())
+      return getCredentialAccount(token, accountCacheRepository)
    }
 
    private external fun getCredentialAccount(

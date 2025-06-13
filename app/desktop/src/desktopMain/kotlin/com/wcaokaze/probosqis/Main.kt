@@ -42,14 +42,17 @@ import com.wcaokaze.probosqis.foundation.error.errorSerializer
 import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
 import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.foundation.resources.Strings
+import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAppRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopTimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
+import com.wcaokaze.probosqis.mastodon.repository.createAccountCacheRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.DesktopNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
+import com.wcaokaze.probosqis.panoptiqon.Repository
 import com.wcaokaze.probosqis.testpages.TestError
 import com.wcaokaze.probosqis.testpages.TestNotePage
 import com.wcaokaze.probosqis.testpages.TestPage
@@ -130,6 +133,12 @@ object Main {
       }
    }
 
+   private val cacheRepositoryKoinModule = module {
+      single<Repository<Account>> {
+         createAccountCacheRepository()
+      }
+   }
+
    private val repositoriesKoinModule = module {
       single<PageDeckRepository> {
          DesktopPageDeckRepository(pageStackRepository = get(), probosqisDataDir)
@@ -160,10 +169,14 @@ object Main {
          )
       }
 
-      single<AppRepository> { DesktopAppRepository(probosqisDataDir) }
+      single<AppRepository> {
+         DesktopAppRepository(probosqisDataDir, accountCacheRepository = get())
+      }
       single<AccountRepository> { DesktopAccountRepository() }
       single<NodeInfoRepository> { DesktopNodeInfoRepository() }
-      single<TimelineRepository> { DesktopTimelineRepository() }
+      single<TimelineRepository> {
+         DesktopTimelineRepository(accountCacheRepository = get())
+      }
    }
 
    @JvmStatic
@@ -177,7 +190,10 @@ object Main {
                   single { appCoroutineScope }
                }
 
-               modules(koinModule, repositoriesKoinModule, appKoinModule)
+               modules(
+                  koinModule, cacheRepositoryKoinModule, repositoriesKoinModule,
+                  appKoinModule,
+               )
             }
          ) {
             ProbosqisTheme {

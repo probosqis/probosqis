@@ -21,9 +21,11 @@ import com.wcaokaze.probosqis.mastodon.entity.Status
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Repository
 
-class AndroidTimelineRepository : TimelineRepository {
+class AndroidTimelineRepository(
+   private val accountCacheRepository: Repository<Account>
+) : TimelineRepository {
    override fun getHomeTimeline(token: Token): List<Status> {
-      return getHomeTimeline(token, TODO())
+      return getHomeTimeline(token, accountCacheRepository)
    }
 
    private external fun getHomeTimeline(

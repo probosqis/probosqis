@@ -17,19 +17,6 @@
 package com.wcaokaze.probosqis.mastodon.repository
 
 import com.wcaokaze.probosqis.mastodon.entity.Account
-import com.wcaokaze.probosqis.mastodon.entity.Status
-import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Repository
 
-class DesktopTimelineRepository(
-   private val accountCacheRepository: Repository<Account>
-) : TimelineRepository {
-   override fun getHomeTimeline(token: Token): List<Status> {
-      return getHomeTimeline(token, accountCacheRepository)
-   }
-
-   private external fun getHomeTimeline(
-      token: Token,
-      accountCacheRepo: Repository<Account>
-   ): List<Status>
-}
+external fun createAccountCacheRepository(): Repository<Account>

@@ -68,6 +68,14 @@ pub mod account {
    use ext_panoptiqon::repository_holder::RepositoryHolder;
    use mastodon_entity::account::{Account, CredentialAccount};
 
+   #[cfg(feature = "jvm")]
+   use {
+      jni::JNIEnv,
+      jni::objects::JClass,
+      mastodon_entity::jvm_types::JvmAccount,
+      panoptiqon::jvm_types::JvmRepository,
+   };
+
    pub type Repository
       = panoptiqon::repository::Repository<Account>;
 
@@ -83,6 +91,15 @@ pub mod account {
 
    pub fn credential_account_repo() -> &'static RepositoryHolder<CredentialAccount> {
       &CREDENTIAL_ACCOUNT_REPO
+   }
+
+   #[cfg(feature = "jvm")]
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesKt_createAccountCacheRepository<'local>(
+      mut env: JNIEnv<'local>,
+      _class: JClass<'local>,
+   ) -> JvmRepository<'local, JvmAccount<'local>> {
+      Repository::new_jvm(&mut env, "mastodon/Account")
    }
 }
 

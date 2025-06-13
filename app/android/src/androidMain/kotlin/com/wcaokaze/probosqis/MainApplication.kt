@@ -34,14 +34,17 @@ import com.wcaokaze.probosqis.foundation.error.PErrorListRepository
 import com.wcaokaze.probosqis.foundation.error.PErrorListState
 import com.wcaokaze.probosqis.foundation.error.errorSerializer
 import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
+import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidTimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
+import com.wcaokaze.probosqis.mastodon.repository.createAccountCacheRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.AndroidNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
+import com.wcaokaze.probosqis.panoptiqon.Repository
 import com.wcaokaze.probosqis.testpages.TestError
 import com.wcaokaze.probosqis.testpages.TestNotePage
 import com.wcaokaze.probosqis.testpages.TestPage
@@ -121,6 +124,12 @@ class MainApplication : Application() {
       }
    }
 
+   private val cacheRepositoryKoinModule = module {
+      single<Repository<Account>> {
+         createAccountCacheRepository()
+      }
+   }
+
    private val repositoriesKoinModule = module {
       single<PageDeckRepository> {
          AndroidPageDeckRepository(context = get(), pageStackRepository = get())
@@ -151,10 +160,14 @@ class MainApplication : Application() {
          )
       }
 
-      single<AppRepository> { AndroidAppRepository(context = get()) }
+      single<AppRepository> {
+         AndroidAppRepository(context = get(), accountCacheRepository = get())
+      }
       single<AccountRepository> { AndroidAccountRepository() }
       single<NodeInfoRepository> { AndroidNodeInfoRepository() }
-      single<TimelineRepository> { AndroidTimelineRepository() }
+      single<TimelineRepository> {
+         AndroidTimelineRepository(accountCacheRepository = get())
+      }
    }
 
    private val appKoinModule = module {
@@ -166,7 +179,10 @@ class MainApplication : Application() {
 
       startKoin {
          androidContext(this@MainApplication)
-         modules(koinModule, repositoriesKoinModule, appKoinModule)
+         modules(
+            koinModule, cacheRepositoryKoinModule, repositoriesKoinModule,
+            appKoinModule,
+         )
       }
    }
 }
