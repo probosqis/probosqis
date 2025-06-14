@@ -135,7 +135,7 @@ object Main {
 
    private val cacheRepositoryKoinModule = module {
       single<Repository<Account>> {
-         createAccountCacheRepository()
+         createAccountCacheRepository(probosqisDataDir.absolutePath)
       }
    }
 

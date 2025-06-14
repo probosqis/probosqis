@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis
 
 import android.app.Application
+import android.content.Context
 import com.wcaokaze.probosqis.app.core.loadErrorListOrDefault
 import com.wcaokaze.probosqis.app.core.loadPageDeckOrDefault
 import com.wcaokaze.probosqis.app.pagedeck.AndroidPageDeckRepository
@@ -57,6 +58,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.MainScope
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.net.URLEncoder
 
@@ -125,8 +127,12 @@ class MainApplication : Application() {
    }
 
    private val cacheRepositoryKoinModule = module {
+      single(named("dataDirPath")) {
+         get<Context>().filesDir.absolutePath
+      }
+
       single<Repository<Account>> {
-         createAccountCacheRepository()
+         createAccountCacheRepository(get(named("dataDirPath")))
       }
    }
 

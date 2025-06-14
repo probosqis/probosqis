@@ -71,7 +71,7 @@ pub mod account {
    #[cfg(feature = "jvm")]
    use {
       jni::JNIEnv,
-      jni::objects::JClass,
+      jni::objects::{JClass, JString},
       mastodon_entity::jvm_types::JvmAccount,
       panoptiqon::jvm_types::JvmRepository,
    };
@@ -98,8 +98,13 @@ pub mod account {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesKt_createAccountCacheRepository<'local>(
       mut env: JNIEnv<'local>,
       _class: JClass<'local>,
+      data_dir_path: JString<'local>
    ) -> JvmRepository<'local, JvmAccount<'local>> {
-      Repository::new_jvm(&mut env, "mastodon/Account")
+      use std::path::Path;
+
+      let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
+      let path = Path::new(&data_dir_path).join("mastodon/Account");
+      Repository::new_jvm(&mut env, path)
    }
 }
 
