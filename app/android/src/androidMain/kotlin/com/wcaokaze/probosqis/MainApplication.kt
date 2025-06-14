@@ -60,6 +60,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import java.io.File
 import java.net.URLEncoder
 
 class MainApplication : Application() {
@@ -127,27 +128,34 @@ class MainApplication : Application() {
    }
 
    private val cacheRepositoryKoinModule = module {
-      single(named("dataDirPath")) {
-         get<Context>().filesDir.absolutePath
+      single(named("appDataDir")) {
+         get<Context>().filesDir
       }
 
       single<Repository<Account>> {
-         createAccountCacheRepository(get(named("dataDirPath")))
+         val appDataDir: File = get(named("appDataDir"))
+         createAccountCacheRepository(appDataDir.absolutePath)
       }
    }
 
    private val repositoriesKoinModule = module {
       single<PageDeckRepository> {
-         AndroidPageDeckRepository(context = get(), pageStackRepository = get())
+         AndroidPageDeckRepository(
+            get(named("appDataDir")),
+            pageStackRepository = get()
+         )
       }
 
       single<PageStackRepository> {
-         AndroidPageStackRepository(context = get(), allPageSerializers)
+         AndroidPageStackRepository(
+            get(named("appDataDir")),
+            allPageSerializers
+         )
       }
 
       single<PErrorListRepository> {
          AndroidPErrorListRepository(
-            context = get(),
+            get(named("appDataDir")),
             allErrorSerializers,
             allPageSerializers
          )
@@ -155,7 +163,7 @@ class MainApplication : Application() {
 
       single<CredentialRepository> {
          AndroidCredentialRepository(
-            context = get(),
+            get(named("appDataDir")),
             allCredentialSerializers = listOf(
                credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token> { token ->
                   val encodedUrl = URLEncoder.encode(token.accountId.instanceUrl.raw, "UTF-8")
@@ -167,7 +175,10 @@ class MainApplication : Application() {
       }
 
       single<AppRepository> {
-         AndroidAppRepository(context = get(), accountCacheRepository = get())
+         AndroidAppRepository(
+            get(named("appDataDir")),
+            accountCacheRepository = get()
+         )
       }
       single<AccountRepository> { AndroidAccountRepository() }
       single<NodeInfoRepository> { AndroidNodeInfoRepository() }

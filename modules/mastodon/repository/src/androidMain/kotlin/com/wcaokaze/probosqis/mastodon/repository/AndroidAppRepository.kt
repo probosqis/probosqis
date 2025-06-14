@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.mastodon.repository
 
-import android.content.Context
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.Application
@@ -36,10 +35,10 @@ import java.io.IOException
 import java.net.URLEncoder
 
 class AndroidAppRepository(
-   context: Context,
+   appDataDir: File,
    private val accountCacheRepository: Repository<Account>
 ) : AppRepository {
-   private val dir = File(context.filesDir, "fFDFXHfgze7i3Ihs")
+   private val dir = File(appDataDir, "fFDFXHfgze7i3Ihs")
 
    private val json = Json {
       serializersModule = SerializersModule {

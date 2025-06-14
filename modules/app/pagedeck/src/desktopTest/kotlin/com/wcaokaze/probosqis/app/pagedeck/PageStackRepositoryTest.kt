@@ -43,13 +43,13 @@ internal fun createPageStackRepository(
    }
    if (!testDir.mkdir()) { throw IOException() }
 
-   return DesktopPageStackRepository(allPageSerializers, testDir)
+   return DesktopPageStackRepository(testDir, allPageSerializers)
 }
 
 internal fun createPageDeckRepository(
    pageStackRepository: PageStackRepository
 ): PageDeckRepository {
-   return DesktopPageDeckRepository(pageStackRepository, testDir)
+   return DesktopPageDeckRepository(testDir, pageStackRepository)
 }
 
 internal fun deletePageStackRepository() {

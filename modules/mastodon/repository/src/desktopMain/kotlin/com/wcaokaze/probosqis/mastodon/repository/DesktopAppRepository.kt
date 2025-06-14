@@ -35,10 +35,10 @@ import java.io.IOException
 import java.net.URLEncoder
 
 class DesktopAppRepository(
-   directory: File,
+   appDataDir: File,
    private val accountCacheRepository: Repository<Account>
 ) : AppRepository {
-   private val dir = File(directory, "fFDFXHfgze7i3Ihs")
+   private val dir = File(appDataDir, "fFDFXHfgze7i3Ihs")
       .also { dir ->
          if (dir.exists()) {
             require(dir.isDirectory)

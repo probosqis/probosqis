@@ -100,7 +100,7 @@ object Main {
       errorSerializer<TestError>(),
    )
 
-   private val probosqisDataDir = File(System.getProperty("user.home"), ".probosqisData")
+   private val appDataDir = File(System.getProperty("user.home"), ".probosqisData")
 
    private val koinModule = module {
       single { PPageSwitcherState(allPageComposables) }
@@ -135,42 +135,42 @@ object Main {
 
    private val cacheRepositoryKoinModule = module {
       single<Repository<Account>> {
-         createAccountCacheRepository(probosqisDataDir.absolutePath)
+         createAccountCacheRepository(appDataDir.absolutePath)
       }
    }
 
    private val repositoriesKoinModule = module {
       single<PageDeckRepository> {
-         DesktopPageDeckRepository(pageStackRepository = get(), probosqisDataDir)
+         DesktopPageDeckRepository(appDataDir, pageStackRepository = get())
       }
 
       single<PageStackRepository> {
-         DesktopPageStackRepository(allPageSerializers, probosqisDataDir)
+         DesktopPageStackRepository(appDataDir, allPageSerializers)
       }
 
       single<PErrorListRepository> {
          DesktopPErrorListRepository(
+            appDataDir,
             allErrorSerializers,
-            allPageSerializers,
-            probosqisDataDir
+            allPageSerializers
          )
       }
 
       single<CredentialRepository> {
          DesktopCredentialRepository(
+            appDataDir,
             allCredentialSerializers = listOf(
                credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token> { token ->
                   val encodedUrl = URLEncoder.encode(token.accountId.instanceUrl.raw, "UTF-8")
                   val localId = token.accountId.local.value
                   "mastodon_${encodedUrl}_$localId"
                },
-            ),
-            probosqisDataDir
+            )
          )
       }
 
       single<AppRepository> {
-         DesktopAppRepository(probosqisDataDir, accountCacheRepository = get())
+         DesktopAppRepository(appDataDir, accountCacheRepository = get())
       }
       single<AccountRepository> { DesktopAccountRepository() }
       single<NodeInfoRepository> { DesktopNodeInfoRepository() }
