@@ -35,7 +35,6 @@ import com.wcaokaze.probosqis.foundation.error.PErrorListRepository
 import com.wcaokaze.probosqis.foundation.error.PErrorListState
 import com.wcaokaze.probosqis.foundation.error.errorSerializer
 import com.wcaokaze.probosqis.foundation.page.PPageSwitcherState
-import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
@@ -43,9 +42,9 @@ import com.wcaokaze.probosqis.mastodon.repository.AndroidTimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.createAccountCacheRepository
+import com.wcaokaze.probosqis.mastodon.repository.createCredentialAccountCacheRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.AndroidNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
-import com.wcaokaze.probosqis.panoptiqon.Repository
 import com.wcaokaze.probosqis.testpages.TestError
 import com.wcaokaze.probosqis.testpages.TestNotePage
 import com.wcaokaze.probosqis.testpages.TestPage
@@ -132,9 +131,14 @@ class MainApplication : Application() {
          get<Context>().filesDir
       }
 
-      single<Repository<Account>> {
+      single(named("accountCacheRepository")) {
          val appDataDir: File = get(named("appDataDir"))
          createAccountCacheRepository(appDataDir.absolutePath)
+      }
+
+      single(named("credentialAccountCacheRepository")) {
+         val appDataDir: File = get(named("appDataDir"))
+         createCredentialAccountCacheRepository(appDataDir.absolutePath)
       }
    }
 
@@ -177,13 +181,16 @@ class MainApplication : Application() {
       single<AppRepository> {
          AndroidAppRepository(
             get(named("appDataDir")),
-            accountCacheRepository = get()
+            get(named("accountCacheRepository")),
+            get(named("credentialAccountCacheRepository"))
          )
       }
       single<AccountRepository> { AndroidAccountRepository() }
       single<NodeInfoRepository> { AndroidNodeInfoRepository() }
       single<TimelineRepository> {
-         AndroidTimelineRepository(accountCacheRepository = get())
+         AndroidTimelineRepository(
+            get(named("accountCacheRepository"))
+         )
       }
    }
 

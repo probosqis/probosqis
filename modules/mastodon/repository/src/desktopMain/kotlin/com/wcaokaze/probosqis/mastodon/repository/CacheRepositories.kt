@@ -17,6 +17,8 @@
 package com.wcaokaze.probosqis.mastodon.repository
 
 import com.wcaokaze.probosqis.mastodon.entity.Account
+import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.panoptiqon.Repository
 
 external fun createAccountCacheRepository(dataDirPath: String): Repository<Account>
+external fun createCredentialAccountCacheRepository(dataDirPath: String): Repository<CredentialAccount>

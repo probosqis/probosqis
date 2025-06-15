@@ -128,7 +128,8 @@ impl AppRepository<'_> {
       client_id: &str,
       client_secret: &str,
       redirect_uri: &str,
-      account_cache_repo: &mut Repository<Account>
+      account_cache_repo: &mut Repository<Account>,
+      credential_account_cache_repo: &mut Repository<CredentialAccount>
    ) -> anyhow::Result<Token> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::oauth;
@@ -146,7 +147,8 @@ impl AppRepository<'_> {
       )?;
 
       let credential_account = self.get_credential_account_impl(
-         instance_cache, &api_token.access_token, account_cache_repo
+         instance_cache, &api_token.access_token,
+         account_cache_repo, credential_account_cache_repo
       )?;
 
       let token = conversion::token::from_api(
@@ -159,10 +161,12 @@ impl AppRepository<'_> {
    pub fn get_credential_account(
       &mut self,
       token: &Token,
-      account_cache_repo: &mut Repository<Account>
+      account_cache_repo: &mut Repository<Account>,
+      credential_account_cache_repo: &mut Repository<CredentialAccount>
    ) -> anyhow::Result<Cache<CredentialAccount>> {
       self.get_credential_account_impl(
-         &token.instance, &token.access_token, account_cache_repo
+         &token.instance, &token.access_token,
+         account_cache_repo, credential_account_cache_repo
       )
    }
 
@@ -170,11 +174,11 @@ impl AppRepository<'_> {
       &mut self,
       instance: &Cache<Instance>,
       access_token: &str,
-      account_cache_repo: &mut Repository<Account>
+      account_cache_repo: &mut Repository<Account>,
+      credential_account_cache_repo: &mut Repository<CredentialAccount>
    ) -> anyhow::Result<Cache<CredentialAccount>> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::accounts;
-      use crate::cache;
       use crate::conversion;
 
       let api_credential_account = accounts::get_verify_credentials(
@@ -190,8 +194,7 @@ impl AppRepository<'_> {
          account_cache_repo
       )?;
 
-      let credential_account = cache::account::credential_account_repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?
+      let credential_account = credential_account_cache_repo
          .save(credential_account);
 
       Ok(credential_account)
@@ -308,14 +311,16 @@ mod jvm {
       code: JvmString<'local>,
       client_id: JvmString<'local>,
       client_secret: JvmString<'local>,
-      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> JvmToken<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
 
       get_token(
          &mut env, instance, code, client_id, client_secret,
-         AppRepository::DESKTOP_REDIRECT_URI, account_cache_repo
+         AppRepository::DESKTOP_REDIRECT_URI,
+         account_cache_repo, credential_account_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -327,14 +332,16 @@ mod jvm {
       code: JvmString<'local>,
       client_id: JvmString<'local>,
       client_secret: JvmString<'local>,
-      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> JvmToken<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
 
       get_token(
          &mut env, instance, code, client_id, client_secret,
-         AppRepository::ANDROID_REDIRECT_URI, account_cache_repo
+         AppRepository::ANDROID_REDIRECT_URI,
+         account_cache_repo, credential_account_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -345,7 +352,8 @@ mod jvm {
       client_id: JvmString<'local>,
       client_secret: JvmString<'local>,
       redirect_uri: &str,
-      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> anyhow::Result<JvmToken<'local>> {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
       use crate::cache;
@@ -353,6 +361,8 @@ mod jvm {
 
       let mut app_repository = AppRepository::new(env);
       let account_cache_repo = Repository::of(env, &account_cache_repo);
+      let credential_account_cache_repo
+         = Repository::of(env, &credential_account_cache_repo);
 
       let instance_cache = cache::instance::clone_from_jvm(env, &instance)?;
 
@@ -362,7 +372,7 @@ mod jvm {
 
       let token = app_repository.get_token(
          &instance_cache, &code, &client_id, &client_secret, redirect_uri,
-         account_cache_repo
+         account_cache_repo, credential_account_cache_repo
       )?;
 
       Ok(token.clone_into_jvm(env))
@@ -373,12 +383,14 @@ mod jvm {
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
       token: JvmToken<'local>,
-      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> JvmCache<'local, JvmCredentialAccount<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_credential_account(&mut env, token, account_cache_repo)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_credential_account(
+         &mut env, token, account_cache_repo, credential_account_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
@@ -386,18 +398,21 @@ mod jvm {
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
       token: JvmToken<'local>,
-      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> JvmCache<'local, JvmCredentialAccount<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_credential_account(&mut env, token, account_cache_repo)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_credential_account(
+         &mut env, token, account_cache_repo, credential_account_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_credential_account<'local>(
       env: &mut JNIEnv<'local>,
       token: JvmToken<'local>,
-      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> anyhow::Result<JvmCache<'local, JvmCredentialAccount<'local>>> {
       use mastodon_entity::token::Token;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
@@ -406,12 +421,15 @@ mod jvm {
 
       let mut app_repository = AppRepository::new(env);
       let account_cache_repo = Repository::of(env, &account_cache_repo);
+      let credential_account_cache_repo
+         = Repository::of(env, &credential_account_cache_repo);
 
       let instance = token.instance(env);
       let instance = cache::instance::clone_from_jvm(env, &instance)?;
       let token = Token::clone_from_jvm(env, &token, instance);
-      let credential_account = app_repository
-         .get_credential_account(&token, account_cache_repo)?;
+      let credential_account = app_repository.get_credential_account(
+         &token, account_cache_repo, credential_account_cache_repo
+      )?;
       Ok(credential_account.clone_into_jvm(env))
    }
 }
@@ -654,7 +672,10 @@ mod test {
       use crate::cache;
 
       let mut repository = AppRepository::new();
-      let mut account_cache_repo = Repository::new("test/AppRepository/token");
+      let mut account_cache_repo
+         = Repository::new("test/AppRepository/token/Account");
+      let mut credential_account_cache_repo
+         = Repository::new("test/AppRepository/token/CredentialAccount");
 
       oauth::inject_post_token(|_, _, _, _, _, _, _, _|
          Ok(
@@ -772,7 +793,8 @@ mod test {
          "client_id",
          "client_secret",
          "redirect_uri",
-         &mut account_cache_repo
+         &mut account_cache_repo,
+         &mut credential_account_cache_repo
       ).unwrap();
 
       assert_eq!(

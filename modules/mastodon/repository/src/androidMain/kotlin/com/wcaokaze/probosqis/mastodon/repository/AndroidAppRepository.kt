@@ -36,7 +36,8 @@ import java.net.URLEncoder
 
 class AndroidAppRepository(
    appDataDir: File,
-   private val accountCacheRepository: Repository<Account>
+   private val accountCacheRepository: Repository<Account>,
+   private val credentialAccountCacheRepository: Repository<CredentialAccount>
 ) : AppRepository {
    private val dir = File(appDataDir, "fFDFXHfgze7i3Ihs")
 
@@ -81,7 +82,7 @@ class AndroidAppRepository(
          code,
          application.clientId     ?: throw IOException(),
          application.clientSecret ?: throw IOException(),
-         accountCacheRepository
+         accountCacheRepository, credentialAccountCacheRepository
       )
    }
 
@@ -90,15 +91,19 @@ class AndroidAppRepository(
       code: String,
       clientId: String,
       clientSecret: String,
-      accountCacheRepo: Repository<Account>
+      accountCacheRepo: Repository<Account>,
+      credentialAccountCacheRepo: Repository<CredentialAccount>
    ): Token
 
    override fun getCredentialAccount(token: Token): Cache<CredentialAccount> {
-      return getCredentialAccount(token, accountCacheRepository)
+      return getCredentialAccount(
+         token, accountCacheRepository, credentialAccountCacheRepository
+      )
    }
 
    private external fun getCredentialAccount(
       token: Token,
-      accountCacheRepo: Repository<Account>
+      accountCacheRepo: Repository<Account>,
+      credentialAccountCacheRepo: Repository<CredentialAccount>
    ): Cache<CredentialAccount>
 }
