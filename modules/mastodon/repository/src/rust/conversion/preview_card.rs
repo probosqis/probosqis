@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+use mastodon_entity::account::Account;
 use mastodon_entity::instance::Instance;
 use mastodon_entity::preview_card::{PreviewCard, PreviewCardAuthor};
 use panoptiqon::cache::Cache;
-use crate::cache;
+use panoptiqon::repository::Repository;
 
 use mastodon_webapi::entity::preview_card::{
    PreviewCard as ApiPreviewCard,
@@ -31,7 +32,7 @@ pub fn from_api(
    #[cfg(feature = "jvm")] env: &mut JNIEnv,
    instance: Cache<Instance>,
    entity: ApiPreviewCard,
-   account_cache_repository: &mut cache::account::Repository
+   account_cache_repository: &mut Repository<Account>
 ) -> anyhow::Result<PreviewCard> {
    let ApiPreviewCard {
       url, title, description, r#type, authors, author_name, author_url,
@@ -83,7 +84,7 @@ pub fn card_author_from_api(
    #[cfg(feature = "jvm")] env: &mut JNIEnv,
    instance: Cache<Instance>,
    entity: ApiPreviewCardAuthor,
-   account_cache_repository: &mut cache::account::Repository
+   account_cache_repository: &mut Repository<Account>
 ) -> anyhow::Result<PreviewCardAuthor> {
    use crate::conversion;
 
