@@ -115,18 +115,6 @@ pub mod instance {
    }
 }
 
-pub mod account_icon {
-   use foundation_entity::image_bytes::ImageBytes;
-   use ext_panoptiqon::repository_holder::RepositoryHolder;
-
-   static REPO: RepositoryHolder<ImageBytes>
-      = RepositoryHolder::new("mastodon/AccountIcon");
-
-   pub fn repo() -> &'static RepositoryHolder<ImageBytes> {
-      &REPO
-   }
-}
-
 pub mod poll {
    use ext_panoptiqon::repository_holder::RepositoryHolder;
    use mastodon_entity::poll::NoCredentialPoll;
