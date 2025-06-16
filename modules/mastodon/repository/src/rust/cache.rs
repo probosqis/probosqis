@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+#[cfg(feature = "jvm")]
+use {
+   panoptiqon::jvm_type,
+};
+
+#[cfg(feature = "jvm")]
+jvm_type! {
+   JvmCacheRepositories,
+}
+
 pub mod instance {
    use ext_panoptiqon::repository_holder::RepositoryHolder;
    use mastodon_entity::instance::Instance;
@@ -73,7 +83,9 @@ pub mod account {
       jni::JNIEnv,
       jni::objects::{JClass, JString},
       mastodon_entity::jvm_types::{JvmAccount, JvmCredentialAccount},
+      panoptiqon::jvm_type::JvmType,
       panoptiqon::jvm_types::JvmRepository,
+      crate::cache::JvmCacheRepositories,
    };
 
    pub type Repository
@@ -95,17 +107,52 @@ pub mod account {
 
    #[cfg(feature = "jvm")]
    #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesKt_createCacheRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _class: JClass<'local>,
+      data_dir_path: JString<'local>
+   ) -> JvmCacheRepositories<'local> {
+      use std::path::Path;
+      use panoptiqon::repository::JvmRepositoryCreator;
+
+      let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
+      let path = Path::new(&data_dir_path).join("mastodon/Account");
+
+      let repository_creator = JvmRepositoryCreator::new(&mut env);
+
+      let account_repo            = repository_creator.create::<Account>          (&mut env, &path);
+      let credential_account_repo = repository_creator.create::<CredentialAccount>(&mut env, &path);
+
+      let jvm_cache_repositories = env.new_object(
+         "com/wcaokaze/probosqis/mastodon/repository/CacheRepositories",
+         "(\
+            Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+            Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         )V",
+         &[
+            account_repo           .j_object().into(),
+            credential_account_repo.j_object().into(),
+         ]
+      ).unwrap();
+
+      unsafe { JvmCacheRepositories::from_j_object(jvm_cache_repositories) }
+   }
+
+   #[cfg(feature = "jvm")]
+   #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesKt_createAccountCacheRepository<'local>(
       mut env: JNIEnv<'local>,
       _class: JClass<'local>,
       data_dir_path: JString<'local>
    ) -> JvmRepository<'local, JvmAccount<'local>> {
       use std::path::Path;
-      use panoptiqon::repository::Repository;
+      use panoptiqon::repository::JvmRepositoryCreator;
 
       let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
       let path = Path::new(&data_dir_path).join("mastodon/Account");
-      Repository::<Account>::new_jvm(&mut env, path)
+
+      let repository_creator = JvmRepositoryCreator::new(&mut env);
+      repository_creator.create::<Account>(&mut env, path)
    }
 
    #[cfg(feature = "jvm")]
@@ -116,11 +163,13 @@ pub mod account {
       data_dir_path: JString<'local>
    ) -> JvmRepository<'local, JvmCredentialAccount<'local>> {
       use std::path::Path;
-      use panoptiqon::repository::Repository;
+      use panoptiqon::repository::JvmRepositoryCreator;
 
       let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
       let path = Path::new(&data_dir_path).join("mastodon/CredentialAccount");
-      Repository::<CredentialAccount>::new_jvm(&mut env, path)
+
+      let repository_creator = JvmRepositoryCreator::new(&mut env);
+      repository_creator.create::<CredentialAccount>(&mut env, path)
    }
 }
 

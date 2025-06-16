@@ -20,5 +20,9 @@ import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.panoptiqon.Repository
 
-external fun createAccountCacheRepository(dataDirPath: String): Repository<Account>
-external fun createCredentialAccountCacheRepository(dataDirPath: String): Repository<CredentialAccount>
+class CacheRepositories(
+   val account: Repository<Account>,
+   val credentialAccount: Repository<CredentialAccount>,
+)
+
+external fun createCacheRepositories(dataDirPath: String): CacheRepositories

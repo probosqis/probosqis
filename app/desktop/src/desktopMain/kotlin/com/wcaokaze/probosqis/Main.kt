@@ -44,12 +44,12 @@ import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.repository.CacheRepositories
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAppRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopTimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
-import com.wcaokaze.probosqis.mastodon.repository.createAccountCacheRepository
-import com.wcaokaze.probosqis.mastodon.repository.createCredentialAccountCacheRepository
+import com.wcaokaze.probosqis.mastodon.repository.createCacheRepositories
 import com.wcaokaze.probosqis.nodeinfo.repository.DesktopNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.testpages.TestError
@@ -134,12 +134,16 @@ object Main {
    }
 
    private val cacheRepositoryKoinModule = module {
+      single<CacheRepositories> {
+         createCacheRepositories(appDataDir.absolutePath)
+      }
+
       single(named("accountCacheRepository")) {
-         createAccountCacheRepository(appDataDir.absolutePath)
+         get<CacheRepositories>().account
       }
 
       single(named("credentialAccountCacheRepository")) {
-         createCredentialAccountCacheRepository(appDataDir.absolutePath)
+         get<CacheRepositories>().credentialAccount
       }
    }
 

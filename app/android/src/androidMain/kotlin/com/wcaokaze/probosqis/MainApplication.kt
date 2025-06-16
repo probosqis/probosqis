@@ -40,9 +40,9 @@ import com.wcaokaze.probosqis.mastodon.repository.AndroidAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidTimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.repository.CacheRepositories
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
-import com.wcaokaze.probosqis.mastodon.repository.createAccountCacheRepository
-import com.wcaokaze.probosqis.mastodon.repository.createCredentialAccountCacheRepository
+import com.wcaokaze.probosqis.mastodon.repository.createCacheRepositories
 import com.wcaokaze.probosqis.nodeinfo.repository.AndroidNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.testpages.TestError
@@ -131,14 +131,17 @@ class MainApplication : Application() {
          get<Context>().filesDir
       }
 
-      single(named("accountCacheRepository")) {
+      single<CacheRepositories> {
          val appDataDir: File = get(named("appDataDir"))
-         createAccountCacheRepository(appDataDir.absolutePath)
+         createCacheRepositories(appDataDir.absolutePath)
+      }
+
+      single(named("accountCacheRepository")) {
+         get<CacheRepositories>().account
       }
 
       single(named("credentialAccountCacheRepository")) {
-         val appDataDir: File = get(named("appDataDir"))
-         createCredentialAccountCacheRepository(appDataDir.absolutePath)
+         get<CacheRepositories>().credentialAccount
       }
    }
 
