@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.mastodon.repository
 
+import com.wcaokaze.probosqis.entity.Image
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.panoptiqon.Repository
@@ -23,6 +24,7 @@ import com.wcaokaze.probosqis.panoptiqon.Repository
 class CacheRepositories(
    val account: Repository<Account>,
    val credentialAccount: Repository<CredentialAccount>,
+   val accountIcon: Repository<Image>,
 )
 
 external fun createCacheRepositories(dataDirPath: String): CacheRepositories

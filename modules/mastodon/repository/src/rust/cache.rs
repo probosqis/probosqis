@@ -36,6 +36,7 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
    data_dir_path: JString<'local>
 ) -> JvmCacheRepositories<'local> {
    use std::path::Path;
+   use foundation_entity::image_bytes::ImageBytes;
    use panoptiqon::repository::JvmRepositoryCreator;
 
    let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
@@ -45,16 +46,19 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
 
    let account_repo            = repository_creator.create::<Account>          (&mut env, &path);
    let credential_account_repo = repository_creator.create::<CredentialAccount>(&mut env, &path);
+   let account_icon_repo       = repository_creator.create::<ImageBytes>       (&mut env, &path);
 
    let jvm_cache_repositories = env.new_object(
       "com/wcaokaze/probosqis/mastodon/repository/CacheRepositories",
       "(\
             Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
             Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+            Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
          )V",
       &[
          account_repo           .j_object().into(),
          credential_account_repo.j_object().into(),
+         account_icon_repo      .j_object().into(),
       ]
    ).unwrap();
 

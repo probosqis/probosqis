@@ -48,6 +48,8 @@ kotlin {
 
          implementation project(':modules:foundation:credential')
 
+         implementation project(':modules:foundation:entity')
+
          implementation project(':modules:testpages')
 
          implementation project(':modules:nodeinfo:repository')

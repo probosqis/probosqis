@@ -145,6 +145,10 @@ object Main {
       single(named("credentialAccountCacheRepository")) {
          get<CacheRepositories>().credentialAccount
       }
+
+      single(named("accountIconCacheRepository")) {
+         get<CacheRepositories>().accountIcon
+      }
    }
 
    private val repositoriesKoinModule = module {
@@ -184,7 +188,11 @@ object Main {
             get(named("credentialAccountCacheRepository"))
          )
       }
-      single<AccountRepository> { DesktopAccountRepository() }
+      single<AccountRepository> {
+         DesktopAccountRepository(
+            get(named("accountIconCacheRepository"))
+         )
+      }
       single<NodeInfoRepository> { DesktopNodeInfoRepository() }
       single<TimelineRepository> {
          DesktopTimelineRepository(
