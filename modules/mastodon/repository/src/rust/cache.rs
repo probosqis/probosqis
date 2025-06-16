@@ -111,28 +111,6 @@ pub mod instance {
    }
 }
 
-pub mod account {
-   use ext_panoptiqon::repository_holder::RepositoryHolder;
-   use mastodon_entity::account::{Account, CredentialAccount};
-
-   pub type Repository
-      = panoptiqon::repository::Repository<Account>;
-
-   static REPO: RepositoryHolder<Account>
-      = RepositoryHolder::new("mastodon/Account");
-
-   static CREDENTIAL_ACCOUNT_REPO: RepositoryHolder<CredentialAccount>
-      = RepositoryHolder::new("mastodon/CredentialAccount");
-
-   //pub fn repo() -> &'static RepositoryHolder<Account> {
-   //   &REPO
-   //}
-
-   //pub fn credential_account_repo() -> &'static RepositoryHolder<CredentialAccount> {
-   //   &CREDENTIAL_ACCOUNT_REPO
-   //}
-}
-
 pub mod account_icon {
    use foundation_entity::image_bytes::ImageBytes;
    use ext_panoptiqon::repository_holder::RepositoryHolder;
