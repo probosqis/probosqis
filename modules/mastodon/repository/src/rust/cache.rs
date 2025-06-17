@@ -119,21 +119,6 @@ pub mod instance {
    }
 }
 
-pub mod poll {
-   use ext_panoptiqon::repository_holder::RepositoryHolder;
-   use mastodon_entity::poll::NoCredentialPoll;
-
-   pub type NoCredentialPollRepository
-      = panoptiqon::repository::Repository<NoCredentialPoll>;
-
-   static NO_CREDENTIAL_POLL_REPO: RepositoryHolder<NoCredentialPoll>
-      = RepositoryHolder::new("mastodon/NoCredentialPoll");
-
-   pub fn no_credential_poll_repo() -> &'static RepositoryHolder<NoCredentialPoll> {
-      &NO_CREDENTIAL_POLL_REPO
-   }
-}
-
 pub mod status {
    use ext_panoptiqon::repository_holder::RepositoryHolder;
    use mastodon_entity::status::{NoCredentialStatus, Status};
