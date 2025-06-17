@@ -15,9 +15,9 @@
  */
 
 use mastodon_entity::instance::Instance;
-use mastodon_entity::poll::{Poll, PollOption};
+use mastodon_entity::poll::{NoCredentialPoll, Poll, PollOption};
 use panoptiqon::cache::Cache;
-use crate::cache;
+use panoptiqon::repository::Repository;
 
 use mastodon_webapi::entity::poll::{
    Poll as ApiPoll,
@@ -27,7 +27,7 @@ use mastodon_webapi::entity::poll::{
 pub fn from_api(
    instance: Cache<Instance>,
    entity: ApiPoll,
-   no_credential_poll_cache_repository: &mut cache::poll::NoCredentialPollRepository
+   no_credential_poll_cache_repository: &mut Repository<NoCredentialPoll>
 ) -> anyhow::Result<Poll> {
    use anyhow::Context;
    use chrono::DateTime;

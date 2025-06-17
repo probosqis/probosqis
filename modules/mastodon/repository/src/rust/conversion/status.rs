@@ -16,6 +16,7 @@
 
 use mastodon_entity::account::Account;
 use mastodon_entity::instance::Instance;
+use mastodon_entity::poll::NoCredentialPoll;
 use mastodon_entity::status::{Status, StatusHashtag, StatusMention};
 use panoptiqon::cache::Cache;
 use panoptiqon::repository::Repository;
@@ -38,7 +39,7 @@ pub fn from_api(
    status_cache_repository: &mut cache::status::StatusRepository,
    no_credential_status_cache_repository:
       &mut cache::status::NoCredentialStatusRepository,
-   no_credential_poll_repository: &mut cache::poll::NoCredentialPollRepository,
+   no_credential_poll_repository: &mut Repository<NoCredentialPoll>
 ) -> anyhow::Result<Status> {
    use anyhow::Context;
    use chrono::DateTime;
