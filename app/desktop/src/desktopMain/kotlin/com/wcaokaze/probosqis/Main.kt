@@ -149,6 +149,10 @@ object Main {
       single(named("accountIconCacheRepository")) {
          get<CacheRepositories>().accountIcon
       }
+
+      single(named("noCredentialPollCacheRepository")) {
+         get<CacheRepositories>().noCredentialPoll
+      }
    }
 
    private val repositoriesKoinModule = module {
@@ -196,7 +200,8 @@ object Main {
       single<NodeInfoRepository> { DesktopNodeInfoRepository() }
       single<TimelineRepository> {
          DesktopTimelineRepository(
-            get(named("accountCacheRepository"))
+            get(named("accountCacheRepository")),
+            get(named("noCredentialPollCacheRepository"))
          )
       }
    }

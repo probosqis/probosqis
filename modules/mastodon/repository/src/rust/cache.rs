@@ -18,9 +18,7 @@
 use {
    jni::JNIEnv,
    jni::objects::{JClass, JString},
-   mastodon_entity::account::{Account, CredentialAccount},
    panoptiqon::jvm_type,
-   panoptiqon::jvm_type::JvmType,
 };
 
 #[cfg(feature = "jvm")]
@@ -37,6 +35,9 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
 ) -> JvmCacheRepositories<'local> {
    use std::path::Path;
    use foundation_entity::image_bytes::ImageBytes;
+   use mastodon_entity::account::{Account, CredentialAccount};
+   use mastodon_entity::poll::NoCredentialPoll;
+   use panoptiqon::jvm_type::JvmType;
    use panoptiqon::repository::JvmRepositoryCreator;
 
    let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
@@ -47,18 +48,21 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
    let account_repo            = repository_creator.create::<Account>          (&mut env, &path);
    let credential_account_repo = repository_creator.create::<CredentialAccount>(&mut env, &path);
    let account_icon_repo       = repository_creator.create::<ImageBytes>       (&mut env, &path);
+   let no_credential_poll_repo = repository_creator.create::<NoCredentialPoll> (&mut env, &path);
 
    let jvm_cache_repositories = env.new_object(
       "com/wcaokaze/probosqis/mastodon/repository/CacheRepositories",
       "(\
-            Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
-            Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
-            Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
-         )V",
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+      )V",
       &[
          account_repo           .j_object().into(),
          credential_account_repo.j_object().into(),
          account_icon_repo      .j_object().into(),
+         no_credential_poll_repo.j_object().into(),
       ]
    ).unwrap();
 

@@ -15,6 +15,7 @@
  */
 
 use mastodon_entity::account::Account;
+use mastodon_entity::poll::NoCredentialPoll;
 use mastodon_entity::status::Status;
 use mastodon_entity::token::Token;
 use panoptiqon::repository::Repository;
@@ -50,7 +51,8 @@ impl TimelineRepository<'_> {
    pub fn get_home_timeline(
       &mut self,
       token: &Token,
-      account_cache_repo: &mut Repository<Account>
+      account_cache_repo: &mut Repository<Account>,
+      no_credential_poll_cache_repo: &mut Repository<NoCredentialPoll>
    ) -> anyhow::Result<Vec<Status>> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::timelines;
@@ -69,9 +71,6 @@ impl TimelineRepository<'_> {
       let mut no_credential_status_repo = cache::status::no_credential_status_repo()
          .write(#[cfg(feature = "jvm")] &mut self.env)?;
 
-      let mut no_credential_poll_repo = cache::poll::no_credential_poll_repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?;
-
       let timeline = api_timeline.into_iter()
          .flat_map(|api_status|
             conversion::status::from_api(
@@ -81,7 +80,7 @@ impl TimelineRepository<'_> {
                account_cache_repo,
                &mut status_repo,
                &mut no_credential_status_repo,
-               &mut no_credential_poll_repo
+               no_credential_poll_cache_repo
             )
          )
          .collect();
@@ -94,7 +93,9 @@ impl TimelineRepository<'_> {
 mod jvm {
    use jni::JNIEnv;
    use jni::objects::JObject;
-   use mastodon_entity::jvm_types::{JvmAccount, JvmStatus, JvmToken};
+   use mastodon_entity::jvm_types::{
+      JvmAccount, JvmPollNoCredential, JvmStatus, JvmToken,
+   };
    use panoptiqon::jvm_types::{JvmList, JvmRepository};
    use panoptiqon::repository::Repository;
    use crate::cache;
@@ -104,12 +105,15 @@ mod jvm {
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
       token: JvmToken<'local>,
-      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_home_time_line(&mut env, token, account_cache_repo)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_home_time_line(
+         &mut env, token,
+         account_cache_repo, no_credential_poll_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
@@ -117,18 +121,22 @@ mod jvm {
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
       token: JvmToken<'local>,
-      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_home_time_line(&mut env, token, account_cache_repo)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_home_time_line(
+         &mut env, token,
+         account_cache_repo, no_credential_poll_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_home_time_line<'local>(
       env: &mut JNIEnv<'local>,
       token: JvmToken<'local>,
-      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
    ) -> anyhow::Result<JvmList<'local, JvmStatus<'local>>> {
       use mastodon_entity::token::Token;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
@@ -136,12 +144,16 @@ mod jvm {
 
       let mut status_repository = TimelineRepository::new(env);
       let account_cache_repo = Repository::of(env, &account_cache_repo);
+      let no_credential_poll_cache_repo = Repository::of(env, &no_credential_poll_cache_repo);
 
       let instance = token.instance(env);
       let instance = cache::instance::clone_from_jvm(env, &instance)?;
       let token = Token::clone_from_jvm(env, &token, instance);
-      let timeline = status_repository
-         .get_home_timeline(&token, account_cache_repo)?;
+      let timeline = status_repository.get_home_timeline(
+         &token,
+         account_cache_repo, no_credential_poll_cache_repo
+      )?;
+
       Ok(timeline.clone_into_jvm(env))
    }
 }
@@ -218,7 +230,10 @@ mod test {
 
       let mut repository = TimelineRepository::new();
       let mut account_cache_repo = Repository::new(
-         "test/TimelineRepository/get_home_timeline"
+         "test/TimelineRepository/get_home_timeline/Account"
+      );
+      let mut no_credential_poll_cache_repo = Repository::new(
+         "test/TimelineRepository/get_home_timeline/NoCredentialPoll"
       );
 
       timelines::inject_get_verify_credentials(|_, _, _|
@@ -754,8 +769,10 @@ mod test {
          created_at: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let statuses = repository
-         .get_home_timeline(&token, &mut account_cache_repo).unwrap();
+      let statuses = repository.get_home_timeline(
+         &token,
+         &mut account_cache_repo, &mut no_credential_poll_cache_repo
+      ).unwrap();
 
       assert_eq!(
          vec![
@@ -1111,8 +1128,7 @@ mod test {
                                  .poll.as_ref().unwrap().get()
                            );
 
-                           let poll = cache::poll::no_credential_poll_repo()
-                              .read().unwrap()
+                           let poll = no_credential_poll_cache_repo
                               .load(id).unwrap();
 
                            Some(poll)
@@ -1282,8 +1298,7 @@ mod test {
 
                   Some(Poll {
                      id: id.clone(),
-                     no_credential: cache::poll::no_credential_poll_repo()
-                        .read().unwrap()
+                     no_credential: no_credential_poll_cache_repo
                         .load(id).unwrap(),
                      is_voted: Some(true),
                      voted_options: vec![6, 7],

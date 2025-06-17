@@ -147,6 +147,10 @@ class MainApplication : Application() {
       single(named("accountIconCacheRepository")) {
          get<CacheRepositories>().accountIcon
       }
+
+      single(named("noCredentialPollCacheRepository")) {
+         get<CacheRepositories>().noCredentialPoll
+      }
    }
 
    private val repositoriesKoinModule = module {
@@ -200,7 +204,8 @@ class MainApplication : Application() {
       single<NodeInfoRepository> { AndroidNodeInfoRepository() }
       single<TimelineRepository> {
          AndroidTimelineRepository(
-            get(named("accountCacheRepository"))
+            get(named("accountCacheRepository")),
+            get(named("noCredentialPollCacheRepository"))
          )
       }
    }
