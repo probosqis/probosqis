@@ -215,6 +215,7 @@ dependencies = [
  "ext_panoptiqon",
  "jni",
  "panoptiqon",
+ "percent-encoding",
  "serde",
  "url",
 ]
@@ -533,6 +534,7 @@ dependencies = [
  "isolang",
  "jni",
  "panoptiqon",
+ "percent-encoding",
  "serde",
  "url",
 ]

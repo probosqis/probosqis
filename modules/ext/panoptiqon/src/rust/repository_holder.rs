@@ -70,7 +70,7 @@ pub struct RepositoryWriteGuard<'a, T: CacheContent> {
 
 impl<'a, T: CacheContent> Deref for RepositoryReadGuard<'a, T> {
    type Target = Repository<T>;
-   
+
    fn deref(&self) -> &Repository<T> {
       if let LazyInitRepository::Repository(ref repo) = *self.lock_guard {
          return repo;
@@ -192,6 +192,7 @@ impl<T: CacheContent> RepositoryHolder<T> {
 
 #[cfg(feature="jni-test")]
 mod jni_tests {
+   use std::path::{Path, PathBuf};
    use std::sync::Mutex;
    use jni::JNIEnv;
    use jni::objects::JObject;
@@ -211,6 +212,10 @@ mod jni_tests {
       type JvmType<'local> = JvmContent<'local>;
 
       fn key(&self) {}
+
+      fn file_path(&self, dir_path: &Path) -> PathBuf {
+         dir_path.join("CacheContent")
+      }
    }
 
    impl<'local> CloneIntoJvm<'local, JvmContent<'local>> for Content {

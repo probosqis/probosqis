@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use std::path::{Path, PathBuf};
 use url::Url;
 use panoptiqon::cache::CacheContent;
 use crate::account::{Account, AccountId, CredentialAccount};
@@ -36,6 +37,15 @@ impl CacheContent for Instance {
    fn key(&self) -> Url {
       self.url.clone()
    }
+
+   fn file_path(&self, dir_path: &Path) -> PathBuf {
+      use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+
+      let encoded_url: String
+         = utf8_percent_encode(self.url.as_str(), NON_ALPHANUMERIC).collect();
+
+      dir_path.join(&encoded_url)
+   }
 }
 
 impl CacheContent for Account {
@@ -46,6 +56,10 @@ impl CacheContent for Account {
 
    fn key(&self) -> AccountId {
       self.id.clone()
+   }
+
+   fn file_path(&self, dir_path: &Path) -> PathBuf {
+      join_id_as_file_path(dir_path, &self.id.instance_url, &self.id.local.0)
    }
 }
 
@@ -58,6 +72,10 @@ impl CacheContent for CredentialAccount {
    fn key(&self) -> AccountId {
       self.id.clone()
    }
+
+   fn file_path(&self, dir_path: &Path) -> PathBuf {
+      join_id_as_file_path(dir_path, &self.id.instance_url, &self.id.local.0)
+   }
 }
 
 impl CacheContent for Status {
@@ -68,6 +86,10 @@ impl CacheContent for Status {
 
    fn key(&self) -> StatusId {
       self.id.clone()
+   }
+
+   fn file_path(&self, dir_path: &Path) -> PathBuf {
+      join_id_as_file_path(dir_path, &self.id.instance_url, &self.id.local.0)
    }
 }
 
@@ -80,6 +102,10 @@ impl CacheContent for NoCredentialStatus {
    fn key(&self) -> StatusId {
       self.id.clone()
    }
+
+   fn file_path(&self, dir_path: &Path) -> PathBuf {
+      join_id_as_file_path(dir_path, &self.id.instance_url, &self.id.local.0)
+   }
 }
 
 impl CacheContent for NoCredentialPoll {
@@ -90,5 +116,44 @@ impl CacheContent for NoCredentialPoll {
 
    fn key(&self) -> PollId {
       self.id.clone()
+   }
+
+   fn file_path(&self, dir_path: &Path) -> PathBuf {
+      join_id_as_file_path(dir_path, &self.id.instance_url, &self.id.local.0)
+   }
+}
+
+fn join_id_as_file_path(
+   dir_path: &Path,
+   instance_url: &Url,
+   local_id: &str
+) -> PathBuf {
+   use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+
+   let mut path_buf = dir_path.to_path_buf();
+
+   let encoded_url: String
+      = utf8_percent_encode(instance_url.as_str(), NON_ALPHANUMERIC).collect();
+
+   path_buf.push(encoded_url);
+   path_buf.push(local_id);
+
+   path_buf
+}
+
+#[cfg(test)]
+mod test {
+   #[test]
+   fn join_id_as_file_path() {
+      use std::path::{Path, PathBuf};
+
+      assert_eq!(
+         PathBuf::from("test/join_id_as_file_path/https%3A%2F%2Fexample%2Ecom%2F/local_id"),
+         super::join_id_as_file_path(
+            &Path::new("test/join_id_as_file_path"),
+            &"https://example.com".parse().unwrap(),
+            "local_id"
+         )
+      );
    }
 }
