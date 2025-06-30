@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+use ext_panoptiqon::PANOPTIQON;
+
 #[cfg(feature = "jvm")]
 use {
    jni::JNIEnv,
@@ -38,17 +40,20 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
    use mastodon_entity::account::{Account, CredentialAccount};
    use mastodon_entity::poll::NoCredentialPoll;
    use panoptiqon::jvm_type::JvmType;
-   use panoptiqon::repository::JvmRepositoryCreator;
+   use panoptiqon::repository::{JvmRepositoryCreator, Repository};
 
    let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
-   let path = Path::new(&data_dir_path).join("mastodon/Account");
 
    let repository_creator = JvmRepositoryCreator::new(&mut env);
 
-   let account_repo            = repository_creator.create::<Account>          (&mut env, &path);
-   let credential_account_repo = repository_creator.create::<CredentialAccount>(&mut env, &path);
-   let account_icon_repo       = repository_creator.create::<ImageBytes>       (&mut env, &path);
-   let no_credential_poll_repo = repository_creator.create::<NoCredentialPoll> (&mut env, &path);
+   let account_repo            = PANOPTIQON.new_repository::<Account>          (&mut env, Path::new(&data_dir_path).join("mastodon/Account"));
+   let credential_account_repo = PANOPTIQON.new_repository::<CredentialAccount>(&mut env, Path::new(&data_dir_path).join("mastodon/CredentialAccount"));
+   let account_icon_repo       = PANOPTIQON.new_repository::<ImageBytes>       (&mut env, Path::new(&data_dir_path).join("mastodon/ImageBytes"));
+   let no_credential_poll_repo = PANOPTIQON.new_repository::<NoCredentialPoll> (&mut env, Path::new(&data_dir_path).join("mastodon/NoCredentialPoll"));
+   let account_repo            = repository_creator.create_jvm_wrapper(&mut env, account_repo);
+   let credential_account_repo = repository_creator.create_jvm_wrapper(&mut env, credential_account_repo);
+   let account_icon_repo       = repository_creator.create_jvm_wrapper(&mut env, account_icon_repo);
+   let no_credential_poll_repo = repository_creator.create_jvm_wrapper(&mut env, no_credential_poll_repo);
 
    let jvm_cache_repositories = env.new_object(
       "com/wcaokaze/probosqis/mastodon/repository/CacheRepositories",

@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+use std::sync::LazyLock;
+use panoptiqon::Panoptiqon;
+
 pub mod repository_holder;
 
 #[cfg(feature="jvm")]
@@ -21,3 +24,5 @@ pub mod convert_jvm_helper;
 
 #[cfg(feature="jvm")]
 pub mod unwrap_or_throw;
+
+pub static PANOPTIQON: LazyLock<Panoptiqon> = LazyLock::new(|| Panoptiqon::new());
