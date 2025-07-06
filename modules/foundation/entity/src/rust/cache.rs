@@ -31,15 +31,15 @@ impl CacheContent for ImageBytes {
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmNullable<'local, JvmImage<'local>>;
 
-   fn key(&self) -> Url {
-      self.url.clone()
+   fn key(&self) -> &Url {
+      &self.url
    }
 
-   fn file_path(&self, dir_path: &Path) -> PathBuf {
+   fn file_path_for_key(dir_path: &Path, url: &Url) -> PathBuf {
       use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
       let encoded_url: String 
-         = utf8_percent_encode(self.url.as_str(), NON_ALPHANUMERIC).collect();
+         = utf8_percent_encode(url.as_str(), NON_ALPHANUMERIC).collect();
 
       dir_path.join(&encoded_url)
    }

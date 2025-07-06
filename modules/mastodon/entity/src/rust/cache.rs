@@ -34,15 +34,15 @@ impl CacheContent for Instance {
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmInstance<'local>;
 
-   fn key(&self) -> Url {
-      self.url.clone()
+   fn key(&self) -> &Url {
+      &self.url
    }
 
-   fn file_path(&self, dir_path: &Path) -> PathBuf {
+   fn file_path_for_key(dir_path: &Path, url: &Url) -> PathBuf {
       use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
       let encoded_url: String
-         = utf8_percent_encode(self.url.as_str(), NON_ALPHANUMERIC).collect();
+         = utf8_percent_encode(url.as_str(), NON_ALPHANUMERIC).collect();
 
       dir_path.join(&encoded_url)
    }
@@ -54,12 +54,12 @@ impl CacheContent for Account {
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmAccount<'local>;
 
-   fn key(&self) -> AccountId {
-      self.id.clone()
+   fn key(&self) -> &AccountId {
+      &self.id
    }
 
-   fn file_path(&self, dir_path: &Path) -> PathBuf {
-      join_id_as_file_path(dir_path, &self.id.instance_url, &self.id.local.0)
+   fn file_path_for_key(dir_path: &Path, id: &AccountId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.local.0)
    }
 }
 
@@ -69,12 +69,12 @@ impl CacheContent for CredentialAccount {
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmCredentialAccount<'local>;
 
-   fn key(&self) -> AccountId {
-      self.id.clone()
+   fn key(&self) -> &AccountId {
+      &self.id
    }
 
-   fn file_path(&self, dir_path: &Path) -> PathBuf {
-      join_id_as_file_path(dir_path, &self.id.instance_url, &self.id.local.0)
+   fn file_path_for_key(dir_path: &Path, id: &AccountId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.local.0)
    }
 }
 
@@ -84,12 +84,12 @@ impl CacheContent for Status {
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmStatus<'local>;
 
-   fn key(&self) -> StatusId {
-      self.id.clone()
+   fn key(&self) -> &StatusId {
+      &self.id
    }
 
-   fn file_path(&self, dir_path: &Path) -> PathBuf {
-      join_id_as_file_path(dir_path, &self.id.instance_url, &self.id.local.0)
+   fn file_path_for_key(dir_path: &Path, id: &StatusId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.local.0)
    }
 }
 
@@ -99,12 +99,12 @@ impl CacheContent for NoCredentialStatus {
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmStatusNoCredential<'local>;
 
-   fn key(&self) -> StatusId {
-      self.id.clone()
+   fn key(&self) -> &StatusId {
+      &self.id
    }
 
-   fn file_path(&self, dir_path: &Path) -> PathBuf {
-      join_id_as_file_path(dir_path, &self.id.instance_url, &self.id.local.0)
+   fn file_path_for_key(dir_path: &Path, id: &StatusId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.local.0)
    }
 }
 
@@ -114,12 +114,12 @@ impl CacheContent for NoCredentialPoll {
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmPollNoCredential<'local>;
 
-   fn key(&self) -> PollId {
-      self.id.clone()
+   fn key(&self) -> &PollId {
+      &self.id
    }
 
-   fn file_path(&self, dir_path: &Path) -> PathBuf {
-      join_id_as_file_path(dir_path, &self.id.instance_url, &self.id.local.0)
+   fn file_path_for_key(dir_path: &Path, id: &PollId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.local.0)
    }
 }
 

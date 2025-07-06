@@ -211,9 +211,11 @@ mod jni_tests {
       type Key = ();
       type JvmType<'local> = JvmContent<'local>;
 
-      fn key(&self) {}
+      fn key(&self) -> &() {
+         &()
+      }
 
-      fn file_path(&self, dir_path: &Path) -> PathBuf {
+      fn file_path_for_key(dir_path: &Path, _key: &()) -> PathBuf {
          dir_path.join("CacheContent")
       }
    }
