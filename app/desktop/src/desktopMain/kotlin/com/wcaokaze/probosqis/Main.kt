@@ -192,6 +192,7 @@ object Main {
       single<AppRepository> {
          DesktopAppRepository(
             appDataDir,
+            get(named("instanceRepository")),
             get(named("accountCacheRepository")),
             get(named("credentialAccountCacheRepository"))
          )

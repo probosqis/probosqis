@@ -56,12 +56,12 @@ impl AppRepository<'_> {
    pub fn post_app(
       &mut self,
       instance: Instance,
-      redirect_uri: &str
+      redirect_uri: &str,
+      instance_cache_repo: &mut Repository<Instance>
    ) -> anyhow::Result<Application> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::apps;
       use semver::Version;
-      use crate::cache;
       use crate::conversion;
 
       let instance_version = Version::parse(&instance.version)
@@ -88,9 +88,7 @@ impl AppRepository<'_> {
          )?
       };
 
-      let instance_cache = cache::instance::repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?
-         .save(instance);
+      let instance_cache = instance_cache_repo.save(instance);
 
       let application = conversion
          ::application::from_api(api_application, instance_cache)?;
@@ -209,6 +207,7 @@ mod jvm {
    use mastodon_entity::jvm_types::{
       JvmAccount, JvmApplication, JvmCredentialAccount, JvmInstance, JvmToken,
    };
+   use panoptiqon::cache::Cache;
    use panoptiqon::jvm_types::{JvmCache, JvmRepository, JvmString};
    use panoptiqon::repository::Repository;
 
@@ -216,40 +215,50 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_postApp<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JvmInstance<'local>
+      instance: JvmInstance<'local>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmApplication<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
 
-      post_app(&mut env, instance, AppRepository::DESKTOP_REDIRECT_URI)
-         .unwrap_or_throw_io_exception(&mut env)
+      post_app(
+         &mut env, instance, AppRepository::DESKTOP_REDIRECT_URI,
+         instance_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_postApp<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JvmInstance<'local>
+      instance: JvmInstance<'local>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmApplication<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
 
-      post_app(&mut env, instance, AppRepository::ANDROID_REDIRECT_URI)
-         .unwrap_or_throw_io_exception(&mut env)
+      post_app(
+         &mut env, instance, AppRepository::ANDROID_REDIRECT_URI,
+         instance_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    fn post_app<'local>(
       env: &mut JNIEnv<'local>,
       instance: JvmInstance<'local>,
-      redirect_uri: &str
+      redirect_uri: &str,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> anyhow::Result<JvmApplication<'local>> {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
+      let mut instance_cache_repo = Repository::of(env, &instance_cache_repo).lock();
 
       let instance = Instance::clone_from_jvm(env, &instance);
-      let application = app_repository.post_app(instance, redirect_uri)?;
+      let application = app_repository.post_app(
+         instance, redirect_uri, &mut *instance_cache_repo
+      )?;
       Ok(application.clone_into_jvm(env))
    }
 

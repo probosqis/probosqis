@@ -36,6 +36,7 @@ import java.net.URLEncoder
 
 class DesktopAppRepository(
    appDataDir: File,
+   private val instanceCacheRepository: Repository<Instance>,
    private val accountCacheRepository: Repository<Account>,
    private val credentialAccountCacheRepository: Repository<CredentialAccount>
 ) : AppRepository {
@@ -56,14 +57,17 @@ class DesktopAppRepository(
 
    @TemporaryCacheApi
    override fun createApp(instance: Instance): Cache<Application> {
-      val application = postApp(instance)
+      val application = postApp(instance, instanceCacheRepository)
 
       val fileName = URLEncoder.encode(instance.url.raw, "UTF-8")
       val file = File(dir, fileName)
       return saveCache(application, file, json).asCache()
    }
 
-   private external fun postApp(instance: Instance): Application
+   private external fun postApp(
+      instance: Instance,
+      instanceCacheRepo: Repository<Instance>
+   ): Application
 
    @TemporaryCacheApi
    override fun loadAppCache(instanceBaseUrl: Url): Cache<Application> {
