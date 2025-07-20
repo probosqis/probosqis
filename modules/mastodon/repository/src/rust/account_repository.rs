@@ -115,7 +115,9 @@ mod jvm {
       let account = Account::clone_from_jvm(env, &account);
 
       let mut account_repository = AccountRepository::new(env);
-      let mut account_icon_cache_repo = Repository::of(env, &account_icon_cache_repo);
+      let mut account_icon_cache_repo
+         = Repository::of(env, &account_icon_cache_repo)
+            .lock().map_err(|_| anyhow::anyhow!("account icon repository was poisoned"))?;
 
       let icon = account_repository
          .get_account_icon(account, &mut account_icon_cache_repo)?;

@@ -143,15 +143,18 @@ mod jvm {
       use super::TimelineRepository;
 
       let mut status_repository = TimelineRepository::new(env);
-      let account_cache_repo = Repository::of(env, &account_cache_repo);
-      let no_credential_poll_cache_repo = Repository::of(env, &no_credential_poll_cache_repo);
+      let mut account_cache_repo = Repository::of(env, &account_cache_repo).lock()
+         .map_err(|_| anyhow::anyhow!("account repository was poisoned"))?;
+      let mut no_credential_poll_cache_repo
+         = Repository::of(env, &no_credential_poll_cache_repo).lock()
+         .map_err(|_| anyhow::anyhow!("no credential poll repository was poisoned"))?;
 
       let instance = token.instance(env);
       let instance = cache::instance::clone_from_jvm(env, &instance)?;
       let token = Token::clone_from_jvm(env, &token, instance);
       let timeline = status_repository.get_home_timeline(
          &token,
-         account_cache_repo, no_credential_poll_cache_repo
+         &mut *account_cache_repo, &mut *no_credential_poll_cache_repo
       )?;
 
       Ok(timeline.clone_into_jvm(env))

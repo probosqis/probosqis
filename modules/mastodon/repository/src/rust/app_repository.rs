@@ -360,9 +360,11 @@ mod jvm {
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
-      let account_cache_repo = Repository::of(env, &account_cache_repo);
-      let credential_account_cache_repo
-         = Repository::of(env, &credential_account_cache_repo);
+      let mut account_cache_repo = Repository::of(env, &account_cache_repo).lock()
+         .map_err(|_| anyhow::anyhow!("account repository was poisoned"))?;
+      let mut credential_account_cache_repo
+         = Repository::of(env, &credential_account_cache_repo).lock()
+         .map_err(|_| anyhow::anyhow!("credential account repository was poisoned"))?;
 
       let instance_cache = cache::instance::clone_from_jvm(env, &instance)?;
 
@@ -372,7 +374,7 @@ mod jvm {
 
       let token = app_repository.get_token(
          &instance_cache, &code, &client_id, &client_secret, redirect_uri,
-         account_cache_repo, credential_account_cache_repo
+         &mut *account_cache_repo, &mut *credential_account_cache_repo
       )?;
 
       Ok(token.clone_into_jvm(env))
@@ -420,15 +422,17 @@ mod jvm {
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
-      let account_cache_repo = Repository::of(env, &account_cache_repo);
-      let credential_account_cache_repo
-         = Repository::of(env, &credential_account_cache_repo);
+      let mut account_cache_repo = Repository::of(env, &account_cache_repo).lock()
+         .map_err(|_| anyhow::anyhow!("account repository was poisoned"))?;
+      let mut credential_account_cache_repo
+         = Repository::of(env, &credential_account_cache_repo).lock()
+         .map_err(|_| anyhow::anyhow!("credential account repository was poisoned"))?;
 
       let instance = token.instance(env);
       let instance = cache::instance::clone_from_jvm(env, &instance)?;
       let token = Token::clone_from_jvm(env, &token, instance);
       let credential_account = app_repository.get_credential_account(
-         &token, account_cache_repo, credential_account_cache_repo
+         &token, &mut *account_cache_repo, &mut *credential_account_cache_repo
       )?;
       Ok(credential_account.clone_into_jvm(env))
    }
