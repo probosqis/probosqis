@@ -138,6 +138,10 @@ object Main {
          createCacheRepositories(appDataDir.absolutePath)
       }
 
+      single(named("instanceRepository")) {
+         get<CacheRepositories>().instance
+      }
+
       single(named("accountCacheRepository")) {
          get<CacheRepositories>().account
       }
