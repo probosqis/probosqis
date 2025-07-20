@@ -288,12 +288,11 @@ mod jvm {
       redirect_uri: &str
    ) -> anyhow::Result<JvmString<'local>> {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
-      use crate::cache;
       use super::AppRepository;
 
       let app_repository = AppRepository::new(env);
 
-      let instance_cache = cache::instance::clone_from_jvm(env, &instance)?;
+      let instance_cache = Cache::<Instance>::clone_from_jvm(env, &instance);
       let client_id = String::clone_from_jvm(env, &client_id);
 
       let authorize_url = app_repository
@@ -356,7 +355,6 @@ mod jvm {
       credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> anyhow::Result<JvmToken<'local>> {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
-      use crate::cache;
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
@@ -366,7 +364,7 @@ mod jvm {
          = Repository::of(env, &credential_account_cache_repo).lock()
          .map_err(|_| anyhow::anyhow!("credential account repository was poisoned"))?;
 
-      let instance_cache = cache::instance::clone_from_jvm(env, &instance)?;
+      let instance_cache = Cache::<Instance>::clone_from_jvm(env, &instance);
 
       let code = String::clone_from_jvm(env, &code);
       let client_id = String::clone_from_jvm(env, &client_id);
@@ -418,7 +416,6 @@ mod jvm {
    ) -> anyhow::Result<JvmCache<'local, JvmCredentialAccount<'local>>> {
       use mastodon_entity::token::Token;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
-      use crate::cache;
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
@@ -429,7 +426,7 @@ mod jvm {
          .map_err(|_| anyhow::anyhow!("credential account repository was poisoned"))?;
 
       let instance = token.instance(env);
-      let instance = cache::instance::clone_from_jvm(env, &instance)?;
+      let instance = Cache::<Instance>::clone_from_jvm(env, &instance);
       let token = Token::clone_from_jvm(env, &token, instance);
       let credential_account = app_repository.get_credential_account(
          &token, &mut *account_cache_repo, &mut *credential_account_cache_repo

@@ -138,7 +138,9 @@ mod jvm {
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
       no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
    ) -> anyhow::Result<JvmList<'local, JvmStatus<'local>>> {
+      use mastodon_entity::instance::Instance;
       use mastodon_entity::token::Token;
+      use panoptiqon::cache::Cache;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
       use super::TimelineRepository;
 
@@ -150,7 +152,7 @@ mod jvm {
          .map_err(|_| anyhow::anyhow!("no credential poll repository was poisoned"))?;
 
       let instance = token.instance(env);
-      let instance = cache::instance::clone_from_jvm(env, &instance)?;
+      let instance = Cache::<Instance>::clone_from_jvm(env, &instance);
       let token = Token::clone_from_jvm(env, &token, instance);
       let timeline = status_repository.get_home_timeline(
          &token,
@@ -165,7 +167,6 @@ mod jvm {
 mod test {
    use std::time::Duration;
    use isolang::Language;
-   use panoptiqon::repository::Repository;
    use super::TimelineRepository;
 
    #[test]
