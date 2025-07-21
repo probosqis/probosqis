@@ -214,6 +214,8 @@ object Main {
       single<TimelineRepository> {
          DesktopTimelineRepository(
             get(named("accountCacheRepository")),
+            get(named("statusRepository")),
+            get(named("noCredentialStatusRepository")),
             get(named("noCredentialPollCacheRepository"))
          )
       }

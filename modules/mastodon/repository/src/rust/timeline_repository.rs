@@ -16,7 +16,7 @@
 
 use mastodon_entity::account::Account;
 use mastodon_entity::poll::NoCredentialPoll;
-use mastodon_entity::status::Status;
+use mastodon_entity::status::{NoCredentialStatus, Status};
 use mastodon_entity::token::Token;
 use panoptiqon::repository::Repository;
 
@@ -52,11 +52,12 @@ impl TimelineRepository<'_> {
       &mut self,
       token: &Token,
       account_cache_repo: &mut Repository<Account>,
+      status_cache_repo: &mut Repository<Status>,
+      no_credential_status_repo: &mut Repository<NoCredentialStatus>,
       no_credential_poll_cache_repo: &mut Repository<NoCredentialPoll>
    ) -> anyhow::Result<Vec<Status>> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::timelines;
-      use crate::cache;
       use crate::conversion;
 
       let api_timeline = timelines::get_home(
@@ -65,12 +66,6 @@ impl TimelineRepository<'_> {
          &token.access_token
       )?;
 
-      let mut status_repo = cache::status::status_repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?;
-
-      let mut no_credential_status_repo = cache::status::no_credential_status_repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?;
-
       let timeline = api_timeline.into_iter()
          .flat_map(|api_status|
             conversion::status::from_api(
@@ -78,8 +73,8 @@ impl TimelineRepository<'_> {
                token.instance.clone(),
                api_status,
                account_cache_repo,
-               &mut status_repo,
-               &mut no_credential_status_repo,
+               status_cache_repo,
+               no_credential_status_repo,
                no_credential_poll_cache_repo
             )
          )
@@ -94,11 +89,11 @@ mod jvm {
    use jni::JNIEnv;
    use jni::objects::JObject;
    use mastodon_entity::jvm_types::{
-      JvmAccount, JvmPollNoCredential, JvmStatus, JvmToken,
+      JvmAccount, JvmPollNoCredential, JvmStatus, JvmStatusNoCredential,
+      JvmToken,
    };
    use panoptiqon::jvm_types::{JvmList, JvmRepository};
    use panoptiqon::repository::Repository;
-   use crate::cache;
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidTimelineRepository_getHomeTimeline<'local>(
@@ -106,13 +101,16 @@ mod jvm {
       _obj: JObject<'local>,
       token: JvmToken<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
+      no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
       no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
       get_home_time_line(
          &mut env, token,
-         account_cache_repo, no_credential_poll_cache_repo
+         account_cache_repo, status_cache_repo, no_credential_status_cache_repo,
+         no_credential_poll_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -122,13 +120,16 @@ mod jvm {
       _obj: JObject<'local>,
       token: JvmToken<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
+      no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
       no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
       get_home_time_line(
          &mut env, token,
-         account_cache_repo, no_credential_poll_cache_repo
+         account_cache_repo, status_cache_repo, no_credential_status_cache_repo,
+         no_credential_poll_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -136,6 +137,8 @@ mod jvm {
       env: &mut JNIEnv<'local>,
       token: JvmToken<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
+      no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
       no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
    ) -> anyhow::Result<JvmList<'local, JvmStatus<'local>>> {
       use mastodon_entity::instance::Instance;
@@ -144,9 +147,14 @@ mod jvm {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
       use super::TimelineRepository;
 
-      let mut status_repository = TimelineRepository::new(env);
+      let mut timeline_repository = TimelineRepository::new(env);
       let mut account_cache_repo = Repository::of(env, &account_cache_repo).lock()
          .map_err(|_| anyhow::anyhow!("account repository was poisoned"))?;
+      let mut status_cache_repo = Repository::of(env, &status_cache_repo).lock()
+         .map_err(|_| anyhow::anyhow!("status repository was poisoned"))?;
+      let mut no_credential_status_repo
+         = Repository::of(env, &no_credential_status_cache_repo).lock()
+         .map_err(|_| anyhow::anyhow!("no credential status repository was poisoned"))?;
       let mut no_credential_poll_cache_repo
          = Repository::of(env, &no_credential_poll_cache_repo).lock()
          .map_err(|_| anyhow::anyhow!("no credential poll repository was poisoned"))?;
@@ -154,9 +162,10 @@ mod jvm {
       let instance = token.instance(env);
       let instance = Cache::<Instance>::clone_from_jvm(env, &instance);
       let token = Token::clone_from_jvm(env, &token, instance);
-      let timeline = status_repository.get_home_timeline(
+      let timeline = timeline_repository.get_home_timeline(
          &token,
-         &mut *account_cache_repo, &mut *no_credential_poll_cache_repo
+         &mut *account_cache_repo, &mut *status_cache_repo,
+         &mut *no_credential_status_repo, &mut *no_credential_poll_cache_repo
       )?;
 
       Ok(timeline.clone_into_jvm(env))

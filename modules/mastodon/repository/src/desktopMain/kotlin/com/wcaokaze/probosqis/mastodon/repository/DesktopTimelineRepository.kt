@@ -24,17 +24,22 @@ import com.wcaokaze.probosqis.panoptiqon.Repository
 
 class DesktopTimelineRepository(
    private val accountCacheRepository: Repository<Account>,
+   private val statusCacheRepository: Repository<Status>,
+   private val noCredentialStatusCacheRepository: Repository<Status.NoCredential>,
    private val noCredentialPollCacheRepository: Repository<Poll.NoCredential>
 ) : TimelineRepository {
    override fun getHomeTimeline(token: Token): List<Status> {
       return getHomeTimeline(
-         token, accountCacheRepository, noCredentialPollCacheRepository
+         token, accountCacheRepository, statusCacheRepository,
+         noCredentialStatusCacheRepository, noCredentialPollCacheRepository
       )
    }
 
    private external fun getHomeTimeline(
       token: Token,
       accountCacheRepo: Repository<Account>,
+      statusCacheRepo: Repository<Status>,
+      noCredentialStatusCacheRepo: Repository<Status.NoCredential>,
       noCredentialPollCacheRepo: Repository<Poll.NoCredential>
    ): List<Status>
 }

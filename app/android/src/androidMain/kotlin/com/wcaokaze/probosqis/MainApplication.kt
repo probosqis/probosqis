@@ -218,6 +218,8 @@ class MainApplication : Application() {
       single<TimelineRepository> {
          AndroidTimelineRepository(
             get(named("accountCacheRepository")),
+            get(named("statusRepository")),
+            get(named("noCredentialStatusRepository")),
             get(named("noCredentialPollCacheRepository"))
          )
       }
