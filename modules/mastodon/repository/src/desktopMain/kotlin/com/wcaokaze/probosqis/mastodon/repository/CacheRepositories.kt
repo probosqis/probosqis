@@ -21,6 +21,7 @@ import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.entity.Poll
+import com.wcaokaze.probosqis.mastodon.entity.Status
 import com.wcaokaze.probosqis.panoptiqon.Repository
 
 class CacheRepositories(
@@ -28,6 +29,8 @@ class CacheRepositories(
    val account: Repository<Account>,
    val credentialAccount: Repository<CredentialAccount>,
    val accountIcon: Repository<Image>,
+   val status: Repository<Status>,
+   val noCredentialStatus: Repository<Status.NoCredential>,
    val noCredentialPoll: Repository<Poll.NoCredential>,
 )
 

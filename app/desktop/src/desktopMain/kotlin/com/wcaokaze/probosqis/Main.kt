@@ -154,6 +154,14 @@ object Main {
          get<CacheRepositories>().accountIcon
       }
 
+      single(named("statusRepository")) {
+         get<CacheRepositories>().status
+      }
+
+      single(named("noCredentialStatusRepository")) {
+         get<CacheRepositories>().noCredentialStatus
+      }
+
       single(named("noCredentialPollCacheRepository")) {
          get<CacheRepositories>().noCredentialPoll
       }

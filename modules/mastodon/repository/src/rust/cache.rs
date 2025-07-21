@@ -40,6 +40,7 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
    use mastodon_entity::account::{Account, CredentialAccount};
    use mastodon_entity::instance::Instance;
    use mastodon_entity::poll::NoCredentialPoll;
+   use mastodon_entity::status::{NoCredentialStatus, Status};
    use panoptiqon::jvm_type::JvmType;
    use panoptiqon::repository::JvmRepositoryCreator;
 
@@ -47,16 +48,20 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
 
    let repository_creator = JvmRepositoryCreator::new(&mut env);
 
-   let instance_repo           = PANOPTIQON.new_repository::<Instance>         (&mut env, Path::new(&data_dir_path).join("mastodon/Instance"));
-   let account_repo            = PANOPTIQON.new_repository::<Account>          (&mut env, Path::new(&data_dir_path).join("mastodon/Account"));
-   let credential_account_repo = PANOPTIQON.new_repository::<CredentialAccount>(&mut env, Path::new(&data_dir_path).join("mastodon/CredentialAccount"));
-   let account_icon_repo       = PANOPTIQON.new_repository::<ImageBytes>       (&mut env, Path::new(&data_dir_path).join("mastodon/ImageBytes"));
-   let no_credential_poll_repo = PANOPTIQON.new_repository::<NoCredentialPoll> (&mut env, Path::new(&data_dir_path).join("mastodon/NoCredentialPoll"));
-   let instance_repo           = repository_creator.create_jvm_wrapper(&mut env, instance_repo);
-   let account_repo            = repository_creator.create_jvm_wrapper(&mut env, account_repo);
-   let credential_account_repo = repository_creator.create_jvm_wrapper(&mut env, credential_account_repo);
-   let account_icon_repo       = repository_creator.create_jvm_wrapper(&mut env, account_icon_repo);
-   let no_credential_poll_repo = repository_creator.create_jvm_wrapper(&mut env, no_credential_poll_repo);
+   let instance_repo             = PANOPTIQON.new_repository::<Instance>          (&mut env, Path::new(&data_dir_path).join("mastodon/Instance"));
+   let account_repo              = PANOPTIQON.new_repository::<Account>           (&mut env, Path::new(&data_dir_path).join("mastodon/Account"));
+   let credential_account_repo   = PANOPTIQON.new_repository::<CredentialAccount> (&mut env, Path::new(&data_dir_path).join("mastodon/CredentialAccount"));
+   let account_icon_repo         = PANOPTIQON.new_repository::<ImageBytes>        (&mut env, Path::new(&data_dir_path).join("mastodon/ImageBytes"));
+   let status_repo               = PANOPTIQON.new_repository::<Status>            (&mut env, Path::new(&data_dir_path).join("mastodon/Status"));
+   let no_credential_status_repo = PANOPTIQON.new_repository::<NoCredentialStatus>(&mut env, Path::new(&data_dir_path).join("mastodon/Status"));
+   let no_credential_poll_repo   = PANOPTIQON.new_repository::<NoCredentialPoll>  (&mut env, Path::new(&data_dir_path).join("mastodon/NoCredentialPoll"));
+   let instance_repo             = repository_creator.create_jvm_wrapper(&mut env, instance_repo);
+   let account_repo              = repository_creator.create_jvm_wrapper(&mut env, account_repo);
+   let credential_account_repo   = repository_creator.create_jvm_wrapper(&mut env, credential_account_repo);
+   let account_icon_repo         = repository_creator.create_jvm_wrapper(&mut env, account_icon_repo);
+   let status_repo               = repository_creator.create_jvm_wrapper(&mut env, status_repo);
+   let no_credential_status_repo = repository_creator.create_jvm_wrapper(&mut env, no_credential_status_repo);
+   let no_credential_poll_repo   = repository_creator.create_jvm_wrapper(&mut env, no_credential_poll_repo);
 
    let jvm_cache_repositories = env.new_object(
       "com/wcaokaze/probosqis/mastodon/repository/CacheRepositories",
@@ -66,13 +71,17 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
          Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
          Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
          Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
       )V",
       &[
-         instance_repo          .j_object().into(),
-         account_repo           .j_object().into(),
-         credential_account_repo.j_object().into(),
-         account_icon_repo      .j_object().into(),
-         no_credential_poll_repo.j_object().into(),
+         instance_repo            .j_object().into(),
+         account_repo             .j_object().into(),
+         credential_account_repo  .j_object().into(),
+         account_icon_repo        .j_object().into(),
+         status_repo              .j_object().into(),
+         no_credential_status_repo.j_object().into(),
+         no_credential_poll_repo  .j_object().into(),
       ]
    ).unwrap();
 
