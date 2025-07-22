@@ -87,29 +87,3 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
 
    unsafe { JvmCacheRepositories::from_j_object(jvm_cache_repositories) }
 }
-
-pub mod status {
-   use ext_panoptiqon::repository_holder::RepositoryHolder;
-   use mastodon_entity::status::{NoCredentialStatus, Status};
-
-   pub type StatusRepository
-      = panoptiqon::repository::Repository<Status>;
-
-   pub type NoCredentialStatusRepository
-      = panoptiqon::repository::Repository<NoCredentialStatus>;
-
-   static REPO: RepositoryHolder<Status>
-      = RepositoryHolder::new("mastodon/Status");
-
-   static NO_CREDENTIAL_REPO: RepositoryHolder<NoCredentialStatus>
-      = RepositoryHolder::new("mastodon/NoCredentialStatus");
-
-   pub fn status_repo() -> &'static RepositoryHolder<Status> {
-      &REPO
-   }
-
-   pub fn no_credential_status_repo(
-   ) -> &'static RepositoryHolder<NoCredentialStatus> {
-      &NO_CREDENTIAL_REPO
-   }
-}
