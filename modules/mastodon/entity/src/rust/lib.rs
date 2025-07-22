@@ -32,11 +32,14 @@ pub mod jvm_types;
 
 #[cfg(feature="jni-test")]
 mod jni_tests {
+   use std::sync::{Arc, LazyLock, Mutex};
    use jni::JNIEnv;
    use jni::objects::JObject;
-   use ext_panoptiqon::repository_holder::RepositoryHolder;
-   use panoptiqon::cache::Cache;
+   use panoptiqon::cache::{Cache, CacheContent};
+   use panoptiqon::convert_jvm::CloneIntoJvmHelper;
    use panoptiqon::jvm_types::JvmCache;
+   use panoptiqon::Panoptiqon;
+   use panoptiqon::repository::Repository;
    use crate::account::Account;
    use crate::instance::Instance;
    use crate::jvm_types::{
@@ -47,10 +50,42 @@ mod jni_tests {
    use crate::poll::NoCredentialPoll;
    use crate::status::{NoCredentialStatus, Status};
 
-   fn save_instance(
-      env: &mut JNIEnv,
-      instance_repo: &RepositoryHolder<Instance>
-   ) -> Cache<Instance> {
+   struct LazyInitRepo<T>(
+      &'static LazyLock<Panoptiqon>,
+      &'static str,
+      Mutex<Option<Arc<Mutex<Repository<T>>>>>
+   )
+   where
+      T: CacheContent + CloneIntoJvmHelper;
+
+   impl<T> LazyInitRepo<T>
+   where
+      T: CacheContent + CloneIntoJvmHelper
+   {
+      const fn new(
+         panoptiqon: &'static LazyLock<Panoptiqon>,
+         dir_name: &'static str
+      ) -> Self {
+         Self(
+            panoptiqon,
+            dir_name,
+            Mutex::new(None)
+         )
+      }
+
+      fn initialize(&self, env: &mut JNIEnv) {
+         let LazyInitRepo(panoptiqon, dir_name, repo) = self;
+         *repo.lock().unwrap() = Some(panoptiqon.new_repository(env, dir_name));
+      }
+
+      fn repo(&self) -> Arc<Mutex<Repository<T>>> {
+         let outer_lock = self.2.lock().unwrap();
+         let arc = outer_lock.as_ref().unwrap();
+         Arc::clone(arc)
+      }
+   }
+
+   fn save_instance(instance_repo: &LazyInitRepo<Instance>) -> Cache<Instance> {
       use chrono::{TimeZone, Utc};
 
       let instance = Instance {
@@ -59,19 +94,16 @@ mod jni_tests {
          version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      instance_repo
-         .write(env).unwrap()
-         .save(instance)
+      instance_repo.repo().lock().unwrap().save(instance)
    }
 
    fn save_account(
-      env: &mut JNIEnv,
-      account_repo: &RepositoryHolder<Account>,
-      instance_repo: &RepositoryHolder<Instance>
+      account_repo: &LazyInitRepo<Account>,
+      instance_repo: &LazyInitRepo<Instance>
    ) -> Cache<Account> {
       use crate::account::{AccountId, AccountLocalId};
 
-      let instance = save_instance(env, instance_repo);
+      let instance = save_instance(instance_repo);
       let instance_url = instance.get().url.clone();
 
       let account = Account {
@@ -106,18 +138,31 @@ mod jni_tests {
          followee_count: None,
       };
 
-      account_repo
-         .write(env).unwrap()
-         .save(account)
+      account_repo.repo().lock().unwrap().save(account)
    }
 
    #[allow(non_upper_case_globals)]
-   static account_toRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_account_toRust_instance");
+   static account_toRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[allow(non_upper_case_globals)]
-   static account_toRust_account_repo: RepositoryHolder<Account>
-      = RepositoryHolder::new("ConvertJniTest_account_toRust_account");
+   static account_toRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &account_toRust_panoptiqon, "ConvertJniTest_account_toRust_instance"
+   );
+
+   #[allow(non_upper_case_globals)]
+   static account_toRust_account_repo: LazyInitRepo<Account> = LazyInitRepo::new(
+      &account_toRust_panoptiqon, "ConvertJniTest_account_toRust_account"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1toRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      account_toRust_instance_repo.initialize(&mut env);
+      account_toRust_account_repo .initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1toRust_00024createInstance<'local>(
@@ -126,8 +171,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &account_toRust_instance_repo)
-         .clone_into_jvm(&mut env)
+      save_instance(&account_toRust_instance_repo).clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
@@ -137,7 +181,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmAccount<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_account(&mut env, &account_toRust_account_repo, &account_toRust_instance_repo)
+      save_account(&account_toRust_account_repo, &account_toRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
@@ -154,7 +198,7 @@ mod jni_tests {
 
       let account = Account::clone_from_jvm(&mut env, &account);
 
-      let instance = save_instance(&mut env, &account_toRust_instance_repo);
+      let instance = save_instance(&account_toRust_instance_repo);
       let instance_url = instance.get().url.clone();
 
       assert_eq!(
@@ -231,7 +275,7 @@ mod jni_tests {
             follower_count: Some(100),
             followee_count: Some(200),
             moved_to: Some(
-               save_account(&mut env, &account_toRust_account_repo, &account_toRust_instance_repo)
+               save_account(&account_toRust_account_repo, &account_toRust_instance_repo)
             ),
          },
          account
@@ -239,12 +283,27 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static account_fromRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_account_fromRust_instance");
+   static account_fromRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[allow(non_upper_case_globals)]
-   static account_fromRust_account_repo: RepositoryHolder<Account>
-      = RepositoryHolder::new("ConvertJniTest_account_fromRust_account");
+   static account_fromRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &account_fromRust_panoptiqon, "ConvertJniTest_account_fromRust_instance"
+   );
+
+   #[allow(non_upper_case_globals)]
+   static account_fromRust_account_repo: LazyInitRepo<Account> = LazyInitRepo::new(
+      &account_fromRust_panoptiqon, "ConvertJniTest_account_fromRust_account"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1fromRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      account_fromRust_instance_repo.initialize(&mut env);
+      account_fromRust_account_repo .initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_account_1fromRust_00024createAccount<'local>(
@@ -256,7 +315,7 @@ mod jni_tests {
       use crate::account::{AccountId, AccountLocalId, AccountProfileField};
       use crate::custom_emoji::CustomEmoji;
 
-      let instance = save_instance(&mut env, &account_fromRust_instance_repo);
+      let instance = save_instance(&account_fromRust_instance_repo);
       let instance_url = instance.get().url.clone();
 
       let account = Account {
@@ -332,7 +391,7 @@ mod jni_tests {
          follower_count: Some(100),
          followee_count: Some(200),
          moved_to: Some(
-            save_account(&mut env, &account_fromRust_account_repo, &account_fromRust_instance_repo)
+            save_account(&account_fromRust_account_repo, &account_fromRust_instance_repo)
          ),
       };
 
@@ -346,7 +405,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &account_fromRust_instance_repo)
+      save_instance(&account_fromRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
@@ -357,13 +416,26 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmAccount<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_account(&mut env, &account_fromRust_account_repo, &account_fromRust_instance_repo)
+      save_account(&account_fromRust_account_repo, &account_fromRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_toRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_customEmoji_toRust_instance");
+   static customEmoji_toRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
+
+   #[allow(non_upper_case_globals)]
+   static customEmoji_toRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &customEmoji_toRust_panoptiqon, "ConvertJniTest_customEmoji_toRust_instance"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1toRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      customEmoji_toRust_instance_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1toRust_00024createInstance<'local>(
@@ -372,8 +444,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &customEmoji_toRust_instance_repo)
-         .clone_into_jvm(&mut env)
+      save_instance(&customEmoji_toRust_instance_repo).clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
@@ -389,7 +460,7 @@ mod jni_tests {
 
       assert_eq!(
          CustomEmoji {
-            instance: save_instance(&mut env, &customEmoji_toRust_instance_repo),
+            instance: save_instance(&customEmoji_toRust_instance_repo),
             shortcode: "shortcode".to_string(),
             image_url: "https://example.com/image/url".parse().unwrap(),
             static_image_url: Some("https://example.com/static/image/url".parse().unwrap()),
@@ -401,8 +472,21 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_nulls_toRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_customEmoji_nulls_toRust_instance");
+   static customEmoji_nulls_toRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
+
+   #[allow(non_upper_case_globals)]
+   static customEmoji_nulls_toRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &customEmoji_nulls_toRust_panoptiqon, "ConvertJniTest_customEmoji_nulls_toRust_instance"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1nulls_1toRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      customEmoji_nulls_toRust_instance_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1nulls_1toRust_00024createInstance<'local>(
@@ -411,7 +495,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &customEmoji_nulls_toRust_instance_repo)
+      save_instance(&customEmoji_nulls_toRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
@@ -428,7 +512,7 @@ mod jni_tests {
 
       assert_eq!(
          CustomEmoji {
-            instance: save_instance(&mut env, &customEmoji_nulls_toRust_instance_repo),
+            instance: save_instance(&customEmoji_nulls_toRust_instance_repo),
             shortcode: "shortcode".to_string(),
             image_url: "https://example.com/image/url".parse().unwrap(),
             static_image_url: None,
@@ -440,8 +524,21 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_fromRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_customEmoji_fromRust_instance");
+   static customEmoji_fromRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
+
+   #[allow(non_upper_case_globals)]
+   static customEmoji_fromRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &customEmoji_fromRust_panoptiqon, "ConvertJniTest_customEmoji_fromRust_instance"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1fromRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      customEmoji_fromRust_instance_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1fromRust_00024createCustomEmoji<'local>(
@@ -452,7 +549,7 @@ mod jni_tests {
       use crate::custom_emoji::CustomEmoji;
 
       let custom_emoji = CustomEmoji {
-         instance: save_instance(&mut env, &customEmoji_fromRust_instance_repo),
+         instance: save_instance(&customEmoji_fromRust_instance_repo),
          shortcode: "shortcode".to_string(),
          image_url: "https://example.com/image/url".parse().unwrap(),
          static_image_url: Some("https://example.com/static/image/url".parse().unwrap()),
@@ -470,13 +567,26 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &customEmoji_fromRust_instance_repo)
+      save_instance(&customEmoji_fromRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
-   static customEmoji_nulls_fromRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_customEmoji_nulls_fromRust_instance");
+   static customEmoji_nulls_fromRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
+
+   #[allow(non_upper_case_globals)]
+   static customEmoji_nulls_fromRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &customEmoji_nulls_fromRust_panoptiqon, "ConvertJniTest_customEmoji_nulls_fromRust_instance"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1nulls_1fromRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      customEmoji_nulls_fromRust_instance_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_customEmoji_1nulls_1fromRust_00024createCustomEmoji<'local>(
@@ -487,7 +597,7 @@ mod jni_tests {
       use crate::custom_emoji::CustomEmoji;
 
       let custom_emoji = CustomEmoji {
-         instance: save_instance(&mut env, &customEmoji_nulls_fromRust_instance_repo),
+         instance: save_instance(&customEmoji_nulls_fromRust_instance_repo),
          shortcode: "shortcode".to_string(),
          image_url: "https://example.com/image/url".parse().unwrap(),
          static_image_url: None,
@@ -505,7 +615,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &customEmoji_nulls_fromRust_instance_repo)
+      save_instance(&customEmoji_nulls_fromRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
@@ -1336,12 +1446,27 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static poll_toRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_poll_toRust_instance");
+   static poll_toRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[allow(non_upper_case_globals)]
-   static poll_toRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll>
-      = RepositoryHolder::new("ConvertJniTest_poll_toRust_no_credential_poll");
+   static poll_toRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &poll_toRust_panoptiqon, "ConvertJniTest_poll_toRust_instance"
+   );
+
+   #[allow(non_upper_case_globals)]
+   static poll_toRust_no_credential_poll_repo: LazyInitRepo<NoCredentialPoll> = LazyInitRepo::new(
+      &poll_toRust_panoptiqon, "ConvertJniTest_poll_toRust_no_credential_poll"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1toRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      poll_toRust_instance_repo.initialize(&mut env);
+      poll_toRust_no_credential_poll_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1toRust_00024createInstance<'local>(
@@ -1350,8 +1475,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &poll_toRust_instance_repo)
-         .clone_into_jvm(&mut env)
+      save_instance(&poll_toRust_instance_repo).clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
@@ -1369,8 +1493,8 @@ mod jni_tests {
          &mut env, &no_credential_poll
       );
 
-      let instance = poll_toRust_instance_repo.read(&mut env).unwrap()
-         .load("https://example.com/instance/url".parse().unwrap()).unwrap();
+      let instance = poll_toRust_instance_repo.repo().lock().unwrap()
+         .load(&"https://example.com/instance/url".parse().unwrap()).unwrap();
 
       let instance_url = instance.get().url.clone();
 
@@ -1436,8 +1560,7 @@ mod jni_tests {
          &mut env, &no_credential_poll
       );
 
-      let cache = poll_toRust_no_credential_poll_repo
-         .write(&mut env).unwrap()
+      let cache = poll_toRust_no_credential_poll_repo.repo().lock().unwrap()
          .save(no_credential_poll);
 
       cache.clone_into_jvm(&mut env)
@@ -1454,16 +1577,15 @@ mod jni_tests {
 
       let poll = Poll::clone_from_jvm(&mut env, &poll);
 
-      let instance = save_instance(&mut env, &poll_toRust_instance_repo);
+      let instance = save_instance(&poll_toRust_instance_repo);
 
       let poll_id = PollId {
          instance_url: instance.get().url.clone(),
          local: PollLocalId("poll id".to_string()),
       };
 
-      let no_credential = poll_toRust_no_credential_poll_repo
-         .read(&mut env).unwrap()
-         .load(poll_id.clone()).unwrap();
+      let no_credential = poll_toRust_no_credential_poll_repo.repo().lock().unwrap()
+         .load(&poll_id).unwrap();
 
       assert_eq!(
          Poll {
@@ -1477,12 +1599,27 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static poll_nulls_toRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_poll_nulls_toRust_instance");
+   static poll_nulls_toRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[allow(non_upper_case_globals)]
-   static poll_nulls_toRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll>
-      = RepositoryHolder::new("ConvertJniTest_poll_nulls_toRust_no_credential_poll");
+   static poll_nulls_toRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &poll_nulls_toRust_panoptiqon, "ConvertJniTest_poll_nulls_toRust_instance"
+   );
+
+   #[allow(non_upper_case_globals)]
+   static poll_nulls_toRust_no_credential_poll_repo: LazyInitRepo<NoCredentialPoll> = LazyInitRepo::new(
+      &poll_nulls_toRust_panoptiqon, "ConvertJniTest_poll_nulls_toRust_no_credential_poll"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1nulls_1toRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      poll_nulls_toRust_instance_repo.initialize(&mut env);
+      poll_nulls_toRust_no_credential_poll_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1nulls_1toRust_00024createInstance<'local>(
@@ -1491,8 +1628,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &poll_nulls_toRust_instance_repo)
-         .clone_into_jvm(&mut env)
+      save_instance(&poll_nulls_toRust_instance_repo).clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
@@ -1508,8 +1644,8 @@ mod jni_tests {
          &mut env, &no_credential_poll
       );
 
-      let instance = poll_nulls_toRust_instance_repo.read(&mut env).unwrap()
-         .load("https://example.com/instance/url".parse().unwrap()).unwrap();
+      let instance = poll_nulls_toRust_instance_repo.repo().lock().unwrap()
+         .load(&"https://example.com/instance/url".parse().unwrap()).unwrap();
 
       let instance_url = instance.get().url.clone();
 
@@ -1548,8 +1684,7 @@ mod jni_tests {
          &mut env, &no_credential_poll
       );
 
-      let cache = poll_nulls_toRust_no_credential_poll_repo
-         .write(&mut env).unwrap()
+      let cache = poll_nulls_toRust_no_credential_poll_repo.repo().lock().unwrap()
          .save(no_credential_poll);
 
       cache.clone_into_jvm(&mut env)
@@ -1566,16 +1701,15 @@ mod jni_tests {
 
       let poll = Poll::clone_from_jvm(&mut env, &poll);
 
-      let instance = save_instance(&mut env, &poll_nulls_toRust_instance_repo);
+      let instance = save_instance(&poll_nulls_toRust_instance_repo);
 
       let poll_id = PollId {
          instance_url: instance.get().url.clone(),
          local: PollLocalId("poll id".to_string()),
       };
 
-      let no_credential = poll_nulls_toRust_no_credential_poll_repo
-         .read(&mut env).unwrap()
-         .load(poll_id.clone()).unwrap();
+      let no_credential = poll_nulls_toRust_no_credential_poll_repo.repo().lock().unwrap()
+         .load(&poll_id).unwrap();
 
       assert_eq!(
          Poll {
@@ -1589,12 +1723,27 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static poll_fromRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_poll_fromRust_instance");
+   static poll_fromRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[allow(non_upper_case_globals)]
-   static poll_fromRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll>
-      = RepositoryHolder::new("ConvertJniTest_poll_fromRust_no_credential_poll");
+   static poll_fromRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &poll_fromRust_panoptiqon, "ConvertJniTest_poll_fromRust_instance"
+   );
+
+   #[allow(non_upper_case_globals)]
+   static poll_fromRust_no_credential_poll_repo: LazyInitRepo<NoCredentialPoll> = LazyInitRepo::new(
+      &poll_fromRust_panoptiqon, "ConvertJniTest_poll_fromRust_no_credential_poll"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1fromRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      poll_fromRust_instance_repo.initialize(&mut env);
+      poll_fromRust_no_credential_poll_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1fromRust_00024createPoll<'local>(
@@ -1606,7 +1755,7 @@ mod jni_tests {
       use crate::custom_emoji::CustomEmoji;
       use crate::poll::{Poll, PollId, PollLocalId, PollOption};
 
-      let instance = save_instance(&mut env, &poll_fromRust_instance_repo);
+      let instance = save_instance(&poll_fromRust_instance_repo);
       let instance_url = instance.get().url.clone();
 
       let no_credential = NoCredentialPoll {
@@ -1655,8 +1804,7 @@ mod jni_tests {
          ],
       };
 
-      let no_credential = poll_fromRust_no_credential_poll_repo
-         .write(&mut env).unwrap()
+      let no_credential = poll_fromRust_no_credential_poll_repo.repo().lock().unwrap()
          .save(no_credential);
 
       let poll = Poll {
@@ -1679,19 +1827,34 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      let instance = poll_fromRust_instance_repo.read(&mut env).unwrap()
-         .load("https://example.com/instance/url".parse().unwrap()).unwrap();
+      let instance = poll_fromRust_instance_repo.repo().lock().unwrap()
+         .load(&"https://example.com/instance/url".parse().unwrap()).unwrap();
 
       instance.clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
-   static poll_nulls_fromRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_poll_nulls_fromRust_instance");
+   static poll_nulls_fromRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[allow(non_upper_case_globals)]
-   static poll_nulls_fromRust_no_credential_poll_repo: RepositoryHolder<NoCredentialPoll>
-      = RepositoryHolder::new("ConvertJniTest_poll_nulls_fromRust_no_credential_poll");
+   static poll_nulls_fromRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &poll_nulls_fromRust_panoptiqon, "ConvertJniTest_poll_nulls_fromRust_instance"
+   );
+
+   #[allow(non_upper_case_globals)]
+   static poll_nulls_fromRust_no_credential_poll_repo: LazyInitRepo<NoCredentialPoll> = LazyInitRepo::new(
+      &poll_nulls_fromRust_panoptiqon, "ConvertJniTest_poll_nulls_fromRust_no_credential_poll"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1nulls_1fromRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      poll_nulls_fromRust_instance_repo.initialize(&mut env);
+      poll_nulls_fromRust_no_credential_poll_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_poll_1nulls_1fromRust_00024createPoll<'local>(
@@ -1701,7 +1864,7 @@ mod jni_tests {
       use panoptiqon::convert_jvm::CloneIntoJvm;
       use crate::poll::{Poll, PollId, PollLocalId, PollOption};
 
-      let instance = save_instance(&mut env, &poll_nulls_fromRust_instance_repo);
+      let instance = save_instance(&poll_nulls_fromRust_instance_repo);
       let instance_url = instance.get().url.clone();
 
       let no_credential = NoCredentialPoll {
@@ -1723,8 +1886,7 @@ mod jni_tests {
          emojis: vec![],
       };
 
-      let no_credential = poll_nulls_fromRust_no_credential_poll_repo
-         .write(&mut env).unwrap()
+      let no_credential = poll_nulls_fromRust_no_credential_poll_repo.repo().lock().unwrap()
          .save(no_credential);
 
       let poll = Poll {
@@ -1747,19 +1909,34 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      let instance = poll_nulls_fromRust_instance_repo.read(&mut env).unwrap()
-         .load("https://example.com/instance/url".parse().unwrap()).unwrap();
+      let instance = poll_nulls_fromRust_instance_repo.repo().lock().unwrap()
+         .load(&"https://example.com/instance/url".parse().unwrap()).unwrap();
 
       instance.clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
-   static previewCard_toRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_previewCard_toRust_instance");
+   static previewCard_toRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[allow(non_upper_case_globals)]
-   static previewCard_toRust_account_repo: RepositoryHolder<Account>
-      = RepositoryHolder::new("ConvertJniTest_previewCard_toRust_account");
+   static previewCard_toRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &previewCard_toRust_panoptiqon, "ConvertJniTest_previewCard_toRust_instance"
+   );
+
+   #[allow(non_upper_case_globals)]
+   static previewCard_toRust_account_repo: LazyInitRepo<Account> = LazyInitRepo::new(
+      &previewCard_toRust_panoptiqon, "ConvertJniTest_previewCard_toRust_account"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1toRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      previewCard_toRust_instance_repo.initialize(&mut env);
+      previewCard_toRust_account_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1toRust_00024createInstance<'local>(
@@ -1768,7 +1945,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &previewCard_toRust_instance_repo)
+      save_instance(&previewCard_toRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
@@ -1782,7 +1959,7 @@ mod jni_tests {
 
       let account = Account::clone_from_jvm(&mut env, &account);
 
-      previewCard_toRust_account_repo.write(&mut env).unwrap()
+      previewCard_toRust_account_repo.repo().lock().unwrap()
          .save(account)
          .clone_into_jvm(&mut env)
    }
@@ -1867,12 +2044,27 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static previewCard_fromRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_previewCard_fromRust_instance");
+   static previewCard_fromRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[allow(non_upper_case_globals)]
-   static previewCard_fromRust_account_repo: RepositoryHolder<Account>
-      = RepositoryHolder::new("ConvertJniTest_previewCard_fromRust_account");
+   static previewCard_fromRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &previewCard_fromRust_panoptiqon, "ConvertJniTest_previewCard_fromRust_instance"
+   );
+
+   #[allow(non_upper_case_globals)]
+   static previewCard_fromRust_account_repo: LazyInitRepo<Account> = LazyInitRepo::new(
+      &previewCard_fromRust_panoptiqon, "ConvertJniTest_previewCard_fromRust_account"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1fromRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      previewCard_fromRust_instance_repo.initialize(&mut env);
+      previewCard_fromRust_account_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_previewCard_1fromRust_00024createPreviewCard<'local>(
@@ -1883,7 +2075,7 @@ mod jni_tests {
       use crate::account::{Account, AccountId, AccountLocalId};
       use crate::preview_card::{PreviewCard, PreviewCardAuthor};
 
-      let instance = save_instance(&mut env, &previewCard_fromRust_instance_repo);
+      let instance = save_instance(&previewCard_fromRust_instance_repo);
       let instance_url = instance.get().url.clone();
 
       let preview_card = PreviewCard {
@@ -1925,8 +2117,8 @@ mod jni_tests {
                   followee_count: None,
                };
 
-               let account_cache = previewCard_fromRust_account_repo
-                  .write(&mut env).unwrap()
+               let account_cache = previewCard_fromRust_account_repo.repo()
+                  .lock().unwrap()
                   .save(account);
 
                PreviewCardAuthor {
@@ -1977,8 +2169,21 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static role_toRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_role_toRust_instance");
+   static role_toRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
+
+   #[allow(non_upper_case_globals)]
+   static role_toRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &role_toRust_panoptiqon, "ConvertJniTest_role_toRust_instance"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1toRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      role_toRust_instance_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1toRust_00024createInstance<'local>(
@@ -1987,7 +2192,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &role_toRust_instance_repo)
+      save_instance(&role_toRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
@@ -2004,7 +2209,7 @@ mod jni_tests {
 
       assert_eq!(
          Role {
-            instance: save_instance(&mut env, &role_toRust_instance_repo),
+            instance: save_instance(&role_toRust_instance_repo),
             id: Some(RoleId("id".to_string())),
             name: Some("name".to_string()),
             color: Some("color".to_string()),
@@ -2016,8 +2221,21 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static role_nulls_toRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_role_nulls_toRust_instance");
+   static role_nulls_toRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
+
+   #[allow(non_upper_case_globals)]
+   static role_nulls_toRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &role_nulls_toRust_panoptiqon, "ConvertJniTest_role_nulls_toRust_instance"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1nulls_1toRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      role_nulls_toRust_instance_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1nulls_1toRust_00024createInstance<'local>(
@@ -2026,7 +2244,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &role_nulls_toRust_instance_repo)
+      save_instance(&role_nulls_toRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
@@ -2043,7 +2261,7 @@ mod jni_tests {
 
       assert_eq!(
          Role {
-            instance: save_instance(&mut env, &role_nulls_toRust_instance_repo),
+            instance: save_instance(&role_nulls_toRust_instance_repo),
             id: None,
             name: None,
             color: None,
@@ -2055,8 +2273,21 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static role_fromRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_role_fromRust_instance");
+   static role_fromRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
+
+   #[allow(non_upper_case_globals)]
+   static role_fromRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &role_fromRust_panoptiqon, "ConvertJniTest_role_fromRust_instance"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1fromRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      role_fromRust_instance_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1fromRust_00024createRole<'local>(
@@ -2067,7 +2298,7 @@ mod jni_tests {
       use crate::role::{Role, RoleId};
 
       let role = Role {
-         instance: save_instance(&mut env, &role_fromRust_instance_repo),
+         instance: save_instance(&role_fromRust_instance_repo),
          id: Some(RoleId("id".to_string())),
          name: Some("name".to_string()),
          color: Some("color".to_string()),
@@ -2085,13 +2316,26 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &role_fromRust_instance_repo)
+      save_instance(&role_fromRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
-   static role_nulls_fromRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_role_nulls_fromRust_instance");
+   static role_nulls_fromRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
+
+   #[allow(non_upper_case_globals)]
+   static role_nulls_fromRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &role_nulls_fromRust_panoptiqon, "ConvertJniTest_role_nulls_fromRust_instance"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1nulls_1fromRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      role_nulls_fromRust_instance_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_role_1nulls_1fromRust_00024createRole<'local>(
@@ -2102,7 +2346,7 @@ mod jni_tests {
       use crate::role::Role;
 
       let role = Role {
-         instance: save_instance(&mut env, &role_nulls_fromRust_instance_repo),
+         instance: save_instance(&role_nulls_fromRust_instance_repo),
          id: None,
          name: None,
          color: None,
@@ -2120,29 +2364,50 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &role_nulls_fromRust_instance_repo)
+      save_instance(&role_nulls_fromRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
    #[allow(non_upper_case_globals)]
-   static status_toRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_status_toRust_instance");
+   static status_toRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[allow(non_upper_case_globals)]
-   static status_toRust_account_repo: RepositoryHolder<Account>
-      = RepositoryHolder::new("ConvertJniTest_status_toRust_account");
+   static status_toRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &status_toRust_panoptiqon, "ConvertJniTest_status_toRust_instance"
+   );
 
    #[allow(non_upper_case_globals)]
-   static status_toRust_noCredentialStatus_repo: RepositoryHolder<NoCredentialStatus>
-      = RepositoryHolder::new("ConvertJniTest_status_toRust_noCredentialStatus");
+   static status_toRust_account_repo: LazyInitRepo<Account> = LazyInitRepo::new(
+      &status_toRust_panoptiqon, "ConvertJniTest_status_toRust_account"
+   );
 
    #[allow(non_upper_case_globals)]
-   static status_toRust_status_repo: RepositoryHolder<Status>
-      = RepositoryHolder::new("ConvertJniTest_status_toRust_status");
+   static status_toRust_noCredentialStatus_repo: LazyInitRepo<NoCredentialStatus> = LazyInitRepo::new(
+      &status_toRust_panoptiqon, "ConvertJniTest_status_toRust_noCredentialStatus"
+   );
 
    #[allow(non_upper_case_globals)]
-   static status_toRust_noCredentialPoll_repo: RepositoryHolder<NoCredentialPoll>
-      = RepositoryHolder::new("ConvertJniTest_status_toRust_noCredentialPoll");
+   static status_toRust_status_repo: LazyInitRepo<Status> = LazyInitRepo::new(
+      &status_toRust_panoptiqon, "ConvertJniTest_status_toRust_status"
+   );
+
+   #[allow(non_upper_case_globals)]
+   static status_toRust_noCredentialPoll_repo: LazyInitRepo<NoCredentialPoll> = LazyInitRepo::new(
+      &status_toRust_panoptiqon, "ConvertJniTest_status_toRust_noCredentialPoll"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1toRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      status_toRust_instance_repo.initialize(&mut env);
+      status_toRust_account_repo.initialize(&mut env);
+      status_toRust_noCredentialStatus_repo.initialize(&mut env);
+      status_toRust_status_repo.initialize(&mut env);
+      status_toRust_noCredentialPoll_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1toRust_00024createInstance<'local>(
@@ -2151,7 +2416,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &status_toRust_instance_repo)
+      save_instance(&status_toRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
@@ -2162,7 +2427,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmAccount<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_account(&mut env, &status_toRust_account_repo, &status_toRust_instance_repo)
+      save_account(&status_toRust_account_repo, &status_toRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
@@ -2179,7 +2444,7 @@ mod jni_tests {
             instance_url: "https://example.com/instance/url".parse().unwrap(),
             local: StatusLocalId("boosted status id".to_string())
          },
-         no_credential: status_toRust_noCredentialStatus_repo.write(&mut env).unwrap().save(
+         no_credential: status_toRust_noCredentialStatus_repo.repo().lock().unwrap().save(
             NoCredentialStatus {
                id: StatusId {
                   instance_url: "https://example.com/instance/url".parse().unwrap(),
@@ -2221,7 +2486,7 @@ mod jni_tests {
          filter_results: vec![],
       };
 
-      status_toRust_status_repo.write(&mut env).unwrap().save(status)
+      status_toRust_status_repo.repo().lock().unwrap().save(status)
          .clone_into_jvm(&mut env)
    }
 
@@ -2247,7 +2512,7 @@ mod jni_tests {
          emojis: vec![],
       };
 
-      status_toRust_noCredentialPoll_repo.write(&mut env).unwrap().save(no_credential_poll)
+      status_toRust_noCredentialPoll_repo.repo().lock().unwrap().save(no_credential_poll)
          .clone_into_jvm(&mut env)
    }
 
@@ -2259,8 +2524,8 @@ mod jni_tests {
       use panoptiqon::convert_jvm::CloneIntoJvm;
       use crate::account::{AccountId, AccountLocalId};
 
-      let instance = status_toRust_instance_repo.read(&mut env).unwrap()
-         .load("https://example.com/instance/url".parse().unwrap()).unwrap();
+      let instance = status_toRust_instance_repo.repo().lock().unwrap()
+         .load(&"https://example.com/instance/url".parse().unwrap()).unwrap();
 
       let instance_url = instance.get().url.clone();
 
@@ -2296,7 +2561,7 @@ mod jni_tests {
          followee_count: None,
       };
 
-      status_toRust_account_repo.write(&mut env).unwrap().save(account)
+      status_toRust_account_repo.repo().lock().unwrap().save(account)
          .clone_into_jvm(&mut env)
    }
 
@@ -2341,9 +2606,8 @@ mod jni_tests {
                   local: AccountLocalId("account id".to_string())
                };
 
-               let account = status_toRust_account_repo
-                  .read(&mut env).unwrap()
-                  .load(id).unwrap();
+               let account = status_toRust_account_repo.repo().lock().unwrap()
+                  .load(&id).unwrap();
 
                Some(account)
             },
@@ -2403,8 +2667,9 @@ mod jni_tests {
                   let instance_url
                      = "https://example.com/instance/url".parse().unwrap();
 
-                  status_toRust_instance_repo.read(&mut env).unwrap()
-                     .load(instance_url).unwrap()
+                  let instance = status_toRust_instance_repo.repo().lock().unwrap()
+                     .load(&instance_url).unwrap();
+                  instance
                },
                name: "app name".to_string(),
                website: Some("https://example.com/app".parse().unwrap()),
@@ -2455,8 +2720,9 @@ mod jni_tests {
                      let instance_url
                         = "https://example.com/instance/url".parse().unwrap();
 
-                     status_toRust_instance_repo.read(&mut env).unwrap()
-                        .load(instance_url).unwrap()
+                     let instance = status_toRust_instance_repo.repo().lock().unwrap()
+                        .load(&instance_url).unwrap();
+                     instance
                   },
                   shortcode: "shortcode".to_string(),
                   image_url: "https://example.com/image/url".parse().unwrap(),
@@ -2485,8 +2751,8 @@ mod jni_tests {
                };
 
                let boosted_status = status_toRust_noCredentialStatus_repo
-                  .read(&mut env).unwrap()
-                  .load(id).unwrap();
+                  .repo().lock().unwrap()
+                  .load(&id).unwrap();
 
                Some(boosted_status)
             },
@@ -2497,8 +2763,8 @@ mod jni_tests {
                };
 
                let no_credential_poll = status_toRust_noCredentialPoll_repo
-                  .read(&mut env).unwrap()
-                  .load(id).unwrap();
+                  .repo().lock().unwrap()
+                  .load(&id).unwrap();
 
                Some(no_credential_poll)
             },
@@ -2514,8 +2780,8 @@ mod jni_tests {
                   };
 
                   let account = status_toRust_account_repo
-                     .read(&mut env).unwrap()
-                     .load(id).unwrap();
+                     .repo().lock().unwrap()
+                     .load(&id).unwrap();
 
                   vec![
                      PreviewCardAuthor {
@@ -2554,7 +2820,7 @@ mod jni_tests {
          &mut env, &no_credential_status
       );
 
-      status_toRust_noCredentialStatus_repo.write(&mut env).unwrap()
+      status_toRust_noCredentialStatus_repo.repo().lock().unwrap()
          .save(no_credential_status)
          .clone_into_jvm(&mut env)
    }
@@ -2588,8 +2854,10 @@ mod jni_tests {
                   local: StatusLocalId("status id".to_string())
                };
 
-               status_toRust_noCredentialStatus_repo.read(&mut env).unwrap()
-                  .load(id).unwrap()
+               let no_credential = status_toRust_noCredentialStatus_repo.repo()
+                  .lock().unwrap()
+                  .load(&id).unwrap();
+               no_credential
             },
             boosted_status: {
                let id = StatusId {
@@ -2597,8 +2865,8 @@ mod jni_tests {
                   local: StatusLocalId("boosted status id".to_string())
                };
 
-               let status = status_toRust_status_repo.read(&mut env).unwrap()
-                  .load(id).unwrap();
+               let status = status_toRust_status_repo.repo().lock().unwrap()
+                  .load(&id).unwrap();
 
                Some(status)
             },
@@ -2613,9 +2881,10 @@ mod jni_tests {
                      local: PollLocalId("poll id".to_string())
                   };
 
-                  status_toRust_noCredentialPoll_repo
-                     .read(&mut env).unwrap()
-                     .load(id).unwrap()
+                  let no_credential = status_toRust_noCredentialPoll_repo.repo()
+                     .lock().unwrap()
+                     .load(&id).unwrap();
+                  no_credential
                },
                is_voted: Some(true),
                voted_options: vec![0],
@@ -2666,12 +2935,27 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static status_nulls_toRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_status_nulls_toRust_instance");
+   static status_nulls_toRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[allow(non_upper_case_globals)]
-   static status_nulls_toRust_noCredentialStatus_repo: RepositoryHolder<NoCredentialStatus>
-      = RepositoryHolder::new("ConvertJniTest_status_nulls_toRust_noCredentialStatus");
+   static status_nulls_toRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &status_nulls_toRust_panoptiqon, "ConvertJniTest_status_nulls_toRust_instance"
+   );
+
+   #[allow(non_upper_case_globals)]
+   static status_nulls_toRust_noCredentialStatus_repo: LazyInitRepo<NoCredentialStatus> = LazyInitRepo::new(
+      &status_nulls_toRust_panoptiqon, "ConvertJniTest_status_nulls_toRust_noCredentialStatus"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1nulls_1toRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      status_nulls_toRust_instance_repo.initialize(&mut env);
+      status_nulls_toRust_noCredentialStatus_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1nulls_1toRust_00024createInstance<'local>(
@@ -2680,7 +2964,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      save_instance(&mut env, &status_nulls_toRust_instance_repo)
+      save_instance(&status_nulls_toRust_instance_repo)
          .clone_into_jvm(&mut env)
    }
 
@@ -2744,7 +3028,7 @@ mod jni_tests {
          &mut env, &no_credential_status
       );
 
-      status_nulls_toRust_noCredentialStatus_repo.write(&mut env).unwrap()
+      status_nulls_toRust_noCredentialStatus_repo.repo().lock().unwrap()
          .save(no_credential_status)
          .clone_into_jvm(&mut env)
    }
@@ -2772,8 +3056,10 @@ mod jni_tests {
                   local: StatusLocalId("status id".to_string())
                };
 
-               status_nulls_toRust_noCredentialStatus_repo.read(&mut env).unwrap()
-                  .load(id).unwrap()
+               let no_credential = status_nulls_toRust_noCredentialStatus_repo.repo()
+                  .lock().unwrap()
+                  .load(&id).unwrap();
+               no_credential
             },
             boosted_status: None,
             poll: None,
@@ -2789,24 +3075,45 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static status_fromRust_instance_repo: RepositoryHolder<Instance>
-      = RepositoryHolder::new("ConvertJniTest_status_fromRust_instance");
+   static status_fromRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[allow(non_upper_case_globals)]
-   static status_fromRust_account_repo: RepositoryHolder<Account>
-      = RepositoryHolder::new("ConvertJniTest_status_fromRust_account");
+   static status_fromRust_instance_repo: LazyInitRepo<Instance> = LazyInitRepo::new(
+      &status_fromRust_panoptiqon, "ConvertJniTest_status_fromRust_instance"
+   );
 
    #[allow(non_upper_case_globals)]
-   static status_fromRust_noCredentialStatus_repo: RepositoryHolder<NoCredentialStatus>
-      = RepositoryHolder::new("ConvertJniTest_status_fromRust_noCredentialStatus");
+   static status_fromRust_account_repo: LazyInitRepo<Account> = LazyInitRepo::new(
+      &status_fromRust_panoptiqon, "ConvertJniTest_status_fromRust_account"
+   );
 
    #[allow(non_upper_case_globals)]
-   static status_fromRust_status_repo: RepositoryHolder<Status>
-      = RepositoryHolder::new("ConvertJniTest_status_fromRust_status");
+   static status_fromRust_noCredentialStatus_repo: LazyInitRepo<NoCredentialStatus> = LazyInitRepo::new(
+      &status_fromRust_panoptiqon, "ConvertJniTest_status_fromRust_noCredentialStatus"
+   );
 
    #[allow(non_upper_case_globals)]
-   static status_fromRust_noCredentialPoll_repo: RepositoryHolder<NoCredentialPoll>
-      = RepositoryHolder::new("ConvertJniTest_status_fromRust_noCredentialPoll");
+   static status_fromRust_status_repo: LazyInitRepo<Status> = LazyInitRepo::new(
+      &status_fromRust_panoptiqon, "ConvertJniTest_status_fromRust_status"
+   );
+
+   #[allow(non_upper_case_globals)]
+   static status_fromRust_noCredentialPoll_repo: LazyInitRepo<NoCredentialPoll> = LazyInitRepo::new(
+      &status_fromRust_panoptiqon, "ConvertJniTest_status_fromRust_noCredentialPoll"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1fromRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      status_fromRust_instance_repo.initialize(&mut env);
+      status_fromRust_account_repo.initialize(&mut env);
+      status_fromRust_noCredentialStatus_repo.initialize(&mut env);
+      status_fromRust_status_repo.initialize(&mut env);
+      status_fromRust_noCredentialPoll_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1fromRust_00024createStatus<'local>(
@@ -2834,45 +3141,49 @@ mod jni_tests {
          StatusHashtag, StatusId, StatusLocalId, StatusMention, StatusVisibility,
       };
 
-      let instance = save_instance(&mut env, &status_fromRust_instance_repo);
+      let instance = save_instance(&status_fromRust_instance_repo);
 
       let boosted_status = Status {
          id: StatusId {
             instance_url: "https://example.com/instance/url".parse().unwrap(),
             local: StatusLocalId("boosted status id".to_string())
          },
-         no_credential: status_toRust_noCredentialStatus_repo.write(&mut env).unwrap().save(
-            NoCredentialStatus {
-               id: StatusId {
-                  instance_url: "https://example.com/instance/url".parse().unwrap(),
-                  local: StatusLocalId("boosted status id".to_string())
-               },
-               uri: None,
-               created_time: None,
-               account: None,
-               content: None,
-               visibility: None,
-               is_sensitive: None,
-               spoiler_text: None,
-               media_attachments: vec![],
-               application: None,
-               mentions: vec![],
-               hashtags: vec![],
-               emojis: vec![],
-               boost_count: None,
-               favorite_count: None,
-               reply_count: None,
-               url: None,
-               replied_status_id: None,
-               replied_account_id: None,
-               boosted_status: None,
-               poll: None,
-               card: None,
-               language: None,
-               text: None,
-               edited_time: None,
-            }
-         ),
+         no_credential: {
+            let no_credential = status_toRust_noCredentialStatus_repo.repo()
+               .lock().unwrap().save(
+                  NoCredentialStatus {
+                     id: StatusId {
+                        instance_url: "https://example.com/instance/url".parse().unwrap(),
+                        local: StatusLocalId("boosted status id".to_string())
+                     },
+                     uri: None,
+                     created_time: None,
+                     account: None,
+                     content: None,
+                     visibility: None,
+                     is_sensitive: None,
+                     spoiler_text: None,
+                     media_attachments: vec![],
+                     application: None,
+                     mentions: vec![],
+                     hashtags: vec![],
+                     emojis: vec![],
+                     boost_count: None,
+                     favorite_count: None,
+                     reply_count: None,
+                     url: None,
+                     replied_status_id: None,
+                     replied_account_id: None,
+                     boosted_status: None,
+                     poll: None,
+                     card: None,
+                     language: None,
+                     text: None,
+                     edited_time: None,
+                  }
+               );
+            no_credential
+         },
          boosted_status: None,
          poll: None,
          is_favorited: None,
@@ -2884,7 +3195,7 @@ mod jni_tests {
       };
 
       let no_credential_poll = status_fromRust_noCredentialPoll_repo
-         .write(&mut env).unwrap()
+         .repo().lock().unwrap()
          .save(
             NoCredentialPoll {
                id: PollId {
@@ -2910,7 +3221,6 @@ mod jni_tests {
          created_time: Some(Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap()),
          account: Some(
             save_account(
-               &mut env,
                &status_fromRust_account_repo,
                &status_fromRust_instance_repo
             )
@@ -3075,7 +3385,7 @@ mod jni_tests {
                };
 
                let account_cache = status_fromRust_account_repo
-                  .write(&mut env).unwrap()
+                  .repo().lock().unwrap()
                   .save(account);
 
                vec![
@@ -3105,14 +3415,18 @@ mod jni_tests {
             instance_url: "https://example.com/instance/url".parse().unwrap(),
             local: StatusLocalId("status id".to_string())
          },
-         no_credential: status_fromRust_noCredentialStatus_repo
-            .write(&mut env).unwrap()
-            .save(no_credential),
-         boosted_status: Some(
-            status_fromRust_status_repo
-               .write(&mut env).unwrap()
-               .save(boosted_status)
-         ),
+         no_credential: {
+            let no_credential = status_fromRust_noCredentialStatus_repo.repo()
+               .lock().unwrap()
+               .save(no_credential);
+            no_credential
+         },
+         boosted_status: {
+            let boosted_status = status_fromRust_status_repo.repo()
+               .lock().unwrap()
+               .save(boosted_status);
+            Some(boosted_status)
+         },
          poll: Some(Poll {
             id: PollId {
                instance_url: "https://example.com/instance/url".parse().unwrap(),
@@ -3168,8 +3482,21 @@ mod jni_tests {
    }
 
    #[allow(non_upper_case_globals)]
-   static status_nulls_fromRust_noCredentialStatus_repo: RepositoryHolder<NoCredentialStatus>
-      = RepositoryHolder::new("ConvertJniTest_status_nulls_fromRust_noCredentialStatus");
+   static status_nulls_fromRust_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
+
+   #[allow(non_upper_case_globals)]
+   static status_nulls_fromRust_noCredentialStatus_repo: LazyInitRepo<NoCredentialStatus> = LazyInitRepo::new(
+      &status_nulls_fromRust_panoptiqon, "ConvertJniTest_status_nulls_fromRust_noCredentialStatus"
+   );
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1nulls_1fromRust_00024createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) {
+      status_nulls_fromRust_noCredentialStatus_repo.initialize(&mut env);
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_entity_ConvertJniTest_status_1nulls_1fromRust_00024createStatus<'local>(
@@ -3215,9 +3542,12 @@ mod jni_tests {
             instance_url: "https://example.com/instance/url".parse().unwrap(),
             local: StatusLocalId("status id".to_string())
          },
-         no_credential: status_nulls_fromRust_noCredentialStatus_repo
-            .write(&mut env).unwrap()
-            .save(no_credential),
+         no_credential: {
+            let no_credential = status_nulls_fromRust_noCredentialStatus_repo.repo()
+               .lock().unwrap()
+               .save(no_credential);
+            no_credential
+         },
          boosted_status: None,
          poll: None,
          is_favorited: None,

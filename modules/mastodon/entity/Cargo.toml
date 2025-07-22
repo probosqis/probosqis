@@ -36,3 +36,4 @@ panoptiqon.workspace = true
 ext_panoptiqon.workspace = true
 
 foundation_entity.workspace = true
+once_cell = "1.21.3"

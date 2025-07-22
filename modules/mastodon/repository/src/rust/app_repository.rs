@@ -253,7 +253,8 @@ mod jvm {
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
-      let mut instance_cache_repo = Repository::of(env, &instance_cache_repo).lock();
+      let mut instance_cache_repo = Repository::of(env, &instance_cache_repo).lock()
+         .map_err(|_| anyhow::anyhow!("instance repository was poisoned"))?;
 
       let instance = Instance::clone_from_jvm(env, &instance);
       let application = app_repository.post_app(
@@ -447,7 +448,7 @@ mod jvm {
 #[cfg(all(test, not(feature = "jvm")))]
 mod test {
    use mastodon_webapi::entity::application::Application;
-   use panoptiqon::repository::Repository;
+   use panoptiqon::Panoptiqon;
    use super::AppRepository;
 
    fn dummy_application() -> Application {
@@ -473,6 +474,11 @@ mod test {
       use url::Url;
 
       let mut repository = AppRepository::new();
+
+      let panoptiqon = Panoptiqon::new();
+      let mut instance_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/switch_function_by_instance_version/Instance"
+      );
 
       let v0_called     = Arc::new(Mutex::new(false));
       let v4_3_0_called = Arc::new(Mutex::new(false));
@@ -500,8 +506,10 @@ mod test {
       };
 
       {
-         let _application = repository
-            .post_app(instance("4.1.0"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance("4.1.0"), AppRepository::ANDROID_REDIRECT_URI,
+            &mut instance_cache_repo.lock().unwrap()
+         );
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
       }
@@ -510,8 +518,10 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository
-            .post_app(instance("4.2.0"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance("4.2.0"), AppRepository::ANDROID_REDIRECT_URI,
+            &mut instance_cache_repo.lock().unwrap()
+         );
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
       }
@@ -520,8 +530,10 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository
-            .post_app(instance("4.2.9"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance("4.2.9"), AppRepository::ANDROID_REDIRECT_URI,
+            &mut instance_cache_repo.lock().unwrap()
+         );
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
       }
@@ -530,8 +542,10 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository
-            .post_app(instance("4.3.0"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance("4.3.0"), AppRepository::ANDROID_REDIRECT_URI,
+            &mut instance_cache_repo.lock().unwrap()
+         );
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
@@ -540,8 +554,10 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository
-            .post_app(instance("4.3.1"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance("4.3.1"), AppRepository::ANDROID_REDIRECT_URI,
+            &mut instance_cache_repo.lock().unwrap()
+         );
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
@@ -550,8 +566,10 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository
-            .post_app(instance("4.4.0"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance("4.4.0"), AppRepository::ANDROID_REDIRECT_URI,
+            &mut instance_cache_repo.lock().unwrap()
+         );
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
@@ -565,6 +583,11 @@ mod test {
       use url::Url;
 
       let mut repository = AppRepository::new();
+
+      let panoptiqon = Panoptiqon::new();
+      let mut instance_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/account_conversion_uses_newer_redirect_uris_field/Instance"
+      );
 
       let instance = Instance {
          url: Url::parse("https://example.com/").unwrap(),
@@ -588,8 +611,10 @@ mod test {
          )
       });
 
-      let application = repository
-         .post_app(instance.clone(), "https://example.com/callback");
+      let application = repository.post_app(
+         instance.clone(), "https://example.com/callback",
+         &mut instance_cache_repo.lock().unwrap()
+      );
 
       assert_eq!(
          vec![
@@ -612,8 +637,10 @@ mod test {
          )
       });
 
-      let application = repository
-         .post_app(instance.clone(), "https://example.com/callback");
+      let application = repository.post_app(
+         instance.clone(), "https://example.com/callback",
+         &mut instance_cache_repo.lock().unwrap()
+      );
 
       assert_eq!(
          vec![
@@ -629,10 +656,15 @@ mod test {
       use chrono::{TimeZone, Utc};
       use mastodon_entity::instance::Instance;
       use mastodon_webapi::api::oauth;
+      use panoptiqon::Panoptiqon;
       use url::Url;
-      use crate::cache;
 
       let repository = AppRepository::new();
+
+      let panoptiqon = Panoptiqon::new();
+      let mut instance_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/authorize_url/Instance"
+      );
 
       oauth::inject_get_authorize_url(|instance_base_url, _, _, _, _, _, _|
          Ok(instance_base_url.join("oauth/authorize")?)
@@ -644,7 +676,7 @@ mod test {
          version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let instance_cache = cache::instance::repo().write().unwrap().save(instance);
+      let instance_cache = instance_cache_repo.lock().unwrap().save(instance);
 
       let authorize_url = repository.get_authorize_url(
          &instance_cache,
@@ -679,13 +711,20 @@ mod test {
       };
       use mastodon_webapi::entity::custom_emoji::CustomEmoji as ApiCustomEmoji;
       use mastodon_webapi::entity::token::Token as ApiToken;
-      use crate::cache;
+      use panoptiqon::Panoptiqon;
 
       let mut repository = AppRepository::new();
-      let mut account_cache_repo
-         = Repository::new("test/AppRepository/token/Account");
-      let mut credential_account_cache_repo
-         = Repository::new("test/AppRepository/token/CredentialAccount");
+
+      let panoptiqon = Panoptiqon::new();
+      let mut instance_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/token/Instance"
+      );
+      let mut account_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/token/Account"
+      );
+      let mut credential_account_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/token/CredentialAccount"
+      );
 
       oauth::inject_post_token(|_, _, _, _, _, _, _, _|
          Ok(
@@ -795,7 +834,7 @@ mod test {
          version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let instance_cache = cache::instance::repo().write().unwrap().save(instance);
+      let instance_cache = instance_cache_repo.lock().unwrap().save(instance);
 
       let token = repository.get_token(
          &instance_cache,
@@ -803,8 +842,8 @@ mod test {
          "client_id",
          "client_secret",
          "redirect_uri",
-         &mut account_cache_repo,
-         &mut credential_account_cache_repo
+         &mut account_cache_repo.lock().unwrap(),
+         &mut credential_account_cache_repo.lock().unwrap()
       ).unwrap();
 
       assert_eq!(

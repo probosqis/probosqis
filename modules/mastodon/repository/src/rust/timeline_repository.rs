@@ -239,13 +239,24 @@ mod test {
          StatusMention as ApiStatusMention,
          StatusTag as ApiStatusTag,
       };
-      use crate::cache;
+      use panoptiqon::Panoptiqon;
 
       let mut repository = TimelineRepository::new();
-      let mut account_cache_repo = Repository::new(
+
+      let panoptiqon = Panoptiqon::new();
+      let mut instance_cache_repo = panoptiqon.new_repository(
+         "test/TimelineRepository/get_home_timeline/Instance"
+      );
+      let mut account_cache_repo = panoptiqon.new_repository(
          "test/TimelineRepository/get_home_timeline/Account"
       );
-      let mut no_credential_poll_cache_repo = Repository::new(
+      let mut status_cache_repo = panoptiqon.new_repository(
+         "test/TimelineRepository/get_home_timeline/Status"
+      );
+      let mut no_credential_status_cache_repo = panoptiqon.new_repository(
+         "test/TimelineRepository/get_home_timeline/NoCredentialStatus"
+      );
+      let mut no_credential_poll_cache_repo = panoptiqon.new_repository(
          "test/TimelineRepository/get_home_timeline/NoCredentialPoll"
       );
 
@@ -767,7 +778,7 @@ mod test {
          version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let instance_cache = cache::instance::repo().write().unwrap().save(instance);
+      let instance_cache = instance_cache_repo.lock().unwrap().save(instance);
 
       let token = Token {
          instance: instance_cache.clone(),
@@ -784,7 +795,10 @@ mod test {
 
       let statuses = repository.get_home_timeline(
          &token,
-         &mut account_cache_repo, &mut no_credential_poll_cache_repo
+         &mut account_cache_repo.lock().unwrap(),
+         &mut status_cache_repo.lock().unwrap(),
+         &mut no_credential_status_cache_repo.lock().unwrap(),
+         &mut no_credential_poll_cache_repo.lock().unwrap()
       ).unwrap();
 
       assert_eq!(
@@ -900,7 +914,8 @@ mod test {
                                     );
 
                                     let moved_to = account_cache_repo
-                                       .load(id).unwrap();
+                                       .lock().unwrap()
+                                       .load(&id).unwrap();
 
                                     Some(moved_to)
                                  },
@@ -917,7 +932,8 @@ mod test {
                            );
 
                            let account = account_cache_repo
-                              .load(id).unwrap();
+                              .lock().unwrap()
+                              .load(&id).unwrap();
 
                            Some(account)
                         },
@@ -1086,9 +1102,9 @@ mod test {
                                  .boosted_status.as_ref().unwrap().get()
                            );
 
-                           let boosted_status = cache::status::no_credential_status_repo()
-                              .read().unwrap()
-                              .load(id).unwrap();
+                           let boosted_status = no_credential_status_cache_repo
+                              .lock().unwrap()
+                              .load(&id).unwrap();
 
                            Some(boosted_status)
                         },
@@ -1142,7 +1158,8 @@ mod test {
                            );
 
                            let poll = no_credential_poll_cache_repo
-                              .load(id).unwrap();
+                              .lock().unwrap()
+                              .load(&id).unwrap();
 
                            Some(poll)
                         },
@@ -1197,7 +1214,8 @@ mod test {
                                     );
 
                                     let account = account_cache_repo
-                                       .load(id).unwrap();
+                                       .lock().unwrap()
+                                       .load(&id).unwrap();
 
                                     Some(account)
                                  },
@@ -1247,7 +1265,8 @@ mod test {
                                     );
 
                                     let account = account_cache_repo
-                                       .load(id).unwrap();
+                                       .lock().unwrap()
+                                       .load(&id).unwrap();
 
                                     Some(account)
                                  },
@@ -1269,9 +1288,11 @@ mod test {
                      *statuses[0].no_credential.get()
                   );
 
-                  cache::status::no_credential_status_repo()
-                     .read().unwrap()
-                     .load(id).unwrap()
+                  // 理由は謎だがここで一時変数に入れないとデッドロックが起こる
+                  let a = no_credential_status_cache_repo
+                     .lock().unwrap()
+                     .load(&id).unwrap();
+                  a
                },
                boosted_status: {
                   let id = StatusId {
@@ -1282,9 +1303,9 @@ mod test {
                   assert_eq!(
                      Status {
                         id: id.clone(),
-                        no_credential: cache::status::no_credential_status_repo()
-                              .read().unwrap()
-                              .load(id.clone()).unwrap(),
+                        no_credential: no_credential_status_cache_repo
+                              .lock().unwrap()
+                              .load(&id).unwrap(),
                         boosted_status: None,
                         poll: None,
                         is_favorited: None,
@@ -1297,9 +1318,9 @@ mod test {
                      *statuses[0].boosted_status.as_ref().unwrap().get()
                   );
 
-                  let boosted_status = cache::status::status_repo()
-                     .read().unwrap()
-                     .load(id).unwrap();
+                  let boosted_status = status_cache_repo
+                     .lock().unwrap()
+                     .load(&id).unwrap();
 
                   Some(boosted_status)
                },
@@ -1312,7 +1333,8 @@ mod test {
                   Some(Poll {
                      id: id.clone(),
                      no_credential: no_credential_poll_cache_repo
-                        .load(id).unwrap(),
+                        .lock().unwrap()
+                        .load(&id).unwrap(),
                      is_voted: Some(true),
                      voted_options: vec![6, 7],
                   })
@@ -1455,9 +1477,9 @@ mod test {
                      *statuses[1].no_credential.get()
                   );
 
-                  cache::status::no_credential_status_repo()
-                     .read().unwrap()
-                     .load(id).unwrap()
+                  no_credential_status_cache_repo
+                     .lock().unwrap()
+                     .load(&id).unwrap()
                },
                boosted_status: None,
                poll: None,

@@ -35,6 +35,8 @@ class ConvertJniTest {
 
    @Test
    fun account_toRust() {
+      `account_toRust$createRepositories`()
+
       val instance = `account_toRust$createInstance`()
 
       val account = Account(
@@ -95,12 +97,15 @@ class ConvertJniTest {
       `account_toRust$assert`(account)
    }
 
+   private external fun `account_toRust$createRepositories`()
    private external fun `account_toRust$createInstance`(): Cache<Instance>
    private external fun `account_toRust$createMovedTo`(): Cache<Account>
    private external fun `account_toRust$assert`(account: Account)
 
    @Test
    fun account_fromRust() {
+      `account_fromRust$createRepositories`()
+
       val account = `account_fromRust$createAccount`()
       val instance = `account_fromRust$createInstance`()
 
@@ -163,6 +168,7 @@ class ConvertJniTest {
       )
    }
 
+   private external fun `account_fromRust$createRepositories`()
    private external fun `account_fromRust$createAccount`(): Account
    private external fun `account_fromRust$createInstance`(): Cache<Instance>
    private external fun `account_fromRust$createMovedTo`(): Cache<Account>
@@ -171,6 +177,8 @@ class ConvertJniTest {
 
    @Test
    fun customEmoji_toRust() {
+      `customEmoji_toRust$createRepositories`()
+
       val customEmoji = CustomEmoji(
          instance = `customEmoji_toRust$createInstance`(),
          "shortcode",
@@ -183,11 +191,14 @@ class ConvertJniTest {
       `customEmoji_toRust$assert`(customEmoji)
    }
 
+   private external fun `customEmoji_toRust$createRepositories`()
    private external fun `customEmoji_toRust$createInstance`(): Cache<Instance>
    private external fun `customEmoji_toRust$assert`(customEmoji: CustomEmoji)
 
    @Test
    fun customEmoji_nulls_toRust() {
+      `customEmoji_nulls_toRust$createRepositories`()
+
       val customEmoji = CustomEmoji(
          instance = `customEmoji_nulls_toRust$createInstance`(),
          "shortcode",
@@ -200,11 +211,14 @@ class ConvertJniTest {
       `customEmoji_nulls_toRust$assert`(customEmoji)
    }
 
+   private external fun `customEmoji_nulls_toRust$createRepositories`()
    private external fun `customEmoji_nulls_toRust$createInstance`(): Cache<Instance>
    private external fun `customEmoji_nulls_toRust$assert`(customEmoji: CustomEmoji)
 
    @Test
    fun customEmoji_fromRust() {
+      `customEmoji_fromRust$createRepositories`()
+
       val customEmoji = `customEmoji_fromRust$createCustomEmoji`()
 
       assertEquals(
@@ -220,11 +234,14 @@ class ConvertJniTest {
       )
    }
 
+   private external fun `customEmoji_fromRust$createRepositories`()
    private external fun `customEmoji_fromRust$createCustomEmoji`(): CustomEmoji
    private external fun `customEmoji_fromRust$createInstance`(): Cache<Instance>
 
    @Test
    fun customEmoji_nulls_fromRust() {
+      `customEmoji_nulls_fromRust$createRepositories`()
+
       val customEmoji = `customEmoji_nulls_fromRust$createCustomEmoji`()
 
       assertEquals(
@@ -240,6 +257,7 @@ class ConvertJniTest {
       )
    }
 
+   private external fun `customEmoji_nulls_fromRust$createRepositories`()
    private external fun `customEmoji_nulls_fromRust$createCustomEmoji`(): CustomEmoji
    private external fun `customEmoji_nulls_fromRust$createInstance`(): Cache<Instance>
 
@@ -890,6 +908,8 @@ class ConvertJniTest {
 
    @Test
    fun poll_toRust() {
+      `poll_toRust$createRepositories`()
+
       val instance = `poll_toRust$createInstance`()
 
       val noCredential = Poll.NoCredential(
@@ -938,6 +958,7 @@ class ConvertJniTest {
       `poll_toRust$assert`(poll)
    }
 
+   private external fun `poll_toRust$createRepositories`()
    private external fun `poll_toRust$createInstance`(): Cache<Instance>
 
    private external fun `poll_toRust$assertNoCredential`(
@@ -952,6 +973,8 @@ class ConvertJniTest {
 
    @Test
    fun poll_nulls_toRust() {
+      `poll_nulls_toRust$createRepositories`()
+
       val instance = `poll_nulls_toRust$createInstance`()
 
       val noCredential = Poll.NoCredential(
@@ -981,6 +1004,7 @@ class ConvertJniTest {
       `poll_nulls_toRust$assert`(poll)
    }
 
+   private external fun `poll_nulls_toRust$createRepositories`()
    private external fun `poll_nulls_toRust$createInstance`(): Cache<Instance>
 
    private external fun `poll_nulls_toRust$assertNoCredential`(
@@ -995,6 +1019,8 @@ class ConvertJniTest {
 
    @Test
    fun poll_fromRust() {
+      `poll_fromRust$createRepositories`()
+
       val poll = `poll_fromRust$createPoll`()
       val instance = `poll_fromRust$getInstanceCache`()
 
@@ -1044,11 +1070,14 @@ class ConvertJniTest {
       )
    }
 
+   private external fun `poll_fromRust$createRepositories`()
    private external fun `poll_fromRust$createPoll`(): Poll
    private external fun `poll_fromRust$getInstanceCache`(): Cache<Instance>
 
    @Test
    fun poll_nulls_fromRust() {
+      `poll_nulls_fromRust$createRepositories`()
+
       val poll = `poll_nulls_fromRust$createPoll`()
       val instance = `poll_nulls_fromRust$getInstanceCache`()
 
@@ -1079,6 +1108,7 @@ class ConvertJniTest {
       )
    }
 
+   private external fun `poll_nulls_fromRust$createRepositories`()
    private external fun `poll_nulls_fromRust$createPoll`(): Poll
    private external fun `poll_nulls_fromRust$getInstanceCache`(): Cache<Instance>
 
@@ -1086,6 +1116,8 @@ class ConvertJniTest {
 
    @Test
    fun previewCard_toRust() {
+      `previewCard_toRust$createRepositories`()
+
       val instance = `previewCard_toRust$createInstance`()
 
       val previewCard = PreviewCard(
@@ -1147,6 +1179,7 @@ class ConvertJniTest {
       `previewCard_toRust$assert`(previewCard)
    }
 
+   private external fun `previewCard_toRust$createRepositories`()
    private external fun `previewCard_toRust$createInstance`(): Cache<Instance>
    private external fun `previewCard_toRust$saveAccount`(account: Account): Cache<Account>
    private external fun `previewCard_toRust$assert`(previewCard: PreviewCard)
@@ -1176,6 +1209,8 @@ class ConvertJniTest {
 
    @Test
    fun previewCard_fromRust() {
+      `previewCard_fromRust$createRepositories`()
+
       val previewCard = `previewCard_fromRust$createPreviewCard`()
 
       assertEquals(
@@ -1198,6 +1233,7 @@ class ConvertJniTest {
       )
    }
 
+   private external fun `previewCard_fromRust$createRepositories`()
    private external fun `previewCard_fromRust$createPreviewCard`(): PreviewCard
 
    @Test
@@ -1230,6 +1266,8 @@ class ConvertJniTest {
 
    @Test
    fun role_toRust() {
+      `role_toRust$createRepositories`()
+
       val role = Role(
          instance = `role_toRust$createInstance`(),
          Role.Id("id"),
@@ -1242,11 +1280,14 @@ class ConvertJniTest {
       `role_toRust$assert`(role)
    }
 
+   private external fun `role_toRust$createRepositories`()
    private external fun `role_toRust$createInstance`(): Cache<Instance>
    private external fun `role_toRust$assert`(role: Role)
 
    @Test
    fun role_nulls_toRust() {
+      `role_nulls_toRust$createRepositories`()
+
       val role = Role(
          instance = `role_nulls_toRust$createInstance`(),
          id = null,
@@ -1259,11 +1300,14 @@ class ConvertJniTest {
       `role_nulls_toRust$assert`(role)
    }
 
+   private external fun `role_nulls_toRust$createRepositories`()
    private external fun `role_nulls_toRust$createInstance`(): Cache<Instance>
    private external fun `role_nulls_toRust$assert`(role: Role)
 
    @Test
    fun role_fromRust() {
+      `role_fromRust$createRepositories`()
+
       val role = `role_fromRust$createRole`()
 
       assertEquals(
@@ -1279,11 +1323,14 @@ class ConvertJniTest {
       )
    }
 
+   private external fun `role_fromRust$createRepositories`()
    private external fun `role_fromRust$createRole`(): Role
    private external fun `role_fromRust$createInstance`(): Cache<Instance>
 
    @Test
    fun role_nulls_fromRust() {
+      `role_nulls_fromRust$createRepositories`()
+
       val role = `role_nulls_fromRust$createRole`()
 
       assertEquals(
@@ -1299,6 +1346,7 @@ class ConvertJniTest {
       )
    }
 
+   private external fun `role_nulls_fromRust$createRepositories`()
    private external fun `role_nulls_fromRust$createRole`(): Role
    private external fun `role_nulls_fromRust$createInstance`(): Cache<Instance>
 
@@ -1306,6 +1354,8 @@ class ConvertJniTest {
 
    @Test
    fun status_toRust() {
+      `status_toRust$createRepositories`()
+
       val instance = `status_toRust$createInstance`()
       val account = `status_toRust$createAccount`()
       val boostedStatus = `status_toRust$createBoostedStatus`()
@@ -1484,6 +1534,7 @@ class ConvertJniTest {
       `status_toRust$assert`(status)
    }
 
+   private external fun `status_toRust$createRepositories`()
    private external fun `status_toRust$createInstance`(): Cache<Instance>
    private external fun `status_toRust$createAccount`(): Cache<Account>
    private external fun `status_toRust$createBoostedStatus`(): Cache<Status>
@@ -1502,6 +1553,8 @@ class ConvertJniTest {
 
    @Test
    fun status_nulls_toRust() {
+      `status_nulls_toRust$createRepositories`()
+
       val instance = `status_nulls_toRust$createInstance`()
 
       val noCredential = Status.NoCredential(
@@ -1552,6 +1605,7 @@ class ConvertJniTest {
       `status_nulls_toRust$assert`(status)
    }
 
+   private external fun `status_nulls_toRust$createRepositories`()
    private external fun `status_nulls_toRust$createInstance`(): Cache<Instance>
 
    private external fun `status_nulls_toRust$assertNoCredential`(
@@ -1566,6 +1620,8 @@ class ConvertJniTest {
 
    @Test
    fun status_fromRust() {
+      `status_fromRust$createRepositories`()
+
       val status = `status_fromRust$createStatus`()
 
       val instanceUrl = status.id.instanceUrl
@@ -1744,10 +1800,13 @@ class ConvertJniTest {
       )
    }
 
+   private external fun `status_fromRust$createRepositories`()
    private external fun `status_fromRust$createStatus`(): Status
 
    @Test
    fun status_nulls_fromRust() {
+      `status_nulls_fromRust$createRepositories`()
+
       val status = `status_nulls_fromRust$createStatus`()
 
       val instanceUrl = status.id.instanceUrl
@@ -1800,5 +1859,6 @@ class ConvertJniTest {
       )
    }
 
+   private external fun `status_nulls_fromRust$createRepositories`()
    private external fun `status_nulls_fromRust$createStatus`(): Status
 }
