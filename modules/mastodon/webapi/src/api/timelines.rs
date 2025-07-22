@@ -18,11 +18,11 @@ use reqwest::blocking::Client;
 use url::Url;
 use crate::entity::status::Status;
 
-#[cfg(feature = "mock")]
+#[cfg(feature = "testable")]
 use std::cell::RefCell;
 
 thread_local! {
-   #[cfg(feature = "mock")]
+   #[cfg(feature = "testable")]
    static GET_HOME: RefCell<Box<dyn Fn(&Client, &Url, &str) -> anyhow::Result<Vec<Status>>>>
       = RefCell::new(Box::new(|_, _, _| panic!()));
 }
@@ -32,7 +32,7 @@ pub fn get_home(
    instance_base_url: &Url,
    access_token: &str
 ) -> anyhow::Result<Vec<Status>> {
-   #[cfg(not(feature = "mock"))]
+   #[cfg(not(feature = "testable"))]
    {
       let url = instance_base_url.join("api/v1/timelines/home")?;
 
@@ -45,7 +45,7 @@ pub fn get_home(
       Ok(statuses)
    }
 
-   #[cfg(feature = "mock")]
+   #[cfg(feature = "testable")]
    {
       GET_HOME.with(|f| {
          let f = f.borrow();
@@ -55,7 +55,7 @@ pub fn get_home(
 }
 
 #[allow(dead_code)]
-#[cfg(feature = "mock")]
+#[cfg(feature = "testable")]
 pub fn inject_get_verify_credentials(
    get_verify_credentials: impl Fn(&Client, &Url, &str) -> anyhow::Result<Vec<Status>> + 'static
 ) {

@@ -76,7 +76,7 @@ tasks.register('cargoBuild', Exec) {
 tasks.register('cargoTest', Exec) {
    workingDir rootProject.projectDir
 
-   def args = ['+nightly', 'test', '--features', 'mock']
+   def args = ['+nightly', 'test', '--features', 'testable']
    if (isXterm()) {
       args += '--color=always'
    }
