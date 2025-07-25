@@ -41,6 +41,7 @@ mod jni_tests {
    use panoptiqon::Panoptiqon;
    use panoptiqon::repository::Repository;
    use crate::account::Account;
+   use crate::application::ApplicationId;
    use crate::instance::Instance;
    use crate::jvm_types::{
       JvmAccount, JvmCustomEmoji, JvmFilterResult, JvmInstance, JvmMediaAttachment,
@@ -2663,6 +2664,10 @@ mod jni_tests {
                },
             ],
             application: Some(Application {
+               id: ApplicationId {
+                  instance_url: "https://example.com/instance/url".parse().unwrap(),
+                  application_name: "app name".to_string(),
+               },
                instance: {
                   let instance_url
                      = "https://example.com/instance/url".parse().unwrap();
@@ -3277,6 +3282,10 @@ mod jni_tests {
             },
          ],
          application: Some(Application {
+            id: ApplicationId {
+               instance_url: "https://example.com/instance/url".parse().unwrap(),
+               application_name: "app name".to_string(),
+            },
             instance: instance.clone(),
             name: "app name".to_string(),
             website: Some("https://example.com/app".parse().unwrap()),

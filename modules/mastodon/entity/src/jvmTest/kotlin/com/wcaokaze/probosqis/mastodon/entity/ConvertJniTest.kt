@@ -1405,6 +1405,10 @@ class ConvertJniTest {
             ),
          ),
          Application(
+            Application.Id(
+               instance.value.url,
+               "app name",
+            ),
             instance,
             "app name",
             website = Url("https://example.com/app"),
@@ -1672,6 +1676,10 @@ class ConvertJniTest {
                ),
             ),
             Application(
+               Application.Id(
+                  instanceUrl,
+                  "app name",
+               ),
                instance = status.noCredential.value.application!!.instance,
                "app name",
                website = Url("https://example.com/app"),

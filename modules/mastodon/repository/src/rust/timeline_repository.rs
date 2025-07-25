@@ -184,7 +184,7 @@ mod test {
       use mastodon_entity::account::{
          Account, AccountId, AccountLocalId, AccountProfileField
       };
-      use mastodon_entity::application::Application;
+      use mastodon_entity::application::{Application, ApplicationId};
       use mastodon_entity::custom_emoji::CustomEmoji;
       use mastodon_entity::filter::{
          Filter, FilterAction, FilterContext, FilterId, FilterKeyword,
@@ -992,6 +992,10 @@ mod test {
                            },
                         ],
                         application: Some(Application {
+                           id: ApplicationId {
+                              instance_url: instance_cache.get().url.clone(),
+                              application_name: "application name".to_string(),
+                           },
                            instance: instance_cache.clone(),
                            name: "application name".to_string(),
                            website: Some("https://example.com/application".parse().unwrap()),
