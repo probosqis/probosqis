@@ -18,15 +18,31 @@ use std::path::{Path, PathBuf};
 use url::Url;
 use panoptiqon::cache::CacheContent;
 use crate::account::{Account, AccountId, CredentialAccount};
+use crate::application::{Application, ApplicationId};
 use crate::instance::Instance;
 use crate::poll::{NoCredentialPoll, PollId};
 use crate::status::{NoCredentialStatus, Status, StatusId};
 
 #[cfg(feature = "jvm")]
 use crate::jvm_types::{
-   JvmAccount, JvmCredentialAccount, JvmInstance, JvmPollNoCredential, JvmStatus,
+   JvmAccount, JvmApplication, JvmCredentialAccount, JvmInstance, JvmPollNoCredential, JvmStatus,
    JvmStatusNoCredential,
 };
+
+impl CacheContent for Application {
+   type Key = ApplicationId;
+
+   #[cfg(feature = "jvm")]
+   type JvmType<'local> = JvmApplication<'local>;
+
+   fn key(&self) -> &ApplicationId {
+      &self.id
+   }
+
+   fn file_path_for_key(dir_path: &Path, id: &ApplicationId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.application_name)
+   }
+}
 
 impl CacheContent for Instance {
    type Key = Url;
