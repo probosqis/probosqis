@@ -38,6 +38,7 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
    use std::path::Path;
    use foundation_entity::image_bytes::ImageBytes;
    use mastodon_entity::account::{Account, CredentialAccount};
+   use mastodon_entity::application::Application;
    use mastodon_entity::instance::Instance;
    use mastodon_entity::poll::NoCredentialPoll;
    use mastodon_entity::status::{NoCredentialStatus, Status};
@@ -49,6 +50,7 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
    let repository_creator = JvmRepositoryCreator::new(&mut env);
 
    let instance_repo             = PANOPTIQON.new_repository::<Instance>          (&mut env, Path::new(&data_dir_path).join("mastodon/Instance"));
+   let application_repo          = PANOPTIQON.new_repository::<Application>       (&mut env, Path::new(&data_dir_path).join("mastodon/Application"));
    let account_repo              = PANOPTIQON.new_repository::<Account>           (&mut env, Path::new(&data_dir_path).join("mastodon/Account"));
    let credential_account_repo   = PANOPTIQON.new_repository::<CredentialAccount> (&mut env, Path::new(&data_dir_path).join("mastodon/CredentialAccount"));
    let account_icon_repo         = PANOPTIQON.new_repository::<ImageBytes>        (&mut env, Path::new(&data_dir_path).join("mastodon/ImageBytes"));
@@ -56,6 +58,7 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
    let no_credential_status_repo = PANOPTIQON.new_repository::<NoCredentialStatus>(&mut env, Path::new(&data_dir_path).join("mastodon/Status"));
    let no_credential_poll_repo   = PANOPTIQON.new_repository::<NoCredentialPoll>  (&mut env, Path::new(&data_dir_path).join("mastodon/NoCredentialPoll"));
    let instance_repo             = repository_creator.create_jvm_wrapper(&mut env, instance_repo);
+   let application_repo          = repository_creator.create_jvm_wrapper(&mut env, application_repo);
    let account_repo              = repository_creator.create_jvm_wrapper(&mut env, account_repo);
    let credential_account_repo   = repository_creator.create_jvm_wrapper(&mut env, credential_account_repo);
    let account_icon_repo         = repository_creator.create_jvm_wrapper(&mut env, account_icon_repo);
@@ -73,9 +76,11 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
          Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
          Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
          Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
       )V",
       &[
          instance_repo            .j_object().into(),
+         application_repo         .j_object().into(),
          account_repo             .j_object().into(),
          credential_account_repo  .j_object().into(),
          account_icon_repo        .j_object().into(),

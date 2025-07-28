@@ -142,6 +142,10 @@ object Main {
          get<CacheRepositories>().instance
       }
 
+      single(named("applicationRepository")) {
+         get<CacheRepositories>().application
+      }
+
       single(named("accountCacheRepository")) {
          get<CacheRepositories>().account
       }
