@@ -15,7 +15,7 @@
  */
 
 use mastodon_entity::account::{Account, CredentialAccount};
-use mastodon_entity::application::Application;
+use mastodon_entity::application::{Application, ApplicationId};
 use mastodon_entity::instance::Instance;
 use mastodon_entity::token::Token;
 use panoptiqon::cache::Cache;
@@ -36,6 +36,7 @@ pub struct AppRepository<'jni> {
 }
 
 impl AppRepository<'_> {
+   const APP_NAME: &'static str = "Probosqis";
    const ANDROID_REDIRECT_URI: &'static str = "https://probosqis.wcaokaze.com/auth/callback";
    const DESKTOP_REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
 
@@ -54,15 +55,16 @@ impl AppRepository<'_> {
    }
 
    pub fn post_app(
-      &mut self,
-      instance: Instance,
+      &self,
+      instance_cache: Cache<Instance>,
       redirect_uri: &str,
-      instance_cache_repo: &mut Repository<Instance>
    ) -> anyhow::Result<Application> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::apps;
       use semver::Version;
       use crate::conversion;
+
+      let instance = instance_cache.get();
 
       let instance_version = Version::parse(&instance.version)
          .unwrap_or(Version::new(0, 0, 0));
@@ -70,7 +72,7 @@ impl AppRepository<'_> {
       let api_application  = if instance_version < Version::new(4, 3, 0) {
          apps::post_apps_v0(
             &CLIENT, &instance.url,
-            /* client_name = */ "Probosqis",
+            /* client_name = */ Self::APP_NAME,
             /* redirect_uris = */ redirect_uri,
             /* scopes = */ Some("read write push"),
             /* website = */ None
@@ -78,7 +80,7 @@ impl AppRepository<'_> {
       } else {
          apps::post_apps_v4_3_0(
             &CLIENT, &instance.url,
-            /* client_name = */ "Probosqis",
+            /* client_name = */ Self::APP_NAME,
             /* redirect_uris = */ &[
                Self::ANDROID_REDIRECT_URI,
                Self::DESKTOP_REDIRECT_URI,
@@ -88,8 +90,6 @@ impl AppRepository<'_> {
          )?
       };
 
-      let instance_cache = instance_cache_repo.save(instance);
-
       let application = conversion
          ::application::from_api(api_application, instance_cache)?;
 
@@ -98,23 +98,40 @@ impl AppRepository<'_> {
 
    pub fn get_authorize_url(
       &self,
-      instance_cache: &Cache<Instance>,
-      client_id: &str,
-      redirect_uri: &str
+      instance: Instance,
+      redirect_uri: &str,
+      instance_cache_repo: &mut Repository<Instance>,
+      application_cache_repo: &mut Repository<Application>
    ) -> anyhow::Result<Url> {
+      use anyhow::Context;
       use mastodon_webapi::api::oauth;
 
-      let authorize_url = {
-         oauth::get_authorize_url(
-            /* instance_base_url = */ &instance_cache.get().url,
-            /* response_type = */ "code",
-            client_id,
-            redirect_uri,
-            /* scope = */ Some("read write push"),
-            /* force_login = */ None,
-            /* lang = */ None
-         )?
+      let instance_cache = instance_cache_repo.save(instance);
+
+      let application_id = ApplicationId {
+         instance_url: instance_cache.get().url.clone(),
+         application_name: Self::APP_NAME.to_string(),
       };
+
+      let application_cache = application_cache_repo
+         .load(&application_id)
+         .or_else(|_| -> anyhow::Result<_> {
+            let application = self.post_app(
+               Cache::clone(&instance_cache), redirect_uri
+            )?;
+            Ok(application_cache_repo.save(application))
+         })?;
+
+      let authorize_url = oauth::get_authorize_url(
+         /* instance_base_url = */ &instance_cache.get().url,
+         /* response_type = */ "code",
+         /* client_id = */ application_cache.get().client_id.as_ref()
+            .context("No client id provided")?,
+         redirect_uri,
+         /* scope = */ Some("read write push"),
+         /* force_login = */ None,
+         /* lang = */ None
+      )?;
 
       Ok(authorize_url)
    }
@@ -267,46 +284,58 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getAuthorizeUrl<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JvmCache<'local, JvmInstance<'local>>,
-      client_id: JvmString<'local>
+      instance: JvmInstance<'local>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>,
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>
    ) -> JvmString<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
 
-      get_authorize_url(&mut env, instance, client_id, AppRepository::DESKTOP_REDIRECT_URI)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_authorize_url(
+         &mut env, instance, AppRepository::DESKTOP_REDIRECT_URI,
+         instance_cache_repo, application_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_getAuthorizeUrl<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JvmCache<'local, JvmInstance<'local>>,
-      client_id: JvmString<'local>
+      instance: JvmInstance<'local>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>,
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>
    ) -> JvmString<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
 
-      get_authorize_url(&mut env, instance, client_id, AppRepository::ANDROID_REDIRECT_URI)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_authorize_url(
+         &mut env, instance, AppRepository::ANDROID_REDIRECT_URI,
+         instance_cache_repo, application_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_authorize_url<'local>(
       env: &mut JNIEnv<'local>,
-      instance: JvmCache<'local, JvmInstance<'local>>,
-      client_id: JvmString<'local>,
-      redirect_uri: &str
+      instance: JvmInstance<'local>,
+      redirect_uri: &str,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>,
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>
    ) -> anyhow::Result<JvmString<'local>> {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
       use super::AppRepository;
 
+      let instance = Instance::clone_from_jvm(env, &instance);
+
+      let mut instance_cache_repo = Repository::of(env, &instance_cache_repo).lock()
+         .map_err(|_| anyhow::anyhow!("instance repository was poisoned"))?;
+      let mut application_cache_repo = Repository::of(env, &application_cache_repo).lock()
+         .map_err(|_| anyhow::anyhow!("application repository was poisoned"))?;
+
       let app_repository = AppRepository::new(env);
-
-      let instance_cache = Cache::<Instance>::clone_from_jvm(env, &instance);
-      let client_id = String::clone_from_jvm(env, &client_id);
-
-      let authorize_url = app_repository
-         .get_authorize_url(&instance_cache, &client_id, redirect_uri)?;
+      let authorize_url = app_repository.get_authorize_url(
+         instance, redirect_uri,
+         &mut instance_cache_repo, &mut application_cache_repo
+      )?;
 
       let authorize_url = authorize_url.as_str().clone_into_jvm(env);
       Ok(authorize_url)
@@ -507,8 +536,8 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance("4.1.0"), AppRepository::ANDROID_REDIRECT_URI,
-            &mut instance_cache_repo.lock().unwrap()
+            instance_cache_repo.lock().unwrap().save(instance("4.1.0")),
+            AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
@@ -519,8 +548,8 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance("4.2.0"), AppRepository::ANDROID_REDIRECT_URI,
-            &mut instance_cache_repo.lock().unwrap()
+            instance_cache_repo.lock().unwrap().save(instance("4.2.0")),
+            AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
@@ -531,8 +560,8 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance("4.2.9"), AppRepository::ANDROID_REDIRECT_URI,
-            &mut instance_cache_repo.lock().unwrap()
+            instance_cache_repo.lock().unwrap().save(instance("4.2.9")),
+            AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
@@ -543,8 +572,8 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance("4.3.0"), AppRepository::ANDROID_REDIRECT_URI,
-            &mut instance_cache_repo.lock().unwrap()
+            instance_cache_repo.lock().unwrap().save(instance("4.3.0")),
+            AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
@@ -555,8 +584,8 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance("4.3.1"), AppRepository::ANDROID_REDIRECT_URI,
-            &mut instance_cache_repo.lock().unwrap()
+            instance_cache_repo.lock().unwrap().save(instance("4.3.1")),
+            AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
@@ -567,8 +596,8 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance("4.4.0"), AppRepository::ANDROID_REDIRECT_URI,
-            &mut instance_cache_repo.lock().unwrap()
+            instance_cache_repo.lock().unwrap().save(instance("4.4.0")),
+            AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
@@ -612,8 +641,8 @@ mod test {
       });
 
       let application = repository.post_app(
-         instance.clone(), "https://example.com/callback",
-         &mut instance_cache_repo.lock().unwrap()
+         instance_cache_repo.lock().unwrap().save(instance.clone()),
+         "https://example.com/callback"
       );
 
       assert_eq!(
@@ -638,8 +667,8 @@ mod test {
       });
 
       let application = repository.post_app(
-         instance.clone(), "https://example.com/callback",
-         &mut instance_cache_repo.lock().unwrap()
+         instance_cache_repo.lock().unwrap().save(instance.clone()),
+         "https://example.com/callback"
       );
 
       assert_eq!(
@@ -655,7 +684,8 @@ mod test {
    fn authorize_url() {
       use chrono::{TimeZone, Utc};
       use mastodon_entity::instance::Instance;
-      use mastodon_webapi::api::oauth;
+      use mastodon_webapi::api::{apps, oauth};
+      use mastodon_webapi::entity::application::Application;
       use panoptiqon::Panoptiqon;
       use url::Url;
 
@@ -665,9 +695,29 @@ mod test {
       let mut instance_cache_repo = panoptiqon.new_repository(
          "test/AppRepository/authorize_url/Instance"
       );
+      let mut application_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/authorize_url/Application"
+      );
 
       oauth::inject_get_authorize_url(|instance_base_url, _, _, _, _, _, _|
          Ok(instance_base_url.join("oauth/authorize")?)
+      );
+      apps::inject_post_apps_v0(|_, _, client_name, redirect_uris, scopes, website|
+         Ok(Application {
+            name: client_name.to_string(),
+            website: website.map(|s| s.to_string()),
+            scopes: scopes.map(|scopes| {
+               scopes.split_whitespace()
+                  .map(|s| s.to_string())
+                  .collect()
+            }),
+            redirect_uris: Some(vec![redirect_uris.to_string()]),
+            redirect_uri: Some(redirect_uris.to_string()),
+            vapid_key: None,
+            client_id: Some("client id".to_string()),
+            client_secret: Some("client secret".to_string()),
+            client_secret_expires_at: None,
+         })
       );
 
       let instance = Instance {
@@ -676,12 +726,11 @@ mod test {
          version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let instance_cache = instance_cache_repo.lock().unwrap().save(instance);
-
       let authorize_url = repository.get_authorize_url(
-         &instance_cache,
-         "client_id",
-         "redirect_uri"
+         instance,
+         "redirect_uri",
+         &mut instance_cache_repo.lock().unwrap(),
+         &mut application_cache_repo.lock().unwrap()
       ).unwrap();
 
       assert_eq!(

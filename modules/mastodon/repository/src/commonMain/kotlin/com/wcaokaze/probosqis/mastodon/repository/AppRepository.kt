@@ -55,20 +55,7 @@ interface AppRepository {
    /**
     * @throws IOException
     */
-   fun getAuthorizeUrl(application: Application): Url
-
-   /**
-    * @throws IOException
-    */
-   fun getAuthorizeUrl(instance: Instance): Url {
-      val appCache = try {
-         loadAppCache(instance.url)
-      } catch (_: Exception) {
-         createApp(instance)
-      }
-
-      return getAuthorizeUrl(appCache.value)
-   }
+   fun getAuthorizeUrl(instance: Instance): Url
 
    /**
     * @throws IOException

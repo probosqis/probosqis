@@ -205,6 +205,7 @@ object Main {
          DesktopAppRepository(
             appDataDir,
             get(named("instanceRepository")),
+            get(named("applicationRepository")),
             get(named("accountCacheRepository")),
             get(named("credentialAccountCacheRepository"))
          )

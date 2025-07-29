@@ -37,6 +37,7 @@ import java.net.URLEncoder
 class AndroidAppRepository(
    appDataDir: File,
    private val instanceCacheRepository: Repository<Instance>,
+   private val applicationCacheRepository: Repository<Application>,
    private val accountCacheRepository: Repository<Account>,
    private val credentialAccountCacheRepository: Repository<CredentialAccount>
 ) : AppRepository {
@@ -69,16 +70,19 @@ class AndroidAppRepository(
       return loadCache<Application>(file, json).asCache()
    }
 
-   override fun getAuthorizeUrl(application: Application): Url {
-      val rawAuthorizeUrl = getAuthorizeUrl(
-         application.instance,
-         application.clientId ?: throw IOException()
+   override fun getAuthorizeUrl(instance: Instance): Url {
+      val authorizeUrl = getAuthorizeUrl(
+         instance, instanceCacheRepository, applicationCacheRepository
       )
 
-      return Url(rawAuthorizeUrl)
+      return Url(authorizeUrl)
    }
 
-   private external fun getAuthorizeUrl(instance: Cache<Instance>, clientId: String): String
+   private external fun getAuthorizeUrl(
+      instance: Instance,
+      instanceCacheRepo: Repository<Instance>,
+      applicationCacheRepo: Repository<Application>
+   ): String
 
    override fun getToken(application: Application, code: String): Token {
       return getToken(
