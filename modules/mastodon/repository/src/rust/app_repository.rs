@@ -229,58 +229,6 @@ mod jvm {
    use panoptiqon::repository::Repository;
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_postApp<'local>(
-      mut env: JNIEnv<'local>,
-      _obj: JObject<'local>,
-      instance: JvmInstance<'local>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
-   ) -> JvmApplication<'local> {
-      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
-      use super::AppRepository;
-
-      post_app(
-         &mut env, instance, AppRepository::DESKTOP_REDIRECT_URI,
-         instance_cache_repo
-      ).unwrap_or_throw_io_exception(&mut env)
-   }
-
-   #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_postApp<'local>(
-      mut env: JNIEnv<'local>,
-      _obj: JObject<'local>,
-      instance: JvmInstance<'local>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
-   ) -> JvmApplication<'local> {
-      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
-      use super::AppRepository;
-
-      post_app(
-         &mut env, instance, AppRepository::ANDROID_REDIRECT_URI,
-         instance_cache_repo
-      ).unwrap_or_throw_io_exception(&mut env)
-   }
-
-   fn post_app<'local>(
-      env: &mut JNIEnv<'local>,
-      instance: JvmInstance<'local>,
-      redirect_uri: &str,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
-   ) -> anyhow::Result<JvmApplication<'local>> {
-      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
-      use super::AppRepository;
-
-      let mut app_repository = AppRepository::new(env);
-      let mut instance_cache_repo = Repository::of(env, &instance_cache_repo).lock()
-         .map_err(|_| anyhow::anyhow!("instance repository was poisoned"))?;
-
-      let instance = Instance::clone_from_jvm(env, &instance);
-      let application = app_repository.post_app(
-         instance, redirect_uri, &mut *instance_cache_repo
-      )?;
-      Ok(application.clone_into_jvm(env))
-   }
-
-   #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getAuthorizeUrl<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,

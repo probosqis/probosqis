@@ -45,11 +45,6 @@ interface AppRepository {
    /**
     * @throws IOException
     */
-   fun createApp(instance: Instance): Cache<Application>
-
-   /**
-    * @throws IOException
-    */
    fun loadAppCache(instanceBaseUrl: Url): Cache<Application>
 
    /**
