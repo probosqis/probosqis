@@ -54,7 +54,7 @@ mod jni_tests {
    struct LazyInitRepo<T>(
       &'static LazyLock<Panoptiqon>,
       &'static str,
-      Mutex<Option<Arc<Mutex<Repository<T>>>>>
+      Mutex<Option<Arc<Repository<T>>>>
    )
    where
       T: CacheContent + CloneIntoJvmHelper;
@@ -79,7 +79,7 @@ mod jni_tests {
          *repo.lock().unwrap() = Some(panoptiqon.new_repository(env, dir_name));
       }
 
-      fn repo(&self) -> Arc<Mutex<Repository<T>>> {
+      fn repo(&self) -> Arc<Repository<T>> {
          let outer_lock = self.2.lock().unwrap();
          let arc = outer_lock.as_ref().unwrap();
          Arc::clone(arc)
@@ -95,7 +95,7 @@ mod jni_tests {
          version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      instance_repo.repo().lock().unwrap().save(instance)
+      instance_repo.repo().save(instance)
    }
 
    fn save_account(
@@ -139,7 +139,7 @@ mod jni_tests {
          followee_count: None,
       };
 
-      account_repo.repo().lock().unwrap().save(account)
+      account_repo.repo().save(account)
    }
 
    #[allow(non_upper_case_globals)]
@@ -1494,7 +1494,7 @@ mod jni_tests {
          &mut env, &no_credential_poll
       );
 
-      let instance = poll_toRust_instance_repo.repo().lock().unwrap()
+      let instance = poll_toRust_instance_repo.repo()
          .load(&"https://example.com/instance/url".parse().unwrap()).unwrap();
 
       let instance_url = instance.get().url.clone();
@@ -1561,7 +1561,7 @@ mod jni_tests {
          &mut env, &no_credential_poll
       );
 
-      let cache = poll_toRust_no_credential_poll_repo.repo().lock().unwrap()
+      let cache = poll_toRust_no_credential_poll_repo.repo()
          .save(no_credential_poll);
 
       cache.clone_into_jvm(&mut env)
@@ -1585,7 +1585,7 @@ mod jni_tests {
          local: PollLocalId("poll id".to_string()),
       };
 
-      let no_credential = poll_toRust_no_credential_poll_repo.repo().lock().unwrap()
+      let no_credential = poll_toRust_no_credential_poll_repo.repo()
          .load(&poll_id).unwrap();
 
       assert_eq!(
@@ -1645,7 +1645,7 @@ mod jni_tests {
          &mut env, &no_credential_poll
       );
 
-      let instance = poll_nulls_toRust_instance_repo.repo().lock().unwrap()
+      let instance = poll_nulls_toRust_instance_repo.repo()
          .load(&"https://example.com/instance/url".parse().unwrap()).unwrap();
 
       let instance_url = instance.get().url.clone();
@@ -1685,7 +1685,7 @@ mod jni_tests {
          &mut env, &no_credential_poll
       );
 
-      let cache = poll_nulls_toRust_no_credential_poll_repo.repo().lock().unwrap()
+      let cache = poll_nulls_toRust_no_credential_poll_repo.repo()
          .save(no_credential_poll);
 
       cache.clone_into_jvm(&mut env)
@@ -1709,7 +1709,7 @@ mod jni_tests {
          local: PollLocalId("poll id".to_string()),
       };
 
-      let no_credential = poll_nulls_toRust_no_credential_poll_repo.repo().lock().unwrap()
+      let no_credential = poll_nulls_toRust_no_credential_poll_repo.repo()
          .load(&poll_id).unwrap();
 
       assert_eq!(
@@ -1805,7 +1805,7 @@ mod jni_tests {
          ],
       };
 
-      let no_credential = poll_fromRust_no_credential_poll_repo.repo().lock().unwrap()
+      let no_credential = poll_fromRust_no_credential_poll_repo.repo()
          .save(no_credential);
 
       let poll = Poll {
@@ -1828,7 +1828,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      let instance = poll_fromRust_instance_repo.repo().lock().unwrap()
+      let instance = poll_fromRust_instance_repo.repo()
          .load(&"https://example.com/instance/url".parse().unwrap()).unwrap();
 
       instance.clone_into_jvm(&mut env)
@@ -1887,7 +1887,7 @@ mod jni_tests {
          emojis: vec![],
       };
 
-      let no_credential = poll_nulls_fromRust_no_credential_poll_repo.repo().lock().unwrap()
+      let no_credential = poll_nulls_fromRust_no_credential_poll_repo.repo()
          .save(no_credential);
 
       let poll = Poll {
@@ -1910,7 +1910,7 @@ mod jni_tests {
    ) -> JvmCache<'local, JvmInstance<'local>> {
       use panoptiqon::convert_jvm::CloneIntoJvm;
 
-      let instance = poll_nulls_fromRust_instance_repo.repo().lock().unwrap()
+      let instance = poll_nulls_fromRust_instance_repo.repo()
          .load(&"https://example.com/instance/url".parse().unwrap()).unwrap();
 
       instance.clone_into_jvm(&mut env)
@@ -1960,7 +1960,7 @@ mod jni_tests {
 
       let account = Account::clone_from_jvm(&mut env, &account);
 
-      previewCard_toRust_account_repo.repo().lock().unwrap()
+      previewCard_toRust_account_repo.repo()
          .save(account)
          .clone_into_jvm(&mut env)
    }
@@ -2119,7 +2119,6 @@ mod jni_tests {
                };
 
                let account_cache = previewCard_fromRust_account_repo.repo()
-                  .lock().unwrap()
                   .save(account);
 
                PreviewCardAuthor {
@@ -2445,7 +2444,7 @@ mod jni_tests {
             instance_url: "https://example.com/instance/url".parse().unwrap(),
             local: StatusLocalId("boosted status id".to_string())
          },
-         no_credential: status_toRust_noCredentialStatus_repo.repo().lock().unwrap().save(
+         no_credential: status_toRust_noCredentialStatus_repo.repo().save(
             NoCredentialStatus {
                id: StatusId {
                   instance_url: "https://example.com/instance/url".parse().unwrap(),
@@ -2487,8 +2486,7 @@ mod jni_tests {
          filter_results: vec![],
       };
 
-      status_toRust_status_repo.repo().lock().unwrap().save(status)
-         .clone_into_jvm(&mut env)
+      status_toRust_status_repo.repo().save(status).clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
@@ -2513,7 +2511,7 @@ mod jni_tests {
          emojis: vec![],
       };
 
-      status_toRust_noCredentialPoll_repo.repo().lock().unwrap().save(no_credential_poll)
+      status_toRust_noCredentialPoll_repo.repo().save(no_credential_poll)
          .clone_into_jvm(&mut env)
    }
 
@@ -2525,7 +2523,7 @@ mod jni_tests {
       use panoptiqon::convert_jvm::CloneIntoJvm;
       use crate::account::{AccountId, AccountLocalId};
 
-      let instance = status_toRust_instance_repo.repo().lock().unwrap()
+      let instance = status_toRust_instance_repo.repo()
          .load(&"https://example.com/instance/url".parse().unwrap()).unwrap();
 
       let instance_url = instance.get().url.clone();
@@ -2562,8 +2560,7 @@ mod jni_tests {
          followee_count: None,
       };
 
-      status_toRust_account_repo.repo().lock().unwrap().save(account)
-         .clone_into_jvm(&mut env)
+      status_toRust_account_repo.repo().save(account).clone_into_jvm(&mut env)
    }
 
    #[no_mangle]
@@ -2607,9 +2604,7 @@ mod jni_tests {
                   local: AccountLocalId("account id".to_string())
                };
 
-               let account = status_toRust_account_repo.repo().lock().unwrap()
-                  .load(&id).unwrap();
-
+               let account = status_toRust_account_repo.repo().load(&id).unwrap();
                Some(account)
             },
             content: Some("content".to_string()),
@@ -2672,7 +2667,7 @@ mod jni_tests {
                   let instance_url
                      = "https://example.com/instance/url".parse().unwrap();
 
-                  let instance = status_toRust_instance_repo.repo().lock().unwrap()
+                  let instance = status_toRust_instance_repo.repo()
                      .load(&instance_url).unwrap();
                   instance
                },
@@ -2725,7 +2720,7 @@ mod jni_tests {
                      let instance_url
                         = "https://example.com/instance/url".parse().unwrap();
 
-                     let instance = status_toRust_instance_repo.repo().lock().unwrap()
+                     let instance = status_toRust_instance_repo.repo()
                         .load(&instance_url).unwrap();
                      instance
                   },
@@ -2755,8 +2750,7 @@ mod jni_tests {
                   local: StatusLocalId("boosted status id".to_string())
                };
 
-               let boosted_status = status_toRust_noCredentialStatus_repo
-                  .repo().lock().unwrap()
+               let boosted_status = status_toRust_noCredentialStatus_repo.repo()
                   .load(&id).unwrap();
 
                Some(boosted_status)
@@ -2767,8 +2761,7 @@ mod jni_tests {
                   local: PollLocalId("poll id".to_string())
                };
 
-               let no_credential_poll = status_toRust_noCredentialPoll_repo
-                  .repo().lock().unwrap()
+               let no_credential_poll = status_toRust_noCredentialPoll_repo.repo()
                   .load(&id).unwrap();
 
                Some(no_credential_poll)
@@ -2784,8 +2777,7 @@ mod jni_tests {
                      local: AccountLocalId("account id".to_string()),
                   };
 
-                  let account = status_toRust_account_repo
-                     .repo().lock().unwrap()
+                  let account = status_toRust_account_repo.repo()
                      .load(&id).unwrap();
 
                   vec![
@@ -2825,7 +2817,7 @@ mod jni_tests {
          &mut env, &no_credential_status
       );
 
-      status_toRust_noCredentialStatus_repo.repo().lock().unwrap()
+      status_toRust_noCredentialStatus_repo.repo()
          .save(no_credential_status)
          .clone_into_jvm(&mut env)
    }
@@ -2860,7 +2852,6 @@ mod jni_tests {
                };
 
                let no_credential = status_toRust_noCredentialStatus_repo.repo()
-                  .lock().unwrap()
                   .load(&id).unwrap();
                no_credential
             },
@@ -2870,9 +2861,7 @@ mod jni_tests {
                   local: StatusLocalId("boosted status id".to_string())
                };
 
-               let status = status_toRust_status_repo.repo().lock().unwrap()
-                  .load(&id).unwrap();
-
+               let status = status_toRust_status_repo.repo().load(&id).unwrap();
                Some(status)
             },
             poll: Some(Poll {
@@ -2887,7 +2876,6 @@ mod jni_tests {
                   };
 
                   let no_credential = status_toRust_noCredentialPoll_repo.repo()
-                     .lock().unwrap()
                      .load(&id).unwrap();
                   no_credential
                },
@@ -3033,7 +3021,7 @@ mod jni_tests {
          &mut env, &no_credential_status
       );
 
-      status_nulls_toRust_noCredentialStatus_repo.repo().lock().unwrap()
+      status_nulls_toRust_noCredentialStatus_repo.repo()
          .save(no_credential_status)
          .clone_into_jvm(&mut env)
    }
@@ -3062,7 +3050,6 @@ mod jni_tests {
                };
 
                let no_credential = status_nulls_toRust_noCredentialStatus_repo.repo()
-                  .lock().unwrap()
                   .load(&id).unwrap();
                no_credential
             },
@@ -3154,39 +3141,38 @@ mod jni_tests {
             local: StatusLocalId("boosted status id".to_string())
          },
          no_credential: {
-            let no_credential = status_toRust_noCredentialStatus_repo.repo()
-               .lock().unwrap().save(
-                  NoCredentialStatus {
-                     id: StatusId {
-                        instance_url: "https://example.com/instance/url".parse().unwrap(),
-                        local: StatusLocalId("boosted status id".to_string())
-                     },
-                     uri: None,
-                     created_time: None,
-                     account: None,
-                     content: None,
-                     visibility: None,
-                     is_sensitive: None,
-                     spoiler_text: None,
-                     media_attachments: vec![],
-                     application: None,
-                     mentions: vec![],
-                     hashtags: vec![],
-                     emojis: vec![],
-                     boost_count: None,
-                     favorite_count: None,
-                     reply_count: None,
-                     url: None,
-                     replied_status_id: None,
-                     replied_account_id: None,
-                     boosted_status: None,
-                     poll: None,
-                     card: None,
-                     language: None,
-                     text: None,
-                     edited_time: None,
-                  }
-               );
+            let no_credential = status_toRust_noCredentialStatus_repo.repo().save(
+               NoCredentialStatus {
+                  id: StatusId {
+                     instance_url: "https://example.com/instance/url".parse().unwrap(),
+                     local: StatusLocalId("boosted status id".to_string())
+                  },
+                  uri: None,
+                  created_time: None,
+                  account: None,
+                  content: None,
+                  visibility: None,
+                  is_sensitive: None,
+                  spoiler_text: None,
+                  media_attachments: vec![],
+                  application: None,
+                  mentions: vec![],
+                  hashtags: vec![],
+                  emojis: vec![],
+                  boost_count: None,
+                  favorite_count: None,
+                  reply_count: None,
+                  url: None,
+                  replied_status_id: None,
+                  replied_account_id: None,
+                  boosted_status: None,
+                  poll: None,
+                  card: None,
+                  language: None,
+                  text: None,
+                  edited_time: None,
+               }
+            );
             no_credential
          },
          boosted_status: None,
@@ -3199,8 +3185,7 @@ mod jni_tests {
          filter_results: vec![],
       };
 
-      let no_credential_poll = status_fromRust_noCredentialPoll_repo
-         .repo().lock().unwrap()
+      let no_credential_poll = status_fromRust_noCredentialPoll_repo.repo()
          .save(
             NoCredentialPoll {
                id: PollId {
@@ -3393,8 +3378,7 @@ mod jni_tests {
                   followee_count: None,
                };
 
-               let account_cache = status_fromRust_account_repo
-                  .repo().lock().unwrap()
+               let account_cache = status_fromRust_account_repo.repo()
                   .save(account);
 
                vec![
@@ -3426,13 +3410,11 @@ mod jni_tests {
          },
          no_credential: {
             let no_credential = status_fromRust_noCredentialStatus_repo.repo()
-               .lock().unwrap()
                .save(no_credential);
             no_credential
          },
          boosted_status: {
             let boosted_status = status_fromRust_status_repo.repo()
-               .lock().unwrap()
                .save(boosted_status);
             Some(boosted_status)
          },
@@ -3553,7 +3535,6 @@ mod jni_tests {
          },
          no_credential: {
             let no_credential = status_nulls_fromRust_noCredentialStatus_repo.repo()
-               .lock().unwrap()
                .save(no_credential);
             no_credential
          },

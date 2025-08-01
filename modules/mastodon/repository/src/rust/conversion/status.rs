@@ -35,10 +35,10 @@ pub fn from_api(
    #[cfg(feature = "jvm")] env: &mut JNIEnv,
    instance: Cache<Instance>,
    entity: ApiStatus,
-   account_cache_repository: &mut Repository<Account>,
-   status_cache_repository: &mut Repository<Status>,
-   no_credential_status_cache_repository: &mut Repository<NoCredentialStatus>,
-   no_credential_poll_repository: &mut Repository<NoCredentialPoll>
+   account_cache_repository: &Repository<Account>,
+   status_cache_repository: &Repository<Status>,
+   no_credential_status_cache_repository: &Repository<NoCredentialStatus>,
+   no_credential_poll_repository: &Repository<NoCredentialPoll>
 ) -> anyhow::Result<Status> {
    use anyhow::Context;
    use chrono::DateTime;

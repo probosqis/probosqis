@@ -51,7 +51,7 @@ impl AccountRepository<'_> {
    pub fn get_account_icon(
       &mut self,
       account: Account,
-      account_icon_cache_repo: &mut Repository<ImageBytes>
+      account_icon_cache_repo: &Repository<ImageBytes>
    ) -> anyhow::Result<Cache<ImageBytes>> {
       let icon_url = account.avatar_image_url
          .ok_or(anyhow::anyhow!("no avatar image url"))?;
@@ -116,8 +116,7 @@ mod jvm {
 
       let mut account_repository = AccountRepository::new(env);
       let mut account_icon_cache_repo
-         = Repository::of(env, &account_icon_cache_repo)
-            .lock().map_err(|_| anyhow::anyhow!("account icon repository was poisoned"))?;
+         = Repository::of(env, &account_icon_cache_repo);
 
       let icon = account_repository
          .get_account_icon(account, &mut account_icon_cache_repo)?;

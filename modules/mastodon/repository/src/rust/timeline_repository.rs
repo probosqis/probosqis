@@ -51,10 +51,10 @@ impl TimelineRepository<'_> {
    pub fn get_home_timeline(
       &mut self,
       token: &Token,
-      account_cache_repo: &mut Repository<Account>,
-      status_cache_repo: &mut Repository<Status>,
-      no_credential_status_repo: &mut Repository<NoCredentialStatus>,
-      no_credential_poll_cache_repo: &mut Repository<NoCredentialPoll>
+      account_cache_repo: &Repository<Account>,
+      status_cache_repo: &Repository<Status>,
+      no_credential_status_repo: &Repository<NoCredentialStatus>,
+      no_credential_poll_cache_repo: &Repository<NoCredentialPoll>
    ) -> anyhow::Result<Vec<Status>> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::timelines;
@@ -148,24 +148,18 @@ mod jvm {
       use super::TimelineRepository;
 
       let mut timeline_repository = TimelineRepository::new(env);
-      let mut account_cache_repo = Repository::of(env, &account_cache_repo).lock()
-         .map_err(|_| anyhow::anyhow!("account repository was poisoned"))?;
-      let mut status_cache_repo = Repository::of(env, &status_cache_repo).lock()
-         .map_err(|_| anyhow::anyhow!("status repository was poisoned"))?;
-      let mut no_credential_status_repo
-         = Repository::of(env, &no_credential_status_cache_repo).lock()
-         .map_err(|_| anyhow::anyhow!("no credential status repository was poisoned"))?;
-      let mut no_credential_poll_cache_repo
-         = Repository::of(env, &no_credential_poll_cache_repo).lock()
-         .map_err(|_| anyhow::anyhow!("no credential poll repository was poisoned"))?;
+      let account_cache_repo            = Repository::of(env, &account_cache_repo);
+      let status_cache_repo             = Repository::of(env, &status_cache_repo);
+      let no_credential_status_repo     = Repository::of(env, &no_credential_status_cache_repo);
+      let no_credential_poll_cache_repo = Repository::of(env, &no_credential_poll_cache_repo);
 
       let instance = token.instance(env);
       let instance = Cache::<Instance>::clone_from_jvm(env, &instance);
       let token = Token::clone_from_jvm(env, &token, instance);
       let timeline = timeline_repository.get_home_timeline(
          &token,
-         &mut *account_cache_repo, &mut *status_cache_repo,
-         &mut *no_credential_status_repo, &mut *no_credential_poll_cache_repo
+         &account_cache_repo, &status_cache_repo,
+         &no_credential_status_repo, &no_credential_poll_cache_repo
       )?;
 
       Ok(timeline.clone_into_jvm(env))
@@ -244,19 +238,19 @@ mod test {
       let mut repository = TimelineRepository::new();
 
       let panoptiqon = Panoptiqon::new();
-      let mut instance_cache_repo = panoptiqon.new_repository(
+      let instance_cache_repo = panoptiqon.new_repository(
          "test/TimelineRepository/get_home_timeline/Instance"
       );
-      let mut account_cache_repo = panoptiqon.new_repository(
+      let account_cache_repo = panoptiqon.new_repository(
          "test/TimelineRepository/get_home_timeline/Account"
       );
-      let mut status_cache_repo = panoptiqon.new_repository(
+      let status_cache_repo = panoptiqon.new_repository(
          "test/TimelineRepository/get_home_timeline/Status"
       );
-      let mut no_credential_status_cache_repo = panoptiqon.new_repository(
+      let no_credential_status_cache_repo = panoptiqon.new_repository(
          "test/TimelineRepository/get_home_timeline/NoCredentialStatus"
       );
-      let mut no_credential_poll_cache_repo = panoptiqon.new_repository(
+      let no_credential_poll_cache_repo = panoptiqon.new_repository(
          "test/TimelineRepository/get_home_timeline/NoCredentialPoll"
       );
 
@@ -778,7 +772,7 @@ mod test {
          version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let instance_cache = instance_cache_repo.lock().unwrap().save(instance);
+      let instance_cache = instance_cache_repo.save(instance);
 
       let token = Token {
          instance: instance_cache.clone(),
@@ -795,10 +789,10 @@ mod test {
 
       let statuses = repository.get_home_timeline(
          &token,
-         &mut account_cache_repo.lock().unwrap(),
-         &mut status_cache_repo.lock().unwrap(),
-         &mut no_credential_status_cache_repo.lock().unwrap(),
-         &mut no_credential_poll_cache_repo.lock().unwrap()
+         &account_cache_repo,
+         &status_cache_repo,
+         &no_credential_status_cache_repo,
+         &no_credential_poll_cache_repo
       ).unwrap();
 
       assert_eq!(
@@ -914,7 +908,6 @@ mod test {
                                     );
 
                                     let moved_to = account_cache_repo
-                                       .lock().unwrap()
                                        .load(&id).unwrap();
 
                                     Some(moved_to)
@@ -932,7 +925,6 @@ mod test {
                            );
 
                            let account = account_cache_repo
-                              .lock().unwrap()
                               .load(&id).unwrap();
 
                            Some(account)
@@ -1107,7 +1099,6 @@ mod test {
                            );
 
                            let boosted_status = no_credential_status_cache_repo
-                              .lock().unwrap()
                               .load(&id).unwrap();
 
                            Some(boosted_status)
@@ -1162,7 +1153,6 @@ mod test {
                            );
 
                            let poll = no_credential_poll_cache_repo
-                              .lock().unwrap()
                               .load(&id).unwrap();
 
                            Some(poll)
@@ -1218,7 +1208,6 @@ mod test {
                                     );
 
                                     let account = account_cache_repo
-                                       .lock().unwrap()
                                        .load(&id).unwrap();
 
                                     Some(account)
@@ -1269,7 +1258,6 @@ mod test {
                                     );
 
                                     let account = account_cache_repo
-                                       .lock().unwrap()
                                        .load(&id).unwrap();
 
                                     Some(account)
@@ -1292,11 +1280,7 @@ mod test {
                      *statuses[0].no_credential.get()
                   );
 
-                  // 理由は謎だがここで一時変数に入れないとデッドロックが起こる
-                  let a = no_credential_status_cache_repo
-                     .lock().unwrap()
-                     .load(&id).unwrap();
-                  a
+                  no_credential_status_cache_repo.load(&id).unwrap()
                },
                boosted_status: {
                   let id = StatusId {
@@ -1308,7 +1292,6 @@ mod test {
                      Status {
                         id: id.clone(),
                         no_credential: no_credential_status_cache_repo
-                              .lock().unwrap()
                               .load(&id).unwrap(),
                         boosted_status: None,
                         poll: None,
@@ -1323,7 +1306,6 @@ mod test {
                   );
 
                   let boosted_status = status_cache_repo
-                     .lock().unwrap()
                      .load(&id).unwrap();
 
                   Some(boosted_status)
@@ -1337,7 +1319,6 @@ mod test {
                   Some(Poll {
                      id: id.clone(),
                      no_credential: no_credential_poll_cache_repo
-                        .lock().unwrap()
                         .load(&id).unwrap(),
                      is_voted: Some(true),
                      voted_options: vec![6, 7],
@@ -1481,9 +1462,7 @@ mod test {
                      *statuses[1].no_credential.get()
                   );
 
-                  no_credential_status_cache_repo
-                     .lock().unwrap()
-                     .load(&id).unwrap()
+                  no_credential_status_cache_repo.load(&id).unwrap()
                },
                boosted_status: None,
                poll: None,

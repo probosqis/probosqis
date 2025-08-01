@@ -27,7 +27,7 @@ use mastodon_webapi::entity::poll::{
 pub fn from_api(
    instance: Cache<Instance>,
    entity: ApiPoll,
-   no_credential_poll_cache_repository: &mut Repository<NoCredentialPoll>
+   no_credential_poll_cache_repository: &Repository<NoCredentialPoll>
 ) -> anyhow::Result<Poll> {
    use anyhow::Context;
    use chrono::DateTime;

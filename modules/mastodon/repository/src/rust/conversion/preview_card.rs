@@ -32,7 +32,7 @@ pub fn from_api(
    #[cfg(feature = "jvm")] env: &mut JNIEnv,
    instance: Cache<Instance>,
    entity: ApiPreviewCard,
-   account_cache_repository: &mut Repository<Account>
+   account_cache_repository: &Repository<Account>
 ) -> anyhow::Result<PreviewCard> {
    let ApiPreviewCard {
       url, title, description, r#type, authors, author_name, author_url,
@@ -84,7 +84,7 @@ pub fn card_author_from_api(
    #[cfg(feature = "jvm")] env: &mut JNIEnv,
    instance: Cache<Instance>,
    entity: ApiPreviewCardAuthor,
-   account_cache_repository: &mut Repository<Account>
+   account_cache_repository: &Repository<Account>
 ) -> anyhow::Result<PreviewCardAuthor> {
    use crate::conversion;
 

@@ -27,7 +27,7 @@ pub fn from_api(
    #[cfg(feature="jvm")] env: &mut JNIEnv,
    instance: Cache<Instance>,
    entity: ApiAccount,
-   account_cache_repo: &mut Repository<Account>
+   account_cache_repo: &Repository<Account>
 ) -> anyhow::Result<Account> {
    use anyhow::Context;
    use chrono::DateTime;
@@ -101,7 +101,7 @@ pub fn credential_account_from_api(
    #[cfg(feature="jvm")] env: &mut JNIEnv,
    instance: Cache<Instance>,
    mut entity: ApiAccount,
-   account_cache_repo: &mut Repository<Account>
+   account_cache_repo: &Repository<Account>
 ) -> anyhow::Result<CredentialAccount> {
    use isolang::Language;
    use mastodon_entity::status::StatusVisibility;

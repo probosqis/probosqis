@@ -100,8 +100,8 @@ impl AppRepository<'_> {
       &self,
       instance: Instance,
       redirect_uri: &str,
-      instance_cache_repo: &mut Repository<Instance>,
-      application_cache_repo: &mut Repository<Application>
+      instance_cache_repo: &Repository<Instance>,
+      application_cache_repo: &Repository<Application>
    ) -> anyhow::Result<Url> {
       use anyhow::Context;
       use mastodon_webapi::api::oauth;
@@ -143,8 +143,8 @@ impl AppRepository<'_> {
       client_id: &str,
       client_secret: &str,
       redirect_uri: &str,
-      account_cache_repo: &mut Repository<Account>,
-      credential_account_cache_repo: &mut Repository<CredentialAccount>
+      account_cache_repo: &Repository<Account>,
+      credential_account_cache_repo: &Repository<CredentialAccount>
    ) -> anyhow::Result<Token> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::oauth;
@@ -176,8 +176,8 @@ impl AppRepository<'_> {
    pub fn get_credential_account(
       &mut self,
       token: &Token,
-      account_cache_repo: &mut Repository<Account>,
-      credential_account_cache_repo: &mut Repository<CredentialAccount>
+      account_cache_repo: &Repository<Account>,
+      credential_account_cache_repo: &Repository<CredentialAccount>
    ) -> anyhow::Result<Cache<CredentialAccount>> {
       self.get_credential_account_impl(
          &token.instance, &token.access_token,
@@ -189,8 +189,8 @@ impl AppRepository<'_> {
       &mut self,
       instance: &Cache<Instance>,
       access_token: &str,
-      account_cache_repo: &mut Repository<Account>,
-      credential_account_cache_repo: &mut Repository<CredentialAccount>
+      account_cache_repo: &Repository<Account>,
+      credential_account_cache_repo: &Repository<CredentialAccount>
    ) -> anyhow::Result<Cache<CredentialAccount>> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::accounts;
@@ -274,15 +274,13 @@ mod jvm {
 
       let instance = Instance::clone_from_jvm(env, &instance);
 
-      let mut instance_cache_repo = Repository::of(env, &instance_cache_repo).lock()
-         .map_err(|_| anyhow::anyhow!("instance repository was poisoned"))?;
-      let mut application_cache_repo = Repository::of(env, &application_cache_repo).lock()
-         .map_err(|_| anyhow::anyhow!("application repository was poisoned"))?;
+      let instance_cache_repo    = Repository::of(env, &instance_cache_repo);
+      let application_cache_repo = Repository::of(env, &application_cache_repo);
 
       let app_repository = AppRepository::new(env);
       let authorize_url = app_repository.get_authorize_url(
          instance, redirect_uri,
-         &mut instance_cache_repo, &mut application_cache_repo
+         &instance_cache_repo, &application_cache_repo
       )?;
 
       let authorize_url = authorize_url.as_str().clone_into_jvm(env);
@@ -345,11 +343,8 @@ mod jvm {
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
-      let mut account_cache_repo = Repository::of(env, &account_cache_repo).lock()
-         .map_err(|_| anyhow::anyhow!("account repository was poisoned"))?;
-      let mut credential_account_cache_repo
-         = Repository::of(env, &credential_account_cache_repo).lock()
-         .map_err(|_| anyhow::anyhow!("credential account repository was poisoned"))?;
+      let account_cache_repo            = Repository::of(env, &account_cache_repo);
+      let credential_account_cache_repo = Repository::of(env, &credential_account_cache_repo);
 
       let instance_cache = Cache::<Instance>::clone_from_jvm(env, &instance);
 
@@ -359,7 +354,7 @@ mod jvm {
 
       let token = app_repository.get_token(
          &instance_cache, &code, &client_id, &client_secret, redirect_uri,
-         &mut *account_cache_repo, &mut *credential_account_cache_repo
+         &account_cache_repo, &credential_account_cache_repo
       )?;
 
       Ok(token.clone_into_jvm(env))
@@ -406,17 +401,14 @@ mod jvm {
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
-      let mut account_cache_repo = Repository::of(env, &account_cache_repo).lock()
-         .map_err(|_| anyhow::anyhow!("account repository was poisoned"))?;
-      let mut credential_account_cache_repo
-         = Repository::of(env, &credential_account_cache_repo).lock()
-         .map_err(|_| anyhow::anyhow!("credential account repository was poisoned"))?;
+      let account_cache_repo            = Repository::of(env, &account_cache_repo);
+      let credential_account_cache_repo = Repository::of(env, &credential_account_cache_repo);
 
       let instance = token.instance(env);
       let instance = Cache::<Instance>::clone_from_jvm(env, &instance);
       let token = Token::clone_from_jvm(env, &token, instance);
       let credential_account = app_repository.get_credential_account(
-         &token, &mut *account_cache_repo, &mut *credential_account_cache_repo
+         &token, &account_cache_repo, &credential_account_cache_repo
       )?;
       Ok(credential_account.clone_into_jvm(env))
    }
@@ -450,10 +442,10 @@ mod test {
       use mastodon_webapi::api::apps;
       use url::Url;
 
-      let mut repository = AppRepository::new();
+      let repository = AppRepository::new();
 
       let panoptiqon = Panoptiqon::new();
-      let mut instance_cache_repo = panoptiqon.new_repository(
+      let instance_cache_repo = panoptiqon.new_repository(
          "test/AppRepository/switch_function_by_instance_version/Instance"
       );
 
@@ -484,7 +476,7 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance_cache_repo.lock().unwrap().save(instance("4.1.0")),
+            instance_cache_repo.save(instance("4.1.0")),
             AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(true,  *v0_called    .lock().unwrap());
@@ -496,7 +488,7 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance_cache_repo.lock().unwrap().save(instance("4.2.0")),
+            instance_cache_repo.save(instance("4.2.0")),
             AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(true,  *v0_called    .lock().unwrap());
@@ -508,7 +500,7 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance_cache_repo.lock().unwrap().save(instance("4.2.9")),
+            instance_cache_repo.save(instance("4.2.9")),
             AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(true,  *v0_called    .lock().unwrap());
@@ -520,7 +512,7 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance_cache_repo.lock().unwrap().save(instance("4.3.0")),
+            instance_cache_repo.save(instance("4.3.0")),
             AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(false, *v0_called    .lock().unwrap());
@@ -532,7 +524,7 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance_cache_repo.lock().unwrap().save(instance("4.3.1")),
+            instance_cache_repo.save(instance("4.3.1")),
             AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(false, *v0_called    .lock().unwrap());
@@ -544,7 +536,7 @@ mod test {
 
       {
          let _application = repository.post_app(
-            instance_cache_repo.lock().unwrap().save(instance("4.4.0")),
+            instance_cache_repo.save(instance("4.4.0")),
             AppRepository::ANDROID_REDIRECT_URI
          );
          assert_eq!(false, *v0_called    .lock().unwrap());
@@ -559,10 +551,10 @@ mod test {
       use mastodon_webapi::api::apps;
       use url::Url;
 
-      let mut repository = AppRepository::new();
+      let repository = AppRepository::new();
 
       let panoptiqon = Panoptiqon::new();
-      let mut instance_cache_repo = panoptiqon.new_repository(
+      let instance_cache_repo = panoptiqon.new_repository(
          "test/AppRepository/account_conversion_uses_newer_redirect_uris_field/Instance"
       );
 
@@ -589,7 +581,7 @@ mod test {
       });
 
       let application = repository.post_app(
-         instance_cache_repo.lock().unwrap().save(instance.clone()),
+         instance_cache_repo.save(instance.clone()),
          "https://example.com/callback"
       );
 
@@ -615,7 +607,7 @@ mod test {
       });
 
       let application = repository.post_app(
-         instance_cache_repo.lock().unwrap().save(instance.clone()),
+         instance_cache_repo.save(instance.clone()),
          "https://example.com/callback"
       );
 
@@ -640,10 +632,10 @@ mod test {
       let repository = AppRepository::new();
 
       let panoptiqon = Panoptiqon::new();
-      let mut instance_cache_repo = panoptiqon.new_repository(
+      let instance_cache_repo = panoptiqon.new_repository(
          "test/AppRepository/authorize_url/Instance"
       );
-      let mut application_cache_repo = panoptiqon.new_repository(
+      let application_cache_repo = panoptiqon.new_repository(
          "test/AppRepository/authorize_url/Application"
       );
 
@@ -677,8 +669,8 @@ mod test {
       let authorize_url = repository.get_authorize_url(
          instance,
          "redirect_uri",
-         &mut instance_cache_repo.lock().unwrap(),
-         &mut application_cache_repo.lock().unwrap()
+         &instance_cache_repo,
+         &application_cache_repo
       ).unwrap();
 
       assert_eq!(
@@ -713,13 +705,13 @@ mod test {
       let mut repository = AppRepository::new();
 
       let panoptiqon = Panoptiqon::new();
-      let mut instance_cache_repo = panoptiqon.new_repository(
+      let instance_cache_repo = panoptiqon.new_repository(
          "test/AppRepository/token/Instance"
       );
-      let mut account_cache_repo = panoptiqon.new_repository(
+      let account_cache_repo = panoptiqon.new_repository(
          "test/AppRepository/token/Account"
       );
-      let mut credential_account_cache_repo = panoptiqon.new_repository(
+      let credential_account_cache_repo = panoptiqon.new_repository(
          "test/AppRepository/token/CredentialAccount"
       );
 
@@ -831,7 +823,7 @@ mod test {
          version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let instance_cache = instance_cache_repo.lock().unwrap().save(instance);
+      let instance_cache = instance_cache_repo.save(instance);
 
       let token = repository.get_token(
          &instance_cache,
@@ -839,8 +831,8 @@ mod test {
          "client_id",
          "client_secret",
          "redirect_uri",
-         &mut account_cache_repo.lock().unwrap(),
-         &mut credential_account_cache_repo.lock().unwrap()
+         &account_cache_repo,
+         &credential_account_cache_repo
       ).unwrap();
 
       assert_eq!(
