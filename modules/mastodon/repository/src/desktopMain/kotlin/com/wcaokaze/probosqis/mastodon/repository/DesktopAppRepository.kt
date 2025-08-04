@@ -24,15 +24,11 @@ import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import com.wcaokaze.probosqis.panoptiqon.Repository
-import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
-import com.wcaokaze.probosqis.panoptiqon.loadCache
-import com.wcaokaze.probosqis.panoptiqon.saveCache
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import java.io.File
 import java.io.IOException
-import java.net.URLEncoder
 
 class DesktopAppRepository(
    appDataDir: File,
@@ -56,12 +52,14 @@ class DesktopAppRepository(
       }
    }
 
-   @TemporaryCacheApi
    override fun loadAppCache(instanceBaseUrl: Url): Cache<Application> {
-      val fileName = URLEncoder.encode(instanceBaseUrl.raw, "UTF-8")
-      val file = File(dir, fileName)
-      return loadCache<Application>(file, json).asCache()
+      return loadAppCache(applicationCacheRepository, instanceBaseUrl.raw)
    }
+
+   private external fun loadAppCache(
+      applicationCacheRepo: Repository<Application>,
+      instanceBaseUrl: String
+   ): Cache<Application>
 
    override fun getAuthorizeUrl(instance: Instance): Url {
       val authorizeUrl = getAuthorizeUrl(

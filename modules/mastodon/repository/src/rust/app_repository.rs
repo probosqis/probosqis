@@ -54,6 +54,18 @@ impl AppRepository<'_> {
       }
    }
 
+   fn load_application_cache(
+      &self,
+      application_cache_repo: &Repository<Application>,
+      instance_base_url: &Url
+   ) -> anyhow::Result<Cache<Application>> {
+      let application_id = ApplicationId {
+         instance_url: instance_base_url.clone(),
+         application_name: Self::APP_NAME.to_string(),
+      };
+      application_cache_repo.load(&application_id)
+   }
+
    pub fn post_app(
       &self,
       instance_cache: Cache<Instance>,
@@ -227,6 +239,56 @@ mod jvm {
    use panoptiqon::cache::Cache;
    use panoptiqon::jvm_types::{JvmCache, JvmRepository, JvmString};
    use panoptiqon::repository::Repository;
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_loadAppCache<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>,
+      instance_base_url: JvmString<'local>
+   ) -> JvmCache<'local, JvmApplication<'local>> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+
+      load_app_cache(
+         &mut env, application_cache_repo, instance_base_url
+      ).unwrap_or_throw_io_exception(&mut env)
+   }
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_loadAppCache<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>,
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>,
+      instance_base_url: JvmString<'local>
+   ) -> JvmCache<'local, JvmApplication<'local>> {
+      use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
+
+      load_app_cache(
+         &mut env, application_cache_repo, instance_base_url
+      ).unwrap_or_throw_io_exception(&mut env)
+   }
+
+   fn load_app_cache<'local>(
+      env: &mut JNIEnv<'local>,
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>,
+      instance_base_url: JvmString<'local>
+   ) -> anyhow::Result<JvmCache<'local, JvmApplication<'local>>> {
+      use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use url::Url;
+      use super::AppRepository;
+
+      let application_cache_repo = Repository::of(env, &application_cache_repo);
+      let instance_base_url = String::clone_from_jvm(env, &instance_base_url);
+      let instance_base_url = Url::parse(&instance_base_url)?;
+
+      let app_repository = AppRepository::new(env);
+      let application_cache = app_repository.load_application_cache(
+         &application_cache_repo, &instance_base_url
+      )?;
+
+      let application_cache = application_cache.clone_into_jvm(env);
+      Ok(application_cache)
+   }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getAuthorizeUrl<'local>(
