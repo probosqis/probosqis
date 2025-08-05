@@ -203,7 +203,6 @@ object Main {
 
       single<AppRepository> {
          DesktopAppRepository(
-            appDataDir,
             get(named("instanceRepository")),
             get(named("applicationRepository")),
             get(named("accountCacheRepository")),

@@ -207,7 +207,6 @@ class MainApplication : Application() {
 
       single<AppRepository> {
          AndroidAppRepository(
-            get(named("appDataDir")),
             get(named("instanceRepository")),
             get(named("applicationRepository")),
             get(named("accountCacheRepository")),

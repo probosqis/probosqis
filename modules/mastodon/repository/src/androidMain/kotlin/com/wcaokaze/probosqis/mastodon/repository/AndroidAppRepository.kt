@@ -24,27 +24,14 @@ import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import com.wcaokaze.probosqis.panoptiqon.Repository
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
-import java.io.File
 import java.io.IOException
 
 class AndroidAppRepository(
-   appDataDir: File,
    private val instanceCacheRepository: Repository<Instance>,
    private val applicationCacheRepository: Repository<Application>,
    private val accountCacheRepository: Repository<Account>,
    private val credentialAccountCacheRepository: Repository<CredentialAccount>
 ) : AppRepository {
-   private val dir = File(appDataDir, "fFDFXHfgze7i3Ihs")
-
-   private val json = Json {
-      serializersModule = SerializersModule {
-         contextual(InstanceCacheSerializer())
-      }
-   }
-
    override fun loadAppCache(instanceBaseUrl: Url): Cache<Application> {
       return loadAppCache(applicationCacheRepository, instanceBaseUrl.raw)
    }
