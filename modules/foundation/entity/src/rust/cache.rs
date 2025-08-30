@@ -22,11 +22,14 @@ use crate::image_bytes::ImageBytes;
 #[cfg(feature = "jvm")]
 use {
    panoptiqon::jvm_types::JvmNullable,
-   crate::jvm_types::JvmImage,
+   crate::jvm_types::{JvmImage, JvmUrl},
 };
 
 impl CacheContent for ImageBytes {
    type Key = Url;
+
+   #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmUrl<'local>;
 
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmNullable<'local, JvmImage<'local>>;
@@ -38,7 +41,7 @@ impl CacheContent for ImageBytes {
    fn file_path_for_key(dir_path: &Path, url: &Url) -> PathBuf {
       use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
-      let encoded_url: String 
+      let encoded_url: String
          = utf8_percent_encode(url.as_str(), NON_ALPHANUMERIC).collect();
 
       dir_path.join(&encoded_url)

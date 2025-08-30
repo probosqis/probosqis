@@ -43,7 +43,7 @@ extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesK
    use mastodon_entity::poll::NoCredentialPoll;
    use mastodon_entity::status::{NoCredentialStatus, Status};
    use panoptiqon::jvm_type::JvmType;
-   use panoptiqon::repository::JvmRepositoryCreator;
+   use panoptiqon::jvm_repository_creator::JvmRepositoryCreator;
 
    let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
 

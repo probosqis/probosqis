@@ -24,13 +24,20 @@ use crate::poll::{NoCredentialPoll, PollId};
 use crate::status::{NoCredentialStatus, Status, StatusId};
 
 #[cfg(feature = "jvm")]
-use crate::jvm_types::{
-   JvmAccount, JvmApplication, JvmCredentialAccount, JvmInstance, JvmPollNoCredential, JvmStatus,
-   JvmStatusNoCredential,
+use {
+   foundation_entity::jvm_types::JvmUrl,
+   crate::jvm_types::{
+      JvmAccount, JvmAccountId, JvmApplication, JvmApplicationId,
+      JvmCredentialAccount, JvmInstance, JvmPollId, JvmPollNoCredential,
+      JvmStatus, JvmStatusId, JvmStatusNoCredential,
+   }
 };
 
 impl CacheContent for Application {
    type Key = ApplicationId;
+
+   #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmApplicationId<'local>;
 
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmApplication<'local>;
@@ -46,6 +53,9 @@ impl CacheContent for Application {
 
 impl CacheContent for Instance {
    type Key = Url;
+
+   #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmUrl<'local>;
 
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmInstance<'local>;
@@ -68,6 +78,9 @@ impl CacheContent for Account {
    type Key = AccountId;
 
    #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmAccountId<'local>;
+
+   #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmAccount<'local>;
 
    fn key(&self) -> &AccountId {
@@ -81,6 +94,9 @@ impl CacheContent for Account {
 
 impl CacheContent for CredentialAccount {
    type Key = AccountId;
+
+   #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmAccountId<'local>;
 
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmCredentialAccount<'local>;
@@ -98,6 +114,9 @@ impl CacheContent for Status {
    type Key = StatusId;
 
    #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmStatusId<'local>;
+
+   #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmStatus<'local>;
 
    fn key(&self) -> &StatusId {
@@ -113,6 +132,9 @@ impl CacheContent for NoCredentialStatus {
    type Key = StatusId;
 
    #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmStatusId<'local>;
+
+   #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmStatusNoCredential<'local>;
 
    fn key(&self) -> &StatusId {
@@ -126,6 +148,9 @@ impl CacheContent for NoCredentialStatus {
 
 impl CacheContent for NoCredentialPoll {
    type Key = PollId;
+
+   #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmPollId<'local>;
 
    #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmPollNoCredential<'local>;
