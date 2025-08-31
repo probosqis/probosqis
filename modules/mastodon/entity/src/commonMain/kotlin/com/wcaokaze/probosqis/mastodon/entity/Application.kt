@@ -59,7 +59,7 @@ data class Application(
    )
 
    val rawInstanceUrl: String
-      get() = id.instanceUrl.raw
+      get() = id.rawInstanceUrl
 
    val applicationName: String
       get() = id.applicationName

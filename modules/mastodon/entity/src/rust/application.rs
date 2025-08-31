@@ -26,7 +26,7 @@ use {
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    panoptiqon::jvm_types::{ JvmCache, JvmList, JvmLong, JvmNullable, JvmString},
-   crate::jvm_types::{JvmApplication, JvmInstance},
+   crate::jvm_types::{JvmAccountId, JvmApplication, JvmApplicationId, JvmInstance},
 };
 
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
@@ -128,6 +128,31 @@ convert_jvm_helper! {
          jvm_getter_method: "getClientSecretExpireTimeEpochMillis",
          jvm_return_type: "Ljava/lang/Long;";
    }
+
+   static APPLICATION_ID_HELPER = impl struct ApplicationIdConvertHelper
+   where
+      jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Application$Id"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmApplicationId<'local>
+      where
+         jvm_constructor: "(\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Lkotlin/Unit;\
+         )V";
+
+      fn raw_instance_url<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getRawInstanceUrl",
+         jvm_return_type: "Ljava/lang/String;";
+
+      fn application_name<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getApplicationName",
+         jvm_return_type: "Ljava/lang/String;";
+   }
 }
 
 #[cfg(feature = "jvm")]
@@ -179,6 +204,33 @@ impl<'local> CloneFromJvm<'local, JvmApplication<'local>> for Application {
          client_id,
          client_secret,
          client_secret_expire_time: client_secret_expire_time_epoch_millis.map(|time| DateTime::from_timestamp_millis(time).unwrap()),
+      }
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmApplicationId<'local>> for ApplicationId {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmApplicationId<'local> {
+      APPLICATION_ID_HELPER.clone_into_jvm(
+         env,
+         self.instance_url.as_str(),
+         &self.application_name,
+      )
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmApplicationId<'local>> for ApplicationId {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmApplicationId<'local>
+   ) -> ApplicationId {
+      let raw_instance_url = APPLICATION_ID_HELPER.raw_instance_url(env, jvm_instance);
+      let application_name = APPLICATION_ID_HELPER.application_name(env, jvm_instance);
+
+      ApplicationId {
+         instance_url: raw_instance_url.parse().unwrap(),
+         application_name,
       }
    }
 }

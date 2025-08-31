@@ -32,8 +32,8 @@ use {
       JvmBoolean, JvmCache, JvmList, JvmLong, JvmNullable, JvmString, JvmUnit,
    },
    crate::jvm_types::{
-      JvmAccount, JvmAccountProfileField, JvmCredentialAccount, JvmCustomEmoji,
-      JvmInstance, JvmRelationalAccount, JvmRole,
+      JvmAccount, JvmAccountId, JvmAccountProfileField, JvmCredentialAccount,
+      JvmCustomEmoji, JvmInstance, JvmRelationalAccount, JvmRole,
    },
 };
 
@@ -273,6 +273,31 @@ convert_jvm_helper! {
                jvm_getter_method: "getFolloweeCount",
                jvm_return_type: "Ljava/lang/Long;";
    }
+
+   static ACCOUNT_ID_HELPER = impl struct AccountIdConvertHelper
+   where
+      jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Account$Id"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmAccountId<'local>
+      where
+         jvm_constructor: "(\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Lkotlin/Unit;\
+         )V";
+
+      fn raw_instance_url<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getRawInstanceUrl",
+         jvm_return_type: "Ljava/lang/String;";
+
+      fn raw_local_id<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getRawLocalId",
+         jvm_return_type: "Ljava/lang/String;";
+   }
 }
 
 #[cfg(feature = "jvm")]
@@ -375,6 +400,33 @@ impl<'local> CloneFromJvm<'local, JvmAccount<'local>> for Account {
          status_count:   status_count  .map(|i| i as u64),
          follower_count: follower_count.map(|i| i as u64),
          followee_count: followee_count.map(|i| i as u64),
+      }
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmAccountId<'local>> for AccountId {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmAccountId<'local> {
+      ACCOUNT_ID_HELPER.clone_into_jvm(
+         env,
+         self.instance_url.as_str(),
+         &self.local.0,
+      )
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmAccountId<'local>> for AccountId {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmAccountId<'local>
+   ) -> AccountId {
+      let raw_instance_url = ACCOUNT_ID_HELPER.raw_instance_url(env, jvm_instance);
+      let raw_local_id     = ACCOUNT_ID_HELPER.raw_local_id    (env, jvm_instance);
+
+      AccountId {
+         instance_url: raw_instance_url.parse().unwrap(),
+         local: AccountLocalId(raw_local_id),
       }
    }
 }

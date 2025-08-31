@@ -108,7 +108,23 @@ data class Account(
    )
 
    @Serializable
-   data class Id(val instanceUrl: Url, val local: LocalId)
+   data class Id(val instanceUrl: Url, val local: LocalId) {
+      constructor(
+         rawInstanceUrl: String,
+         rawLocalId: String,
+         @Suppress("UNUSED_PARAMETER")
+         dummy: Unit?
+      ) : this(
+         Url(rawInstanceUrl),
+         LocalId(rawLocalId),
+      )
+      
+      val rawInstanceUrl: String
+         get() = instanceUrl.raw
+
+      val rawLocalId: String
+         get() = local.value
+   }
 
    @Serializable
    @JvmInline
@@ -132,10 +148,10 @@ data class Account(
    }
 
    val rawInstanceUrl: String
-      get() = id.instanceUrl.raw
+      get() = id.rawInstanceUrl
 
    val rawLocalId: String
-      get() = id.local.value
+      get() = id.rawLocalId
 
    val rawUrl: String?
       get() = url?.raw
