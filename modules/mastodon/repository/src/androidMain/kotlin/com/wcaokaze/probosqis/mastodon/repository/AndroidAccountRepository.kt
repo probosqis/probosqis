@@ -17,12 +17,13 @@
 package com.wcaokaze.probosqis.mastodon.repository
 
 import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import com.wcaokaze.probosqis.panoptiqon.Repository
 
 class AndroidAccountRepository(
-   private val accountIconCacheRepo: Repository<Image>
+   private val accountIconCacheRepo: Repository<Url, Image>
 ) : AccountRepository {
    override fun getAccountIcon(account: Account): Cache<Image?> {
       return getAccountIcon(account, accountIconCacheRepo)
@@ -30,6 +31,6 @@ class AndroidAccountRepository(
 
    private external fun getAccountIcon(
       account: Account,
-      accountIconCacheRepo: Repository<Image>
+      accountIconCacheRepo: Repository<Url, Image>
    ): Cache<Image?>
 }

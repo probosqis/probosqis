@@ -27,17 +27,17 @@ import com.wcaokaze.probosqis.panoptiqon.Repository
 import java.io.IOException
 
 class DesktopAppRepository(
-   private val instanceCacheRepository: Repository<Instance>,
-   private val applicationCacheRepository: Repository<Application>,
-   private val accountCacheRepository: Repository<Account>,
-   private val credentialAccountCacheRepository: Repository<CredentialAccount>
+   private val instanceCacheRepository: Repository<Url, Instance>,
+   private val applicationCacheRepository: Repository<Application.Id, Application>,
+   private val accountCacheRepository: Repository<Account.Id, Account>,
+   private val credentialAccountCacheRepository: Repository<Account.Id, CredentialAccount>
 ) : AppRepository {
    override fun loadAppCache(instanceBaseUrl: Url): Cache<Application> {
       return loadAppCache(applicationCacheRepository, instanceBaseUrl.raw)
    }
 
    private external fun loadAppCache(
-      applicationCacheRepo: Repository<Application>,
+      applicationCacheRepo: Repository<Application.Id, Application>,
       instanceBaseUrl: String
    ): Cache<Application>
 
@@ -51,8 +51,8 @@ class DesktopAppRepository(
 
    private external fun getAuthorizeUrl(
       instance: Instance,
-      instanceCacheRepo: Repository<Instance>,
-      applicationCacheRepo: Repository<Application>
+      instanceCacheRepo: Repository<Url, Instance>,
+      applicationCacheRepo: Repository<Application.Id, Application>
    ): String
 
    override fun getToken(application: Application, code: String): Token {
@@ -70,8 +70,8 @@ class DesktopAppRepository(
       code: String,
       clientId: String,
       clientSecret: String,
-      accountCacheRepo: Repository<Account>,
-      credentialAccountCacheRepo: Repository<CredentialAccount>
+      accountCacheRepo: Repository<Account.Id, Account>,
+      credentialAccountCacheRepo: Repository<Account.Id, CredentialAccount>
    ): Token
 
    override fun getCredentialAccount(token: Token): Cache<CredentialAccount> {
@@ -82,7 +82,7 @@ class DesktopAppRepository(
 
    private external fun getCredentialAccount(
       token: Token,
-      accountCacheRepo: Repository<Account>,
-      credentialAccountCacheRepo: Repository<CredentialAccount>
+      accountCacheRepo: Repository<Account.Id, Account>,
+      credentialAccountCacheRepo: Repository<Account.Id, CredentialAccount>
    ): Cache<CredentialAccount>
 }

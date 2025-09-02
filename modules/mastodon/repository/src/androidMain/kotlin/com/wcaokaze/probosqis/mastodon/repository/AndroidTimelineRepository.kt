@@ -23,10 +23,10 @@ import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Repository
 
 class AndroidTimelineRepository(
-   private val accountCacheRepository: Repository<Account>,
-   private val statusCacheRepository: Repository<Status>,
-   private val noCredentialStatusCacheRepository: Repository<Status.NoCredential>,
-   private val noCredentialPollCacheRepository: Repository<Poll.NoCredential>
+   private val accountCacheRepository: Repository<Account.Id, Account>,
+   private val statusCacheRepository: Repository<Status.Id, Status>,
+   private val noCredentialStatusCacheRepository: Repository<Status.Id, Status.NoCredential>,
+   private val noCredentialPollCacheRepository: Repository<Poll.Id, Poll.NoCredential>
 ) : TimelineRepository {
    override fun getHomeTimeline(token: Token): List<Status> {
       return getHomeTimeline(
@@ -37,9 +37,9 @@ class AndroidTimelineRepository(
 
    private external fun getHomeTimeline(
       token: Token,
-      accountCacheRepo: Repository<Account>,
-      statusCacheRepo: Repository<Status>,
-      noCredentialStatusCacheRepo: Repository<Status.NoCredential>,
-      noCredentialPollCacheRepo: Repository<Poll.NoCredential>
+      accountCacheRepo: Repository<Account.Id, Account>,
+      statusCacheRepo: Repository<Status.Id, Status>,
+      noCredentialStatusCacheRepo: Repository<Status.Id, Status.NoCredential>,
+      noCredentialPollCacheRepo: Repository<Poll.Id, Poll.NoCredential>
    ): List<Status>
 }

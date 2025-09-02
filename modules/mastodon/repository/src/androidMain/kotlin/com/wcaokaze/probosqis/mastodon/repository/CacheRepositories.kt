@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.mastodon.repository
 
 import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.Application
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
@@ -26,14 +27,14 @@ import com.wcaokaze.probosqis.mastodon.entity.Status
 import com.wcaokaze.probosqis.panoptiqon.Repository
 
 class CacheRepositories(
-   val instance: Repository<Instance>,
-   val application: Repository<Application>,
-   val account: Repository<Account>,
-   val credentialAccount: Repository<CredentialAccount>,
-   val accountIcon: Repository<Image>,
-   val status: Repository<Status>,
-   val noCredentialStatus: Repository<Status.NoCredential>,
-   val noCredentialPoll: Repository<Poll.NoCredential>,
+   val instance: Repository<Url, Instance>,
+   val application: Repository<Application.Id, Application>,
+   val account: Repository<Account.Id, Account>,
+   val credentialAccount: Repository<Account.Id, CredentialAccount>,
+   val accountIcon: Repository<Url, Image>,
+   val status: Repository<Status.Id, Status>,
+   val noCredentialStatus: Repository<Status.Id, Status.NoCredential>,
+   val noCredentialPoll: Repository<Poll.Id, Poll.NoCredential>,
 )
 
 external fun createCacheRepositories(dataDirPath: String): CacheRepositories
