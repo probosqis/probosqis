@@ -35,8 +35,9 @@ mod jni_tests {
    use std::sync::{Arc, LazyLock, Mutex};
    use jni::JNIEnv;
    use jni::objects::JObject;
+   use serde::Deserialize;
    use panoptiqon::cache::{Cache, CacheContent};
-   use panoptiqon::convert_jvm::CloneIntoJvmHelper;
+   use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm, CloneIntoJvmHelper};
    use panoptiqon::jvm_types::JvmCache;
    use panoptiqon::Panoptiqon;
    use panoptiqon::repository::Repository;
@@ -57,11 +58,19 @@ mod jni_tests {
       Mutex<Option<Arc<Repository<T>>>>
    )
    where
-      T: CacheContent + CloneIntoJvmHelper;
+      T: CacheContent
+         + CloneIntoJvmHelper
+         + for<'de> Deserialize<'de>
+         + for<'a> CloneIntoJvm<'a, T::JvmType<'a>>,
+      T::Key: for<'a> CloneFromJvm<'a, T::JvmKey<'a>>;
 
    impl<T> LazyInitRepo<T>
    where
-      T: CacheContent + CloneIntoJvmHelper
+      T: CacheContent
+         + CloneIntoJvmHelper
+         + for<'de> Deserialize<'de>
+         + for<'a> CloneIntoJvm<'a, T::JvmType<'a>>,
+      T::Key: for<'a> CloneFromJvm<'a, T::JvmKey<'a>>
    {
       const fn new(
          panoptiqon: &'static LazyLock<Panoptiqon>,
