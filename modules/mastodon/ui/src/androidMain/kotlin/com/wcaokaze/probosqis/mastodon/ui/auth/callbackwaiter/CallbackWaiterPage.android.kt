@@ -59,10 +59,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.CircularProgressCompleteIcon
+import com.wcaokaze.probosqis.ext.compose.LoadState
+import com.wcaokaze.probosqis.foundation.page.PPageComposable
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.foundation.resources.icons.Error
 import com.wcaokaze.probosqis.mastodon.ui.Mastodon
-import com.wcaokaze.probosqis.foundation.page.PPageComposable
 import kotlin.time.Duration.Companion.milliseconds
 
 @Stable
@@ -94,7 +95,15 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
             val progressIndicatorSize = with (density) { 22.sp.toDp() }
 
             when (credentialAccountLoadState) {
-               is CredentialAccountLoadState.Loading -> {
+               null -> {
+                  Text(
+                     Strings.Mastodon.callbackWaiter.android.initialMessage,
+                     fontSize = 15.sp,
+                     modifier = Modifier.fillMaxWidth()
+                        .padding(16.dp)
+                  )
+               }
+               is LoadState.Loading -> {
                   Row(
                      verticalAlignment = Alignment.CenterVertically,
                      modifier = Modifier
@@ -126,7 +135,7 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                      )
                   }
                }
-               is CredentialAccountLoadState.Error -> {
+               is LoadState.Error -> {
                   Row(
                      modifier = Modifier
                         .fillMaxWidth()
@@ -148,15 +157,7 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                      )
                   }
                }
-               is CredentialAccountLoadState.Unloading -> {
-                  Text(
-                     Strings.Mastodon.callbackWaiter.android.initialMessage,
-                     fontSize = 15.sp,
-                     modifier = Modifier.fillMaxWidth()
-                        .padding(16.dp)
-                  )
-               }
-               is CredentialAccountLoadState.Success -> {
+               is LoadState.Success -> {
                   Column(
                      modifier = Modifier
                         .fillMaxWidth()
@@ -178,9 +179,9 @@ actual val callbackWaiterPageComposable = PPageComposable<CallbackWaiterPage, Ca
                         )
                      }
 
-                     val verifiedAccount = credentialAccountLoadState
+                     val verifiedAccount = credentialAccountLoadState.data
                         .credentialAccount.account.value
-                     val verifiedAccountIcon = credentialAccountLoadState
+                     val verifiedAccountIcon = credentialAccountLoadState.data
                         .credentialAccountIcon.value?.composeImageBitmap
 
                      val slideInOffset = with (density) { -32.dp.roundToPx() }

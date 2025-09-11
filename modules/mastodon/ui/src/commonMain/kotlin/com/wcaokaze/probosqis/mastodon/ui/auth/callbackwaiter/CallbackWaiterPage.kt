@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.page.PPage
@@ -48,31 +49,25 @@ class CallbackWaiterPage(
    val instanceBaseUrl: Url
 ) : PPage()
 
-internal sealed class CredentialAccountLoadState {
-   data object Unloading : CredentialAccountLoadState()
-   data object Loading   : CredentialAccountLoadState()
-   data object Error     : CredentialAccountLoadState()
-
-   class Success(
-      val credentialAccount: CredentialAccount,
-      val credentialAccountIcon: Cache<Image?>
-   ) : CredentialAccountLoadState()
-}
+internal data class CredentialAccountIcon(
+   val credentialAccount: CredentialAccount,
+   val credentialAccountIcon: Cache<Image?>
+)
 
 abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
    private val appRepository: AppRepository by inject()
    private val accountRepository: AccountRepository by inject()
    private val credentialRepository: CredentialRepository by inject()
 
-   internal var credentialAccountLoadState: CredentialAccountLoadState
-      by mutableStateOf(CredentialAccountLoadState.Unloading)
+   internal var credentialAccountLoadState: LoadState<CredentialAccountIcon>?
+      by mutableStateOf(null)
 
    fun saveAuthorizedAccountByCode(code: String) {
-      if (credentialAccountLoadState is CredentialAccountLoadState.Loading) {
+      if (credentialAccountLoadState is LoadState.Loading) {
          return
       }
 
-      credentialAccountLoadState = CredentialAccountLoadState.Loading
+      credentialAccountLoadState = LoadState.Loading
 
       pageStateScope.launch {
          val token: Token
@@ -88,13 +83,13 @@ abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>(
 
                credentialRepository.saveCredential(token)
 
-               CredentialAccountLoadState.Success(
-                  credentialAccount, credentialAccountIcon
+               LoadState.Success(
+                  CredentialAccountIcon(credentialAccount, credentialAccountIcon)
                )
             }
          } catch (e: Exception) {
             e.printStackTrace()
-            credentialAccountLoadState = CredentialAccountLoadState.Error
+            credentialAccountLoadState = LoadState.Error(e)
             return@launch
          }
 

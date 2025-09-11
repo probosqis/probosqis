@@ -34,6 +34,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
 import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.page.PPageState
@@ -322,7 +323,7 @@ class CallbackWaiterPageTest {
       rule.onNodeWithText("Verify the Code").performClick()
 
       rule.waitUntil {
-         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+         state.credentialAccountLoadState is LoadState.Success
       }
 
       rule.mainClock.advanceTimeBy(3000L)
@@ -389,7 +390,7 @@ class CallbackWaiterPageTest {
       rule.onNodeWithText("Verify the Code").performClick()
 
       rule.waitUntil {
-         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+         state.credentialAccountLoadState is LoadState.Success
       }
 
       rule.mainClock.advanceTimeBy(3000L)
@@ -453,7 +454,7 @@ class CallbackWaiterPageTest {
       rule.onNodeWithText("Verify the Code").performClick()
 
       rule.waitUntil {
-         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+         state.credentialAccountLoadState is LoadState.Success
       }
 
       rule.mainClock.advanceTimeBy(3000L)
@@ -518,7 +519,7 @@ class CallbackWaiterPageTest {
       rule.onNodeWithText("Verify the Code").performClick()
 
       rule.waitUntil {
-         state.credentialAccountLoadState is CredentialAccountLoadState.Success
+         state.credentialAccountLoadState is LoadState.Success
       }
 
       rule.mainClock.advanceTimeBy(3000L)
