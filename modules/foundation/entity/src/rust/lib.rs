@@ -28,7 +28,6 @@ mod jni_tests {
    use jni::objects::JObject;
    use url::Url;
    use panoptiqon::convert_jvm::CloneIntoJvm;
-   use panoptiqon::jvm_types::JvmNullable;
    use crate::image_bytes::ImageBytes;
    use crate::jvm_types::JvmImage;
 
@@ -36,7 +35,7 @@ mod jni_tests {
    extern "C" fn Java_com_wcaokaze_probosqis_entity_ImageConvertJniTest_image_00024createImage<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JvmNullable<'local, JvmImage<'local>> {
+   ) -> JvmImage<'local> {
       let image_bytes = ImageBytes::new(
          Url::parse("https://github.com/wcaokaze.png").unwrap(),
          Bytes::copy_from_slice(&[
@@ -305,7 +304,7 @@ mod jni_tests {
    extern "C" fn Java_com_wcaokaze_probosqis_entity_ImageConvertJniTest_image_1illegalFormat_00024createImage<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
-   ) -> JvmNullable<'local, JvmImage<'local>> {
+   ) -> JvmImage<'local> {
       let image_bytes = ImageBytes::new(
          Url::parse("https://example.com/illegal.png").unwrap(),
          Bytes::copy_from_slice(&[

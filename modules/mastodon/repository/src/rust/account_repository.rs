@@ -74,7 +74,7 @@ mod jvm {
    use jni::objects::JObject;
    use foundation_entity::jvm_types::JvmImage;
    use mastodon_entity::jvm_types::JvmAccount;
-   use panoptiqon::jvm_types::{JvmCache, JvmNullable, JvmRepository};
+   use panoptiqon::jvm_types::{JvmCache, JvmRepository};
    use panoptiqon::repository::Repository;
 
    #[no_mangle]
@@ -82,8 +82,8 @@ mod jvm {
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
       account: JvmAccount<'local>,
-      account_icon_cache_repo: JvmRepository<'local, JvmNullable<'local, JvmImage<'local>>>
-   ) -> JvmCache<'local, JvmNullable<'local, JvmImage<'local>>> {
+      account_icon_cache_repo: JvmRepository<'local, JvmImage<'local>>
+   ) -> JvmCache<'local, JvmImage<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
       get_account_icon(&mut env, account, account_icon_cache_repo)
@@ -95,8 +95,8 @@ mod jvm {
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
       account: JvmAccount<'local>,
-      account_icon_cache_repo: JvmRepository<'local, JvmNullable<'local, JvmImage<'local>>>
-   ) -> JvmCache<'local, JvmNullable<'local, JvmImage<'local>>> {
+      account_icon_cache_repo: JvmRepository<'local, JvmImage<'local>>
+   ) -> JvmCache<'local, JvmImage<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
       get_account_icon(&mut env, account, account_icon_cache_repo)
@@ -106,8 +106,8 @@ mod jvm {
    fn get_account_icon<'local>(
       env: &mut JNIEnv<'local>,
       account: JvmAccount<'local>,
-      account_icon_cache_repo: JvmRepository<'local, JvmNullable<'local, JvmImage<'local>>>
-   ) -> anyhow::Result<JvmCache<'local, JvmNullable<'local, JvmImage<'local>>>> {
+      account_icon_cache_repo: JvmRepository<'local, JvmImage<'local>>
+   ) -> anyhow::Result<JvmCache<'local, JvmImage<'local>>> {
       use mastodon_entity::account::Account;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
       use crate::account_repository::AccountRepository;

@@ -16,10 +16,25 @@
 
 package com.wcaokaze.probosqis.entity
 
-import androidx.compose.ui.graphics.ImageBitmap
 import com.wcaokaze.probosqis.ext.kotlin.Url
 
-expect class Image {
-   val url: Url
-   val composeImageBitmap: ImageBitmap
+class Image(
+   val url: Url,
+   val bytes: ByteArray,
+) {
+   constructor(
+      rawUrl: String,
+      bytes: ByteArray,
+      @Suppress("UNUSED_PARAMETER")
+      dummy: Unit?,
+   ) : this(
+      Url(rawUrl),
+      bytes,
+   )
+
+   val rawUrl: String
+      get() = url.raw
+
+   val dummy: Unit?
+      get() = null
 }

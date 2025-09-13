@@ -20,8 +20,9 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.wcaokaze.probosqis.entity.Image
+import androidx.compose.ui.graphics.ImageBitmap
 import com.wcaokaze.probosqis.ext.compose.LoadState
+import com.wcaokaze.probosqis.ext.compose.graphics.fromBytes
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.page.PPage
@@ -33,7 +34,6 @@ import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage
-import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -51,7 +51,7 @@ class CallbackWaiterPage(
 
 internal data class CredentialAccountIcon(
    val credentialAccount: CredentialAccount,
-   val credentialAccountIcon: Cache<Image?>
+   val credentialAccountIcon: ImageBitmap
 )
 
 abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>() {
@@ -84,7 +84,10 @@ abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>(
                credentialRepository.saveCredential(token)
 
                LoadState.Success(
-                  CredentialAccountIcon(credentialAccount, credentialAccountIcon)
+                  CredentialAccountIcon(
+                     credentialAccount,
+                     ImageBitmap.fromBytes(credentialAccountIcon.value.bytes)
+                  )
                )
             }
          } catch (e: Exception) {

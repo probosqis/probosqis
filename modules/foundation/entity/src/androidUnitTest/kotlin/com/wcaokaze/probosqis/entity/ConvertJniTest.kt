@@ -23,7 +23,6 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 // Image.fromBytesがBitmapFactoryを使うためRobolectricでの実行が必須
@@ -36,11 +35,10 @@ class ImageConvertJniTest {
    @Test
    fun image() {
       val image = `image$createImage`()
-      assertNotNull(image)
       assertEquals(Url("https://github.com/wcaokaze.png"), image.url)
    }
 
-   private external fun `image$createImage`(): Image?
+   private external fun `image$createImage`(): Image
 
    @Ignore(
       "不正なバイト列を渡すとBitmapFactory.decodeByteArrayがnullを返す想定" +
@@ -52,5 +50,5 @@ class ImageConvertJniTest {
       assertNull(image)
    }
 
-   private external fun `image_illegalFormat$createImage`(): Image?
+   private external fun `image_illegalFormat$createImage`(): Image
 }

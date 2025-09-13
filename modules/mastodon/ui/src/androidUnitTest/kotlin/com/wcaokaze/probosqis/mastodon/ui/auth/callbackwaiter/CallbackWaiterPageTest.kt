@@ -23,7 +23,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
-import com.wcaokaze.probosqis.entity.Image
 import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.foundation.page.PPageState
@@ -155,10 +154,7 @@ class CallbackWaiterPageTest {
                      followRequestCount = 0L,
                      role = null,
                   ),
-                  credentialAccountIcon = Cache(Image(
-                     Url("https://example.com/avatarImageUrl"),
-                     ImageBitmap(100, 100),
-                  )),
+                  credentialAccountIcon = ImageBitmap(100, 100),
                )
             )
          }
@@ -225,10 +221,7 @@ class CallbackWaiterPageTest {
                      followRequestCount = 0L,
                      role = null,
                   ),
-                  credentialAccountIcon = Cache(Image(
-                     Url("https://example.com/avatarImageUrl"),
-                     ImageBitmap(100, 100),
-                  )),
+                  credentialAccountIcon = ImageBitmap(100, 100),
                )
             )
          }
@@ -305,10 +298,7 @@ class CallbackWaiterPageTest {
                followRequestCount = 0L,
                role = null,
             ),
-            credentialAccountIcon = Cache(Image(
-               Url("https://example.com/avatarImageUrl"),
-               ImageBitmap(100, 100),
-            )),
+            credentialAccountIcon = ImageBitmap(100, 100),
          )
       )
 

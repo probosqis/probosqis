@@ -21,7 +21,6 @@ use crate::image_bytes::ImageBytes;
 
 #[cfg(feature = "jvm")]
 use {
-   panoptiqon::jvm_types::JvmNullable,
    crate::jvm_types::{JvmImage, JvmUrl},
 };
 
@@ -32,7 +31,7 @@ impl CacheContent for ImageBytes {
    type JvmKey<'local> = JvmUrl<'local>;
 
    #[cfg(feature = "jvm")]
-   type JvmType<'local> = JvmNullable<'local, JvmImage<'local>>;
+   type JvmType<'local> = JvmImage<'local>;
 
    fn key(&self) -> &Url {
       &self.url
