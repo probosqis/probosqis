@@ -18,15 +18,9 @@ package com.wcaokaze.probosqis.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
-// Image.fromBytesがBitmapFactoryを使うためRobolectricでの実行が必須
-@RunWith(RobolectricTestRunner::class)
 class ImageConvertJniTest {
    init {
       loadNativeLib()
@@ -39,16 +33,4 @@ class ImageConvertJniTest {
    }
 
    private external fun `image$createImage`(): Image
-
-   @Ignore(
-      "不正なバイト列を渡すとBitmapFactory.decodeByteArrayがnullを返す想定" +
-       "だったがどうやらそうじゃないらしい"
-   )
-   @Test
-   fun image_illegalFormat() {
-      val image = `image_illegalFormat$createImage`()
-      assertNull(image)
-   }
-
-   private external fun `image_illegalFormat$createImage`(): Image
 }
