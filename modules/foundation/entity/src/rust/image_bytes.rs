@@ -98,10 +98,12 @@ impl<'local> CloneIntoJvm<'local, JvmByteArray<'local>> for Bytes {
 #[cfg(feature = "jvm")]
 impl<'local> CloneFromJvm<'local, JvmByteArray<'local>> for Bytes {
    fn clone_from_jvm(
-      _env: &mut JNIEnv<'local>,
-      _jvm_instance: &JvmByteArray<'local>
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmByteArray<'local>
    ) -> Bytes {
-      panic!("not implemented");
+      Bytes::from(
+         env.convert_byte_array(&jvm_instance.0).unwrap()
+      )
    }
 }
 
@@ -166,5 +168,18 @@ impl<'local> CloneIntoJvm<'local, JvmImage<'local>> for ImageBytes {
          &self.image_bytes.0,
          &None::<()>,
       )
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmImage<'local>> for ImageBytes {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmImage<'local>
+   ) -> ImageBytes {
+      let raw_url = IMAGE_BYTES_HELPER.raw_url(env, jvm_instance);
+      let bytes   = IMAGE_BYTES_HELPER.bytes  (env, jvm_instance);
+
+      ImageBytes::new(raw_url.parse().unwrap(), bytes)
    }
 }
