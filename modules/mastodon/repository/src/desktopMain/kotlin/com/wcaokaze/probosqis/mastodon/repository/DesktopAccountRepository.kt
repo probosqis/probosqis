@@ -16,21 +16,21 @@
 
 package com.wcaokaze.probosqis.mastodon.repository
 
-import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.entity.ImageBytes
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import com.wcaokaze.probosqis.panoptiqon.Repository
 
 class DesktopAccountRepository(
-   private val accountIconCacheRepo: Repository<Url, Image>
+   private val accountIconCacheRepo: Repository<Url, ImageBytes>
 ) : AccountRepository {
-   override fun getAccountIcon(account: Account): Cache<Image> {
+   override fun getAccountIcon(account: Account): Cache<ImageBytes> {
       return getAccountIcon(account, accountIconCacheRepo)
    }
 
    private external fun getAccountIcon(
       account: Account,
-      accountIconCacheRepo: Repository<Url, Image>
-   ): Cache<Image>
+      accountIconCacheRepo: Repository<Url, ImageBytes>
+   ): Cache<ImageBytes>
 }

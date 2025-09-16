@@ -32,7 +32,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
-import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.entity.ImageBytes
 import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
@@ -552,7 +552,7 @@ class CallbackWaiterPageTest {
             val imageUrl = firstArg<Account>().avatarImageUrl ?: throw IOException()
 
             Cache(
-               Image(imageUrl, imageBytes)
+               ImageBytes(imageUrl, imageBytes)
             )
          }
       }
@@ -620,7 +620,7 @@ class CallbackWaiterPageTest {
             val imageUrl = firstArg<Account>().avatarImageUrl ?: throw IOException()
 
             Cache(
-               Image(imageUrl, imageBytes)
+               ImageBytes(imageUrl, imageBytes)
             )
          }
       }
@@ -685,7 +685,7 @@ class CallbackWaiterPageTest {
             val imageUrl = firstArg<Account>().avatarImageUrl ?: throw IOException()
 
             Cache(
-               Image(imageUrl, imageBytes)
+               ImageBytes(imageUrl, imageBytes)
             )
          }
       }
@@ -751,7 +751,7 @@ class CallbackWaiterPageTest {
             val imageUrl = firstArg<Account>().avatarImageUrl ?: throw IOException()
 
             Cache(
-               Image(imageUrl, imageBytes)
+               ImageBytes(imageUrl, imageBytes)
             )
          }
       }

@@ -28,8 +28,8 @@ class ImageConvertJniTest {
    }
 
    @Test
-   fun image_rust2Kt() {
-      val image = `image_rust2Kt$createImage`()
+   fun imageBytes_rust2Kt() {
+      val image = `imageBytes_rust2Kt$createImageBytes`()
       assertEquals(Url("https://github.com/wcaokaze.png"), image.url)
       assertContentEquals(
          byteArrayOf(
@@ -39,18 +39,18 @@ class ImageConvertJniTest {
       )
    }
 
-   private external fun `image_rust2Kt$createImage`(): Image
+   private external fun `imageBytes_rust2Kt$createImageBytes`(): ImageBytes
 
    @Test
-   fun image_kt2Rust() {
-      val image = Image(
+   fun imageBytes_kt2Rust() {
+      val imageBytes = ImageBytes(
          Url("https://github.com/wcaokaze.png"),
          byteArrayOf(
             0xca.toByte(), 0xfe.toByte(), 0xba.toByte(), 0xbe.toByte(),
          )
       )
-      `image_kt2Rust$assert`(image)
+      `imageBytes_kt2Rust$assert`(imageBytes)
    }
 
-   private external fun `image_kt2Rust$assert`(image: Image)
+   private external fun `imageBytes_kt2Rust$assert`(imageBytes: ImageBytes)
 }

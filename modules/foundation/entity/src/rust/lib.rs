@@ -28,7 +28,7 @@ mod jni_tests {
    use crate::jvm_types::JvmImage;
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_entity_ImageConvertJniTest_image_1rust2Kt_00024createImage<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_entity_ImageConvertJniTest_imageBytes_1rust2Kt_00024createImageBytes<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
    ) -> JvmImage<'local> {
@@ -46,7 +46,7 @@ mod jni_tests {
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_entity_ImageConvertJniTest_image_1kt2Rust_00024assert<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_entity_ImageConvertJniTest_imageBytes_1kt2Rust_00024assert<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
       image: JvmImage<'local>

@@ -126,7 +126,7 @@ impl<'local> JvmType<'local> for JvmByteArray<'local> {
 convert_jvm_helper! {
    static IMAGE_BYTES_HELPER = impl struct ImageBytesConvertHelper
    where
-      jvm_class: "com/wcaokaze/probosqis/entity/Image"
+      jvm_class: "com/wcaokaze/probosqis/entity/ImageBytes"
    {
       fn clone_into_jvm<'local>(..) -> JvmImage<'local>
       where

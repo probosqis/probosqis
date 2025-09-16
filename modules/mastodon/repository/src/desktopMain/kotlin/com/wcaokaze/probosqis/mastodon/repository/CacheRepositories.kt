@@ -16,7 +16,7 @@
 
 package com.wcaokaze.probosqis.mastodon.repository
 
-import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.entity.ImageBytes
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.Application
@@ -31,7 +31,7 @@ class CacheRepositories(
    val application: Repository<Application.Id, Application>,
    val account: Repository<Account.Id, Account>,
    val credentialAccount: Repository<Account.Id, CredentialAccount>,
-   val accountIcon: Repository<Url, Image>,
+   val accountIcon: Repository<Url, ImageBytes>,
    val status: Repository<Status.Id, Status>,
    val noCredentialStatus: Repository<Status.Id, Status.NoCredential>,
    val noCredentialPoll: Repository<Poll.Id, Poll.NoCredential>,

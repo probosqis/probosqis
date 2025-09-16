@@ -18,7 +18,7 @@ package com.wcaokaze.probosqis.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
 
-class Image(
+class ImageBytes(
    val url: Url,
    val bytes: ByteArray,
 ) {

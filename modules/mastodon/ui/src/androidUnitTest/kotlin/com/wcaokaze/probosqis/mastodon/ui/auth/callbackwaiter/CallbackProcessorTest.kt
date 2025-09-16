@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
-import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.entity.ImageBytes
 import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
@@ -79,7 +79,7 @@ class CallbackProcessorTest {
 
       val accountRepository: AccountRepository = mockk {
          every { getAccountIcon(any()) } returns Cache(
-            Image(Url("https://example.com/avatar"), byteArrayOf())
+            ImageBytes(Url("https://example.com/avatar"), byteArrayOf())
          )
       }
 
