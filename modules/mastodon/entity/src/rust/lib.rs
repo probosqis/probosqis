@@ -35,7 +35,7 @@ mod jni_tests {
    use std::sync::{Arc, LazyLock, Mutex};
    use jni::JNIEnv;
    use jni::objects::JObject;
-   use serde::Deserialize;
+   use serde::{Deserialize, Serialize};
    use panoptiqon::cache::{Cache, CacheContent};
    use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm, CloneIntoJvmHelper};
    use panoptiqon::jvm_types::JvmCache;
@@ -60,16 +60,20 @@ mod jni_tests {
    where
       T: CacheContent
          + CloneIntoJvmHelper
+         + Serialize
          + for<'de> Deserialize<'de>
-         + for<'a> CloneIntoJvm<'a, T::JvmType<'a>>,
+         + for<'a> CloneIntoJvm<'a, T::JvmType<'a>>
+         + for<'a> CloneFromJvm<'a, T::JvmType<'a>>,
       T::Key: for<'a> CloneFromJvm<'a, T::JvmKey<'a>>;
 
    impl<T> LazyInitRepo<T>
    where
       T: CacheContent
          + CloneIntoJvmHelper
+         + Serialize
          + for<'de> Deserialize<'de>
-         + for<'a> CloneIntoJvm<'a, T::JvmType<'a>>,
+         + for<'a> CloneIntoJvm<'a, T::JvmType<'a>>
+         + for<'a> CloneFromJvm<'a, T::JvmType<'a>>,
       T::Key: for<'a> CloneFromJvm<'a, T::JvmKey<'a>>
    {
       const fn new(
