@@ -88,10 +88,7 @@ impl TimelineRepository<'_> {
 mod jvm {
    use jni::JNIEnv;
    use jni::objects::JObject;
-   use mastodon_entity::jvm_types::{
-      JvmAccount, JvmPollNoCredential, JvmStatus, JvmStatusNoCredential,
-      JvmToken,
-   };
+   use mastodon_entity::jvm_types::{JvmAccount, JvmInstance, JvmPollNoCredential, JvmStatus, JvmStatusNoCredential, JvmToken};
    use panoptiqon::jvm_types::{JvmList, JvmRepository};
    use panoptiqon::repository::Repository;
 
@@ -103,14 +100,15 @@ mod jvm {
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
       status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
       no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
-      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
       get_home_time_line(
          &mut env, token,
          account_cache_repo, status_cache_repo, no_credential_status_cache_repo,
-         no_credential_poll_cache_repo
+         no_credential_poll_cache_repo, instance_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -122,14 +120,15 @@ mod jvm {
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
       status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
       no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
-      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
       get_home_time_line(
          &mut env, token,
          account_cache_repo, status_cache_repo, no_credential_status_cache_repo,
-         no_credential_poll_cache_repo
+         no_credential_poll_cache_repo, instance_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -139,12 +138,12 @@ mod jvm {
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
       status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
       no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
-      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> anyhow::Result<JvmList<'local, JvmStatus<'local>>> {
-      use mastodon_entity::instance::Instance;
       use mastodon_entity::token::Token;
-      use panoptiqon::cache::Cache;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use crate::cache;
       use super::TimelineRepository;
 
       let mut timeline_repository = TimelineRepository::new(env);
@@ -154,7 +153,7 @@ mod jvm {
       let no_credential_poll_cache_repo = Repository::of(env, &no_credential_poll_cache_repo);
 
       let instance = token.instance(env);
-      let instance = Cache::<Instance>::clone_from_jvm(env, &instance);
+      let instance = cache::instance::clone_from_jvm(env, &instance, &instance_cache_repo)?;
       let token = Token::clone_from_jvm(env, &token, instance);
       let timeline = timeline_repository.get_home_timeline(
          &token,
