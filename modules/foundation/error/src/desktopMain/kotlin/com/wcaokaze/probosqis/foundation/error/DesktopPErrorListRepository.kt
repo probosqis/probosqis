@@ -25,11 +25,11 @@ import java.io.File
 import java.io.IOException
 
 class DesktopPErrorListRepository(
+   appDataDir: File,
    allErrorSerializers: List<PErrorListRepository.PErrorSerializer<*>>,
-   allPageSerializers: List<PageStackRepository.PageSerializer<*>>,
-   directory: File
+   allPageSerializers: List<PageStackRepository.PageSerializer<*>>
 ) : AbstractPErrorListRepository(allErrorSerializers, allPageSerializers) {
-   private val file = File(directory, "MrVA3boZqIa78Man")
+   private val file = File(appDataDir, "MrVA3boZqIa78Man")
 
    /** @throws IOException */
    @TemporaryCacheApi

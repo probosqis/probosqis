@@ -17,7 +17,7 @@
 use chrono::{DateTime, Utc};
 use isolang::Language;
 use panoptiqon::cache::Cache;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 use crate::account::{Account, AccountId};
 use crate::application::Application;
@@ -42,7 +42,7 @@ use {
    },
 };
 
-#[derive(Debug, PartialEq, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Status {
    pub id: StatusId,
    pub no_credential: Cache<NoCredentialStatus>,
@@ -56,7 +56,7 @@ pub struct Status {
    pub filter_results: Vec<FilterResult>,
 }
 
-#[derive(Debug, PartialEq, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct NoCredentialStatus {
    pub id: StatusId,
    pub uri: Option<String>,
@@ -85,19 +85,19 @@ pub struct NoCredentialStatus {
    pub edited_time: Option<DateTime<Utc>>,
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub struct StatusId {
    pub instance_url: Url,
    pub local: StatusLocalId,
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub struct StatusLocalId(pub String);
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct StatusVisibility(pub String);
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct StatusMention {
    pub mentioned_account_id: Option<AccountId>,
    pub mentioned_account_username: Option<String>,
@@ -105,7 +105,7 @@ pub struct StatusMention {
    pub mentioned_account_acct: Option<String>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct StatusHashtag {
    pub name: Option<String>,
    pub url: Option<Url>,

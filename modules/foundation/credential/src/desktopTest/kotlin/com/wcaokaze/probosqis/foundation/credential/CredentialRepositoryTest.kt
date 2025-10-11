@@ -43,11 +43,11 @@ class CredentialRepositoryTest {
    @BeforeTest
    fun initializeRepository() {
       credentialRepository = DesktopCredentialRepository(
+         testDir,
          allCredentialSerializers = listOf(
             stringCredentialSerializer,
             intCredentialSerializer,
-         ),
-         testDir
+         )
       )
    }
 

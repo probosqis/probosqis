@@ -15,7 +15,7 @@
  */
 
 use chrono::{DateTime, Utc};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 use panoptiqon::cache::Cache;
 use crate::custom_emoji::CustomEmoji;
@@ -29,11 +29,12 @@ use {
       JvmBoolean, JvmCache, JvmList, JvmLong, JvmNullable, JvmString,
    },
    crate::jvm_types::{
-      JvmCustomEmoji, JvmPoll, JvmPollNoCredential, JvmPollOption,
+      JvmAccountId, JvmCustomEmoji, JvmPoll, JvmPollId, JvmPollNoCredential,
+      JvmPollOption,
    },
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Poll {
    pub id: PollId,
    pub no_credential: Cache<NoCredentialPoll>,
@@ -41,7 +42,7 @@ pub struct Poll {
    pub voted_options: Vec<i64>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct NoCredentialPoll {
    pub id: PollId,
    pub expire_time: Option<DateTime<Utc>>,
@@ -53,16 +54,16 @@ pub struct NoCredentialPoll {
    pub emojis: Vec<CustomEmoji>,
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub struct PollId {
    pub instance_url: Url,
    pub local: PollLocalId,
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub struct PollLocalId(pub String);
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct PollOption {
    pub title: Option<String>,
    pub vote_count: Option<i64>,
@@ -107,6 +108,31 @@ convert_jvm_helper! {
                jvm_getter_method: "getVotedOptions",
                jvm_return_type: "Ljava/util/List;";
    }
+
+   static POLL_ID_HELPER = impl struct PollIdConverterHelper
+   where
+      jvm_class: "com/wcaokaze/probosqis/mastodon/entity/PollId"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmPollId<'local>
+      where
+         jvm_constructor: "(\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Lkotlin/Unit;\
+         )V";
+
+      fn raw_instance_url<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getRawInstanceUrl",
+         jvm_return_type: "Ljava/lang/String;";
+
+      fn raw_local_id<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getRawLocalId",
+         jvm_return_type: "Ljava/lang/String;";
+   }
 }
 
 #[cfg(feature = "jvm")]
@@ -143,6 +169,33 @@ impl<'local> CloneFromJvm<'local, JvmPoll<'local>> for Poll {
          no_credential,
          is_voted,
          voted_options,
+      }
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmPollId<'local>> for PollId {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmPollId<'local> {
+      POLL_ID_HELPER.clone_into_jvm(
+         env,
+         self.instance_url.as_str(),
+         &self.local.0,
+      )
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmPollId<'local>> for PollId {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmPollId<'local>
+   ) -> PollId {
+      let raw_instance_url = POLL_ID_HELPER.raw_instance_url(env, jvm_instance);
+      let raw_local_id     = POLL_ID_HELPER.raw_local_id    (env, jvm_instance);
+
+      PollId {
+         instance_url: raw_instance_url.parse().unwrap(),
+         local: PollLocalId(raw_local_id),
       }
    }
 }

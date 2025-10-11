@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.app.pagedeck
 
-import android.content.Context
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
@@ -26,10 +25,10 @@ import java.io.File
 import java.io.IOException
 
 class AndroidPageStackRepository(
-   context: Context,
+   appDataDir: File,
    allPageSerializers: List<PageStackRepository.PageSerializer<*>>
 ) : AbstractPageStackRepository(allPageSerializers) {
-   private val dir = File(context.filesDir, "L9h1Qx3xvfo0M0kX")
+   private val dir = File(appDataDir, "L9h1Qx3xvfo0M0kX")
       .also { dir ->
          if (dir.exists()) {
             require(dir.isDirectory)

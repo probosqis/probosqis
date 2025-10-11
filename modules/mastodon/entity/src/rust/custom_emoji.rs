@@ -15,7 +15,7 @@
  */
 
 use panoptiqon::cache::Cache;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 use crate::instance::Instance;
 
@@ -28,7 +28,7 @@ use {
    crate::jvm_types::{JvmCustomEmoji, JvmInstance},
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct CustomEmoji {
    pub instance: Cache<Instance>,
    pub shortcode: String,

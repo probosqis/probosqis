@@ -14,27 +14,63 @@
  * limitations under the License.
  */
 
+use std::path::{Path, PathBuf};
 use url::Url;
 use panoptiqon::cache::CacheContent;
 use crate::account::{Account, AccountId, CredentialAccount};
+use crate::application::{Application, ApplicationId};
 use crate::instance::Instance;
 use crate::poll::{NoCredentialPoll, PollId};
 use crate::status::{NoCredentialStatus, Status, StatusId};
 
 #[cfg(feature = "jvm")]
-use crate::jvm_types::{
-   JvmAccount, JvmCredentialAccount, JvmInstance, JvmPollNoCredential, JvmStatus,
-   JvmStatusNoCredential,
+use {
+   foundation_entity::jvm_types::JvmUrl,
+   crate::jvm_types::{
+      JvmAccount, JvmAccountId, JvmApplication, JvmApplicationId,
+      JvmCredentialAccount, JvmInstance, JvmPollId, JvmPollNoCredential,
+      JvmStatus, JvmStatusId, JvmStatusNoCredential,
+   }
 };
+
+impl CacheContent for Application {
+   type Key = ApplicationId;
+
+   #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmApplicationId<'local>;
+
+   #[cfg(feature = "jvm")]
+   type JvmType<'local> = JvmApplication<'local>;
+
+   fn key(&self) -> &ApplicationId {
+      &self.id
+   }
+
+   fn file_path_for_key(dir_path: &Path, id: &ApplicationId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.application_name)
+   }
+}
 
 impl CacheContent for Instance {
    type Key = Url;
 
    #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmUrl<'local>;
+
+   #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmInstance<'local>;
 
-   fn key(&self) -> Url {
-      self.url.clone()
+   fn key(&self) -> &Url {
+      &self.url
+   }
+
+   fn file_path_for_key(dir_path: &Path, url: &Url) -> PathBuf {
+      use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+
+      let encoded_url: String
+         = utf8_percent_encode(url.as_str(), NON_ALPHANUMERIC).collect();
+
+      dir_path.join(&encoded_url)
    }
 }
 
@@ -42,10 +78,17 @@ impl CacheContent for Account {
    type Key = AccountId;
 
    #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmAccountId<'local>;
+
+   #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmAccount<'local>;
 
-   fn key(&self) -> AccountId {
-      self.id.clone()
+   fn key(&self) -> &AccountId {
+      &self.id
+   }
+
+   fn file_path_for_key(dir_path: &Path, id: &AccountId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.local.0)
    }
 }
 
@@ -53,10 +96,17 @@ impl CacheContent for CredentialAccount {
    type Key = AccountId;
 
    #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmAccountId<'local>;
+
+   #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmCredentialAccount<'local>;
 
-   fn key(&self) -> AccountId {
-      self.id.clone()
+   fn key(&self) -> &AccountId {
+      &self.id
+   }
+
+   fn file_path_for_key(dir_path: &Path, id: &AccountId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.local.0)
    }
 }
 
@@ -64,10 +114,17 @@ impl CacheContent for Status {
    type Key = StatusId;
 
    #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmStatusId<'local>;
+
+   #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmStatus<'local>;
 
-   fn key(&self) -> StatusId {
-      self.id.clone()
+   fn key(&self) -> &StatusId {
+      &self.id
+   }
+
+   fn file_path_for_key(dir_path: &Path, id: &StatusId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.local.0)
    }
 }
 
@@ -75,10 +132,17 @@ impl CacheContent for NoCredentialStatus {
    type Key = StatusId;
 
    #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmStatusId<'local>;
+
+   #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmStatusNoCredential<'local>;
 
-   fn key(&self) -> StatusId {
-      self.id.clone()
+   fn key(&self) -> &StatusId {
+      &self.id
+   }
+
+   fn file_path_for_key(dir_path: &Path, id: &StatusId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.local.0)
    }
 }
 
@@ -86,9 +150,51 @@ impl CacheContent for NoCredentialPoll {
    type Key = PollId;
 
    #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmPollId<'local>;
+
+   #[cfg(feature = "jvm")]
    type JvmType<'local> = JvmPollNoCredential<'local>;
 
-   fn key(&self) -> PollId {
-      self.id.clone()
+   fn key(&self) -> &PollId {
+      &self.id
+   }
+
+   fn file_path_for_key(dir_path: &Path, id: &PollId) -> PathBuf {
+      join_id_as_file_path(dir_path, &id.instance_url, &id.local.0)
+   }
+}
+
+fn join_id_as_file_path(
+   dir_path: &Path,
+   instance_url: &Url,
+   local_id: &str
+) -> PathBuf {
+   use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+
+   let mut path_buf = dir_path.to_path_buf();
+
+   let encoded_url: String
+      = utf8_percent_encode(instance_url.as_str(), NON_ALPHANUMERIC).collect();
+
+   path_buf.push(encoded_url);
+   path_buf.push(local_id);
+
+   path_buf
+}
+
+#[cfg(test)]
+mod test {
+   #[test]
+   fn join_id_as_file_path() {
+      use std::path::{Path, PathBuf};
+
+      assert_eq!(
+         PathBuf::from("test/join_id_as_file_path/https%3A%2F%2Fexample%2Ecom%2F/local_id"),
+         super::join_id_as_file_path(
+            &Path::new("test/join_id_as_file_path"),
+            &"https://example.com".parse().unwrap(),
+            "local_id"
+         )
+      );
    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 wcaokaze
+ * Copyright 2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-use std::sync::LazyLock;
-use panoptiqon::Panoptiqon;
+package com.wcaokaze.probosqis.ext.compose.graphics
 
-#[cfg(feature="jvm")]
-pub mod convert_jvm_helper;
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
+import org.jetbrains.skia.Image
 
-#[cfg(feature="jvm")]
-pub mod unwrap_or_throw;
-
-pub static PANOPTIQON: LazyLock<Panoptiqon> = LazyLock::new(|| Panoptiqon::new());
+actual fun ImageBitmap.Companion.fromBytes(bytes: ByteArray): ImageBitmap {
+   val image = Image.makeFromEncoded(bytes)
+   return image.toComposeImageBitmap()
+}

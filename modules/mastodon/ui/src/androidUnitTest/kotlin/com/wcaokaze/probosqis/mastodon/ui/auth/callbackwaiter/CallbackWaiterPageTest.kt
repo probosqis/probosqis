@@ -23,13 +23,13 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.wcaokaze.probosqis.capsiqum.page.test.rememberTestPageState
-import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.entity.Status
-import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import io.mockk.mockk
 import kotlinx.datetime.Instant
@@ -76,7 +76,7 @@ class CallbackWaiterPageTest {
    fun screenshot_verifying() {
       rule.setContent {
          val state = rememberPageState().also {
-            it.credentialAccountLoadState = CredentialAccountLoadState.Loading
+            it.credentialAccountLoadState = LoadState.Loading
          }
 
          CallbackWaiterPage(state)
@@ -89,7 +89,7 @@ class CallbackWaiterPageTest {
    fun screenshot_error() {
       rule.setContent {
          val state = rememberPageState().also {
-            it.credentialAccountLoadState = CredentialAccountLoadState.Error
+            it.credentialAccountLoadState = LoadState.Error(Exception())
          }
 
          CallbackWaiterPage(state)
@@ -102,61 +102,60 @@ class CallbackWaiterPageTest {
    fun screenshot_success() {
       rule.setContent {
          val state = rememberPageState().also {
-            it.credentialAccountLoadState = CredentialAccountLoadState.Success(
-               CredentialAccount(
-                  id = Account.Id(
-                     instanceUrl = Url("https://example.com/"),
-                     Account.LocalId("account id"),
-                  ),
-                  Cache(Account(
-                     instance = Cache(Instance(
-                        Url("https://example.com/"),
-                        version = "0.0.0",
-                        versionCheckedTime = Instant.fromEpochMilliseconds(
-                           0L
-                        ),
-                     )),
+            it.credentialAccountLoadState = LoadState.Success(
+               CredentialAccountIcon(
+                  CredentialAccount(
                      id = Account.Id(
                         instanceUrl = Url("https://example.com/"),
                         Account.LocalId("account id"),
                      ),
-                     "username",
-                     "acct",
-                     Url("https://example.com/account_id"),
-                     "displayName",
-                     "profileNote",
-                     Url("https://example.com/avatarImageUrl"),
-                     Url("https://example.com/avatarStaticImageUrl"),
-                     Url("https://example.com/headerImageUrl"),
-                     Url("https://example.com/headerStaticImageUrl"),
-                     isLocked = false,
-                     profileFields = emptyList(),
-                     emojisInProfile = emptyList(),
-                     isBot = false,
-                     isGroup = false,
-                     isDiscoverable = false,
-                     isNoindex = false,
-                     movedTo = null,
-                     isSuspended = false,
-                     isLimited = false,
-                     createdTime = Instant.fromEpochMilliseconds(0L),
-                     lastStatusPostTime = Instant.fromEpochMilliseconds(0L),
-                     statusCount = 0L,
-                     followerCount = 0L,
-                     followeeCount = 0L,
-                  )),
-                  rawProfileNote = "profileNote",
-                  rawProfileFields = emptyList(),
-                  defaultPostVisibility = Status.Visibility.PUBLIC,
-                  defaultPostSensitivity = false,
-                  defaultPostLanguage = "ja",
-                  followRequestCount = 0L,
-                  role = null,
-               ),
-               credentialAccountIcon = Cache(Image(
-                  Url("https://example.com/avatarImageUrl"),
-                  ImageBitmap(100, 100),
-               )),
+                     Cache(Account(
+                        instance = Cache(Instance(
+                           Url("https://example.com/"),
+                           version = "0.0.0",
+                           versionCheckedTime = Instant.fromEpochMilliseconds(
+                              0L
+                           ),
+                        )),
+                        id = Account.Id(
+                           instanceUrl = Url("https://example.com/"),
+                           Account.LocalId("account id"),
+                        ),
+                        "username",
+                        "acct",
+                        Url("https://example.com/account_id"),
+                        "displayName",
+                        "profileNote",
+                        Url("https://example.com/avatarImageUrl"),
+                        Url("https://example.com/avatarStaticImageUrl"),
+                        Url("https://example.com/headerImageUrl"),
+                        Url("https://example.com/headerStaticImageUrl"),
+                        isLocked = false,
+                        profileFields = emptyList(),
+                        emojisInProfile = emptyList(),
+                        isBot = false,
+                        isGroup = false,
+                        isDiscoverable = false,
+                        isNoindex = false,
+                        movedTo = null,
+                        isSuspended = false,
+                        isLimited = false,
+                        createdTime = Instant.fromEpochMilliseconds(0L),
+                        lastStatusPostTime = Instant.fromEpochMilliseconds(0L),
+                        statusCount = 0L,
+                        followerCount = 0L,
+                        followeeCount = 0L,
+                     )),
+                     rawProfileNote = "profileNote",
+                     rawProfileFields = emptyList(),
+                     defaultPostVisibility = Status.Visibility.PUBLIC,
+                     defaultPostSensitivity = false,
+                     defaultPostLanguage = "ja",
+                     followRequestCount = 0L,
+                     role = null,
+                  ),
+                  credentialAccountIcon = ImageBitmap(100, 100),
+               )
             )
          }
 
@@ -170,61 +169,60 @@ class CallbackWaiterPageTest {
    fun screenshot_success_tooLongName() {
       rule.setContent {
          val state = rememberPageState().also {
-            it.credentialAccountLoadState = CredentialAccountLoadState.Success(
-               CredentialAccount(
-                  id = Account.Id(
-                     instanceUrl = Url("https://example.com/"),
-                     Account.LocalId("account id"),
-                  ),
-                  Cache(Account(
-                     instance = Cache(Instance(
-                        Url("https://example.com/"),
-                        version = "0.0.0",
-                        versionCheckedTime = Instant.fromEpochMilliseconds(
-                           0L
-                        ),
-                     )),
+            it.credentialAccountLoadState = LoadState.Success(
+               CredentialAccountIcon(
+                  CredentialAccount(
                      id = Account.Id(
                         instanceUrl = Url("https://example.com/"),
                         Account.LocalId("account id"),
                      ),
-                     "username".repeat(10),
-                     "acct".repeat(10),
-                     Url("https://example.com/account_id"),
-                     "displayName".repeat(10),
-                     "profileNote",
-                     Url("https://example.com/avatarImageUrl"),
-                     Url("https://example.com/avatarStaticImageUrl"),
-                     Url("https://example.com/headerImageUrl"),
-                     Url("https://example.com/headerStaticImageUrl"),
-                     isLocked = false,
-                     profileFields = emptyList(),
-                     emojisInProfile = emptyList(),
-                     isBot = false,
-                     isGroup = false,
-                     isDiscoverable = false,
-                     isNoindex = false,
-                     movedTo = null,
-                     isSuspended = false,
-                     isLimited = false,
-                     createdTime = Instant.fromEpochMilliseconds(0L),
-                     lastStatusPostTime = Instant.fromEpochMilliseconds(0L),
-                     statusCount = 0L,
-                     followerCount = 0L,
-                     followeeCount = 0L,
-                  )),
-                  rawProfileNote = "profileNote",
-                  rawProfileFields = emptyList(),
-                  defaultPostVisibility = Status.Visibility.PUBLIC,
-                  defaultPostSensitivity = false,
-                  defaultPostLanguage = "ja",
-                  followRequestCount = 0L,
-                  role = null,
-               ),
-               credentialAccountIcon = Cache(Image(
-                  Url("https://example.com/avatarImageUrl"),
-                  ImageBitmap(100, 100),
-               )),
+                     Cache(Account(
+                        instance = Cache(Instance(
+                           Url("https://example.com/"),
+                           version = "0.0.0",
+                           versionCheckedTime = Instant.fromEpochMilliseconds(
+                              0L
+                           ),
+                        )),
+                        id = Account.Id(
+                           instanceUrl = Url("https://example.com/"),
+                           Account.LocalId("account id"),
+                        ),
+                        "username".repeat(10),
+                        "acct".repeat(10),
+                        Url("https://example.com/account_id"),
+                        "displayName".repeat(10),
+                        "profileNote",
+                        Url("https://example.com/avatarImageUrl"),
+                        Url("https://example.com/avatarStaticImageUrl"),
+                        Url("https://example.com/headerImageUrl"),
+                        Url("https://example.com/headerStaticImageUrl"),
+                        isLocked = false,
+                        profileFields = emptyList(),
+                        emojisInProfile = emptyList(),
+                        isBot = false,
+                        isGroup = false,
+                        isDiscoverable = false,
+                        isNoindex = false,
+                        movedTo = null,
+                        isSuspended = false,
+                        isLimited = false,
+                        createdTime = Instant.fromEpochMilliseconds(0L),
+                        lastStatusPostTime = Instant.fromEpochMilliseconds(0L),
+                        statusCount = 0L,
+                        followerCount = 0L,
+                        followeeCount = 0L,
+                     )),
+                     rawProfileNote = "profileNote",
+                     rawProfileFields = emptyList(),
+                     defaultPostVisibility = Status.Visibility.PUBLIC,
+                     defaultPostSensitivity = false,
+                     defaultPostLanguage = "ja",
+                     followRequestCount = 0L,
+                     role = null,
+                  ),
+                  credentialAccountIcon = ImageBitmap(100, 100),
+               )
             )
          }
 
@@ -240,7 +238,7 @@ class CallbackWaiterPageTest {
 
       rule.setContent {
          state = rememberPageState().also {
-            it.credentialAccountLoadState = CredentialAccountLoadState.Loading
+            it.credentialAccountLoadState = LoadState.Loading
          }
 
          CallbackWaiterPage(state)
@@ -248,61 +246,60 @@ class CallbackWaiterPageTest {
 
       rule.mainClock.autoAdvance = false
 
-      state.credentialAccountLoadState = CredentialAccountLoadState.Success(
-         CredentialAccount(
-            id = Account.Id(
-               instanceUrl = Url("https://example.com/"),
-               Account.LocalId("account id"),
-            ),
-            Cache(Account(
-               instance = Cache(Instance(
-                  Url("https://example.com/"),
-                  version = "0.0.0",
-                  versionCheckedTime = Instant.fromEpochMilliseconds(
-                     0L
-                  ),
-               )),
+      state.credentialAccountLoadState = LoadState.Success(
+         CredentialAccountIcon(
+            CredentialAccount(
                id = Account.Id(
                   instanceUrl = Url("https://example.com/"),
                   Account.LocalId("account id"),
                ),
-               "username",
-               "acct",
-               Url("https://example.com/account_id"),
-               "displayName",
-               "profileNote",
-               Url("https://example.com/avatarImageUrl"),
-               Url("https://example.com/avatarStaticImageUrl"),
-               Url("https://example.com/headerImageUrl"),
-               Url("https://example.com/headerStaticImageUrl"),
-               isLocked = false,
-               profileFields = emptyList(),
-               emojisInProfile = emptyList(),
-               isBot = false,
-               isGroup = false,
-               isDiscoverable = false,
-               isNoindex = false,
-               movedTo = null,
-               isSuspended = false,
-               isLimited = false,
-               createdTime = Instant.fromEpochMilliseconds(0L),
-               lastStatusPostTime = Instant.fromEpochMilliseconds(0L),
-               statusCount = 0L,
-               followerCount = 0L,
-               followeeCount = 0L,
-            )),
-            rawProfileNote = "profileNote",
-            rawProfileFields = emptyList(),
-            defaultPostVisibility = Status.Visibility.PUBLIC,
-            defaultPostSensitivity = false,
-            defaultPostLanguage = "ja",
-            followRequestCount = 0L,
-            role = null,
-         ),
-         credentialAccountIcon = Cache(Image(
-            Url("https://example.com/avatarImageUrl"),
-            ImageBitmap(100, 100),
-         )),
+               Cache(Account(
+                  instance = Cache(Instance(
+                     Url("https://example.com/"),
+                     version = "0.0.0",
+                     versionCheckedTime = Instant.fromEpochMilliseconds(
+                        0L
+                     ),
+                  )),
+                  id = Account.Id(
+                     instanceUrl = Url("https://example.com/"),
+                     Account.LocalId("account id"),
+                  ),
+                  "username",
+                  "acct",
+                  Url("https://example.com/account_id"),
+                  "displayName",
+                  "profileNote",
+                  Url("https://example.com/avatarImageUrl"),
+                  Url("https://example.com/avatarStaticImageUrl"),
+                  Url("https://example.com/headerImageUrl"),
+                  Url("https://example.com/headerStaticImageUrl"),
+                  isLocked = false,
+                  profileFields = emptyList(),
+                  emojisInProfile = emptyList(),
+                  isBot = false,
+                  isGroup = false,
+                  isDiscoverable = false,
+                  isNoindex = false,
+                  movedTo = null,
+                  isSuspended = false,
+                  isLimited = false,
+                  createdTime = Instant.fromEpochMilliseconds(0L),
+                  lastStatusPostTime = Instant.fromEpochMilliseconds(0L),
+                  statusCount = 0L,
+                  followerCount = 0L,
+                  followeeCount = 0L,
+               )),
+               rawProfileNote = "profileNote",
+               rawProfileFields = emptyList(),
+               defaultPostVisibility = Status.Visibility.PUBLIC,
+               defaultPostSensitivity = false,
+               defaultPostLanguage = "ja",
+               followRequestCount = 0L,
+               role = null,
+            ),
+            credentialAccountIcon = ImageBitmap(100, 100),
+         )
       )
 
       rule.waitForIdle()

@@ -15,7 +15,7 @@
  */
 
 use chrono::{DateTime, Utc};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use crate::status::StatusId;
 
 #[cfg(feature = "jvm")]
@@ -31,7 +31,7 @@ use {
    },
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Filter {
    pub id: FilterId,
    pub title: Option<String>,
@@ -42,35 +42,35 @@ pub struct Filter {
    pub statuses: Vec<FilterStatus>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FilterId(pub String);
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FilterContext(pub String);
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FilterAction(pub String);
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FilterKeyword {
    pub id: FilterKeywordId,
    pub keyword: Option<String>,
    pub whole_word: Option<bool>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FilterKeywordId(pub String);
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FilterStatus {
    pub id: FilterStatusId,
    pub status_id: StatusId,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FilterStatusId(pub String);
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FilterResult {
    pub filter: Option<Filter>,
    pub keyword_matches: Vec<String>,

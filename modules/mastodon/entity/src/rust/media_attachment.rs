@@ -15,7 +15,7 @@
  */
 
 use std::time::Duration;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 
 #[cfg(feature = "jvm")]
@@ -32,7 +32,7 @@ use {
    },
 };
 
-#[derive(Debug, PartialEq, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct MediaAttachment {
    pub id: MediaAttachmentId,
    pub url: Option<Url>,
@@ -43,10 +43,10 @@ pub struct MediaAttachment {
    pub blurhash: Option<String>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct MediaAttachmentId(pub String);
 
-#[derive(Debug, PartialEq, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum MediaAttachmentMetadata {
    Image {
       original_size: Option<ImageSize>,
@@ -80,19 +80,19 @@ pub enum MediaAttachmentMetadata {
    },
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ImageSize {
    pub width: i64,
    pub height: i64,
 }
 
-#[derive(Debug, PartialEq, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ImageFocus {
    pub x: f64,
    pub y: f64,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct VideoSize {
    pub width: Option<i64>,
    pub height: Option<i64>,
@@ -101,7 +101,7 @@ pub struct VideoSize {
    pub bitrate: Option<i64>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct AudioSize {
    pub duration: Option<Duration>,
    pub bitrate: Option<i64>,

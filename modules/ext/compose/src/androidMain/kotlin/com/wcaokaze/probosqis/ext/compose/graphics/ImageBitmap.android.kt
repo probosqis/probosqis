@@ -14,34 +14,15 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.entity
+package com.wcaokaze.probosqis.ext.compose.graphics
 
 import android.graphics.BitmapFactory
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import com.wcaokaze.probosqis.ext.kotlin.Url
 
-actual class Image(
-   actual val url: Url,
-   actual val composeImageBitmap: ImageBitmap
-) {
-   val rawUrl: String
-      get() = url.raw
+actual fun ImageBitmap.Companion.fromBytes(bytes: ByteArray): ImageBitmap {
+   val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+      ?: throw IllegalArgumentException()
 
-   val imageBytes: ByteArray
-      get() = throw NotImplementedError()
-
-   companion object {
-      @JvmStatic
-      fun fromBytes(rawUrl: String, imageBytes: ByteArray): Image? {
-         return try {
-            val bitmap = BitmapFactory
-               .decodeByteArray(imageBytes, 0, imageBytes.size) ?: return null
-            val composeImageBitmap = bitmap.asImageBitmap()
-            Image(Url(rawUrl), composeImageBitmap)
-         } catch (_: Exception) {
-            null
-         }
-      }
-   }
+   return bitmap.asImageBitmap()
 }

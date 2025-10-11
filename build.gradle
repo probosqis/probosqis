@@ -33,7 +33,7 @@ subprojects {
    tasks.register('cargoJniTestBuild', Exec) {
       workingDir rootProject.projectDir
 
-      def args = ['+nightly', 'build', '--features', 'jni-test mock']
+      def args = ['+nightly', 'build', '--features', 'jni-test testable']
       if (isXterm()) {
          args += '--color=always'
       }

@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.foundation.credential
 
-import android.content.Context
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
 import com.wcaokaze.probosqis.panoptiqon.loadCache
@@ -27,12 +26,12 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 class AndroidCredentialRepository(
-   context: Context,
+   appDataDir: File,
    allCredentialSerializers: List<CredentialRepository.CredentialSerializer<*>>
 ) : AbstractCredentialRepository(allCredentialSerializers) {
    private val lock = ReentrantLock()
 
-   private val dir = File(context.filesDir, "YeNl4QfY6KDSixTZ")
+   private val dir = File(appDataDir, "YeNl4QfY6KDSixTZ")
       .also { dir ->
          if (dir.exists()) {
             require(dir.isDirectory)

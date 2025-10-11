@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 use panoptiqon::cache::Cache;
 use crate::account::Account;
@@ -30,7 +30,7 @@ use {
    crate::jvm_types::{JvmAccount, JvmPreviewCard, JvmPreviewCardAuthor},
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct PreviewCard {
    pub url: Option<Url>,
    pub title: Option<String>,
@@ -47,7 +47,7 @@ pub struct PreviewCard {
    pub blurhash: Option<String>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct PreviewCardAuthor {
    pub name: Option<String>,
    pub url: Option<Url>,

@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
+use mastodon_entity::account::Account;
 use mastodon_entity::instance::Instance;
-use mastodon_entity::status::{Status, StatusHashtag, StatusMention};
+use mastodon_entity::poll::NoCredentialPoll;
+use mastodon_entity::status::{NoCredentialStatus, Status, StatusHashtag, StatusMention};
 use panoptiqon::cache::Cache;
+use panoptiqon::repository::Repository;
 use crate::cache;
 
 use mastodon_webapi::entity::status::{
@@ -32,11 +35,10 @@ pub fn from_api(
    #[cfg(feature = "jvm")] env: &mut JNIEnv,
    instance: Cache<Instance>,
    entity: ApiStatus,
-   account_cache_repository: &mut cache::account::Repository,
-   status_cache_repository: &mut cache::status::StatusRepository,
-   no_credential_status_cache_repository:
-      &mut cache::status::NoCredentialStatusRepository,
-   no_credential_poll_repository: &mut cache::poll::NoCredentialPollRepository,
+   account_cache_repository: &Repository<Account>,
+   status_cache_repository: &Repository<Status>,
+   no_credential_status_cache_repository: &Repository<NoCredentialStatus>,
+   no_credential_poll_repository: &Repository<NoCredentialPoll>
 ) -> anyhow::Result<Status> {
    use anyhow::Context;
    use chrono::DateTime;

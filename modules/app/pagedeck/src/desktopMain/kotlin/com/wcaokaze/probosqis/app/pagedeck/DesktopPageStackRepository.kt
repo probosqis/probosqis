@@ -25,10 +25,10 @@ import java.io.File
 import java.io.IOException
 
 class DesktopPageStackRepository(
-   allPageSerializers: List<PageStackRepository.PageSerializer<*>>,
-   directory: File
+   appDataDir: File,
+   allPageSerializers: List<PageStackRepository.PageSerializer<*>>
 ) : AbstractPageStackRepository(allPageSerializers) {
-   private val dir = File(directory, "L9h1Qx3xvfo0M0kX")
+   private val dir = File(appDataDir, "L9h1Qx3xvfo0M0kX")
       .also { dir ->
          if (dir.exists()) {
             require(dir.isDirectory)

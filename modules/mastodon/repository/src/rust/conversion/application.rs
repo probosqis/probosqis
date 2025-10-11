@@ -25,6 +25,7 @@ pub fn from_api(
    instance_cache: Cache<Instance>
 ) -> anyhow::Result<Application> {
    use chrono::{DateTime, Utc};
+   use mastodon_entity::application::ApplicationId;
    use mastodon_webapi::entity::application::ApplicationClientSecretExpiresAt;
 
    let ApiApplication {
@@ -41,6 +42,10 @@ pub fn from_api(
       .unwrap_or(vec![]);
 
    let application = Application {
+      id: ApplicationId {
+         instance_url: instance_cache.get().url.clone(),
+         application_name: name.clone(),
+      },
       instance: instance_cache,
       name,
       website: website.and_then(|url| url.parse().ok()),
