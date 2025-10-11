@@ -141,10 +141,9 @@ mod jvm {
       no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
       no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
    ) -> anyhow::Result<JvmList<'local, JvmStatus<'local>>> {
-      use mastodon_entity::instance::Instance;
       use mastodon_entity::token::Token;
-      use panoptiqon::cache::Cache;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use crate::cache;
       use super::TimelineRepository;
 
       let mut timeline_repository = TimelineRepository::new(env);
@@ -154,7 +153,7 @@ mod jvm {
       let no_credential_poll_cache_repo = Repository::of(env, &no_credential_poll_cache_repo);
 
       let instance = token.instance(env);
-      let instance = Cache::<Instance>::clone_from_jvm(env, &instance);
+      let instance = cache::instance::clone_from_jvm(env, &instance)?;
       let token = Token::clone_from_jvm(env, &token, instance);
       let timeline = timeline_repository.get_home_timeline(
          &token,
