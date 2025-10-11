@@ -101,16 +101,18 @@ pub mod instance {
    use {
       jni::JNIEnv,
       mastodon_entity::jvm_types::JvmInstance,
-      panoptiqon::jvm_types::JvmCache,
+      panoptiqon::jvm_types::{JvmCache, JvmRepository},
    };
 
    #[cfg(feature = "jvm")]
    pub(crate) fn clone_from_jvm<'local>(
       env: &mut JNIEnv<'local>,
       java_instance: &JvmCache<'local, JvmInstance<'local>>,
+      instance_cache_repo: &JvmRepository<'local, JvmInstance<'local>>
    ) -> anyhow::Result<Cache<Instance>> {
       use panoptiqon::convert_jvm::CloneFromJvm;
       use panoptiqon::jvm_type::JvmType;
+      use panoptiqon::repository::Repository;
 
       if env.is_instance_of(
          java_instance.j_object(),
@@ -129,7 +131,7 @@ pub mod instance {
 
          let instance = Instance::clone_from_jvm(env, &jvm_instance);
 
-         let mut repo = REPO.write(env)?;
+         let repo = Repository::of(env, instance_cache_repo);
          Ok(repo.save(instance))
       }
    }
