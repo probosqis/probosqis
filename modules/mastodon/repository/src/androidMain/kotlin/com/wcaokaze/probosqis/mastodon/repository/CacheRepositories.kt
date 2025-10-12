@@ -19,18 +19,22 @@ package com.wcaokaze.probosqis.mastodon.repository
 import com.wcaokaze.probosqis.entity.ImageBytes
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.mastodon.entity.Account
-import com.wcaokaze.probosqis.panoptiqon.Cache
+import com.wcaokaze.probosqis.mastodon.entity.Application
+import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
+import com.wcaokaze.probosqis.mastodon.entity.Instance
+import com.wcaokaze.probosqis.mastodon.entity.Poll
+import com.wcaokaze.probosqis.mastodon.entity.Status
 import com.wcaokaze.probosqis.panoptiqon.Repository
 
-class DesktopAccountRepository(
-   private val accountIconCacheRepo: Repository<Url, ImageBytes>
-) : AccountRepository {
-   override fun getAccountIcon(account: Account): Cache<ImageBytes> {
-      return getAccountIcon(account, accountIconCacheRepo)
-   }
+class CacheRepositories(
+   val instance: Repository<Url, Instance>,
+   val application: Repository<Application.Id, Application>,
+   val account: Repository<Account.Id, Account>,
+   val credentialAccount: Repository<Account.Id, CredentialAccount>,
+   val accountIcon: Repository<Url, ImageBytes>,
+   val status: Repository<Status.Id, Status>,
+   val noCredentialStatus: Repository<Status.Id, Status.NoCredential>,
+   val noCredentialPoll: Repository<Poll.Id, Poll.NoCredential>,
+)
 
-   private external fun getAccountIcon(
-      account: Account,
-      accountIconCacheRepo: Repository<Url, ImageBytes>
-   ): Cache<ImageBytes>
-}
+external fun createCacheRepositories(dataDirPath: String): CacheRepositories

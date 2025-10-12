@@ -15,7 +15,7 @@
  */
 
 use chrono::{DateTime, Utc};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 
 #[cfg(feature = "jvm")]
@@ -27,7 +27,7 @@ use {
    crate::jvm_types::JvmInstance,
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Instance {
    pub url: Url,
    pub version: String,

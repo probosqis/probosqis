@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.entity
+package com.wcaokaze.probosqis.ext.compose.graphics
 
 import androidx.compose.ui.graphics.ImageBitmap
-import com.wcaokaze.probosqis.ext.kotlin.Url
 
-expect class Image {
-   val url: Url
-   val composeImageBitmap: ImageBitmap
-}
+/**
+ * @throws Exception 指定したバイト列を画像として読み込めない場合
+ */
+expect fun ImageBitmap.Companion.fromBytes(bytes: ByteArray): ImageBitmap

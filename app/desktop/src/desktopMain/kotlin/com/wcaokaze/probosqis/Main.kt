@@ -44,10 +44,12 @@ import com.wcaokaze.probosqis.foundation.resources.ProbosqisTheme
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.repository.AccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.repository.CacheRepositories
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopAppRepository
 import com.wcaokaze.probosqis.mastodon.repository.DesktopTimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
+import com.wcaokaze.probosqis.mastodon.repository.createCacheRepositories
 import com.wcaokaze.probosqis.nodeinfo.repository.DesktopNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.testpages.TestError
@@ -60,6 +62,7 @@ import com.wcaokaze.probosqis.testpages.testPageComposable
 import com.wcaokaze.probosqis.testpages.testTimelinePageComposable
 import kotlinx.collections.immutable.persistentListOf
 import org.koin.compose.KoinApplication
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.io.File
 import java.net.URLEncoder
@@ -97,7 +100,7 @@ object Main {
       errorSerializer<TestError>(),
    )
 
-   private val probosqisDataDir = File(System.getProperty("user.home"), ".probosqisData")
+   private val appDataDir = File(System.getProperty("user.home"), ".probosqisData")
 
    private val koinModule = module {
       single { PPageSwitcherState(allPageComposables) }
@@ -130,40 +133,97 @@ object Main {
       }
    }
 
+   private val cacheRepositoryKoinModule = module {
+      single<CacheRepositories> {
+         createCacheRepositories(appDataDir.absolutePath)
+      }
+
+      single(named("instanceRepository")) {
+         get<CacheRepositories>().instance
+      }
+
+      single(named("applicationRepository")) {
+         get<CacheRepositories>().application
+      }
+
+      single(named("accountCacheRepository")) {
+         get<CacheRepositories>().account
+      }
+
+      single(named("credentialAccountCacheRepository")) {
+         get<CacheRepositories>().credentialAccount
+      }
+
+      single(named("accountIconCacheRepository")) {
+         get<CacheRepositories>().accountIcon
+      }
+
+      single(named("statusRepository")) {
+         get<CacheRepositories>().status
+      }
+
+      single(named("noCredentialStatusRepository")) {
+         get<CacheRepositories>().noCredentialStatus
+      }
+
+      single(named("noCredentialPollCacheRepository")) {
+         get<CacheRepositories>().noCredentialPoll
+      }
+   }
+
    private val repositoriesKoinModule = module {
       single<PageDeckRepository> {
-         DesktopPageDeckRepository(pageStackRepository = get(), probosqisDataDir)
+         DesktopPageDeckRepository(appDataDir, pageStackRepository = get())
       }
 
       single<PageStackRepository> {
-         DesktopPageStackRepository(allPageSerializers, probosqisDataDir)
+         DesktopPageStackRepository(appDataDir, allPageSerializers)
       }
 
       single<PErrorListRepository> {
          DesktopPErrorListRepository(
+            appDataDir,
             allErrorSerializers,
-            allPageSerializers,
-            probosqisDataDir
+            allPageSerializers
          )
       }
 
       single<CredentialRepository> {
          DesktopCredentialRepository(
+            appDataDir,
             allCredentialSerializers = listOf(
                credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token> { token ->
                   val encodedUrl = URLEncoder.encode(token.accountId.instanceUrl.raw, "UTF-8")
                   val localId = token.accountId.local.value
                   "mastodon_${encodedUrl}_$localId"
                },
-            ),
-            probosqisDataDir
+            )
          )
       }
 
-      single<AppRepository> { DesktopAppRepository(probosqisDataDir) }
-      single<AccountRepository> { DesktopAccountRepository() }
+      single<AppRepository> {
+         DesktopAppRepository(
+            get(named("instanceRepository")),
+            get(named("applicationRepository")),
+            get(named("accountCacheRepository")),
+            get(named("credentialAccountCacheRepository"))
+         )
+      }
+      single<AccountRepository> {
+         DesktopAccountRepository(
+            get(named("accountIconCacheRepository"))
+         )
+      }
       single<NodeInfoRepository> { DesktopNodeInfoRepository() }
-      single<TimelineRepository> { DesktopTimelineRepository() }
+      single<TimelineRepository> {
+         DesktopTimelineRepository(
+            get(named("accountCacheRepository")),
+            get(named("statusRepository")),
+            get(named("noCredentialStatusRepository")),
+            get(named("noCredentialPollCacheRepository")),
+            get(named("instanceRepository"))
+         )
+      }
    }
 
    @JvmStatic
@@ -177,7 +237,10 @@ object Main {
                   single { appCoroutineScope }
                }
 
-               modules(koinModule, repositoriesKoinModule, appKoinModule)
+               modules(
+                  koinModule, cacheRepositoryKoinModule, repositoriesKoinModule,
+                  appKoinModule,
+               )
             }
          ) {
             ProbosqisTheme {

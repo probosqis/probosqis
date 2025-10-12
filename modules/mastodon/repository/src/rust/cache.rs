@@ -14,31 +14,105 @@
  * limitations under the License.
  */
 
+use ext_panoptiqon::PANOPTIQON;
+
+#[cfg(feature = "jvm")]
+use {
+   jni::JNIEnv,
+   jni::objects::{JClass, JString},
+   panoptiqon::jvm_type,
+};
+
+#[cfg(feature = "jvm")]
+jvm_type! {
+   JvmCacheRepositories,
+}
+
+#[cfg(feature = "jvm")]
+#[no_mangle]
+extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_CacheRepositoriesKt_createCacheRepositories<'local>(
+   mut env: JNIEnv<'local>,
+   _class: JClass<'local>,
+   data_dir_path: JString<'local>
+) -> JvmCacheRepositories<'local> {
+   use std::path::Path;
+   use foundation_entity::image_bytes::ImageBytes;
+   use mastodon_entity::account::{Account, CredentialAccount};
+   use mastodon_entity::application::Application;
+   use mastodon_entity::instance::Instance;
+   use mastodon_entity::poll::NoCredentialPoll;
+   use mastodon_entity::status::{NoCredentialStatus, Status};
+   use panoptiqon::jvm_type::JvmType;
+   use panoptiqon::jvm_repository_creator::JvmRepositoryCreator;
+
+   let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
+
+   let repository_creator = JvmRepositoryCreator::new(&mut env);
+
+   let instance_repo             = PANOPTIQON.new_repository::<Instance>          (&mut env, Path::new(&data_dir_path).join("mastodon/Instance"));
+   let application_repo          = PANOPTIQON.new_repository::<Application>       (&mut env, Path::new(&data_dir_path).join("mastodon/Application"));
+   let account_repo              = PANOPTIQON.new_repository::<Account>           (&mut env, Path::new(&data_dir_path).join("mastodon/Account"));
+   let credential_account_repo   = PANOPTIQON.new_repository::<CredentialAccount> (&mut env, Path::new(&data_dir_path).join("mastodon/CredentialAccount"));
+   let account_icon_repo         = PANOPTIQON.new_repository::<ImageBytes>        (&mut env, Path::new(&data_dir_path).join("mastodon/ImageBytes"));
+   let status_repo               = PANOPTIQON.new_repository::<Status>            (&mut env, Path::new(&data_dir_path).join("mastodon/Status"));
+   let no_credential_status_repo = PANOPTIQON.new_repository::<NoCredentialStatus>(&mut env, Path::new(&data_dir_path).join("mastodon/Status"));
+   let no_credential_poll_repo   = PANOPTIQON.new_repository::<NoCredentialPoll>  (&mut env, Path::new(&data_dir_path).join("mastodon/NoCredentialPoll"));
+   let instance_repo             = repository_creator.create_jvm_wrapper(&mut env, instance_repo);
+   let application_repo          = repository_creator.create_jvm_wrapper(&mut env, application_repo);
+   let account_repo              = repository_creator.create_jvm_wrapper(&mut env, account_repo);
+   let credential_account_repo   = repository_creator.create_jvm_wrapper(&mut env, credential_account_repo);
+   let account_icon_repo         = repository_creator.create_jvm_wrapper(&mut env, account_icon_repo);
+   let status_repo               = repository_creator.create_jvm_wrapper(&mut env, status_repo);
+   let no_credential_status_repo = repository_creator.create_jvm_wrapper(&mut env, no_credential_status_repo);
+   let no_credential_poll_repo   = repository_creator.create_jvm_wrapper(&mut env, no_credential_poll_repo);
+
+   let jvm_cache_repositories = env.new_object(
+      "com/wcaokaze/probosqis/mastodon/repository/CacheRepositories",
+      "(\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+         Lcom/wcaokaze/probosqis/panoptiqon/Repository;\
+      )V",
+      &[
+         instance_repo            .j_object().into(),
+         application_repo         .j_object().into(),
+         account_repo             .j_object().into(),
+         credential_account_repo  .j_object().into(),
+         account_icon_repo        .j_object().into(),
+         status_repo              .j_object().into(),
+         no_credential_status_repo.j_object().into(),
+         no_credential_poll_repo  .j_object().into(),
+      ]
+   ).unwrap();
+
+   unsafe { JvmCacheRepositories::from_j_object(jvm_cache_repositories) }
+}
+
 pub mod instance {
-   use ext_panoptiqon::repository_holder::RepositoryHolder;
    use mastodon_entity::instance::Instance;
    use panoptiqon::cache::Cache;
-   
+
    #[cfg(feature = "jvm")]
    use {
       jni::JNIEnv,
       mastodon_entity::jvm_types::JvmInstance,
-      panoptiqon::jvm_types::JvmCache,
+      panoptiqon::jvm_types::{JvmCache, JvmRepository},
    };
-
-   static REPO: RepositoryHolder<Instance> = RepositoryHolder::new();
-
-   pub fn repo() -> &'static RepositoryHolder<Instance> {
-      &REPO
-   }
 
    #[cfg(feature = "jvm")]
    pub(crate) fn clone_from_jvm<'local>(
       env: &mut JNIEnv<'local>,
       java_instance: &JvmCache<'local, JvmInstance<'local>>,
+      instance_cache_repo: &JvmRepository<'local, JvmInstance<'local>>
    ) -> anyhow::Result<Cache<Instance>> {
       use panoptiqon::convert_jvm::CloneFromJvm;
       use panoptiqon::jvm_type::JvmType;
+      use panoptiqon::repository::Repository;
 
       if env.is_instance_of(
          java_instance.j_object(),
@@ -57,78 +131,8 @@ pub mod instance {
 
          let instance = Instance::clone_from_jvm(env, &jvm_instance);
 
-         let mut repo = REPO.write(env)?;
+         let repo = Repository::of(env, instance_cache_repo);
          Ok(repo.save(instance))
       }
-   }
-}
-
-pub mod account {
-   use ext_panoptiqon::repository_holder::RepositoryHolder;
-   use mastodon_entity::account::{Account, CredentialAccount};
-
-   pub type Repository = panoptiqon::repository::Repository<Account>;
-
-   static REPO: RepositoryHolder<Account> = RepositoryHolder::new();
-   
-   static CREDENTIAL_ACCOUNT_REPO: RepositoryHolder<CredentialAccount>
-      = RepositoryHolder::new();
-
-   pub fn repo() -> &'static RepositoryHolder<Account> {
-      &REPO
-   }
-
-   pub fn credential_account_repo() -> &'static RepositoryHolder<CredentialAccount> {
-      &CREDENTIAL_ACCOUNT_REPO
-   }
-}
-
-pub mod account_icon {
-   use foundation_entity::image_bytes::ImageBytes;
-   use ext_panoptiqon::repository_holder::RepositoryHolder;
-
-   static REPO: RepositoryHolder<ImageBytes> = RepositoryHolder::new();
-
-   pub fn repo() -> &'static RepositoryHolder<ImageBytes> {
-      &REPO
-   }
-}
-
-pub mod poll {
-   use ext_panoptiqon::repository_holder::RepositoryHolder;
-   use mastodon_entity::poll::NoCredentialPoll;
-
-   pub type NoCredentialPollRepository
-      = panoptiqon::repository::Repository<NoCredentialPoll>;
-
-   static NO_CREDENTIAL_POLL_REPO: RepositoryHolder<NoCredentialPoll>
-      = RepositoryHolder::new();
-
-   pub fn no_credential_poll_repo() -> &'static RepositoryHolder<NoCredentialPoll> {
-      &NO_CREDENTIAL_POLL_REPO
-   }
-}
-
-pub mod status {
-   use ext_panoptiqon::repository_holder::RepositoryHolder;
-   use mastodon_entity::status::{NoCredentialStatus, Status};
-
-   pub type StatusRepository = panoptiqon::repository::Repository<Status>;
-
-   pub type NoCredentialStatusRepository
-      = panoptiqon::repository::Repository<NoCredentialStatus>;
-
-   static REPO: RepositoryHolder<Status> = RepositoryHolder::new();
-
-   static NO_CREDENTIAL_REPO: RepositoryHolder<NoCredentialStatus>
-      = RepositoryHolder::new();
-
-   pub fn status_repo() -> &'static RepositoryHolder<Status> {
-      &REPO
-   }
-
-   pub fn no_credential_status_repo(
-   ) -> &'static RepositoryHolder<NoCredentialStatus> {
-      &NO_CREDENTIAL_REPO
    }
 }

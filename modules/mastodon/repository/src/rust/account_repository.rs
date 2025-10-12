@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-use foundation_entity::image_bytes::ImageBytes;
 use ext_reqwest::CLIENT;
+use foundation_entity::image_bytes::ImageBytes;
 use mastodon_entity::account::Account;
+use panoptiqon::repository::Repository;
 
 #[cfg(not(feature = "jvm"))]
 use std::marker::PhantomData;
@@ -49,10 +50,9 @@ impl AccountRepository<'_> {
 
    pub fn get_account_icon(
       &mut self,
-      account: Account
+      account: Account,
+      account_icon_cache_repo: &Repository<ImageBytes>
    ) -> anyhow::Result<Cache<ImageBytes>> {
-      use crate::cache;
-
       let icon_url = account.avatar_image_url
          .ok_or(anyhow::anyhow!("no avatar image url"))?;
 
@@ -62,9 +62,7 @@ impl AccountRepository<'_> {
 
       let image_bytes = ImageBytes::new(icon_url, bytes);
 
-      let icon_cache = cache::account_icon::repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?
-         .save(image_bytes);
+      let icon_cache = account_icon_cache_repo.save(image_bytes);
 
       Ok(icon_cache)
    }
@@ -76,17 +74,19 @@ mod jvm {
    use jni::objects::JObject;
    use foundation_entity::jvm_types::JvmImage;
    use mastodon_entity::jvm_types::JvmAccount;
-   use panoptiqon::jvm_types::{JvmCache, JvmNullable};
+   use panoptiqon::jvm_types::{JvmCache, JvmRepository};
+   use panoptiqon::repository::Repository;
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAccountRepository_getAccountIcon<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      account: JvmAccount<'local>
-   ) -> JvmCache<'local, JvmNullable<'local, JvmImage<'local>>> {
+      account: JvmAccount<'local>,
+      account_icon_cache_repo: JvmRepository<'local, JvmImage<'local>>
+   ) -> JvmCache<'local, JvmImage<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_account_icon(&mut env, account)
+      get_account_icon(&mut env, account, account_icon_cache_repo)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -94,18 +94,20 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAccountRepository_getAccountIcon<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      account: JvmAccount<'local>
-   ) -> JvmCache<'local, JvmNullable<'local, JvmImage<'local>>> {
+      account: JvmAccount<'local>,
+      account_icon_cache_repo: JvmRepository<'local, JvmImage<'local>>
+   ) -> JvmCache<'local, JvmImage<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_account_icon(&mut env, account)
+      get_account_icon(&mut env, account, account_icon_cache_repo)
          .unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_account_icon<'local>(
       env: &mut JNIEnv<'local>,
-      account: JvmAccount<'local>
-   ) -> anyhow::Result<JvmCache<'local, JvmNullable<'local, JvmImage<'local>>>> {
+      account: JvmAccount<'local>,
+      account_icon_cache_repo: JvmRepository<'local, JvmImage<'local>>
+   ) -> anyhow::Result<JvmCache<'local, JvmImage<'local>>> {
       use mastodon_entity::account::Account;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
       use crate::account_repository::AccountRepository;
@@ -113,8 +115,11 @@ mod jvm {
       let account = Account::clone_from_jvm(env, &account);
 
       let mut account_repository = AccountRepository::new(env);
+      let mut account_icon_cache_repo
+         = Repository::of(env, &account_icon_cache_repo);
 
-      let icon = account_repository.get_account_icon(account)?;
+      let icon = account_repository
+         .get_account_icon(account, &mut account_icon_cache_repo)?;
       let icon = icon.clone_into_jvm(env);
       Ok(icon)
    }

@@ -16,7 +16,6 @@
 
 package com.wcaokaze.probosqis.app.pagedeck
 
-import android.content.Context
 import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.loadCache
@@ -24,10 +23,10 @@ import com.wcaokaze.probosqis.panoptiqon.saveCache
 import java.io.File
 
 class AndroidPageDeckRepository(
-   context: Context,
+   appDataDir: File,
    pageStackRepository: PageStackRepository
 ) : AbstractPageDeckRepository(pageStackRepository) {
-   private val file = File(context.filesDir, "U61Jfjj954X8OrvZ")
+   private val file = File(appDataDir, "U61Jfjj954X8OrvZ")
 
    @TemporaryCacheApi
    override fun saveSerializableDeck(deck: SerializablePageDeck): WritableCache<SerializablePageDeck> {

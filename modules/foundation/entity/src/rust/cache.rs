@@ -14,23 +14,60 @@
  * limitations under the License.
  */
 
+use std::path::{Path, PathBuf};
 use url::Url;
 use panoptiqon::cache::CacheContent;
 use crate::image_bytes::ImageBytes;
 
 #[cfg(feature = "jvm")]
 use {
-   panoptiqon::jvm_types::JvmNullable,
-   crate::jvm_types::JvmImage,
+   crate::jvm_types::{JvmImage, JvmUrl},
 };
 
 impl CacheContent for ImageBytes {
    type Key = Url;
 
    #[cfg(feature = "jvm")]
-   type JvmType<'local> = JvmNullable<'local, JvmImage<'local>>;
+   type JvmKey<'local> = JvmUrl<'local>;
 
-   fn key(&self) -> Url {
-      self.url.clone()
+   #[cfg(feature = "jvm")]
+   type JvmType<'local> = JvmImage<'local>;
+
+   fn key(&self) -> &Url {
+      &self.url
+   }
+
+   fn file_path_for_key(dir_path: &Path, url: &Url) -> PathBuf {
+      use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+
+      let encoded_url: String
+         = utf8_percent_encode(url.as_str(), NON_ALPHANUMERIC).collect();
+
+      dir_path.join(&encoded_url)
+   }
+}
+
+#[cfg(test)]
+mod test {
+   use std::path::PathBuf;
+
+   #[allow(non_snake_case)]
+   #[test]
+   fn ImageBytes_filePath() {
+      use bytes::Bytes;
+      use panoptiqon::cache::CacheContent;
+      use crate::image_bytes::{ImageBytes, SerializableBytes};
+
+      let image_bytes = ImageBytes {
+         url: "https://example.com/image".parse().unwrap(),
+         image_bytes: SerializableBytes(Bytes::new())
+      };
+
+      let dir = PathBuf::from("test/ImageBytes");
+
+      assert_eq!(
+         PathBuf::from("test/ImageBytes/https%3A%2F%2Fexample%2Ecom%2Fimage"),
+         image_bytes.file_path(&dir)
+      );
    }
 }

@@ -167,6 +167,9 @@ abstract class AbstractPageDeckRepository
          }
       }
 
+      override val id: Cache.Id
+         get() = throw UnsupportedOperationException("This Cache isn't managed by Panoptiqon.")
+
       @OptIn(InternalCacheApi::class)
       override var value: PageDeck
          get() = state.value

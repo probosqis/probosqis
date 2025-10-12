@@ -25,7 +25,7 @@ use {
    jni::objects::{JByteArray, JObject},
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    panoptiqon::jvm_type::JvmType,
-   panoptiqon::jvm_types::{JvmNullable, JvmString},
+   panoptiqon::jvm_types::{JvmNullable, JvmString, JvmUnit},
    crate::jvm_types::JvmImage,
 };
 
@@ -98,10 +98,12 @@ impl<'local> CloneIntoJvm<'local, JvmByteArray<'local>> for Bytes {
 #[cfg(feature = "jvm")]
 impl<'local> CloneFromJvm<'local, JvmByteArray<'local>> for Bytes {
    fn clone_from_jvm(
-      _env: &mut JNIEnv<'local>,
-      _jvm_instance: &JvmByteArray<'local>
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmByteArray<'local>
    ) -> Bytes {
-      panic!("not implemented");
+      Bytes::from(
+         env.convert_byte_array(&jvm_instance.0).unwrap()
+      )
    }
 }
 
@@ -123,34 +125,61 @@ impl<'local> JvmType<'local> for JvmByteArray<'local> {
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
    static IMAGE_BYTES_HELPER = impl struct ImageBytesConvertHelper
-      where jvm_class: "com/wcaokaze/probosqis/entity/Image"
+   where
+      jvm_class: "com/wcaokaze/probosqis/entity/ImageBytes"
    {
-      fn clone_into_jvm<'local>(..) -> JvmNullable<'local, JvmImage<'local>>
-         where jvm_static_method: "fromBytes",
-               jvm_signature: "(Ljava/lang/String;[B)Lcom/wcaokaze/probosqis/entity/Image;";
+      fn clone_into_jvm<'local>(..) -> JvmImage<'local>
+      where
+         jvm_constructor: "(\
+            Ljava/lang/String;\
+            [B\
+            Lkotlin/Unit;\
+         )V";
 
       fn raw_url<'local>(..) -> String
-         where jvm_type: JvmString<'local>,
-               jvm_getter_method: "getRawUrl",
-               jvm_return_type: "Ljava/lang/String;";
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getRawUrl",
+         jvm_return_type: "Ljava/lang/String;";
 
-      fn image_bytes<'local>(..) -> Bytes
-         where jvm_type: JvmByteArray<'local>,
-               jvm_getter_method: "getImageBytes",
-               jvm_return_type: "[B";
+      fn bytes<'local>(..) -> Bytes
+      where
+         jvm_type: JvmByteArray<'local>,
+         jvm_getter_method: "getBytes",
+         jvm_return_type: "[B";
+
+      fn dummy<'local>(..) -> Option<()>
+      where
+         jvm_type: JvmNullable<'local, JvmUnit<'local>>,
+         jvm_getter_method: "getDummy",
+         jvm_return_type: "Lkotlin/Unit;";
    }
 }
 
 #[cfg(feature = "jvm")]
-impl<'local> CloneIntoJvm<'local, JvmNullable<'local, JvmImage<'local>>> for ImageBytes {
+impl<'local> CloneIntoJvm<'local, JvmImage<'local>> for ImageBytes {
    fn clone_into_jvm(
       &self,
       env: &mut JNIEnv<'local>
-   ) -> JvmNullable<'local, JvmImage<'local>> {
+   ) -> JvmImage<'local> {
       IMAGE_BYTES_HELPER.clone_into_jvm(
          env,
          self.url.as_str(),
-         &self.image_bytes.0
+         &self.image_bytes.0,
+         &None::<()>,
       )
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmImage<'local>> for ImageBytes {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmImage<'local>
+   ) -> ImageBytes {
+      let raw_url = IMAGE_BYTES_HELPER.raw_url(env, jvm_instance);
+      let bytes   = IMAGE_BYTES_HELPER.bytes  (env, jvm_instance);
+
+      ImageBytes::new(raw_url.parse().unwrap(), bytes)
    }
 }

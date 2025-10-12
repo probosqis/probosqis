@@ -15,7 +15,7 @@
  */
 
 use panoptiqon::cache::Cache;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use crate::instance::Instance;
 
 #[cfg(feature = "jvm")]
@@ -27,7 +27,7 @@ use {
    crate::jvm_types::{JvmInstance, JvmRole},
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Role {
    pub instance: Cache<Instance>,
    pub id: Option<RoleId>,
@@ -37,7 +37,7 @@ pub struct Role {
    pub is_highlighted: Option<bool>,
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub struct RoleId(pub String);
 
 #[cfg(feature = "jvm")]

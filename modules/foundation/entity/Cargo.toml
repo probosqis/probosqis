@@ -29,6 +29,7 @@ serde.workspace = true
 jni = { workspace = true, optional = true }
 
 url.workspace = true
+percent-encoding.workspace = true
 
 panoptiqon.workspace = true
 ext_panoptiqon.workspace = true

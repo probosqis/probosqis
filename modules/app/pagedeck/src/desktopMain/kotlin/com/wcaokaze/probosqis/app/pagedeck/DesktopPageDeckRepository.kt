@@ -23,10 +23,10 @@ import com.wcaokaze.probosqis.panoptiqon.saveCache
 import java.io.File
 
 class DesktopPageDeckRepository(
-   pageStackRepository: PageStackRepository,
-   directory: File
+   appDataDir: File,
+   pageStackRepository: PageStackRepository
 ) : AbstractPageDeckRepository(pageStackRepository) {
-   private val file = File(directory, "U61Jfjj954X8OrvZ")
+   private val file = File(appDataDir, "U61Jfjj954X8OrvZ")
 
    @TemporaryCacheApi
    override fun saveSerializableDeck(deck: SerializablePageDeck): WritableCache<SerializablePageDeck> {

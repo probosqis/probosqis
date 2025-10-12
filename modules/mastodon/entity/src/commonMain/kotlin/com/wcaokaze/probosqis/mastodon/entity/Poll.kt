@@ -45,7 +45,23 @@ data class Poll(
    val rawLocalId: String
       get() = id.local.raw
 
-   data class Id(val instanceUrl: Url, val local: LocalId)
+   data class Id(val instanceUrl: Url, val local: LocalId) {
+      constructor(
+         rawInstanceUrl: String,
+         rawLocalId: String,
+         @Suppress("UNUSED_PARAMETER")
+         dummy: Unit?
+      ) : this(
+         Url(rawInstanceUrl),
+         LocalId(rawLocalId),
+      )
+
+      val rawInstanceUrl: String
+         get() = instanceUrl.raw
+
+      val rawLocalId: String
+         get() = local.raw
+   }
 
    @JvmInline
    value class LocalId(val raw: String)
@@ -82,10 +98,10 @@ data class Poll(
       )
 
       val rawInstanceUrl: String
-         get() = id.instanceUrl.raw
+         get() = id.rawInstanceUrl
 
       val rawLocalId: String
-         get() = id.local.raw
+         get() = id.rawLocalId
 
       val expireTimeEpochMillis: Long?
          get() = expireTime?.toEpochMilliseconds()

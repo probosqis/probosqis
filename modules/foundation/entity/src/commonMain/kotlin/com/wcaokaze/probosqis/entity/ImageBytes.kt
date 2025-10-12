@@ -16,31 +16,25 @@
 
 package com.wcaokaze.probosqis.entity
 
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.toComposeImageBitmap
 import com.wcaokaze.probosqis.ext.kotlin.Url
-import org.jetbrains.skia.Image as SkiaImage
 
-actual class Image(
-   actual val url: Url,
-   actual val composeImageBitmap: ImageBitmap
+class ImageBytes(
+   val url: Url,
+   val bytes: ByteArray,
 ) {
+   constructor(
+      rawUrl: String,
+      bytes: ByteArray,
+      @Suppress("UNUSED_PARAMETER")
+      dummy: Unit?,
+   ) : this(
+      Url(rawUrl),
+      bytes,
+   )
+
    val rawUrl: String
       get() = url.raw
 
-   val imageBytes: ByteArray
-      get() = throw NotImplementedError()
-
-   companion object {
-      @JvmStatic
-      fun fromBytes(rawUrl: String, imageBytes: ByteArray): Image? {
-         return try {
-            val image = SkiaImage.makeFromEncoded(imageBytes)
-            val composeImageBitmap = image.toComposeImageBitmap()
-            Image(Url(rawUrl), composeImageBitmap)
-         } catch (e: Exception) {
-            null
-         }
-      }
-   }
+   val dummy: Unit?
+      get() = null
 }

@@ -26,12 +26,12 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 class DesktopCredentialRepository(
-   allCredentialSerializers: List<CredentialRepository.CredentialSerializer<*>>,
-   directory: File
+   appDataDir: File,
+   allCredentialSerializers: List<CredentialRepository.CredentialSerializer<*>>
 ) : AbstractCredentialRepository(allCredentialSerializers) {
    private val lock = ReentrantLock()
 
-   private val dir = File(directory, "YeNl4QfY6KDSixTZ")
+   private val dir = File(appDataDir, "YeNl4QfY6KDSixTZ")
       .also { dir ->
          if (dir.exists()) {
             require(dir.isDirectory)

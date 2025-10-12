@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-use mastodon_entity::status::Status;
+use mastodon_entity::account::Account;
+use mastodon_entity::poll::NoCredentialPoll;
+use mastodon_entity::status::{NoCredentialStatus, Status};
 use mastodon_entity::token::Token;
+use panoptiqon::repository::Repository;
 
 #[cfg(not(feature = "jvm"))]
 use std::marker::PhantomData;
@@ -47,11 +50,14 @@ impl TimelineRepository<'_> {
 
    pub fn get_home_timeline(
       &mut self,
-      token: &Token
+      token: &Token,
+      account_cache_repo: &Repository<Account>,
+      status_cache_repo: &Repository<Status>,
+      no_credential_status_repo: &Repository<NoCredentialStatus>,
+      no_credential_poll_cache_repo: &Repository<NoCredentialPoll>
    ) -> anyhow::Result<Vec<Status>> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::timelines;
-      use crate::cache;
       use crate::conversion;
 
       let api_timeline = timelines::get_home(
@@ -60,28 +66,16 @@ impl TimelineRepository<'_> {
          &token.access_token
       )?;
 
-      let mut account_repo = cache::account::repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?;
-
-      let mut status_repo = cache::status::status_repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?;
-
-      let mut no_credential_status_repo = cache::status::no_credential_status_repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?;
-
-      let mut no_credential_poll_repo = cache::poll::no_credential_poll_repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?;
-
       let timeline = api_timeline.into_iter()
          .flat_map(|api_status|
             conversion::status::from_api(
                #[cfg(feature = "jvm")] &mut self.env,
                token.instance.clone(),
                api_status,
-               &mut account_repo,
-               &mut status_repo,
-               &mut no_credential_status_repo,
-               &mut no_credential_poll_repo
+               account_cache_repo,
+               status_cache_repo,
+               no_credential_status_repo,
+               no_credential_poll_cache_repo
             )
          )
          .collect();
@@ -94,48 +88,79 @@ impl TimelineRepository<'_> {
 mod jvm {
    use jni::JNIEnv;
    use jni::objects::JObject;
-   use mastodon_entity::jvm_types::{JvmStatus, JvmToken};
-   use panoptiqon::jvm_types::JvmList;
-   use crate::cache;
+   use mastodon_entity::jvm_types::{JvmAccount, JvmInstance, JvmPollNoCredential, JvmStatus, JvmStatusNoCredential, JvmToken};
+   use panoptiqon::jvm_types::{JvmList, JvmRepository};
+   use panoptiqon::repository::Repository;
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidTimelineRepository_getHomeTimeline<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      token: JvmToken<'local>
+      token: JvmToken<'local>,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
+      no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_home_time_line(&mut env, token)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_home_time_line(
+         &mut env, token,
+         account_cache_repo, status_cache_repo, no_credential_status_cache_repo,
+         no_credential_poll_cache_repo, instance_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopTimelineRepository_getHomeTimeline<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      token: JvmToken<'local>
+      token: JvmToken<'local>,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
+      no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_home_time_line(&mut env, token)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_home_time_line(
+         &mut env, token,
+         account_cache_repo, status_cache_repo, no_credential_status_cache_repo,
+         no_credential_poll_cache_repo, instance_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_home_time_line<'local>(
       env: &mut JNIEnv<'local>,
-      token: JvmToken<'local>
+      token: JvmToken<'local>,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
+      no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> anyhow::Result<JvmList<'local, JvmStatus<'local>>> {
       use mastodon_entity::token::Token;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use crate::cache;
       use super::TimelineRepository;
 
-      let mut status_repository = TimelineRepository::new(env);
+      let mut timeline_repository = TimelineRepository::new(env);
+      let account_cache_repo            = Repository::of(env, &account_cache_repo);
+      let status_cache_repo             = Repository::of(env, &status_cache_repo);
+      let no_credential_status_repo     = Repository::of(env, &no_credential_status_cache_repo);
+      let no_credential_poll_cache_repo = Repository::of(env, &no_credential_poll_cache_repo);
 
       let instance = token.instance(env);
-      let instance = cache::instance::clone_from_jvm(env, &instance)?;
+      let instance = cache::instance::clone_from_jvm(env, &instance, &instance_cache_repo)?;
       let token = Token::clone_from_jvm(env, &token, instance);
-      let timeline = status_repository.get_home_timeline(&token)?;
+      let timeline = timeline_repository.get_home_timeline(
+         &token,
+         &account_cache_repo, &status_cache_repo,
+         &no_credential_status_repo, &no_credential_poll_cache_repo
+      )?;
+
       Ok(timeline.clone_into_jvm(env))
    }
 }
@@ -152,7 +177,7 @@ mod test {
       use mastodon_entity::account::{
          Account, AccountId, AccountLocalId, AccountProfileField
       };
-      use mastodon_entity::application::Application;
+      use mastodon_entity::application::{Application, ApplicationId};
       use mastodon_entity::custom_emoji::CustomEmoji;
       use mastodon_entity::filter::{
          Filter, FilterAction, FilterContext, FilterId, FilterKeyword,
@@ -207,9 +232,26 @@ mod test {
          StatusMention as ApiStatusMention,
          StatusTag as ApiStatusTag,
       };
-      use crate::cache;
+      use panoptiqon::Panoptiqon;
 
       let mut repository = TimelineRepository::new();
+
+      let panoptiqon = Panoptiqon::new();
+      let instance_cache_repo = panoptiqon.new_repository(
+         "test/TimelineRepository/get_home_timeline/Instance"
+      );
+      let account_cache_repo = panoptiqon.new_repository(
+         "test/TimelineRepository/get_home_timeline/Account"
+      );
+      let status_cache_repo = panoptiqon.new_repository(
+         "test/TimelineRepository/get_home_timeline/Status"
+      );
+      let no_credential_status_cache_repo = panoptiqon.new_repository(
+         "test/TimelineRepository/get_home_timeline/NoCredentialStatus"
+      );
+      let no_credential_poll_cache_repo = panoptiqon.new_repository(
+         "test/TimelineRepository/get_home_timeline/NoCredentialPoll"
+      );
 
       timelines::inject_get_verify_credentials(|_, _, _|
          Ok(vec![
@@ -729,7 +771,7 @@ mod test {
          version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let instance_cache = cache::instance::repo().write().unwrap().save(instance);
+      let instance_cache = instance_cache_repo.save(instance);
 
       let token = Token {
          instance: instance_cache.clone(),
@@ -744,7 +786,13 @@ mod test {
          created_at: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let statuses = repository.get_home_timeline(&token).unwrap();
+      let statuses = repository.get_home_timeline(
+         &token,
+         &account_cache_repo,
+         &status_cache_repo,
+         &no_credential_status_cache_repo,
+         &no_credential_poll_cache_repo
+      ).unwrap();
 
       assert_eq!(
          vec![
@@ -858,9 +906,8 @@ mod test {
                                           .moved_to.as_ref().unwrap().get()
                                     );
 
-                                    let moved_to = cache::account::repo()
-                                       .read().unwrap()
-                                       .load(id).unwrap();
+                                    let moved_to = account_cache_repo
+                                       .load(&id).unwrap();
 
                                     Some(moved_to)
                                  },
@@ -876,9 +923,8 @@ mod test {
                                  .account.as_ref().unwrap().get()
                            );
 
-                           let account = cache::account::repo()
-                              .read().unwrap()
-                              .load(id).unwrap();
+                           let account = account_cache_repo
+                              .load(&id).unwrap();
 
                            Some(account)
                         },
@@ -937,6 +983,10 @@ mod test {
                            },
                         ],
                         application: Some(Application {
+                           id: ApplicationId {
+                              instance_url: instance_cache.get().url.clone(),
+                              application_name: "application name".to_string(),
+                           },
                            instance: instance_cache.clone(),
                            name: "application name".to_string(),
                            website: Some("https://example.com/application".parse().unwrap()),
@@ -1047,9 +1097,8 @@ mod test {
                                  .boosted_status.as_ref().unwrap().get()
                            );
 
-                           let boosted_status = cache::status::no_credential_status_repo()
-                              .read().unwrap()
-                              .load(id).unwrap();
+                           let boosted_status = no_credential_status_cache_repo
+                              .load(&id).unwrap();
 
                            Some(boosted_status)
                         },
@@ -1102,9 +1151,8 @@ mod test {
                                  .poll.as_ref().unwrap().get()
                            );
 
-                           let poll = cache::poll::no_credential_poll_repo()
-                              .read().unwrap()
-                              .load(id).unwrap();
+                           let poll = no_credential_poll_cache_repo
+                              .load(&id).unwrap();
 
                            Some(poll)
                         },
@@ -1158,9 +1206,8 @@ mod test {
                                           .account.as_ref().unwrap().get()
                                     );
 
-                                    let account = cache::account::repo()
-                                       .read().unwrap()
-                                       .load(id).unwrap();
+                                    let account = account_cache_repo
+                                       .load(&id).unwrap();
 
                                     Some(account)
                                  },
@@ -1209,9 +1256,8 @@ mod test {
                                           .account.as_ref().unwrap().get()
                                     );
 
-                                    let account = cache::account::repo()
-                                       .read().unwrap()
-                                       .load(id).unwrap();
+                                    let account = account_cache_repo
+                                       .load(&id).unwrap();
 
                                     Some(account)
                                  },
@@ -1233,9 +1279,7 @@ mod test {
                      *statuses[0].no_credential.get()
                   );
 
-                  cache::status::no_credential_status_repo()
-                     .read().unwrap()
-                     .load(id).unwrap()
+                  no_credential_status_cache_repo.load(&id).unwrap()
                },
                boosted_status: {
                   let id = StatusId {
@@ -1246,9 +1290,8 @@ mod test {
                   assert_eq!(
                      Status {
                         id: id.clone(),
-                        no_credential: cache::status::no_credential_status_repo()
-                              .read().unwrap()
-                              .load(id.clone()).unwrap(),
+                        no_credential: no_credential_status_cache_repo
+                              .load(&id).unwrap(),
                         boosted_status: None,
                         poll: None,
                         is_favorited: None,
@@ -1261,9 +1304,8 @@ mod test {
                      *statuses[0].boosted_status.as_ref().unwrap().get()
                   );
 
-                  let boosted_status = cache::status::status_repo()
-                     .read().unwrap()
-                     .load(id).unwrap();
+                  let boosted_status = status_cache_repo
+                     .load(&id).unwrap();
 
                   Some(boosted_status)
                },
@@ -1275,9 +1317,8 @@ mod test {
 
                   Some(Poll {
                      id: id.clone(),
-                     no_credential: cache::poll::no_credential_poll_repo()
-                        .read().unwrap()
-                        .load(id).unwrap(),
+                     no_credential: no_credential_poll_cache_repo
+                        .load(&id).unwrap(),
                      is_voted: Some(true),
                      voted_options: vec![6, 7],
                   })
@@ -1420,9 +1461,7 @@ mod test {
                      *statuses[1].no_credential.get()
                   );
 
-                  cache::status::no_credential_status_repo()
-                     .read().unwrap()
-                     .load(id).unwrap()
+                  no_credential_status_cache_repo.load(&id).unwrap()
                },
                boosted_status: None,
                poll: None,

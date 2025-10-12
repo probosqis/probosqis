@@ -16,7 +16,7 @@
 
 package com.wcaokaze.probosqis.mastodon.repository
 
-import com.wcaokaze.probosqis.entity.Image
+import com.wcaokaze.probosqis.entity.ImageBytes
 import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import java.io.IOException
@@ -25,5 +25,5 @@ interface AccountRepository {
    /**
     * @throws IOException
     */
-   fun getAccountIcon(account: Account): Cache<Image?>
+   fun getAccountIcon(account: Account): Cache<ImageBytes>
 }

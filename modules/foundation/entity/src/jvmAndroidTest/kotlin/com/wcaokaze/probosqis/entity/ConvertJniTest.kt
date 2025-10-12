@@ -18,39 +18,39 @@ package com.wcaokaze.probosqis.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import kotlin.test.Ignore
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
-// Image.fromBytesがBitmapFactoryを使うためRobolectricでの実行が必須
-@RunWith(RobolectricTestRunner::class)
 class ImageConvertJniTest {
    init {
       loadNativeLib()
    }
 
    @Test
-   fun image() {
-      val image = `image$createImage`()
-      assertNotNull(image)
+   fun imageBytes_rust2Kt() {
+      val image = `imageBytes_rust2Kt$createImageBytes`()
       assertEquals(Url("https://github.com/wcaokaze.png"), image.url)
+      assertContentEquals(
+         byteArrayOf(
+            0xca.toByte(), 0xfe.toByte(), 0xba.toByte(), 0xbe.toByte(),
+         ),
+         image.bytes
+      )
    }
 
-   private external fun `image$createImage`(): Image?
+   private external fun `imageBytes_rust2Kt$createImageBytes`(): ImageBytes
 
-   @Ignore(
-      "不正なバイト列を渡すとBitmapFactory.decodeByteArrayがnullを返す想定" +
-       "だったがどうやらそうじゃないらしい"
-   )
    @Test
-   fun image_illegalFormat() {
-      val image = `image_illegalFormat$createImage`()
-      assertNull(image)
+   fun imageBytes_kt2Rust() {
+      val imageBytes = ImageBytes(
+         Url("https://github.com/wcaokaze.png"),
+         byteArrayOf(
+            0xca.toByte(), 0xfe.toByte(), 0xba.toByte(), 0xbe.toByte(),
+         )
+      )
+      `imageBytes_kt2Rust$assert`(imageBytes)
    }
 
-   private external fun `image_illegalFormat$createImage`(): Image?
+   private external fun `imageBytes_kt2Rust$assert`(imageBytes: ImageBytes)
 }

@@ -18,15 +18,15 @@ use reqwest::blocking::Client;
 use url::Url;
 use crate::entity::token::Token;
 
-#[cfg(feature = "mock")]
+#[cfg(feature = "testable")]
 use std::cell::RefCell;
 
 thread_local! {
-   #[cfg(feature = "mock")]
+   #[cfg(feature = "testable")]
    static GET_AUTHORIZE_URL: RefCell<Box<dyn Fn(&Url, &str, &str, &str, Option<&str>, Option<bool>, Option<&str>) -> anyhow::Result<Url>>>
       = RefCell::new(Box::new(|_, _, _, _, _, _, _| panic!()));
 
-   #[cfg(feature = "mock")]
+   #[cfg(feature = "testable")]
    static POST_TOKEN: RefCell<Box<dyn Fn(&Client, &Url, &str, Option<&str>, &str, &str, &str, Option<&str>) -> anyhow::Result<Token>>>
       = RefCell::new(Box::new(|_, _, _, _, _, _, _, _| panic!()));
 }
@@ -44,7 +44,7 @@ pub fn get_authorize_url(
    force_login: Option<bool>,
    lang: Option<&str>,
 ) -> anyhow::Result<Url> {
-   #[cfg(not(feature = "mock"))]
+   #[cfg(not(feature = "testable"))]
    {
       let mut url = instance_base_url.join("oauth/authorize")?;
 
@@ -67,7 +67,7 @@ pub fn get_authorize_url(
       Ok(url)
    }
 
-   #[cfg(feature = "mock")]
+   #[cfg(feature = "testable")]
    {
       GET_AUTHORIZE_URL.with(|f| {
          let f = f.borrow();
@@ -87,7 +87,7 @@ pub fn post_token(
    redirect_uri: &str,
    scope: Option<&str>,
 ) -> anyhow::Result<Token> {
-   #[cfg(not(feature = "mock"))]
+   #[cfg(not(feature = "testable"))]
    {
       use std::collections::HashMap;
 
@@ -114,7 +114,7 @@ pub fn post_token(
       Ok(token)
    }
 
-   #[cfg(feature = "mock")]
+   #[cfg(feature = "testable")]
    {
       POST_TOKEN.with(|f| {
          let f = f.borrow();
@@ -124,7 +124,7 @@ pub fn post_token(
 }
 
 #[allow(dead_code)]
-#[cfg(feature = "mock")]
+#[cfg(feature = "testable")]
 pub fn inject_get_authorize_url(
    get_authorize_url: impl Fn(&Url, &str, &str, &str, Option<&str>, Option<bool>, Option<&str>) -> anyhow::Result<Url> + 'static
 ) {
@@ -132,7 +132,7 @@ pub fn inject_get_authorize_url(
 }
 
 #[allow(dead_code)]
-#[cfg(feature = "mock")]
+#[cfg(feature = "testable")]
 pub fn inject_post_token(
    post_token: impl Fn(&Client, &Url, &str, Option<&str>, &str, &str, &str, Option<&str>) -> anyhow::Result<Token> + 'static
 ) {

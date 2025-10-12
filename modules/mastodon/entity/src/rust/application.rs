@@ -16,7 +16,7 @@
 
 use chrono::{DateTime, Utc};
 use panoptiqon::cache::Cache;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 use crate::instance::Instance;
 
@@ -26,11 +26,12 @@ use {
    jni::JNIEnv,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    panoptiqon::jvm_types::{ JvmCache, JvmList, JvmLong, JvmNullable, JvmString},
-   crate::jvm_types::{JvmApplication, JvmInstance},
+   crate::jvm_types::{JvmAccountId, JvmApplication, JvmApplicationId, JvmInstance},
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Application {
+   pub id: ApplicationId,
    pub instance: Cache<Instance>,
    pub name: String,
    pub website: Option<Url>,
@@ -41,13 +42,22 @@ pub struct Application {
    pub client_secret_expire_time: Option<DateTime<Utc>>,
 }
 
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
+pub struct ApplicationId {
+   pub instance_url: Url,
+   pub application_name: String,
+}
+
 #[cfg(feature = "jvm")]
 convert_jvm_helper! {
    static HELPER = impl struct ApplicationConvertHelper
-      where jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Application"
+   where
+      jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Application"
    {
       fn clone_into_jvm<'local>(..) -> JvmApplication<'local>
          where jvm_constructor: "(\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
             Lcom/wcaokaze/probosqis/panoptiqon/Cache;\
             Ljava/lang/String;\
             Ljava/lang/String;\
@@ -58,45 +68,90 @@ convert_jvm_helper! {
             Ljava/lang/Long;\
          )V";
 
+      fn raw_instance_url<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getRawInstanceUrl",
+         jvm_return_type: "Ljava/lang/String;";
+
+      fn application_name<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getApplicationName",
+         jvm_return_type: "Ljava/lang/String;";
+
       fn instance<'local>(..) -> Cache<Instance>
-         where jvm_type: JvmCache<'local, JvmInstance<'local>>,
-               jvm_getter_method: "getInstance",
-               jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
+      where
+         jvm_type: JvmCache<'local, JvmInstance<'local>>,
+         jvm_getter_method: "getInstance",
+         jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
       fn name<'local>(..) -> String
-         where jvm_type: JvmString<'local>,
-               jvm_getter_method: "getName",
-               jvm_return_type: "Ljava/lang/String;";
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getName",
+         jvm_return_type: "Ljava/lang/String;";
 
       fn raw_website<'local>(..) -> Option<String>
-         where jvm_type: JvmNullable<'local, JvmString<'local>>,
-               jvm_getter_method: "getRawWebsite",
-               jvm_return_type: "Ljava/lang/String;";
+      where
+         jvm_type: JvmNullable<'local, JvmString<'local>>,
+         jvm_getter_method: "getRawWebsite",
+         jvm_return_type: "Ljava/lang/String;";
 
       fn scopes<'local>(..) -> Vec<String>
-         where jvm_type: JvmList<'local, JvmString<'local>>,
-               jvm_getter_method: "getScopes",
-               jvm_return_type: "Ljava/util/List;";
+      where
+         jvm_type: JvmList<'local, JvmString<'local>>,
+         jvm_getter_method: "getScopes",
+         jvm_return_type: "Ljava/util/List;";
 
       fn redirect_uris<'local>(..) -> Vec<String>
-         where jvm_type: JvmList<'local, JvmString<'local>>,
-               jvm_getter_method: "getRedirectUris",
-               jvm_return_type: "Ljava/util/List;";
+      where
+         jvm_type: JvmList<'local, JvmString<'local>>,
+         jvm_getter_method: "getRedirectUris",
+         jvm_return_type: "Ljava/util/List;";
 
       fn client_id<'local>(..) -> Option<String>
-         where jvm_type: JvmNullable<'local, JvmString<'local>>,
-               jvm_getter_method: "getClientId",
-               jvm_return_type: "Ljava/lang/String;";
+      where
+         jvm_type: JvmNullable<'local, JvmString<'local>>,
+         jvm_getter_method: "getClientId",
+         jvm_return_type: "Ljava/lang/String;";
 
       fn client_secret<'local>(..) -> Option<String>
-         where jvm_type: JvmNullable<'local, JvmString<'local>>,
-               jvm_getter_method: "getClientSecret",
-               jvm_return_type: "Ljava/lang/String;";
+      where
+         jvm_type: JvmNullable<'local, JvmString<'local>>,
+         jvm_getter_method: "getClientSecret",
+         jvm_return_type: "Ljava/lang/String;";
 
       fn client_secret_expire_time_epoch_millis<'local>(..) -> Option<i64>
-         where jvm_type: JvmNullable<'local, JvmLong<'local>>,
-               jvm_getter_method: "getClientSecretExpireTimeEpochMillis",
-               jvm_return_type: "Ljava/lang/Long;";
+      where
+         jvm_type: JvmNullable<'local, JvmLong<'local>>,
+         jvm_getter_method: "getClientSecretExpireTimeEpochMillis",
+         jvm_return_type: "Ljava/lang/Long;";
+   }
+
+   static APPLICATION_ID_HELPER = impl struct ApplicationIdConvertHelper
+   where
+      jvm_class: "com/wcaokaze/probosqis/mastodon/entity/Application$Id"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmApplicationId<'local>
+      where
+         jvm_constructor: "(\
+            Ljava/lang/String;\
+            Ljava/lang/String;\
+            Lkotlin/Unit;\
+         )V";
+
+      fn raw_instance_url<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getRawInstanceUrl",
+         jvm_return_type: "Ljava/lang/String;";
+
+      fn application_name<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getApplicationName",
+         jvm_return_type: "Ljava/lang/String;";
    }
 }
 
@@ -105,6 +160,8 @@ impl<'local> CloneIntoJvm<'local, JvmApplication<'local>> for Application {
    fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmApplication<'local> {
       HELPER.clone_into_jvm(
          env,
+         self.id.instance_url.as_str(),
+         &self.id.application_name,
          &self.instance,
          &self.name,
          &self.website.as_ref().map(Url::as_str),
@@ -123,6 +180,8 @@ impl<'local> CloneFromJvm<'local, JvmApplication<'local>> for Application {
       env: &mut JNIEnv<'local>,
       jvm_instance: &JvmApplication<'local>
    ) -> Application {
+      let raw_instance_url                       = HELPER.raw_instance_url                      (env, jvm_instance);
+      let application_name                       = HELPER.application_name                      (env, jvm_instance);
       let instance                               = HELPER.instance                              (env, jvm_instance);
       let name                                   = HELPER.name                                  (env, jvm_instance);
       let raw_website                            = HELPER.raw_website                           (env, jvm_instance);
@@ -133,6 +192,10 @@ impl<'local> CloneFromJvm<'local, JvmApplication<'local>> for Application {
       let client_secret_expire_time_epoch_millis = HELPER.client_secret_expire_time_epoch_millis(env, jvm_instance);
 
       Application {
+         id: ApplicationId {
+            instance_url: Url::parse(&raw_instance_url).unwrap(),
+            application_name,
+         },
          instance,
          name,
          website: raw_website.map(|url| url.parse().unwrap()),
@@ -141,6 +204,33 @@ impl<'local> CloneFromJvm<'local, JvmApplication<'local>> for Application {
          client_id,
          client_secret,
          client_secret_expire_time: client_secret_expire_time_epoch_millis.map(|time| DateTime::from_timestamp_millis(time).unwrap()),
+      }
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmApplicationId<'local>> for ApplicationId {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmApplicationId<'local> {
+      APPLICATION_ID_HELPER.clone_into_jvm(
+         env,
+         self.instance_url.as_str(),
+         &self.application_name,
+      )
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmApplicationId<'local>> for ApplicationId {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmApplicationId<'local>
+   ) -> ApplicationId {
+      let raw_instance_url = APPLICATION_ID_HELPER.raw_instance_url(env, jvm_instance);
+      let application_name = APPLICATION_ID_HELPER.application_name(env, jvm_instance);
+
+      ApplicationId {
+         instance_url: raw_instance_url.parse().unwrap(),
+         application_name,
       }
    }
 }

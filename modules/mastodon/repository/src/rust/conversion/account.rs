@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 use mastodon_entity::account::{Account, AccountProfileField, CredentialAccount};
 use mastodon_entity::instance::Instance;
 use mastodon_webapi::entity::account::{Account as ApiAccount, AccountField};
 use panoptiqon::cache::Cache;
-use crate::cache;
+use panoptiqon::repository::Repository;
 
 #[cfg(feature="jvm")]
 use jni::JNIEnv;
@@ -26,7 +27,7 @@ pub fn from_api(
    #[cfg(feature="jvm")] env: &mut JNIEnv,
    instance: Cache<Instance>,
    entity: ApiAccount,
-   account_cache_repository: &mut cache::account::Repository
+   account_cache_repo: &Repository<Account>
 ) -> anyhow::Result<Account> {
    use anyhow::Context;
    use chrono::DateTime;
@@ -74,10 +75,10 @@ pub fn from_api(
                #[cfg(feature="jvm")] env,
                instance.clone(),
                *moved,
-               account_cache_repository
+               account_cache_repo
             ).ok()?;
 
-            let moved = account_cache_repository.save(moved);
+            let moved = account_cache_repo.save(moved);
             Some(moved)
          }),
       is_suspended: suspended,
@@ -99,7 +100,8 @@ pub fn from_api(
 pub fn credential_account_from_api(
    #[cfg(feature="jvm")] env: &mut JNIEnv,
    instance: Cache<Instance>,
-   mut entity: ApiAccount
+   mut entity: ApiAccount,
+   account_cache_repo: &Repository<Account>
 ) -> anyhow::Result<CredentialAccount> {
    use isolang::Language;
    use mastodon_entity::status::StatusVisibility;
@@ -137,10 +139,7 @@ pub fn credential_account_from_api(
    let role = entity.role.take();
    let role = role.and_then(|role| role::from_api(instance.clone(), role).ok());
 
-   let mut account_cache_repo = cache::account::repo()
-      .write(#[cfg(feature="jvm")] env)?;
-
-   let account = from_api(#[cfg(feature="jvm")] env, instance, entity, &mut account_cache_repo)?;
+   let account = from_api(#[cfg(feature="jvm")] env, instance, entity, account_cache_repo)?;
    let id = account.id.clone();
    let account = account_cache_repo.save(account);
 

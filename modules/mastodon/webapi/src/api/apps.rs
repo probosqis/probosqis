@@ -18,15 +18,15 @@ use reqwest::blocking::Client;
 use url::Url;
 use crate::entity::application::Application;
 
-#[cfg(feature = "mock")]
+#[cfg(feature = "testable")]
 use std::cell::RefCell;
 
 thread_local! {
-   #[cfg(feature = "mock")]
+   #[cfg(feature = "testable")]
    static POST_APPS_V0: RefCell<Box<dyn Fn(&Client, &Url, &str, &str, Option<&str>, Option<&str>) -> anyhow::Result<Application>>>
       = RefCell::new(Box::new(|_, _, _, _, _, _| panic!()));
 
-   #[cfg(feature = "mock")]
+   #[cfg(feature = "testable")]
    static POST_APPS_V4_3_0: RefCell<Box<dyn Fn(&Client, &Url, &str, &[&str], Option<&str>, Option<&str>) -> anyhow::Result<Application>>>
       = RefCell::new(Box::new(|_, _, _, _, _, _| panic!()));
 }
@@ -40,7 +40,7 @@ pub fn post_apps_v0(
    scopes: Option<&str>,
    website: Option<&str>
 ) -> anyhow::Result<Application> {
-   #[cfg(not(feature = "mock"))]
+   #[cfg(not(feature = "testable"))]
    {
       use std::collections::HashMap;
 
@@ -65,7 +65,7 @@ pub fn post_apps_v0(
       Ok(application)
    }
 
-   #[cfg(feature = "mock")]
+   #[cfg(feature = "testable")]
    {
       POST_APPS_V0.with(|f| {
          let f = f.borrow();
@@ -85,7 +85,7 @@ pub fn post_apps_v4_3_0(
    scopes: Option<&str>,
    website: Option<&str>
 ) -> anyhow::Result<Application> {
-   #[cfg(not(feature = "mock"))]
+   #[cfg(not(feature = "testable"))]
    {
       let url = instance_base_url.join("api/v1/apps")?;
 
@@ -112,7 +112,7 @@ pub fn post_apps_v4_3_0(
       Ok(application)
    }
 
-   #[cfg(feature = "mock")]
+   #[cfg(feature = "testable")]
    {
       POST_APPS_V4_3_0.with(|f| {
          let f = f.borrow();
@@ -122,7 +122,7 @@ pub fn post_apps_v4_3_0(
 }
 
 #[allow(dead_code)]
-#[cfg(feature = "mock")]
+#[cfg(feature = "testable")]
 pub fn inject_post_apps_v0(
    post_app_v0: impl Fn(&Client, &Url, &str, &str, Option<&str>, Option<&str>) -> anyhow::Result<Application> + 'static
 ) {
@@ -130,7 +130,7 @@ pub fn inject_post_apps_v0(
 }
 
 #[allow(dead_code)]
-#[cfg(feature = "mock")]
+#[cfg(feature = "testable")]
 pub fn inject_post_apps_v4_3_0(
    post_app_v4_3_0: impl Fn(&Client, &Url, &str, &[&str], Option<&str>, Option<&str>) -> anyhow::Result<Application> + 'static
 ) {

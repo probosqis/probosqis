@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis
 
 import android.app.Application
+import android.content.Context
 import com.wcaokaze.probosqis.app.core.loadErrorListOrDefault
 import com.wcaokaze.probosqis.app.core.loadPageDeckOrDefault
 import com.wcaokaze.probosqis.app.pagedeck.AndroidPageDeckRepository
@@ -39,7 +40,9 @@ import com.wcaokaze.probosqis.mastodon.repository.AndroidAccountRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidAppRepository
 import com.wcaokaze.probosqis.mastodon.repository.AndroidTimelineRepository
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.repository.CacheRepositories
 import com.wcaokaze.probosqis.mastodon.repository.TimelineRepository
+import com.wcaokaze.probosqis.mastodon.repository.createCacheRepositories
 import com.wcaokaze.probosqis.nodeinfo.repository.AndroidNodeInfoRepository
 import com.wcaokaze.probosqis.nodeinfo.repository.NodeInfoRepository
 import com.wcaokaze.probosqis.testpages.TestError
@@ -54,7 +57,9 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.MainScope
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import java.io.File
 import java.net.URLEncoder
 
 class MainApplication : Application() {
@@ -121,18 +126,67 @@ class MainApplication : Application() {
       }
    }
 
+   private val cacheRepositoryKoinModule = module {
+      single(named("appDataDir")) {
+         get<Context>().filesDir
+      }
+
+      single<CacheRepositories> {
+         val appDataDir: File = get(named("appDataDir"))
+         createCacheRepositories(appDataDir.absolutePath)
+      }
+
+      single(named("instanceRepository")) {
+         get<CacheRepositories>().instance
+      }
+
+      single(named("applicationRepository")) {
+         get<CacheRepositories>().application
+      }
+
+      single(named("accountCacheRepository")) {
+         get<CacheRepositories>().account
+      }
+
+      single(named("credentialAccountCacheRepository")) {
+         get<CacheRepositories>().credentialAccount
+      }
+
+      single(named("accountIconCacheRepository")) {
+         get<CacheRepositories>().accountIcon
+      }
+
+      single(named("statusRepository")) {
+         get<CacheRepositories>().status
+      }
+
+      single(named("noCredentialStatusRepository")) {
+         get<CacheRepositories>().noCredentialStatus
+      }
+
+      single(named("noCredentialPollCacheRepository")) {
+         get<CacheRepositories>().noCredentialPoll
+      }
+   }
+
    private val repositoriesKoinModule = module {
       single<PageDeckRepository> {
-         AndroidPageDeckRepository(context = get(), pageStackRepository = get())
+         AndroidPageDeckRepository(
+            get(named("appDataDir")),
+            pageStackRepository = get()
+         )
       }
 
       single<PageStackRepository> {
-         AndroidPageStackRepository(context = get(), allPageSerializers)
+         AndroidPageStackRepository(
+            get(named("appDataDir")),
+            allPageSerializers
+         )
       }
 
       single<PErrorListRepository> {
          AndroidPErrorListRepository(
-            context = get(),
+            get(named("appDataDir")),
             allErrorSerializers,
             allPageSerializers
          )
@@ -140,7 +194,7 @@ class MainApplication : Application() {
 
       single<CredentialRepository> {
          AndroidCredentialRepository(
-            context = get(),
+            get(named("appDataDir")),
             allCredentialSerializers = listOf(
                credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token> { token ->
                   val encodedUrl = URLEncoder.encode(token.accountId.instanceUrl.raw, "UTF-8")
@@ -151,10 +205,29 @@ class MainApplication : Application() {
          )
       }
 
-      single<AppRepository> { AndroidAppRepository(context = get()) }
-      single<AccountRepository> { AndroidAccountRepository() }
+      single<AppRepository> {
+         AndroidAppRepository(
+            get(named("instanceRepository")),
+            get(named("applicationRepository")),
+            get(named("accountCacheRepository")),
+            get(named("credentialAccountCacheRepository"))
+         )
+      }
+      single<AccountRepository> {
+         AndroidAccountRepository(
+            get(named("accountIconCacheRepository"))
+         )
+      }
       single<NodeInfoRepository> { AndroidNodeInfoRepository() }
-      single<TimelineRepository> { AndroidTimelineRepository() }
+      single<TimelineRepository> {
+         AndroidTimelineRepository(
+            get(named("accountCacheRepository")),
+            get(named("statusRepository")),
+            get(named("noCredentialStatusRepository")),
+            get(named("noCredentialPollCacheRepository")),
+            get(named("instanceRepository"))
+         )
+      }
    }
 
    private val appKoinModule = module {
@@ -166,7 +239,10 @@ class MainApplication : Application() {
 
       startKoin {
          androidContext(this@MainApplication)
-         modules(koinModule, repositoriesKoinModule, appKoinModule)
+         modules(
+            koinModule, cacheRepositoryKoinModule, repositoriesKoinModule,
+            appKoinModule,
+         )
       }
    }
 }

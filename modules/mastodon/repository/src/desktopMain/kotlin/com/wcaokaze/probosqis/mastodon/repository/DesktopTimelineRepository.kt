@@ -16,9 +16,34 @@
 
 package com.wcaokaze.probosqis.mastodon.repository
 
+import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.mastodon.entity.Account
+import com.wcaokaze.probosqis.mastodon.entity.Instance
+import com.wcaokaze.probosqis.mastodon.entity.Poll
 import com.wcaokaze.probosqis.mastodon.entity.Status
 import com.wcaokaze.probosqis.mastodon.entity.Token
+import com.wcaokaze.probosqis.panoptiqon.Repository
 
-class DesktopTimelineRepository : TimelineRepository {
-   external override fun getHomeTimeline(token: Token): List<Status>
+class DesktopTimelineRepository(
+   private val accountCacheRepository: Repository<Account.Id, Account>,
+   private val statusCacheRepository: Repository<Status.Id, Status>,
+   private val noCredentialStatusCacheRepository: Repository<Status.Id, Status.NoCredential>,
+   private val noCredentialPollCacheRepository: Repository<Poll.Id, Poll.NoCredential>,
+   private val instanceCacheRepository: Repository<Url, Instance>
+) : TimelineRepository {
+   override fun getHomeTimeline(token: Token): List<Status> {
+      return getHomeTimeline(
+         token, accountCacheRepository, statusCacheRepository,
+         noCredentialStatusCacheRepository, noCredentialPollCacheRepository, instanceCacheRepository
+      )
+   }
+
+   private external fun getHomeTimeline(
+      token: Token,
+      accountCacheRepo: Repository<Account.Id, Account>,
+      statusCacheRepo: Repository<Status.Id, Status>,
+      noCredentialStatusCacheRepo: Repository<Status.Id, Status.NoCredential>,
+      noCredentialPollCacheRepo: Repository<Poll.Id, Poll.NoCredential>,
+      instanceCacheRepo: Repository<Url, Instance>
+   ): List<Status>
 }

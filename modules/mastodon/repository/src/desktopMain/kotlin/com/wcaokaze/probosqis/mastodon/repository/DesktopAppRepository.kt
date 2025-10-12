@@ -17,72 +17,51 @@
 package com.wcaokaze.probosqis.mastodon.repository
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.mastodon.entity.Account
 import com.wcaokaze.probosqis.mastodon.entity.Application
 import com.wcaokaze.probosqis.mastodon.entity.CredentialAccount
 import com.wcaokaze.probosqis.mastodon.entity.Instance
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.panoptiqon.Cache
-import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
-import com.wcaokaze.probosqis.panoptiqon.loadCache
-import com.wcaokaze.probosqis.panoptiqon.saveCache
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
-import java.io.File
+import com.wcaokaze.probosqis.panoptiqon.Repository
 import java.io.IOException
-import java.net.URLEncoder
 
-class DesktopAppRepository(directory: File) : AppRepository {
-   private val dir = File(directory, "fFDFXHfgze7i3Ihs")
-      .also { dir ->
-         if (dir.exists()) {
-            require(dir.isDirectory)
-         } else {
-            if (!dir.mkdirs()) { throw IOException() }
-         }
-      }
-
-   private val json = Json {
-      serializersModule = SerializersModule {
-         contextual(InstanceCacheSerializer())
-      }
-   }
-
-   @TemporaryCacheApi
-   override fun createApp(instance: Instance): Cache<Application> {
-      val application = postApp(instance)
-
-      val fileName = URLEncoder.encode(instance.url.raw, "UTF-8")
-      val file = File(dir, fileName)
-      return saveCache(application, file, json).asCache()
-   }
-
-   private external fun postApp(instance: Instance): Application
-
-   @TemporaryCacheApi
+class DesktopAppRepository(
+   private val instanceCacheRepository: Repository<Url, Instance>,
+   private val applicationCacheRepository: Repository<Application.Id, Application>,
+   private val accountCacheRepository: Repository<Account.Id, Account>,
+   private val credentialAccountCacheRepository: Repository<Account.Id, CredentialAccount>
+) : AppRepository {
    override fun loadAppCache(instanceBaseUrl: Url): Cache<Application> {
-      val fileName = URLEncoder.encode(instanceBaseUrl.raw, "UTF-8")
-      val file = File(dir, fileName)
-      return loadCache<Application>(file, json).asCache()
+      return loadAppCache(applicationCacheRepository, instanceBaseUrl.raw)
    }
 
-   override fun getAuthorizeUrl(application: Application): Url {
-      val rawAuthorizeUrl = getAuthorizeUrl(
-         application.instance,
-         application.clientId ?: throw IOException()
+   private external fun loadAppCache(
+      applicationCacheRepo: Repository<Application.Id, Application>,
+      instanceBaseUrl: String
+   ): Cache<Application>
+
+   override fun getAuthorizeUrl(instance: Instance): Url {
+      val authorizeUrl = getAuthorizeUrl(
+         instance, instanceCacheRepository, applicationCacheRepository
       )
 
-      return Url(rawAuthorizeUrl)
+      return Url(authorizeUrl)
    }
 
-   private external fun getAuthorizeUrl(instance: Cache<Instance>, clientId: String): String
+   private external fun getAuthorizeUrl(
+      instance: Instance,
+      instanceCacheRepo: Repository<Url, Instance>,
+      applicationCacheRepo: Repository<Application.Id, Application>
+   ): String
 
    override fun getToken(application: Application, code: String): Token {
       return getToken(
          application.instance,
          code,
          application.clientId     ?: throw IOException(),
-         application.clientSecret ?: throw IOException()
+         application.clientSecret ?: throw IOException(),
+         accountCacheRepository, credentialAccountCacheRepository, instanceCacheRepository
       )
    }
 
@@ -90,8 +69,22 @@ class DesktopAppRepository(directory: File) : AppRepository {
       instance: Cache<Instance>,
       code: String,
       clientId: String,
-      clientSecret: String
+      clientSecret: String,
+      accountCacheRepo: Repository<Account.Id, Account>,
+      credentialAccountCacheRepo: Repository<Account.Id, CredentialAccount>,
+      instanceCacheRepo: Repository<Url, Instance>
    ): Token
 
-   external override fun getCredentialAccount(token: Token): Cache<CredentialAccount>
+   override fun getCredentialAccount(token: Token): Cache<CredentialAccount> {
+      return getCredentialAccount(
+         token, accountCacheRepository, credentialAccountCacheRepository, instanceCacheRepository
+      )
+   }
+
+   private external fun getCredentialAccount(
+      token: Token,
+      accountCacheRepo: Repository<Account.Id, Account>,
+      credentialAccountCacheRepo: Repository<Account.Id, CredentialAccount>,
+      instanceCacheRepo: Repository<Url, Instance>
+   ): Cache<CredentialAccount>
 }

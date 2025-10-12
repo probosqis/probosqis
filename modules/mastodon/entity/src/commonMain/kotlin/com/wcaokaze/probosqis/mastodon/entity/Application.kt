@@ -24,6 +24,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Application(
+   val id: Id,
    @Contextual
    val instance: Cache<Instance>,
    val name: String,
@@ -35,6 +36,8 @@ data class Application(
    val clientSecretExpireTime: Instant?,
 ) {
    constructor(
+      rawInstanceUrl: String,
+      applicationName: String,
       instance: Cache<Instance>,
       name: String,
       rawWebsite: String?,
@@ -44,6 +47,7 @@ data class Application(
       clientSecret: String?,
       clientSecretExpireTimeEpochMillis: Long?,
    ) : this(
+      Id(Url(rawInstanceUrl), applicationName),
       instance,
       name,
       rawWebsite?.let(::Url),
@@ -54,9 +58,37 @@ data class Application(
       clientSecretExpireTimeEpochMillis?.let(Instant::fromEpochMilliseconds),
    )
 
+   val rawInstanceUrl: String
+      get() = id.rawInstanceUrl
+
+   val applicationName: String
+      get() = id.applicationName
+
    val rawWebsite: String?
       get() = website?.raw
 
    val clientSecretExpireTimeEpochMillis: Long?
       get() = clientSecretExpireTime?.toEpochMilliseconds()
+
+   @Serializable
+   data class Id(
+      val instanceUrl: Url,
+      val applicationName: String,
+   ) {
+      constructor(
+         rawInstanceUrl: String,
+         applicationName: String,
+         @Suppress("UNUSED_PARAMETER")
+         dummy: Unit?
+      ) : this(
+         Url(rawInstanceUrl),
+         applicationName,
+      )
+
+      val rawInstanceUrl: String
+         get() = instanceUrl.raw
+
+      val dummy: Unit?
+         get() = null
+   }
 }

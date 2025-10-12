@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-use mastodon_entity::account::CredentialAccount;
-use mastodon_entity::application::Application;
+use mastodon_entity::account::{Account, CredentialAccount};
+use mastodon_entity::application::{Application, ApplicationId};
 use mastodon_entity::instance::Instance;
 use mastodon_entity::token::Token;
 use panoptiqon::cache::Cache;
+use panoptiqon::repository::Repository;
 use url::Url;
 
 #[cfg(not(feature = "jvm"))]
@@ -35,6 +36,7 @@ pub struct AppRepository<'jni> {
 }
 
 impl AppRepository<'_> {
+   const APP_NAME: &'static str = "Probosqis";
    const ANDROID_REDIRECT_URI: &'static str = "https://probosqis.wcaokaze.com/auth/callback";
    const DESKTOP_REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
 
@@ -52,16 +54,29 @@ impl AppRepository<'_> {
       }
    }
 
+   fn load_application_cache(
+      &self,
+      application_cache_repo: &Repository<Application>,
+      instance_base_url: &Url
+   ) -> anyhow::Result<Cache<Application>> {
+      let application_id = ApplicationId {
+         instance_url: instance_base_url.clone(),
+         application_name: Self::APP_NAME.to_string(),
+      };
+      application_cache_repo.load(&application_id)
+   }
+
    pub fn post_app(
-      &mut self,
-      instance: Instance,
-      redirect_uri: &str
+      &self,
+      instance_cache: Cache<Instance>,
+      redirect_uri: &str,
    ) -> anyhow::Result<Application> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::apps;
       use semver::Version;
-      use crate::cache;
       use crate::conversion;
+
+      let instance = instance_cache.get();
 
       let instance_version = Version::parse(&instance.version)
          .unwrap_or(Version::new(0, 0, 0));
@@ -69,7 +84,7 @@ impl AppRepository<'_> {
       let api_application  = if instance_version < Version::new(4, 3, 0) {
          apps::post_apps_v0(
             &CLIENT, &instance.url,
-            /* client_name = */ "Probosqis",
+            /* client_name = */ Self::APP_NAME,
             /* redirect_uris = */ redirect_uri,
             /* scopes = */ Some("read write push"),
             /* website = */ None
@@ -77,7 +92,7 @@ impl AppRepository<'_> {
       } else {
          apps::post_apps_v4_3_0(
             &CLIENT, &instance.url,
-            /* client_name = */ "Probosqis",
+            /* client_name = */ Self::APP_NAME,
             /* redirect_uris = */ &[
                Self::ANDROID_REDIRECT_URI,
                Self::DESKTOP_REDIRECT_URI,
@@ -87,10 +102,6 @@ impl AppRepository<'_> {
          )?
       };
 
-      let instance_cache = cache::instance::repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?
-         .save(instance);
-
       let application = conversion
          ::application::from_api(api_application, instance_cache)?;
 
@@ -99,23 +110,40 @@ impl AppRepository<'_> {
 
    pub fn get_authorize_url(
       &self,
-      instance_cache: &Cache<Instance>,
-      client_id: &str,
-      redirect_uri: &str
+      instance: Instance,
+      redirect_uri: &str,
+      instance_cache_repo: &Repository<Instance>,
+      application_cache_repo: &Repository<Application>
    ) -> anyhow::Result<Url> {
+      use anyhow::Context;
       use mastodon_webapi::api::oauth;
 
-      let authorize_url = {
-         oauth::get_authorize_url(
-            /* instance_base_url = */ &instance_cache.get().url,
-            /* response_type = */ "code",
-            client_id,
-            redirect_uri,
-            /* scope = */ Some("read write push"),
-            /* force_login = */ None,
-            /* lang = */ None
-         )?
+      let instance_cache = instance_cache_repo.save(instance);
+
+      let application_id = ApplicationId {
+         instance_url: instance_cache.get().url.clone(),
+         application_name: Self::APP_NAME.to_string(),
       };
+
+      let application_cache = application_cache_repo
+         .load(&application_id)
+         .or_else(|_| -> anyhow::Result<_> {
+            let application = self.post_app(
+               Cache::clone(&instance_cache), redirect_uri
+            )?;
+            Ok(application_cache_repo.save(application))
+         })?;
+
+      let authorize_url = oauth::get_authorize_url(
+         /* instance_base_url = */ &instance_cache.get().url,
+         /* response_type = */ "code",
+         /* client_id = */ application_cache.get().client_id.as_ref()
+            .context("No client id provided")?,
+         redirect_uri,
+         /* scope = */ Some("read write push"),
+         /* force_login = */ None,
+         /* lang = */ None
+      )?;
 
       Ok(authorize_url)
    }
@@ -126,7 +154,9 @@ impl AppRepository<'_> {
       code: &str,
       client_id: &str,
       client_secret: &str,
-      redirect_uri: &str
+      redirect_uri: &str,
+      account_cache_repo: &Repository<Account>,
+      credential_account_cache_repo: &Repository<CredentialAccount>
    ) -> anyhow::Result<Token> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::oauth;
@@ -143,8 +173,10 @@ impl AppRepository<'_> {
          /* scope = */ Some("read write push")
       )?;
 
-      let credential_account = self
-         .get_credential_account_impl(instance_cache, &api_token.access_token)?;
+      let credential_account = self.get_credential_account_impl(
+         instance_cache, &api_token.access_token,
+         account_cache_repo, credential_account_cache_repo
+      )?;
 
       let token = conversion::token::from_api(
          api_token, instance_cache.clone(), credential_account
@@ -155,19 +187,25 @@ impl AppRepository<'_> {
 
    pub fn get_credential_account(
       &mut self,
-      token: &Token
+      token: &Token,
+      account_cache_repo: &Repository<Account>,
+      credential_account_cache_repo: &Repository<CredentialAccount>
    ) -> anyhow::Result<Cache<CredentialAccount>> {
-      self.get_credential_account_impl(&token.instance, &token.access_token)
+      self.get_credential_account_impl(
+         &token.instance, &token.access_token,
+         account_cache_repo, credential_account_cache_repo
+      )
    }
 
    fn get_credential_account_impl(
       &mut self,
       instance: &Cache<Instance>,
-      access_token: &str
+      access_token: &str,
+      account_cache_repo: &Repository<Account>,
+      credential_account_cache_repo: &Repository<CredentialAccount>
    ) -> anyhow::Result<Cache<CredentialAccount>> {
       use ext_reqwest::CLIENT;
       use mastodon_webapi::api::accounts;
-      use crate::cache;
       use crate::conversion;
 
       let api_credential_account = accounts::get_verify_credentials(
@@ -179,11 +217,11 @@ impl AppRepository<'_> {
       let credential_account = conversion::account::credential_account_from_api(
          #[cfg(feature = "jvm")] &mut self.env,
          Cache::clone(&instance),
-         api_credential_account
+         api_credential_account,
+         account_cache_repo
       )?;
 
-      let credential_account = cache::account::credential_account_repo()
-         .write(#[cfg(feature = "jvm")] &mut self.env)?
+      let credential_account = credential_account_cache_repo
          .save(credential_account);
 
       Ok(credential_account)
@@ -196,96 +234,116 @@ mod jvm {
    use jni::objects::JObject;
    use mastodon_entity::instance::Instance;
    use mastodon_entity::jvm_types::{
-      JvmApplication, JvmCredentialAccount, JvmInstance, JvmToken,
+      JvmAccount, JvmApplication, JvmCredentialAccount, JvmInstance, JvmToken,
    };
-   use panoptiqon::jvm_types::{JvmCache, JvmString};
+   use panoptiqon::cache::Cache;
+   use panoptiqon::jvm_types::{JvmCache, JvmRepository, JvmString};
+   use panoptiqon::repository::Repository;
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_postApp<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_loadAppCache<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JvmInstance<'local>
-   ) -> JvmApplication<'local> {
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>,
+      instance_base_url: JvmString<'local>
+   ) -> JvmCache<'local, JvmApplication<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
-      use super::AppRepository;
 
-      post_app(&mut env, instance, AppRepository::DESKTOP_REDIRECT_URI)
-         .unwrap_or_throw_io_exception(&mut env)
+      load_app_cache(
+         &mut env, application_cache_repo, instance_base_url
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
-   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_postApp<'local>(
+   extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_loadAppCache<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JvmInstance<'local>
-   ) -> JvmApplication<'local> {
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>,
+      instance_base_url: JvmString<'local>
+   ) -> JvmCache<'local, JvmApplication<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
-      use super::AppRepository;
 
-      post_app(&mut env, instance, AppRepository::ANDROID_REDIRECT_URI)
-         .unwrap_or_throw_io_exception(&mut env)
+      load_app_cache(
+         &mut env, application_cache_repo, instance_base_url
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
-   fn post_app<'local>(
+   fn load_app_cache<'local>(
       env: &mut JNIEnv<'local>,
-      instance: JvmInstance<'local>,
-      redirect_uri: &str
-   ) -> anyhow::Result<JvmApplication<'local>> {
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>,
+      instance_base_url: JvmString<'local>
+   ) -> anyhow::Result<JvmCache<'local, JvmApplication<'local>>> {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
+      use url::Url;
       use super::AppRepository;
 
-      let mut app_repository = AppRepository::new(env);
+      let application_cache_repo = Repository::of(env, &application_cache_repo);
+      let instance_base_url = String::clone_from_jvm(env, &instance_base_url);
+      let instance_base_url = Url::parse(&instance_base_url)?;
 
-      let instance = Instance::clone_from_jvm(env, &instance);
-      let application = app_repository.post_app(instance, redirect_uri)?;
-      Ok(application.clone_into_jvm(env))
+      let app_repository = AppRepository::new(env);
+      let application_cache = app_repository.load_application_cache(
+         &application_cache_repo, &instance_base_url
+      )?;
+
+      let application_cache = application_cache.clone_into_jvm(env);
+      Ok(application_cache)
    }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getAuthorizeUrl<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JvmCache<'local, JvmInstance<'local>>,
-      client_id: JvmString<'local>
+      instance: JvmInstance<'local>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>,
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>
    ) -> JvmString<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
 
-      get_authorize_url(&mut env, instance, client_id, AppRepository::DESKTOP_REDIRECT_URI)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_authorize_url(
+         &mut env, instance, AppRepository::DESKTOP_REDIRECT_URI,
+         instance_cache_repo, application_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_getAuthorizeUrl<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      instance: JvmCache<'local, JvmInstance<'local>>,
-      client_id: JvmString<'local>
+      instance: JvmInstance<'local>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>,
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>
    ) -> JvmString<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
 
-      get_authorize_url(&mut env, instance, client_id, AppRepository::ANDROID_REDIRECT_URI)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_authorize_url(
+         &mut env, instance, AppRepository::ANDROID_REDIRECT_URI,
+         instance_cache_repo, application_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_authorize_url<'local>(
       env: &mut JNIEnv<'local>,
-      instance: JvmCache<'local, JvmInstance<'local>>,
-      client_id: JvmString<'local>,
-      redirect_uri: &str
+      instance: JvmInstance<'local>,
+      redirect_uri: &str,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>,
+      application_cache_repo: JvmRepository<'local, JvmApplication<'local>>
    ) -> anyhow::Result<JvmString<'local>> {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
-      use crate::cache;
       use super::AppRepository;
 
+      let instance = Instance::clone_from_jvm(env, &instance);
+
+      let instance_cache_repo    = Repository::of(env, &instance_cache_repo);
+      let application_cache_repo = Repository::of(env, &application_cache_repo);
+
       let app_repository = AppRepository::new(env);
-
-      let instance_cache = cache::instance::clone_from_jvm(env, &instance)?;
-      let client_id = String::clone_from_jvm(env, &client_id);
-
-      let authorize_url = app_repository
-         .get_authorize_url(&instance_cache, &client_id, redirect_uri)?;
+      let authorize_url = app_repository.get_authorize_url(
+         instance, redirect_uri,
+         &instance_cache_repo, &application_cache_repo
+      )?;
 
       let authorize_url = authorize_url.as_str().clone_into_jvm(env);
       Ok(authorize_url)
@@ -298,13 +356,19 @@ mod jvm {
       instance: JvmCache<'local, JvmInstance<'local>>,
       code: JvmString<'local>,
       client_id: JvmString<'local>,
-      client_secret: JvmString<'local>
+      client_secret: JvmString<'local>,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmToken<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
 
-      get_token(&mut env, instance, code, client_id, client_secret, AppRepository::DESKTOP_REDIRECT_URI)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_token(
+         &mut env, instance, code, client_id, client_secret,
+         AppRepository::DESKTOP_REDIRECT_URI,
+         account_cache_repo, credential_account_cache_repo, instance_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
@@ -314,13 +378,19 @@ mod jvm {
       instance: JvmCache<'local, JvmInstance<'local>>,
       code: JvmString<'local>,
       client_id: JvmString<'local>,
-      client_secret: JvmString<'local>
+      client_secret: JvmString<'local>,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmToken<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
 
-      get_token(&mut env, instance, code, client_id, client_secret, AppRepository::ANDROID_REDIRECT_URI)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_token(
+         &mut env, instance, code, client_id, client_secret,
+         AppRepository::ANDROID_REDIRECT_URI,
+         account_cache_repo, credential_account_cache_repo, instance_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_token<'local>(
@@ -329,22 +399,28 @@ mod jvm {
       code: JvmString<'local>,
       client_id: JvmString<'local>,
       client_secret: JvmString<'local>,
-      redirect_uri: &str
+      redirect_uri: &str,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> anyhow::Result<JvmToken<'local>> {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
       use crate::cache;
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
+      let account_cache_repo            = Repository::of(env, &account_cache_repo);
+      let credential_account_cache_repo = Repository::of(env, &credential_account_cache_repo);
 
-      let instance_cache = cache::instance::clone_from_jvm(env, &instance)?;
+      let instance_cache = cache::instance::clone_from_jvm(env, &instance, &instance_cache_repo)?;
 
       let code = String::clone_from_jvm(env, &code);
       let client_id = String::clone_from_jvm(env, &client_id);
       let client_secret = String::clone_from_jvm(env, &client_secret);
 
       let token = app_repository.get_token(
-         &instance_cache, &code, &client_id, &client_secret, redirect_uri
+         &instance_cache, &code, &client_id, &client_secret, redirect_uri,
+         &account_cache_repo, &credential_account_cache_repo
       )?;
 
       Ok(token.clone_into_jvm(env))
@@ -354,29 +430,40 @@ mod jvm {
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_AndroidAppRepository_getCredentialAccount<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      token: JvmToken<'local>
+      token: JvmToken<'local>,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmCache<'local, JvmCredentialAccount<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_credential_account(&mut env, token)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_credential_account(
+         &mut env, token, account_cache_repo, credential_account_cache_repo, instance_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_mastodon_repository_DesktopAppRepository_getCredentialAccount<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>,
-      token: JvmToken<'local>
+      token: JvmToken<'local>,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmCache<'local, JvmCredentialAccount<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
-      get_credential_account(&mut env, token)
-         .unwrap_or_throw_io_exception(&mut env)
+      get_credential_account(
+         &mut env, token, account_cache_repo, credential_account_cache_repo, instance_cache_repo
+      ).unwrap_or_throw_io_exception(&mut env)
    }
 
    fn get_credential_account<'local>(
       env: &mut JNIEnv<'local>,
-      token: JvmToken<'local>
+      token: JvmToken<'local>,
+      account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
+      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> anyhow::Result<JvmCache<'local, JvmCredentialAccount<'local>>> {
       use mastodon_entity::token::Token;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
@@ -384,11 +471,15 @@ mod jvm {
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
+      let account_cache_repo            = Repository::of(env, &account_cache_repo);
+      let credential_account_cache_repo = Repository::of(env, &credential_account_cache_repo);
 
       let instance = token.instance(env);
-      let instance = cache::instance::clone_from_jvm(env, &instance)?;
+      let instance = cache::instance::clone_from_jvm(env, &instance, &instance_cache_repo)?;
       let token = Token::clone_from_jvm(env, &token, instance);
-      let credential_account = app_repository.get_credential_account(&token)?;
+      let credential_account = app_repository.get_credential_account(
+         &token, &account_cache_repo, &credential_account_cache_repo
+      )?;
       Ok(credential_account.clone_into_jvm(env))
    }
 }
@@ -396,6 +487,7 @@ mod jvm {
 #[cfg(all(test, not(feature = "jvm")))]
 mod test {
    use mastodon_webapi::entity::application::Application;
+   use panoptiqon::Panoptiqon;
    use super::AppRepository;
 
    fn dummy_application() -> Application {
@@ -420,7 +512,12 @@ mod test {
       use mastodon_webapi::api::apps;
       use url::Url;
 
-      let mut repository = AppRepository::new();
+      let repository = AppRepository::new();
+
+      let panoptiqon = Panoptiqon::new();
+      let instance_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/switch_function_by_instance_version/Instance"
+      );
 
       let v0_called     = Arc::new(Mutex::new(false));
       let v4_3_0_called = Arc::new(Mutex::new(false));
@@ -448,8 +545,10 @@ mod test {
       };
 
       {
-         let _application = repository
-            .post_app(instance("4.1.0"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance_cache_repo.save(instance("4.1.0")),
+            AppRepository::ANDROID_REDIRECT_URI
+         );
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
       }
@@ -458,8 +557,10 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository
-            .post_app(instance("4.2.0"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance_cache_repo.save(instance("4.2.0")),
+            AppRepository::ANDROID_REDIRECT_URI
+         );
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
       }
@@ -468,8 +569,10 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository
-            .post_app(instance("4.2.9"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance_cache_repo.save(instance("4.2.9")),
+            AppRepository::ANDROID_REDIRECT_URI
+         );
          assert_eq!(true,  *v0_called    .lock().unwrap());
          assert_eq!(false, *v4_3_0_called.lock().unwrap());
       }
@@ -478,8 +581,10 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository
-            .post_app(instance("4.3.0"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance_cache_repo.save(instance("4.3.0")),
+            AppRepository::ANDROID_REDIRECT_URI
+         );
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
@@ -488,8 +593,10 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository
-            .post_app(instance("4.3.1"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance_cache_repo.save(instance("4.3.1")),
+            AppRepository::ANDROID_REDIRECT_URI
+         );
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
@@ -498,8 +605,10 @@ mod test {
       *v4_3_0_called.lock().unwrap() = false;
 
       {
-         let _application = repository
-            .post_app(instance("4.4.0"), AppRepository::ANDROID_REDIRECT_URI);
+         let _application = repository.post_app(
+            instance_cache_repo.save(instance("4.4.0")),
+            AppRepository::ANDROID_REDIRECT_URI
+         );
          assert_eq!(false, *v0_called    .lock().unwrap());
          assert_eq!(true,  *v4_3_0_called.lock().unwrap());
       }
@@ -512,7 +621,12 @@ mod test {
       use mastodon_webapi::api::apps;
       use url::Url;
 
-      let mut repository = AppRepository::new();
+      let repository = AppRepository::new();
+
+      let panoptiqon = Panoptiqon::new();
+      let instance_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/account_conversion_uses_newer_redirect_uris_field/Instance"
+      );
 
       let instance = Instance {
          url: Url::parse("https://example.com/").unwrap(),
@@ -536,8 +650,10 @@ mod test {
          )
       });
 
-      let application = repository
-         .post_app(instance.clone(), "https://example.com/callback");
+      let application = repository.post_app(
+         instance_cache_repo.save(instance.clone()),
+         "https://example.com/callback"
+      );
 
       assert_eq!(
          vec![
@@ -560,8 +676,10 @@ mod test {
          )
       });
 
-      let application = repository
-         .post_app(instance.clone(), "https://example.com/callback");
+      let application = repository.post_app(
+         instance_cache_repo.save(instance.clone()),
+         "https://example.com/callback"
+      );
 
       assert_eq!(
          vec![
@@ -576,14 +694,40 @@ mod test {
    fn authorize_url() {
       use chrono::{TimeZone, Utc};
       use mastodon_entity::instance::Instance;
-      use mastodon_webapi::api::oauth;
+      use mastodon_webapi::api::{apps, oauth};
+      use mastodon_webapi::entity::application::Application;
+      use panoptiqon::Panoptiqon;
       use url::Url;
-      use crate::cache;
 
       let repository = AppRepository::new();
 
+      let panoptiqon = Panoptiqon::new();
+      let instance_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/authorize_url/Instance"
+      );
+      let application_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/authorize_url/Application"
+      );
+
       oauth::inject_get_authorize_url(|instance_base_url, _, _, _, _, _, _|
          Ok(instance_base_url.join("oauth/authorize")?)
+      );
+      apps::inject_post_apps_v0(|_, _, client_name, redirect_uris, scopes, website|
+         Ok(Application {
+            name: client_name.to_string(),
+            website: website.map(|s| s.to_string()),
+            scopes: scopes.map(|scopes| {
+               scopes.split_whitespace()
+                  .map(|s| s.to_string())
+                  .collect()
+            }),
+            redirect_uris: Some(vec![redirect_uris.to_string()]),
+            redirect_uri: Some(redirect_uris.to_string()),
+            vapid_key: None,
+            client_id: Some("client id".to_string()),
+            client_secret: Some("client secret".to_string()),
+            client_secret_expires_at: None,
+         })
       );
 
       let instance = Instance {
@@ -592,12 +736,11 @@ mod test {
          version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let instance_cache = cache::instance::repo().write().unwrap().save(instance);
-
       let authorize_url = repository.get_authorize_url(
-         &instance_cache,
-         "client_id",
-         "redirect_uri"
+         instance,
+         "redirect_uri",
+         &instance_cache_repo,
+         &application_cache_repo
       ).unwrap();
 
       assert_eq!(
@@ -627,9 +770,20 @@ mod test {
       };
       use mastodon_webapi::entity::custom_emoji::CustomEmoji as ApiCustomEmoji;
       use mastodon_webapi::entity::token::Token as ApiToken;
-      use crate::cache;
+      use panoptiqon::Panoptiqon;
 
       let mut repository = AppRepository::new();
+
+      let panoptiqon = Panoptiqon::new();
+      let instance_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/token/Instance"
+      );
+      let account_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/token/Account"
+      );
+      let credential_account_cache_repo = panoptiqon.new_repository(
+         "test/AppRepository/token/CredentialAccount"
+      );
 
       oauth::inject_post_token(|_, _, _, _, _, _, _, _|
          Ok(
@@ -739,14 +893,16 @@ mod test {
          version_checked_time: Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap(),
       };
 
-      let instance_cache = cache::instance::repo().write().unwrap().save(instance);
+      let instance_cache = instance_cache_repo.save(instance);
 
       let token = repository.get_token(
          &instance_cache,
          "code",
          "client_id",
          "client_secret",
-         "redirect_uri"
+         "redirect_uri",
+         &account_cache_repo,
+         &credential_account_cache_repo
       ).unwrap();
 
       assert_eq!(

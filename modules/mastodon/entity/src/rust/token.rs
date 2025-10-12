@@ -16,7 +16,7 @@
 
 use chrono::{DateTime, Utc};
 use panoptiqon::cache::Cache;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use crate::account::{AccountId, CredentialAccount};
 use crate::instance::Instance;
 
@@ -29,7 +29,7 @@ use {
    crate::jvm_types::{JvmCredentialAccount, JvmInstance, JvmToken},
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Token {
    pub instance: Cache<Instance>,
    pub account: Option<Cache<CredentialAccount>>,
@@ -66,7 +66,7 @@ convert_jvm_helper! {
          where jvm_type: JvmNullable<'local, JvmCache<'local, JvmCredentialAccount<'local>>>,
                jvm_getter_method: "getAccount",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
-      
+
       fn raw_instance_url<'local>(..) -> String
          where jvm_type: JvmString<'local>,
                jvm_getter_method: "getRawInstanceUrl",

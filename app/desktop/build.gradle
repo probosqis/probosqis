@@ -48,6 +48,8 @@ kotlin {
 
          implementation project(':modules:foundation:credential')
 
+         implementation project(':modules:foundation:entity')
+
          implementation project(':modules:testpages')
 
          implementation project(':modules:nodeinfo:repository')
@@ -74,7 +76,7 @@ tasks.register('cargoBuild', Exec) {
 tasks.register('cargoTest', Exec) {
    workingDir rootProject.projectDir
 
-   def args = ['+nightly', 'test', '--features', 'mock']
+   def args = ['+nightly', 'test', '--features', 'testable']
    if (isXterm()) {
       args += '--color=always'
    }
