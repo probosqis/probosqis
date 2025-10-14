@@ -23,6 +23,8 @@ plugins {
    alias libs.plugins.roborazzi apply false
 }
 
+ext.appName = 'probosqis'
+
 static def isXterm() {
    def term = System.getenv('TERM')
    if (term == null) { return false }

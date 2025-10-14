@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import org.intellij.lang.annotations.Language
+
 plugins {
    alias libs.plugins.kotlin.multiplatform
 }
@@ -24,5 +26,39 @@ kotlin {
    sourceSets {
       commonMain.dependencies {
       }
+   }
+}
+
+tasks.register('generateSource') {
+   doFirst {
+      final kotlinFile = file(
+          'src/commonMain/kotlin/com/wcaokaze/probosqis/foundation/appinfo/AppInfo.kt'
+              .replace('/', File.separator)
+      )
+
+      if (!kotlinFile.parentFile.exists() && !kotlinFile.parentFile.mkdirs()) {
+         throw new GradleException("can not generate source: $kotlinFile")
+      }
+
+      @Language("kotlin")
+      final kotlinSource = """
+         package com.wcaokaze.probosqis.foundation.appinfo
+         val appName = "$appName"
+      """
+      kotlinFile.write(kotlinSource, "UTF-8", /* writeBom = */ false)
+
+      final rustFile = file(
+          'src/rust/lib.rs'.replace('/', File.separator)
+      )
+
+      if (!rustFile.parentFile.exists() && !rustFile.parentFile.mkdirs()) {
+         throw new GradleException("can not generate source: $rustFile")
+      }
+
+      @Language("rust")
+      final rustSource = """
+         pub const APP_NAME: &'static str = "$appName";
+      """
+      rustFile.write(rustSource, "UTF-8", /* writeBom = */ false)
    }
 }
