@@ -55,4 +55,10 @@ subprojects {
          task.outputs.upToDateWhen { false }
       }
    }
+
+   tasks.configureEach { task ->
+      if (task.name.contains('cargo')) {
+         task.dependsOn ':modules:foundation:appinfo:generateSource'
+      }
+   }
 }
