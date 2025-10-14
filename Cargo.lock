@@ -208,6 +208,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "foundation_appinfo"
+version = "0.0.0"
+
+[[package]]
 name = "foundation_entity"
 version = "0.0.0"
 dependencies = [
