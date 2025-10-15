@@ -44,6 +44,7 @@ tasks.register('generateSource') {
       final kotlinSource = """
          package com.wcaokaze.probosqis.foundation.appinfo
          val appName = "$appName"
+         val appVersion = "$appVersion"
       """
       kotlinFile.write(kotlinSource, "UTF-8", /* writeBom = */ false)
 
@@ -58,6 +59,7 @@ tasks.register('generateSource') {
       @Language("rust")
       final rustSource = """
          pub const APP_NAME: &'static str = "$appName";
+         pub const APP_VERSION: &'static str = "$appVersion";
       """
       rustFile.write(rustSource, "UTF-8", /* writeBom = */ false)
    }

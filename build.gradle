@@ -24,6 +24,7 @@ plugins {
 }
 
 ext.appName = 'probosqis'
+ext.appVersion = '0.0.0'
 
 static def isXterm() {
    def term = System.getenv('TERM')
