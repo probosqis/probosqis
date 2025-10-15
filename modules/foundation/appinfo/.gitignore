@@ -1,0 +1,3 @@
+/build
+src/commonMain/kotlin/com/wcaokaze/probosqis/foundation/appinfo/AppInfo.kt
+src/rust/lib.rs

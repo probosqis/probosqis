@@ -186,6 +186,7 @@ dependencies = [
 name = "ext_reqwest"
 version = "0.0.0"
 dependencies = [
+ "foundation_appinfo",
  "jni",
  "reqwest",
  "serde",
@@ -206,6 +207,10 @@ checksum = "e13624c2627564efccf4934284bdd98cbaa14e79b0b5a141218e507b3a823456"
 dependencies = [
  "percent-encoding",
 ]
+
+[[package]]
+name = "foundation_appinfo"
+version = "0.0.0"
 
 [[package]]
 name = "foundation_entity"

@@ -15,6 +15,7 @@
 [workspace]
 members = [
     "modules/app/core",
+    "modules/foundation/appinfo",
     "modules/foundation/entity",
     "modules/ext/kotlinTest",
     "modules/ext/panoptiqon",
@@ -47,6 +48,7 @@ reqwest.default-features = false
 reqwest.features = ["rustls-tls", "charset", "http2", "blocking", "json"]
 percent-encoding = "2.3.1"
 
+foundation_appinfo = { path = "modules/foundation/appinfo" }
 foundation_entity = { path = "modules/foundation/entity" }
 ext_kotlintest = { path = "modules/ext/kotlinTest" }
 ext_panoptiqon = { path = "modules/ext/panoptiqon" }

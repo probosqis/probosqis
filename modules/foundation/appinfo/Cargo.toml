@@ -1,4 +1,4 @@
-# Copyright 2024 wcaokaze
+# Copyright 2025 wcaokaze
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,18 +13,10 @@
 # limitations under the License.
 
 [package]
-name = "ext_reqwest"
+name = "foundation_appinfo"
 edition = "2021"
 
-[features]
-jvm = ["dep:jni"]
-jni-test = ["jvm"]
+[lib]
+path = "src/rust/lib.rs"
 
 [dependencies]
-serde.workspace = true
-jni = { workspace = true, optional = true }
-
-url.workspace = true
-reqwest.workspace = true
-
-foundation_appinfo.workspace = true
