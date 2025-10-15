@@ -186,6 +186,7 @@ dependencies = [
 name = "ext_reqwest"
 version = "0.0.0"
 dependencies = [
+ "foundation_appinfo",
  "jni",
  "reqwest",
  "serde",

@@ -13,10 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use std::cell::LazyCell;
 
+use std::cell::LazyCell;
 use reqwest::blocking::Client;
 
-pub const CLIENT: LazyCell<Client> = LazyCell::new(
-   || Client::builder().build().unwrap()
-);
+pub const CLIENT: LazyCell<Client> = LazyCell::new(|| {
+   use foundation_appinfo::{APP_NAME, APP_VERSION};
+
+   let user_agent = format!("{}/{}", APP_NAME, APP_VERSION);
+
+   Client::builder()
+      .user_agent(user_agent)
+      .build().unwrap()
+});
