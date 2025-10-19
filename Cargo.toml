@@ -17,6 +17,7 @@ members = [
     "modules/app/core",
     "modules/foundation/appinfo",
     "modules/foundation/entity",
+    "modules/foundation/error",
     "modules/ext/kotlinTest",
     "modules/ext/panoptiqon",
     "modules/ext/reqwest",
@@ -50,6 +51,7 @@ percent-encoding = "2.3.1"
 
 foundation_appinfo = { path = "modules/foundation/appinfo" }
 foundation_entity = { path = "modules/foundation/entity" }
+foundation_error = { path = "modules/foundation/error" }
 ext_kotlintest = { path = "modules/ext/kotlinTest" }
 ext_panoptiqon = { path = "modules/ext/panoptiqon" }
 ext_reqwest = { path = "modules/ext/reqwest" }
