@@ -78,3 +78,7 @@ abstract class AbstractPErrorListRepository
       }
    }
 }
+
+data class ErrorListJson(
+   val json: String
+)
