@@ -30,6 +30,7 @@ import kotlinx.serialization.modules.PolymorphicModuleBuilder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
+import java.io.IOException
 import kotlin.reflect.KClass
 
 inline fun <reified E : PError>
@@ -82,6 +83,24 @@ abstract class AbstractPErrorListRepository
          }
       }
    }
+
+   /** @throws IOException */
+   override fun saveErrorList(
+      errorList: List<RaisedError>
+   ): WritableCache<List<RaisedError>> {
+      val errorListJson = ErrorListJson(json.encodeToString(errorList))
+      val panoptiqonCache = savePanoptiqon(errorListJson)
+      return ErrorListCache(json, panoptiqonCache)
+   }
+
+   /** @throws IOException */
+   override fun loadErrorList(): WritableCache<List<RaisedError>> {
+      val panoptiqonCache = loadPanoptiqon()
+      return ErrorListCache(json, panoptiqonCache)
+   }
+
+   abstract fun savePanoptiqon(json: ErrorListJson): WritableCache<ErrorListJson>
+   abstract fun loadPanoptiqon(): WritableCache<ErrorListJson>
 }
 
 data class ErrorListJson(
