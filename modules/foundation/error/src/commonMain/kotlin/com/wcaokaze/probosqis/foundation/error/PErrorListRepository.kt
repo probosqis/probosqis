@@ -113,7 +113,7 @@ private class ErrorListCache(
    private val jsonCache: WritableCache<ErrorListJson>
 ) : WritableCache<List<RaisedError>>, Cache<List<RaisedError>> {
    override val id: Cache.Id
-      get() = jsonCache.asCache().id
+      get() = jsonCache.id
 
    override var value: List<RaisedError>
       get() {
