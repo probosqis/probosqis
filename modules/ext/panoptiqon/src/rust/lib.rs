@@ -18,9 +18,27 @@ use std::sync::LazyLock;
 use panoptiqon::Panoptiqon;
 
 #[cfg(feature="jvm")]
+use {
+   jni::JNIEnv,
+   jni::objects::JObject,
+   panoptiqon::jvm_types::{JvmCache, JvmCacheId, JvmErased},
+   crate::unwrap_or_throw::UnwrapOrThrow,
+};
+
+#[cfg(feature="jvm")]
 pub mod convert_jvm_helper;
 
 #[cfg(feature="jvm")]
 pub mod unwrap_or_throw;
 
 pub static PANOPTIQON: LazyLock<Panoptiqon> = LazyLock::new(|| Panoptiqon::new());
+
+#[cfg(feature="jvm")]
+#[no_mangle]
+extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_Panoptiqon_loadById<'local>(
+   mut env: JNIEnv<'local>,
+   _obj: JObject<'local>,
+   id: JvmCacheId<'local>
+) -> JvmCache<'local, JvmErased<'local>> {
+   PANOPTIQON.load_jvm(&mut env, &id).unwrap_or_throw_io_exception(&mut env)
+}
