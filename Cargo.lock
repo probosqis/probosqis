@@ -214,6 +214,17 @@ name = "foundation_appinfo"
 version = "0.0.0"
 
 [[package]]
+name = "foundation_credential"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "ext_panoptiqon",
+ "jni",
+ "panoptiqon",
+ "serde",
+]
+
+[[package]]
 name = "foundation_entity"
 version = "0.0.0"
 dependencies = [
