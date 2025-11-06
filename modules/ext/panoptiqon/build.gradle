@@ -17,9 +17,16 @@
 plugins {
    alias libs.plugins.kotlin.multiplatform
    alias libs.plugins.kotlinx.serialization
+   alias libs.plugins.android.library
+   alias libs.plugins.compose.jb
+   alias libs.plugins.compose.compiler
 }
 
 apply from: rootProject.file('gradle/setupModule.gradle')
+
+android {
+   namespace 'com.wcaokaze.probosqis.ext.panoptiqon'
+}
 
 kotlin {
    sourceSets {
