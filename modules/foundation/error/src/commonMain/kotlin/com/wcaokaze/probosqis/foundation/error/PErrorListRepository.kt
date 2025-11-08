@@ -16,13 +16,10 @@
 
 package com.wcaokaze.probosqis.foundation.error
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
 import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.capsiqum.page.Page
-import com.wcaokaze.probosqis.panoptiqon.Cache
-import com.wcaokaze.probosqis.panoptiqon.InternalCacheApi
+import com.wcaokaze.probosqis.ext.panoptiqon.MappedWritableCache
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -110,41 +107,13 @@ data class ErrorListJson(
 @Stable
 private class ErrorListCache(
    private val json: Json,
-   private val jsonCache: WritableCache<ErrorListJson>
-) : WritableCache<List<RaisedError>>, Cache<List<RaisedError>> {
-   override val id: Cache.Id
-      get() = jsonCache.id
+   jsonCache: WritableCache<ErrorListJson>
+) : MappedWritableCache<ErrorListJson, List<RaisedError>>(jsonCache) {
+   override fun map(value: ErrorListJson): List<RaisedError> {
+      return json.decodeFromString(value.json)
+   }
 
-   override var value: List<RaisedError>
-      get() {
-         @OptIn(InternalCacheApi::class)
-         return mutableState.value
-      }
-      set(value) {
-         @OptIn(InternalCacheApi::class)
-         mutableState.value = value
-      }
-
-   override fun asCache(): Cache<List<RaisedError>> = this
-
-   @InternalCacheApi
-   override val state: State<List<RaisedError>>
-      get() = mutableState
-
-   @InternalCacheApi
-   override val mutableState = object : MutableState<List<RaisedError>> {
-      private val jsonState = jsonCache.mutableState
-
-      override var value: List<RaisedError>
-         get() = json.decodeFromString(jsonState.value.json)
-         set(value) {
-            jsonState.value = ErrorListJson(json.encodeToString(value))
-         }
-
-      override fun component1() = value
-
-      override fun component2(): (List<RaisedError>) -> Unit {
-         return { value = it }
-      }
+   override fun reverseMap(value: List<RaisedError>): ErrorListJson {
+      return ErrorListJson(json.encodeToString(value))
    }
 }
