@@ -29,10 +29,16 @@ class CredentialRepositoryTest {
    private lateinit var credentialRepository: CredentialRepository
 
    @Serializable
-   data class StringCredential(val id: String) : Credential()
+   data class StringCredential(val token: String) : Credential() {
+      override val id: String
+         get() = token
+   }
 
    @Serializable
-   data class IntCredential(val id: Int) : Credential()
+   data class IntCredential(val token: Int) : Credential() {
+      override val id: String
+         get() = token.toString()
+   }
 
    private val stringCredentialSerializer
       = credentialSerializer<StringCredential> { "string" + it.id }

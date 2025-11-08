@@ -91,6 +91,9 @@ data class Token(
       Instant.fromEpochMilliseconds(createdAtEpochMillis),
    )
 
+   override val id: String
+      get() = accountId.toString()
+
    val rawInstanceUrl: String
       get() = accountId.instanceUrl.raw
 

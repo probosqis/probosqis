@@ -19,4 +19,12 @@ package com.wcaokaze.probosqis.foundation.credential
 import kotlinx.serialization.Serializable
 
 @Serializable
-abstract class Credential
+abstract class Credential {
+   /**
+    * このCredentialを一意に区別するための識別子。
+    *
+    * `a.id == b.id` のときaとbは同一のアカウントに対するCredentialと判断され、
+    * 後に連携されたものだけがアプリ内に保存される。
+    */
+   abstract val id: String
+}
