@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-pub mod credential_repository;
+#![cfg(feature = "jvm")]
 
-#[cfg(feature = "jvm")]
-pub mod jvm_types;
+use panoptiqon::jvm_type;
+
+jvm_type! {
+   JvmSerializedCredential,
+   JvmCredentialList,
+}

@@ -82,3 +82,12 @@ abstract class AbstractCredentialRepository
       return impl(credential)
    }
 }
+
+data class SerializedCredential(
+   val id: String,
+   val json: String
+)
+
+data class CredentialList(
+   val credentials: List<Cache<SerializedCredential>>
+)

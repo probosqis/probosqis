@@ -1,0 +1,149 @@
+/*
+ * Copyright 2025 wcaokaze
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+use std::path::{Path, PathBuf};
+use serde::{Deserialize, Serialize};
+use panoptiqon::cache::{Cache, CacheContent};
+
+#[cfg(feature = "jvm")]
+use {
+   jni::JNIEnv,
+   ext_panoptiqon::convert_jvm_helper,
+   panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
+   panoptiqon::jvm_types::{JvmCache, JvmList, JvmString, JvmUnit},
+   crate::jvm_types::{JvmCredentialList, JvmSerializedCredential},
+};
+
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
+pub(crate) struct SerializedCredential {
+   pub id: String,
+   pub json: String
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
+pub(crate) struct CredentialList(Vec<Cache<SerializedCredential>>);
+
+impl CacheContent for SerializedCredential {
+   type Key = String;
+
+   #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmString<'local>;
+
+   #[cfg(feature = "jvm")]
+   type JvmType<'local> = JvmSerializedCredential<'local>;
+
+   fn key(&self) -> &String {
+      &self.id
+   }
+
+   fn file_path_for_key(dir_path: &Path, key: &String) -> PathBuf {
+      dir_path.join(key)
+   }
+}
+
+impl CacheContent for CredentialList {
+   type Key = ();
+
+   #[cfg(feature = "jvm")]
+   type JvmKey<'local> = JvmUnit<'local>;
+
+   #[cfg(feature = "jvm")]
+   type JvmType<'local> = JvmCredentialList<'local>;
+
+   fn key(&self) -> &() {
+      &()
+   }
+
+   fn file_path_for_key(dir_path: &Path, _key: &()) -> PathBuf {
+      dir_path.join("0")
+   }
+}
+
+#[cfg(feature = "jvm")]
+convert_jvm_helper! {
+   static SERIALIZED_CREDENTIAL_HELPER = impl struct SerializedCredentialConvertHelper
+   where
+      jvm_class: "com/wcaokaze/probosqis/foundation/credential/SerializedCredential"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmSerializedCredential<'local>
+      where
+         jvm_constructor: "(Ljava/lang/String;Ljava/lang/String;)V";
+
+      fn id<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getId",
+         jvm_return_type: "Ljava/lang/String;";
+
+      fn json<'local>(..) -> String
+      where
+         jvm_type: JvmString<'local>,
+         jvm_getter_method: "getJson",
+         jvm_return_type: "Ljava/lang/String;";
+   }
+
+   static CREDENTIAL_LIST_HELPER = impl struct CredentialListHelper
+   where
+      jvm_class: "com/wcaokaze/probosqis/foundation/credential/CredentialList"
+   {
+      fn clone_into_jvm<'local>(..) -> JvmCredentialList<'local>
+      where
+         jvm_constructor: "(Ljava/util/List;)V";
+
+      fn credentials<'local>(..) -> Vec<Cache<SerializedCredential>>
+      where
+         jvm_type: JvmList<'local, JvmCache<'local, JvmSerializedCredential<'local>>>,
+         jvm_getter_method: "getCredentials",
+         jvm_return_type: "Ljava/util/List;";
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmSerializedCredential<'local>> for SerializedCredential {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmSerializedCredential<'local> {
+      SERIALIZED_CREDENTIAL_HELPER.clone_into_jvm(env, &self.id, &self.json)
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmSerializedCredential<'local>> for SerializedCredential {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmSerializedCredential<'local>
+   ) -> SerializedCredential {
+      let id   = SERIALIZED_CREDENTIAL_HELPER.id  (env, jvm_instance);
+      let json = SERIALIZED_CREDENTIAL_HELPER.json(env, jvm_instance);
+      SerializedCredential { id, json }
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneIntoJvm<'local, JvmCredentialList<'local>> for CredentialList {
+   fn clone_into_jvm(&self, env: &mut JNIEnv<'local>) -> JvmCredentialList<'local> {
+      CREDENTIAL_LIST_HELPER.clone_into_jvm(env, &self.0)
+   }
+}
+
+#[cfg(feature = "jvm")]
+impl<'local> CloneFromJvm<'local, JvmCredentialList<'local>> for CredentialList {
+   fn clone_from_jvm(
+      env: &mut JNIEnv<'local>,
+      jvm_instance: &JvmCredentialList<'local>
+   ) -> CredentialList {
+      let credentials = CREDENTIAL_LIST_HELPER.credentials(env, jvm_instance);
+      CredentialList(credentials)
+   }
+}
