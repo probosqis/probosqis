@@ -172,7 +172,7 @@ class ProbosqisTest {
                   single<CredentialRepository> {
                      mockk {
                         every { loadAllCredentials() } returns (
-                            credentials.map { Cache(it) }
+                            WritableCache(credentials.map { Cache(it) })
                         )
                      }
                   }

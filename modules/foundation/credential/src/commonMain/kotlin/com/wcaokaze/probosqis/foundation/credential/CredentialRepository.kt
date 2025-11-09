@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.foundation.credential
 
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.PolymorphicModuleBuilder
@@ -43,7 +44,7 @@ interface CredentialRepository {
    )
 
    fun saveCredential(credential: Credential)
-   fun loadAllCredentials(): List<Cache<Credential>>
+   fun loadAllCredentials(): WritableCache<List<Cache<Credential>>>
 }
 
 abstract class AbstractCredentialRepository

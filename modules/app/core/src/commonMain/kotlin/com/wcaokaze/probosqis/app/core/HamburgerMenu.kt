@@ -77,6 +77,7 @@ internal class HamburgerMenuState : KoinComponent {
       credentialLoadState = withContext (Dispatchers.IO) {
          try {
             val credentials = credentialRepository.loadAllCredentials()
+               .value
                .map { credentialCache ->
                   val credential = credentialCache.value as Token
 

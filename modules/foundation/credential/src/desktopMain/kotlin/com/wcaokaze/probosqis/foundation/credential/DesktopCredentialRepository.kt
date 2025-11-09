@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.foundation.credential
 
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
+import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.loadCache
 import com.wcaokaze.probosqis.panoptiqon.saveCache
 import java.io.File
@@ -60,7 +61,7 @@ class DesktopCredentialRepository(
 
    /** @throws IOException */
    @TemporaryCacheApi
-   override fun loadAllCredentials(): List<Cache<Credential>> {
+   override fun loadAllCredentials(): WritableCache<List<Cache<Credential>>> {
       return lock.withLock {
          if (!credentialListFile.exists()) { return@withLock emptyList() }
 

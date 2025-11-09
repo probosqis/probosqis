@@ -66,7 +66,7 @@ class CredentialRepositoryTest {
    fun loadAllCredentials_emptyIfFileNotFound() {
       assertEquals(
          emptyList(),
-         credentialRepository.loadAllCredentials()
+         credentialRepository.loadAllCredentials().value
       )
    }
 
@@ -74,7 +74,7 @@ class CredentialRepositoryTest {
    fun saveLoad() {
       assertEquals(
          emptyList(),
-         credentialRepository.loadAllCredentials()
+         credentialRepository.loadAllCredentials().value
       )
 
       credentialRepository.saveCredential(StringCredential("1"))
@@ -82,7 +82,7 @@ class CredentialRepositoryTest {
          listOf(
             StringCredential("1"),
          ),
-         credentialRepository.loadAllCredentials().map { it.value }
+         credentialRepository.loadAllCredentials().value.map { it.value }
       )
 
       credentialRepository.saveCredential(StringCredential("2"))
@@ -91,7 +91,7 @@ class CredentialRepositoryTest {
             StringCredential("1"),
             StringCredential("2"),
          ),
-         credentialRepository.loadAllCredentials().map { it.value }
+         credentialRepository.loadAllCredentials().value.map { it.value }
       )
 
       credentialRepository.saveCredential(IntCredential(3))
@@ -101,7 +101,7 @@ class CredentialRepositoryTest {
             StringCredential("2"),
             IntCredential(3),
          ),
-         credentialRepository.loadAllCredentials().map { it.value }
+         credentialRepository.loadAllCredentials().value.map { it.value }
       )
    }
 }
