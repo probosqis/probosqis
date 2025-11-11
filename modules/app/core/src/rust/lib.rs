@@ -17,3 +17,4 @@
 pub use foundation_error;
 pub use mastodon_repository;
 pub use nodeinfo_repository;
+pub use foundation_credential;

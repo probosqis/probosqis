@@ -16,17 +16,17 @@
 
 package com.wcaokaze.probosqis.foundation.credential
 
+import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
+import com.wcaokaze.probosqis.panoptiqon.Repository
+import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.serialization.Serializable
-import java.io.File
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class CredentialRepositoryTest {
-   private val testDir = File(".pageStackRepositoryTest")
-
-   private lateinit var credentialRepository: CredentialRepository
+   init {
+      loadNativeLib()
+   }
 
    @Serializable
    data class StringCredential(val token: String) : Credential() {
@@ -46,24 +46,44 @@ class CredentialRepositoryTest {
    private val intCredentialSerializer
       = credentialSerializer<IntCredential> { "int" + it.id }
 
-   @BeforeTest
-   fun initializeRepository() {
-      credentialRepository = DesktopCredentialRepository(
-         testDir,
-         allCredentialSerializers = listOf(
-            stringCredentialSerializer,
-            intCredentialSerializer,
-         )
+   private inner class CredentialRepository : AbstractCredentialRepository(
+      allCredentialSerializers = listOf(
+         stringCredentialSerializer,
+         intCredentialSerializer,
       )
-   }
+   ) {
+      private val panoptiqonCredentialRepository: Repository<String, SerializedCredential>
+      private val panoptiqonCredentialListRepository: Repository<Unit, CredentialList>
 
-   @AfterTest
-   fun deleteRepository() {
-      testDir.deleteRecursively()
+      init {
+         val repositories = createRepositories()
+         panoptiqonCredentialRepository     = repositories.first
+         panoptiqonCredentialListRepository = repositories.second
+      }
+
+      override fun savePanoptiqon(
+         credential: SerializedCredential
+      ): WritableCache<SerializedCredential> {
+         return panoptiqonCredentialRepository.save(credential)
+      }
+
+      override fun saveAllCredentialsPanoptiqon(
+         credentialList: CredentialList
+      ): WritableCache<CredentialList> {
+         return panoptiqonCredentialListRepository.save(credentialList)
+      }
+
+      override fun loadAllCredentialsPanoptiqon(): WritableCache<CredentialList> {
+         return panoptiqonCredentialListRepository.load(Unit)
+      }
+
+      private external fun createRepositories(
+      ): Pair<Repository<String, SerializedCredential>, Repository<Unit, CredentialList>>
    }
 
    @Test
    fun loadAllCredentials_emptyIfFileNotFound() {
+      val credentialRepository = CredentialRepository()
       assertEquals(
          emptyList(),
          credentialRepository.loadAllCredentials().value
@@ -72,6 +92,8 @@ class CredentialRepositoryTest {
 
    @Test
    fun saveLoad() {
+      val credentialRepository = CredentialRepository()
+
       assertEquals(
          emptyList(),
          credentialRepository.loadAllCredentials().value

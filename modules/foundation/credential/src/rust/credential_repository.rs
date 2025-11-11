@@ -16,14 +16,16 @@
 
 use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
+use ext_panoptiqon::PANOPTIQON;
 use panoptiqon::cache::{Cache, CacheContent};
 
 #[cfg(feature = "jvm")]
 use {
    jni::JNIEnv,
+   jni::objects::{JObject, JString},
    ext_panoptiqon::convert_jvm_helper,
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
-   panoptiqon::jvm_types::{JvmCache, JvmList, JvmString, JvmUnit},
+   panoptiqon::jvm_types::{JvmCache, JvmList, JvmRepository, JvmString, JvmUnit},
    crate::jvm_types::{JvmCredentialList, JvmSerializedCredential},
 };
 
@@ -145,5 +147,127 @@ impl<'local> CloneFromJvm<'local, JvmCredentialList<'local>> for CredentialList 
    ) -> CredentialList {
       let credentials = CREDENTIAL_LIST_HELPER.credentials(env, jvm_instance);
       CredentialList(credentials)
+   }
+}
+
+#[cfg(feature = "jvm")]
+#[no_mangle]
+extern "C" fn Java_com_wcaokaze_probosqis_foundation_credential_AndroidCredentialRepository_createCredentialRepository<'local>(
+   mut env: JNIEnv<'local>,
+   _obj: JObject<'local>,
+   data_dir_path: JString<'local>
+) -> JvmRepository<'local, JvmSerializedCredential<'local>> {
+   use panoptiqon::jvm_repository_creator::JvmRepositoryCreator;
+
+   let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
+
+   let repo = PANOPTIQON.new_repository::<SerializedCredential>(
+      &mut env,
+      Path::new(&data_dir_path).join("credential")
+   );
+
+   let repository_creator = JvmRepositoryCreator::new(&mut env);
+   repository_creator.create_jvm_wrapper(&mut env, repo)
+}
+
+#[cfg(feature = "jvm")]
+#[no_mangle]
+extern "C" fn Java_com_wcaokaze_probosqis_foundation_credential_DesktopCredentialRepository_createCredentialRepository<'local>(
+   mut env: JNIEnv<'local>,
+   _obj: JObject<'local>,
+   data_dir_path: JString<'local>
+) -> JvmRepository<'local, JvmSerializedCredential<'local>> {
+   use panoptiqon::jvm_repository_creator::JvmRepositoryCreator;
+
+   let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
+
+   let repo = PANOPTIQON.new_repository::<SerializedCredential>(
+      &mut env,
+      Path::new(&data_dir_path).join("credential")
+   );
+
+   let repository_creator = JvmRepositoryCreator::new(&mut env);
+   repository_creator.create_jvm_wrapper(&mut env, repo)
+}
+
+#[cfg(feature = "jvm")]
+#[no_mangle]
+extern "C" fn Java_com_wcaokaze_probosqis_foundation_credential_AndroidCredentialRepository_createCredentialListRepository<'local>(
+   mut env: JNIEnv<'local>,
+   _obj: JObject<'local>,
+   data_dir_path: JString<'local>
+) -> JvmRepository<'local, JvmCredentialList<'local>> {
+   use panoptiqon::jvm_repository_creator::JvmRepositoryCreator;
+
+   let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
+
+   let repo = PANOPTIQON.new_repository::<CredentialList>(
+      &mut env,
+      Path::new(&data_dir_path).join("credentialList")
+   );
+
+   let repository_creator = JvmRepositoryCreator::new(&mut env);
+   repository_creator.create_jvm_wrapper(&mut env, repo)
+}
+
+#[cfg(feature = "jvm")]
+#[no_mangle]
+extern "C" fn Java_com_wcaokaze_probosqis_foundation_credential_DesktopCredentialRepository_createCredentialListRepository<'local>(
+   mut env: JNIEnv<'local>,
+   _obj: JObject<'local>,
+   data_dir_path: JString<'local>
+) -> JvmRepository<'local, JvmCredentialList<'local>> {
+   use panoptiqon::jvm_repository_creator::JvmRepositoryCreator;
+
+   let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
+
+   let repo = PANOPTIQON.new_repository::<CredentialList>(
+      &mut env,
+      Path::new(&data_dir_path).join("credentialList")
+   );
+
+   let repository_creator = JvmRepositoryCreator::new(&mut env);
+   repository_creator.create_jvm_wrapper(&mut env, repo)
+}
+
+#[cfg(feature = "jni-test")]
+mod jni_tests {
+   use jni::JNIEnv;
+   use jni::objects::JObject;
+   use panoptiqon::jvm_type::JvmType;
+   use panoptiqon::jvm_types::{JvmPair, JvmRepository};
+   use panoptiqon::Panoptiqon;
+   use crate::credential_repository::{CredentialList, SerializedCredential};
+   use crate::jvm_types::{JvmCredentialList, JvmSerializedCredential};
+
+   #[no_mangle]
+   extern "C" fn Java_com_wcaokaze_probosqis_foundation_credential_CredentialRepositoryTest_00024CredentialRepository_createRepositories<'local>(
+      mut env: JNIEnv<'local>,
+      _obj: JObject<'local>
+   ) -> JvmPair<'local, JvmRepository<'local, JvmSerializedCredential<'local>>, JvmRepository<'local, JvmCredentialList<'local>>> {
+      use panoptiqon::jvm_repository_creator::JvmRepositoryCreator;
+
+      let panoptiqon = Panoptiqon::new();
+
+      let credential_epo = panoptiqon.new_repository::<SerializedCredential>(
+         &mut env,
+         "test/CredentialRepositoryTest/SerializedCredential"
+      );
+
+      let credential_list_repo = panoptiqon.new_repository::<CredentialList>(
+         &mut env,
+         "test/CredentialRepositoryTest/CredentialList"
+      );
+
+      let repository_creator = JvmRepositoryCreator::new(&mut env);
+      let credential_repo      = repository_creator.create_jvm_wrapper(&mut env, credential_epo);
+      let credential_list_repo = repository_creator.create_jvm_wrapper(&mut env, credential_list_repo);
+
+      let j_object = env.new_object(
+         "kotlin/Pair", "(Ljava/lang/Object;Ljava/lang/Object;)V",
+         &[credential_repo.j_object().into(), credential_list_repo.j_object().into()]
+      ).unwrap();
+
+      unsafe { JvmPair::from_j_object(j_object) }
    }
 }

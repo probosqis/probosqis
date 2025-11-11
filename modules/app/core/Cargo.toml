@@ -22,5 +22,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 foundation_error.workspace = true
+foundation_credential.workspace = true
 nodeinfo_repository.workspace = true
 mastodon_repository.workspace = true

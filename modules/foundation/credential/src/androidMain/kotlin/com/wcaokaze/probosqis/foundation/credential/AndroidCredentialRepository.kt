@@ -16,61 +16,40 @@
 
 package com.wcaokaze.probosqis.foundation.credential
 
-import com.wcaokaze.probosqis.panoptiqon.Cache
-import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
+import com.wcaokaze.probosqis.panoptiqon.Repository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.panoptiqon.loadCache
-import com.wcaokaze.probosqis.panoptiqon.saveCache
 import java.io.File
-import java.io.IOException
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 class AndroidCredentialRepository(
    appDataDir: File,
    allCredentialSerializers: List<CredentialRepository.CredentialSerializer<*>>
 ) : AbstractCredentialRepository(allCredentialSerializers) {
-   private val lock = ReentrantLock()
+   private val panoptiqonCredentialRepository
+       = createCredentialRepository(appDataDir.absolutePath)
+   private val panoptiqonCredentialListRepository
+       = createCredentialListRepository(appDataDir.absolutePath)
 
-   private val dir = File(appDataDir, "YeNl4QfY6KDSixTZ")
-      .also { dir ->
-         if (dir.exists()) {
-            require(dir.isDirectory)
-         } else {
-            if (!dir.mkdirs()) { throw IOException() }
-         }
-      }
-
-   private val credentialListFile = File(dir, "pI9mnCtxBMhYGJpJ")
-
-   /** @throws IOException */
-   @TemporaryCacheApi
-   override fun saveCredential(credential: Credential) {
-      lock.withLock {
-         val fileName = getFileNameFor(credential)
-         val file = File(dir, fileName)
-         saveCache(credential, file, json)
-
-         if (!credentialListFile.exists() || credentialListFile.length() == 0L) {
-            credentialListFile.writeText(fileName)
-         } else {
-            credentialListFile.appendText("\n" + fileName)
-         }
-      }
+   override fun savePanoptiqon(
+      credential: SerializedCredential
+   ): WritableCache<SerializedCredential> {
+      return panoptiqonCredentialRepository.save(credential)
    }
 
-   /** @throws IOException */
-   @TemporaryCacheApi
-   override fun loadAllCredentials(): WritableCache<List<Cache<Credential>>> {
-      return lock.withLock {
-         if (!credentialListFile.exists()) { return@withLock emptyList() }
+   override fun saveAllCredentialsPanoptiqon(
+      credentialList: CredentialList
+   ): WritableCache<CredentialList> {
+      return panoptiqonCredentialListRepository.save(credentialList)
+   }
 
-         val fileNames = credentialListFile.readLines()
-
-         fileNames.map {
-            val file = File(dir, it)
-            loadCache<Credential>(file, json).asCache()
-         }
-      }
+   override fun loadAllCredentialsPanoptiqon(): WritableCache<CredentialList> {
+      return panoptiqonCredentialListRepository.load(Unit)
    }
 }
+
+private external fun createCredentialRepository(
+   dataDirPath: String
+): Repository<String, SerializedCredential>
+
+private external fun createCredentialListRepository(
+   dataDirPath: String
+): Repository<Unit, CredentialList>
