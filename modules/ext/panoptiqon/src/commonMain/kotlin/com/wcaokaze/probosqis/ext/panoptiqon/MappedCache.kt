@@ -20,6 +20,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import com.wcaokaze.probosqis.panoptiqon.CacheId
 import com.wcaokaze.probosqis.panoptiqon.InternalCacheApi
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
@@ -33,7 +34,7 @@ inline fun <T, R> Cache<T>.map(crossinline op: (T) -> R): Cache<R> {
 abstract class MappedCache<in T, out R>(
    private val origin: Cache<T>
 ) : Cache<R> {
-   override val id: Cache.Id
+   override val id: CacheId
       get() = origin.id
 
    override val value: R
@@ -55,7 +56,7 @@ abstract class MappedCache<in T, out R>(
 abstract class MappedWritableCache<T, R>(
    private val origin: WritableCache<T>
 ) : WritableCache<R> {
-   override val id: Cache.Id
+   override val id: CacheId
       get() = origin.id
 
    override var value: R

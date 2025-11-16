@@ -16,9 +16,9 @@
 
 package com.wcaokaze.probosqis.ext.panoptiqon
 
-import com.wcaokaze.probosqis.panoptiqon.Cache
+import com.wcaokaze.probosqis.panoptiqon.CacheId
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
 object Panoptiqon {
-   external fun loadById(cacheId: Cache.Id): WritableCache<*>
+   external fun loadById(cacheId: CacheId): WritableCache<*>
 }

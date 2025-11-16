@@ -19,17 +19,18 @@ package com.wcaokaze.probosqis.ext.panoptiqon
 import com.wcaokaze.probosqis.panoptiqon.AbstractCacheSerializer
 import com.wcaokaze.probosqis.panoptiqon.AbstractWritableCacheSerializer
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import com.wcaokaze.probosqis.panoptiqon.CacheId
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
 class CacheSerializer<T> : AbstractCacheSerializer<T>() {
-   override fun loadCache(cacheId: Cache.Id): Cache<T> {
+   override fun loadCache(cacheId: CacheId): Cache<T> {
       @Suppress("UNCHECKED_CAST")
       return Panoptiqon.loadById(cacheId).asCache() as Cache<T>
    }
 }
 
 class WritableCacheSerializer<T> : AbstractWritableCacheSerializer<T>() {
-   override fun loadCache(cacheId: Cache.Id): WritableCache<T> {
+   override fun loadCache(cacheId: CacheId): WritableCache<T> {
       @Suppress("UNCHECKED_CAST")
       return Panoptiqon.loadById(cacheId) as WritableCache<T>
    }
