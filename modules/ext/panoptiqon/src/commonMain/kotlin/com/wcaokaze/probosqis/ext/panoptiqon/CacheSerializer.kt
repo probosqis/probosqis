@@ -16,22 +16,9 @@
 
 package com.wcaokaze.probosqis.ext.panoptiqon
 
-import com.wcaokaze.probosqis.panoptiqon.AbstractCacheSerializer
-import com.wcaokaze.probosqis.panoptiqon.AbstractWritableCacheSerializer
 import com.wcaokaze.probosqis.panoptiqon.Cache
-import com.wcaokaze.probosqis.panoptiqon.CacheId
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import kotlinx.serialization.KSerializer
 
-class CacheSerializer<T> : AbstractCacheSerializer<T>() {
-   override fun loadCache(cacheId: CacheId): Cache<T> {
-      @Suppress("UNCHECKED_CAST")
-      return Panoptiqon.loadById(cacheId).asCache() as Cache<T>
-   }
-}
-
-class WritableCacheSerializer<T> : AbstractWritableCacheSerializer<T>() {
-   override fun loadCache(cacheId: CacheId): WritableCache<T> {
-      @Suppress("UNCHECKED_CAST")
-      return Panoptiqon.loadById(cacheId) as WritableCache<T>
-   }
-}
+expect class CacheSerializer<T>         : KSerializer<Cache<T>>
+expect class WritableCacheSerializer<T> : KSerializer<WritableCache<T>>
