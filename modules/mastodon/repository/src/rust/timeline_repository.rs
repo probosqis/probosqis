@@ -253,7 +253,7 @@ mod test {
          "test/TimelineRepository/get_home_timeline/NoCredentialPoll"
       );
 
-      timelines::inject_get_verify_credentials(|_, _, _|
+      timelines::inject_get_home(|_, _, _|
          Ok(vec![
             ApiStatus {
                id: Some("status id 1".to_string()),

@@ -56,8 +56,8 @@ pub fn get_home(
 
 #[allow(dead_code)]
 #[cfg(feature = "testable")]
-pub fn inject_get_verify_credentials(
-   get_verify_credentials: impl Fn(&Client, &Url, &str) -> anyhow::Result<Vec<Status>> + 'static
+pub fn inject_get_home(
+   get_home: impl Fn(&Client, &Url, &str) -> anyhow::Result<Vec<Status>> + 'static
 ) {
-   GET_HOME.set(Box::new(get_verify_credentials));
+   GET_HOME.set(Box::new(get_home));
 }
