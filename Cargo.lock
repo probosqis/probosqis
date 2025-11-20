@@ -222,6 +222,7 @@ dependencies = [
  "ext_panoptiqon",
  "jni",
  "panoptiqon",
+ "percent-encoding",
  "serde",
 ]
 

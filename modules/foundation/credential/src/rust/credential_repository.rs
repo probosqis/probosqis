@@ -52,7 +52,12 @@ impl CacheContent for SerializedCredential {
    }
 
    fn file_path_for_key(dir_path: &Path, key: &String) -> PathBuf {
-      dir_path.join(key)
+      use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+
+      let encoded_url: String
+         = utf8_percent_encode(key.as_str(), NON_ALPHANUMERIC).collect();
+
+      dir_path.join(encoded_url)
    }
 }
 
