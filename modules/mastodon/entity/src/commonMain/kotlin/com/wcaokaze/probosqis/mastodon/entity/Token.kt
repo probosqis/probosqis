@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.ext.panoptiqon.CacheSerializer
 import com.wcaokaze.probosqis.foundation.credential.Credential
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
@@ -62,9 +63,9 @@ private object AccountCacheSerializer : KSerializer<Cache<CredentialAccount>?> {
 
 @Serializable
 data class Token(
-   @Serializable(with = InstanceCacheSerializer::class)
+   @Serializable(CacheSerializer::class)
    val instance: Cache<Instance>,
-   @Serializable(with = AccountCacheSerializer::class)
+   @Serializable(CacheSerializer::class)
    val account: Cache<CredentialAccount>?,
    val accountId: Account.Id,
    val accessToken: String,

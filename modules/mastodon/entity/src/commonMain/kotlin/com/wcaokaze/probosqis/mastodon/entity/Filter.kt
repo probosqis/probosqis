@@ -18,7 +18,9 @@ package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Filter(
    val id: Id,
    val title: String?,
@@ -58,9 +60,11 @@ data class Filter(
    val rawFilterAction: String?
       get() = filterAction?.raw
 
+   @Serializable
    @JvmInline
    value class Id(val raw: String)
 
+   @Serializable
    @JvmInline
    value class Context(val raw: String) {
       companion object {
@@ -72,6 +76,7 @@ data class Filter(
       }
    }
 
+   @Serializable
    @JvmInline
    value class Action(val raw: String) {
       companion object {
@@ -80,6 +85,7 @@ data class Filter(
       }
    }
 
+   @Serializable
    data class Keyword(
       val id: Id,
       val keyword: String?,
@@ -103,10 +109,12 @@ data class Filter(
       val dummy: Unit?
          get() = null
 
+      @Serializable
       @JvmInline
       value class Id(val raw: String)
    }
 
+   @Serializable
    data class FilterStatus(
       val id: Id,
       val statusId: Status.Id,
@@ -129,11 +137,13 @@ data class Filter(
       val rawLocalStatusId: String
          get() = statusId.local.raw
 
+      @Serializable
       @JvmInline
       value class Id(val raw: String)
    }
 }
 
+@Serializable
 data class FilterResult(
    val filter: Filter?,
    val keywordMatches: List<String>,

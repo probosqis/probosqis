@@ -17,12 +17,17 @@
 package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.ext.panoptiqon.CacheSerializer
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Status(
    val id: Id,
+   @Serializable(CacheSerializer::class)
    val noCredential: Cache<NoCredential>,
+   @Serializable(CacheSerializer::class)
    val boostedStatus: Cache<Status>?,
    val poll: Poll?,
    val isFavorited: Boolean?,
@@ -63,6 +68,7 @@ data class Status(
    val rawLocalId: String
       get() = id.local.raw
 
+   @Serializable
    data class Id(
       val instanceUrl: Url,
       val local: LocalId
@@ -87,13 +93,16 @@ data class Status(
          get() = null
    }
 
+   @Serializable
    @JvmInline
    value class LocalId(val raw: String)
 
+   @Serializable
    data class NoCredential(
       val id: Id,
       val uri: String?,
       val createdTime: Instant?,
+      @Serializable(CacheSerializer::class)
       val account: Cache<Account>?,
       val content: String?,
       val visibility: Visibility?,
@@ -110,7 +119,9 @@ data class Status(
       val url: Url?,
       val repliedStatusId: Id?,
       val repliedAccountId: Account.Id?,
+      @Serializable(CacheSerializer::class)
       val boostedStatus: Cache<NoCredential>?,
+      @Serializable(CacheSerializer::class)
       val poll: Cache<Poll.NoCredential>?,
       val card: PreviewCard?,
       val language: String?,
@@ -201,6 +212,7 @@ data class Status(
          get() = editedTime?.toEpochMilliseconds()
    }
 
+   @Serializable
    @JvmInline
    value class Visibility(val raw: String) {
       companion object {
@@ -211,6 +223,7 @@ data class Status(
       }
    }
 
+   @Serializable
    data class Mention(
       val mentionedAccountId: Account.Id?,
       val mentionedAccountUsername: String?,
@@ -247,6 +260,7 @@ data class Status(
          get() = mentionedAccountUrl?.raw
    }
 
+   @Serializable
    data class Hashtag(
       val name: String?,
       val url: Url?,
