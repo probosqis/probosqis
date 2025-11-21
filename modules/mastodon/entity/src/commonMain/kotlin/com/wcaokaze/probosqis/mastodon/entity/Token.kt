@@ -66,7 +66,7 @@ data class Token(
    @Serializable(CacheSerializer::class)
    val instance: Cache<Instance>,
    @Serializable(CacheSerializer::class)
-   val account: Cache<CredentialAccount>?,
+   val account: Cache<CredentialAccount>,
    val accountId: Account.Id,
    val accessToken: String,
    val tokenType: String,
@@ -75,7 +75,7 @@ data class Token(
 ): Credential() {
    constructor(
       instance: Cache<Instance>,
-      account: Cache<CredentialAccount>?,
+      account: Cache<CredentialAccount>,
       rawInstanceUrl: String,
       rawLocalId: String,
       accessToken: String,

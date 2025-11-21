@@ -987,10 +987,10 @@ mod test {
                                        follower_count: None,
                                        followee_count: None,
                                     },
-                                    *token.account.as_ref().unwrap().get().account.get().moved_to.as_ref().unwrap().get()
+                                    *token.account.get().account.get().moved_to.as_ref().unwrap().get()
                                  );
 
-                                 token.account.as_ref().unwrap().get().account.get().moved_to.clone()
+                                 token.account.get().account.get().moved_to.clone()
                               },
                               is_suspended: Some(false),
                               is_limited: Some(false),
@@ -1000,10 +1000,10 @@ mod test {
                               follower_count: Some(100),
                               followee_count: Some(1000),
                            },
-                           *token.account.as_ref().unwrap().get().account.get()
+                           *token.account.get().account.get()
                         );
 
-                        token.account.as_ref().unwrap().get().account.clone()
+                        token.account.get().account.clone()
                      },
                      raw_profile_note: Some("note".to_string()),
                      raw_profile_fields: vec![
@@ -1019,7 +1019,7 @@ mod test {
                      follow_request_count: Some(1),
                      role: None,
                   },
-                  *token.account.as_ref().unwrap().get()
+                  *token.account.get()
                );
 
                token.account.clone()

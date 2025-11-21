@@ -32,7 +32,7 @@ use {
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Token {
    pub instance: Cache<Instance>,
-   pub account: Option<Cache<CredentialAccount>>,
+   pub account: Cache<CredentialAccount>,
    pub account_id: AccountId,
    pub access_token: String,
    pub token_type: String,
@@ -62,8 +62,8 @@ convert_jvm_helper! {
                jvm_getter_method: "getInstance",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
-      fn account<'local>(..) -> Option<Cache<CredentialAccount>>
-         where jvm_type: JvmNullable<'local, JvmCache<'local, JvmCredentialAccount<'local>>>,
+      fn account<'local>(..) -> Cache<CredentialAccount>
+         where jvm_type: JvmCache<'local, JvmCredentialAccount<'local>>,
                jvm_getter_method: "getAccount",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 

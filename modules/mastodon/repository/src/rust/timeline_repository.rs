@@ -169,6 +169,7 @@ mod jvm {
 mod test {
    use std::time::Duration;
    use isolang::Language;
+   use mastodon_entity::account::CredentialAccount;
    use super::TimelineRepository;
 
    #[test]
@@ -242,6 +243,9 @@ mod test {
       );
       let account_cache_repo = panoptiqon.new_repository(
          "test/TimelineRepository/get_home_timeline/Account"
+      );
+      let credential_account_cache_repo = panoptiqon.new_repository(
+         "test/TimelineRepository/get_home_timeline/CredentialAccount"
       );
       let status_cache_repo = panoptiqon.new_repository(
          "test/TimelineRepository/get_home_timeline/Status"
@@ -775,7 +779,54 @@ mod test {
 
       let token = Token {
          instance: instance_cache.clone(),
-         account: None,
+         account: credential_account_cache_repo.save(
+            CredentialAccount {
+               id: AccountId {
+                  instance_url: "https://example.com/".parse().unwrap(),
+                  local: AccountLocalId("credential account id".to_string())
+               },
+               account: account_cache_repo.save(
+                  Account {
+                     instance: instance_cache.clone(),
+                     id: AccountId {
+                        instance_url: "https://example.com/".parse().unwrap(),
+                        local: AccountLocalId("credential account id".to_string())
+                     },
+                     username: None,
+                     acct: None,
+                     url: None,
+                     display_name: None,
+                     profile_note: None,
+                     avatar_image_url: None,
+                     avatar_static_image_url: None,
+                     header_image_url: None,
+                     header_static_image_url: None,
+                     is_locked: None,
+                     profile_fields: vec![],
+                     emojis_in_profile: vec![],
+                     is_bot: None,
+                     is_group: None,
+                     is_discoverable: None,
+                     is_noindex: None,
+                     moved_to: None,
+                     is_suspended: None,
+                     is_limited: None,
+                     created_time: None,
+                     last_status_post_time: None,
+                     status_count: None,
+                     follower_count: None,
+                     followee_count: None
+                  }
+               ),
+               raw_profile_note: None,
+               raw_profile_fields: vec![],
+               default_post_visibility: None,
+               default_post_sensitivity: None,
+               default_post_language: None,
+               follow_request_count: None,
+               role: None
+            }
+         ),
          account_id: AccountId {
             instance_url: instance_cache.get().url.clone(),
             local: AccountLocalId("credential account id".to_string()),
