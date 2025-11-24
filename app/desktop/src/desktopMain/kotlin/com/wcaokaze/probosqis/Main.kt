@@ -102,6 +102,8 @@ object Main {
 
    private val appDataDir = File(System.getProperty("user.home"), ".probosqisData")
 
+   private val cacheRepositories = createCacheRepositories(appDataDir.absolutePath)
+
    private val koinModule = module {
       single { PPageSwitcherState(allPageComposables) }
 
@@ -135,7 +137,7 @@ object Main {
 
    private val cacheRepositoryKoinModule = module {
       single<CacheRepositories> {
-         createCacheRepositories(appDataDir.absolutePath)
+         cacheRepositories
       }
 
       single(named("instanceRepository")) {
