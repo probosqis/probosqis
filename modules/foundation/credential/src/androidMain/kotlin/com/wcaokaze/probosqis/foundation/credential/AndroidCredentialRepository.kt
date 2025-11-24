@@ -44,12 +44,12 @@ class AndroidCredentialRepository(
    override fun loadAllCredentialsPanoptiqon(): WritableCache<CredentialList> {
       return panoptiqonCredentialListRepository.load(Unit)
    }
+
+   private external fun createCredentialRepository(
+      dataDirPath: String
+   ): Repository<String, SerializedCredential>
+
+   private external fun createCredentialListRepository(
+      dataDirPath: String
+   ): Repository<Unit, CredentialList>
 }
-
-private external fun createCredentialRepository(
-   dataDirPath: String
-): Repository<String, SerializedCredential>
-
-private external fun createCredentialListRepository(
-   dataDirPath: String
-): Repository<Unit, CredentialList>
