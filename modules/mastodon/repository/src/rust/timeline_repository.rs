@@ -100,8 +100,7 @@ mod jvm {
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
       status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
       no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
-      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
@@ -120,8 +119,7 @@ mod jvm {
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
       status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
       no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
-      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
    ) -> JvmList<'local, JvmStatus<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 

@@ -359,7 +359,6 @@ mod jvm {
       client_secret: JvmString<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
       credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmToken<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
@@ -381,7 +380,6 @@ mod jvm {
       client_secret: JvmString<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
       credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmToken<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
@@ -430,8 +428,7 @@ mod jvm {
       _obj: JObject<'local>,
       token: JvmToken<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
-      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> JvmCache<'local, JvmCredentialAccount<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
@@ -446,8 +443,7 @@ mod jvm {
       _obj: JObject<'local>,
       token: JvmToken<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
-      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> JvmCache<'local, JvmCredentialAccount<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 

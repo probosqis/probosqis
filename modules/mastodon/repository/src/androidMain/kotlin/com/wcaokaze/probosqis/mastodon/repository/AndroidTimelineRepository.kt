@@ -34,7 +34,7 @@ class AndroidTimelineRepository(
    override fun getHomeTimeline(token: Token): List<Status> {
       return getHomeTimeline(
          token, accountCacheRepository, statusCacheRepository,
-         noCredentialStatusCacheRepository, noCredentialPollCacheRepository, instanceCacheRepository
+         noCredentialStatusCacheRepository, noCredentialPollCacheRepository
       )
    }
 
@@ -43,7 +43,6 @@ class AndroidTimelineRepository(
       accountCacheRepo: Repository<Account.Id, Account>,
       statusCacheRepo: Repository<Status.Id, Status>,
       noCredentialStatusCacheRepo: Repository<Status.Id, Status.NoCredential>,
-      noCredentialPollCacheRepo: Repository<Poll.Id, Poll.NoCredential>,
-      instanceCacheRepo: Repository<Url, Instance>
+      noCredentialPollCacheRepo: Repository<Poll.Id, Poll.NoCredential>
    ): List<Status>
 }
