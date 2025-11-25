@@ -108,7 +108,7 @@ mod jvm {
       get_home_time_line(
          &mut env, token,
          account_cache_repo, status_cache_repo, no_credential_status_cache_repo,
-         no_credential_poll_cache_repo, instance_cache_repo
+         no_credential_poll_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -128,7 +128,7 @@ mod jvm {
       get_home_time_line(
          &mut env, token,
          account_cache_repo, status_cache_repo, no_credential_status_cache_repo,
-         no_credential_poll_cache_repo, instance_cache_repo
+         no_credential_poll_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -138,12 +138,10 @@ mod jvm {
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
       status_cache_repo: JvmRepository<'local, JvmStatus<'local>>,
       no_credential_status_cache_repo: JvmRepository<'local, JvmStatusNoCredential<'local>>,
-      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
+      no_credential_poll_cache_repo: JvmRepository<'local, JvmPollNoCredential<'local>>
    ) -> anyhow::Result<JvmList<'local, JvmStatus<'local>>> {
       use mastodon_entity::token::Token;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
-      use crate::cache;
       use super::TimelineRepository;
 
       let mut timeline_repository = TimelineRepository::new(env);
@@ -152,9 +150,7 @@ mod jvm {
       let no_credential_status_repo     = Repository::of(env, &no_credential_status_cache_repo);
       let no_credential_poll_cache_repo = Repository::of(env, &no_credential_poll_cache_repo);
 
-      let instance = token.instance(env);
-      let instance = cache::instance::clone_from_jvm(env, &instance, &instance_cache_repo)?;
-      let token = Token::clone_from_jvm(env, &token, instance);
+      let token = Token::clone_from_jvm(env, &token);
       let timeline = timeline_repository.get_home_timeline(
          &token,
          &account_cache_repo, &status_cache_repo,
