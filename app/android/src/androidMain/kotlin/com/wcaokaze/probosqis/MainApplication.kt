@@ -17,7 +17,6 @@
 package com.wcaokaze.probosqis
 
 import android.app.Application
-import android.content.Context
 import com.wcaokaze.probosqis.app.core.loadErrorListOrDefault
 import com.wcaokaze.probosqis.app.core.loadPageDeckOrDefault
 import com.wcaokaze.probosqis.app.pagedeck.AndroidPageDeckRepository
@@ -59,7 +58,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import java.io.File
 import java.net.URLEncoder
 
 class MainApplication : Application() {
@@ -95,6 +93,8 @@ class MainApplication : Application() {
       errorSerializer<TestError>(),
    )
 
+   private lateinit var cacheRepositories: CacheRepositories
+
    private val koinModule = module {
       single { PPageSwitcherState(allPageComposables) }
 
@@ -128,12 +128,11 @@ class MainApplication : Application() {
 
    private val cacheRepositoryKoinModule = module {
       single(named("appDataDir")) {
-         get<Context>().filesDir
+         filesDir
       }
 
       single<CacheRepositories> {
-         val appDataDir: File = get(named("appDataDir"))
-         createCacheRepositories(appDataDir.absolutePath)
+         cacheRepositories
       }
 
       single(named("instanceRepository")) {
@@ -224,8 +223,7 @@ class MainApplication : Application() {
             get(named("accountCacheRepository")),
             get(named("statusRepository")),
             get(named("noCredentialStatusRepository")),
-            get(named("noCredentialPollCacheRepository")),
-            get(named("instanceRepository"))
+            get(named("noCredentialPollCacheRepository"))
          )
       }
    }
@@ -236,6 +234,8 @@ class MainApplication : Application() {
 
    override fun onCreate() {
       super.onCreate()
+
+      cacheRepositories = createCacheRepositories(filesDir.absolutePath)
 
       startKoin {
          androidContext(this@MainApplication)

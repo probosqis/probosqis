@@ -17,11 +17,15 @@
 package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.ext.panoptiqon.CacheSerializer
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Poll(
    val id: Id,
+   @Serializable(CacheSerializer::class)
    val noCredential: Cache<NoCredential>,
    val isVoted: Boolean?,
    val votedOptions: List<Long>,
@@ -45,6 +49,7 @@ data class Poll(
    val rawLocalId: String
       get() = id.local.raw
 
+   @Serializable
    data class Id(val instanceUrl: Url, val local: LocalId) {
       constructor(
          rawInstanceUrl: String,
@@ -63,9 +68,11 @@ data class Poll(
          get() = local.raw
    }
 
+   @Serializable
    @JvmInline
    value class LocalId(val raw: String)
 
+   @Serializable
    data class NoCredential(
       val id: Id,
       val expireTime: Instant?,
@@ -107,6 +114,7 @@ data class Poll(
          get() = expireTime?.toEpochMilliseconds()
    }
 
+   @Serializable
    data class Option(
       val title: String?,
       val voteCount: Long?,

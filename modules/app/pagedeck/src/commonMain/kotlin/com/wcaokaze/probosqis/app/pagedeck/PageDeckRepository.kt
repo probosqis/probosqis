@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import com.wcaokaze.probosqis.panoptiqon.CacheId
 import com.wcaokaze.probosqis.panoptiqon.InternalCacheApi
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.serialization.Contextual
@@ -167,7 +168,7 @@ abstract class AbstractPageDeckRepository
          }
       }
 
-      override val id: Cache.Id
+      override val id: CacheId
          get() = throw UnsupportedOperationException("This Cache isn't managed by Panoptiqon.")
 
       @OptIn(InternalCacheApi::class)

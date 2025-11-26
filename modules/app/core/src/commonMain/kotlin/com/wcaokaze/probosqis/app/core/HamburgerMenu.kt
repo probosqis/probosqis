@@ -59,8 +59,6 @@ import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -73,28 +71,19 @@ internal class HamburgerMenuState : KoinComponent {
       by mutableStateOf(LoadState.Loading)
       private set
 
-   suspend fun fetchCredentials() {
-      credentialLoadState = withContext (Dispatchers.IO) {
-         try {
-            val credentials = credentialRepository.loadAllCredentials()
-               .map { credentialCache ->
-                  val credential = credentialCache.value as Token
+   fun fetchCredentials() {
+      credentialLoadState = try {
+         val credentials = credentialRepository.loadAllCredentials()
+            .value
+            .map { credentialCache ->
+               val credential = credentialCache.value as Token
+               AccountItemState(credential)
+            }
+            .toImmutableList()
 
-                  val credentialAccount
-                      = appRepository.getCredentialAccount(credential)
-
-                  AccountItemState(
-                     credential.copy(
-                        account = credentialAccount,
-                     )
-                  )
-               }
-               .toImmutableList()
-
-            LoadState.Success(credentials)
-         } catch (e: Exception) {
-            LoadState.Error(e)
-         }
+         LoadState.Success(credentials)
+      } catch (e: Exception) {
+         LoadState.Error(e)
       }
    }
 }

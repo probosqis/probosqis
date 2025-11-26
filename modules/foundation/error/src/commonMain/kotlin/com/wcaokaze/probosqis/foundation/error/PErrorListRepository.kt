@@ -16,8 +16,10 @@
 
 package com.wcaokaze.probosqis.foundation.error
 
+import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
 import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.ext.panoptiqon.MappedWritableCache
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -25,6 +27,7 @@ import kotlinx.serialization.modules.PolymorphicModuleBuilder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
+import java.io.IOException
 import kotlin.reflect.KClass
 
 inline fun <reified E : PError>
@@ -76,5 +79,41 @@ abstract class AbstractPErrorListRepository
             }
          }
       }
+   }
+
+   /** @throws IOException */
+   override fun saveErrorList(
+      errorList: List<RaisedError>
+   ): WritableCache<List<RaisedError>> {
+      val errorListJson = ErrorListJson(json.encodeToString(errorList))
+      val panoptiqonCache = savePanoptiqon(errorListJson)
+      return ErrorListCache(json, panoptiqonCache)
+   }
+
+   /** @throws IOException */
+   override fun loadErrorList(): WritableCache<List<RaisedError>> {
+      val panoptiqonCache = loadPanoptiqon()
+      return ErrorListCache(json, panoptiqonCache)
+   }
+
+   abstract fun savePanoptiqon(json: ErrorListJson): WritableCache<ErrorListJson>
+   abstract fun loadPanoptiqon(): WritableCache<ErrorListJson>
+}
+
+data class ErrorListJson(
+   val json: String
+)
+
+@Stable
+private class ErrorListCache(
+   private val json: Json,
+   jsonCache: WritableCache<ErrorListJson>
+) : MappedWritableCache<ErrorListJson, List<RaisedError>>(jsonCache) {
+   override fun map(value: ErrorListJson): List<RaisedError> {
+      return json.decodeFromString(value.json)
+   }
+
+   override fun reverseMap(value: List<RaisedError>): ErrorListJson {
+      return ErrorListJson(json.encodeToString(value))
    }
 }

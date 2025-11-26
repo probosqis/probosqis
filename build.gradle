@@ -23,6 +23,9 @@ plugins {
    alias libs.plugins.roborazzi apply false
 }
 
+ext.appName = 'probosqis'
+ext.appVersion = '0.0.0'
+
 static def isXterm() {
    def term = System.getenv('TERM')
    if (term == null) { return false }
@@ -51,6 +54,12 @@ subprojects {
           task.name.matches(/jvmTest/))
       {
          task.outputs.upToDateWhen { false }
+      }
+   }
+
+   tasks.configureEach { task ->
+      if (task.name.contains('cargo')) {
+         task.dependsOn ':modules:foundation:appinfo:generateSource'
       }
    }
 }

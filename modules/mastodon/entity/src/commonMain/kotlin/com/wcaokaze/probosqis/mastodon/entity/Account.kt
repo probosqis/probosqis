@@ -17,12 +17,15 @@
 package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.ext.panoptiqon.CacheSerializer
 import com.wcaokaze.probosqis.mastodon.entity.Account.ProfileField
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
+@Serializable
 data class Account(
+   @Serializable(CacheSerializer::class)
    val instance: Cache<Instance>,
    val id: Id,
    val username: String?,
@@ -41,6 +44,7 @@ data class Account(
    val isGroup: Boolean?,
    val isDiscoverable: Boolean?,
    val isNoindex: Boolean?,
+   @Serializable(CacheSerializer::class)
    val movedTo: Cache<Account>?,
    val isSuspended: Boolean?,
    val isLimited: Boolean?,
@@ -118,7 +122,7 @@ data class Account(
          Url(rawInstanceUrl),
          LocalId(rawLocalId),
       )
-      
+
       val rawInstanceUrl: String
          get() = instanceUrl.raw
 
@@ -130,6 +134,7 @@ data class Account(
    @JvmInline
    value class LocalId(val value: String)
 
+   @Serializable
    data class ProfileField(
       val name: String?,
       val value: String?,
@@ -175,8 +180,10 @@ data class Account(
       get() = lastStatusPostTime?.toEpochMilliseconds()
 }
 
+@Serializable
 data class CredentialAccount(
    val id: Account.Id,
+   @Serializable(CacheSerializer::class)
    val account: Cache<Account>,
    val rawProfileNote: String?,
    val rawProfileFields: List<ProfileField>,
@@ -224,7 +231,9 @@ data class CredentialAccount(
       get() = null
 }
 
+@Serializable
 data class RelationalAccount(
+   @Serializable(CacheSerializer::class)
    val account: Cache<Account>,
    val muteExpireTime: Instant?,
 ) {

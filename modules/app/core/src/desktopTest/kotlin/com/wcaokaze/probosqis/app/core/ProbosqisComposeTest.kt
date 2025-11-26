@@ -160,7 +160,7 @@ class ProbosqisComposeTest {
       }
 
       val credentialRepository = mockk<CredentialRepository> {
-         every { loadAllCredentials() } returns emptyList()
+         every { loadAllCredentials() } returns WritableCache(emptyList())
       }
 
       loadPageDeckOrDefault(
@@ -182,7 +182,7 @@ class ProbosqisComposeTest {
       }
 
       val credentialRepository = mockk<CredentialRepository> {
-         every { loadAllCredentials() } returns emptyList()
+         every { loadAllCredentials() } returns WritableCache(emptyList())
       }
 
       loadPageDeckOrDefault(
@@ -199,7 +199,7 @@ class ProbosqisComposeTest {
       }
 
       val credentialRepository = mockk<CredentialRepository> {
-         every { loadAllCredentials() } returns emptyList()
+         every { loadAllCredentials() } returns WritableCache(emptyList())
       }
 
       val pageDeck = createDefaultPageDeck(pageStackRepository, credentialRepository)
@@ -225,7 +225,7 @@ class ProbosqisComposeTest {
       }
 
       val credentialRepository = mockk<CredentialRepository> {
-         every { loadAllCredentials() } returns listOf(Cache(mockToken))
+         every { loadAllCredentials() } returns WritableCache(listOf(Cache(mockToken)))
       }
 
       val pageDeck = createDefaultPageDeck(pageStackRepository, credentialRepository)

@@ -26,3 +26,5 @@ jni = { workspace = true, optional = true }
 
 url.workspace = true
 reqwest.workspace = true
+
+foundation_appinfo.workspace = true

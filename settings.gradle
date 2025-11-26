@@ -37,7 +37,7 @@ dependencyResolutionManagement {
          version('kotlin', '2.1.10')
          version('rust-android-plugin', '0.9.6')
          version('android-plugin', '8.7.0')
-         version('android-ndk', '27.2.12479018')
+         version('android-ndk', '27.3.13750724')
          version('compose-jb', '1.7.3')
          version('compose-androidx', '1.7.7')
          version('compose-compiler', '1.5.15')
@@ -100,6 +100,7 @@ includeSubmodule ':capsiqum-transition', 'modules/capsiqum/capsiqum-transition'
 include ':modules:app:core'
 include ':modules:app:pagedeck'
 include ':modules:app:setting'
+include ':modules:foundation:appinfo'
 include ':modules:foundation:credential'
 include ':modules:foundation:entity'
 include ':modules:foundation:error'

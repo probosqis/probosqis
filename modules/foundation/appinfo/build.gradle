@@ -1,0 +1,66 @@
+/*
+ * Copyright 2025 wcaokaze
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import org.intellij.lang.annotations.Language
+
+plugins {
+   alias libs.plugins.kotlin.multiplatform
+}
+
+apply from: rootProject.file('gradle/setupModule.gradle')
+
+kotlin {
+   sourceSets {
+      commonMain.dependencies {
+      }
+   }
+}
+
+tasks.register('generateSource') {
+   doFirst {
+      final kotlinFile = file(
+          'src/commonMain/kotlin/com/wcaokaze/probosqis/foundation/appinfo/AppInfo.kt'
+              .replace('/', File.separator)
+      )
+
+      if (!kotlinFile.parentFile.exists() && !kotlinFile.parentFile.mkdirs()) {
+         throw new GradleException("can not generate source: $kotlinFile")
+      }
+
+      @Language("kotlin")
+      final kotlinSource = """
+         package com.wcaokaze.probosqis.foundation.appinfo
+         val appName = "$appName"
+         val appVersion = "$appVersion"
+      """
+      kotlinFile.write(kotlinSource, "UTF-8", /* writeBom = */ false)
+
+      final rustFile = file(
+          'src/rust/lib.rs'.replace('/', File.separator)
+      )
+
+      if (!rustFile.parentFile.exists() && !rustFile.parentFile.mkdirs()) {
+         throw new GradleException("can not generate source: $rustFile")
+      }
+
+      @Language("rust")
+      final rustSource = """
+         pub const APP_NAME: &'static str = "$appName";
+         pub const APP_VERSION: &'static str = "$appVersion";
+      """
+      rustFile.write(rustSource, "UTF-8", /* writeBom = */ false)
+   }
+}

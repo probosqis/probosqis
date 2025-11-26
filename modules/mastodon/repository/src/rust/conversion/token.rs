@@ -27,11 +27,11 @@ pub fn from_api(
    credential_account_cache: Cache<CredentialAccount>
 ) -> Result<Token> {
    let ApiToken { access_token, token_type, scope, created_at } = entity;
-   
+
    let account_id = credential_account_cache.get().id.clone();
 
    let token = Token {
-      instance: instance_cache, account: Some(credential_account_cache),
+      instance: instance_cache, account: credential_account_cache,
       account_id, access_token, token_type, scope,
       created_at: DateTime::from_timestamp(created_at, 0).unwrap()
    };

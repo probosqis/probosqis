@@ -61,7 +61,7 @@ internal fun createDefaultPageDeck(
    credentialRepository: CredentialRepository
 ): PageDeck {
    val allCredentials = try {
-      credentialRepository.loadAllCredentials()
+      credentialRepository.loadAllCredentials().value
    } catch (_: Exception) {
       emptyList()
    }

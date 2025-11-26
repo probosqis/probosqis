@@ -359,7 +359,6 @@ mod jvm {
       client_secret: JvmString<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
       credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmToken<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
@@ -367,7 +366,7 @@ mod jvm {
       get_token(
          &mut env, instance, code, client_id, client_secret,
          AppRepository::DESKTOP_REDIRECT_URI,
-         account_cache_repo, credential_account_cache_repo, instance_cache_repo
+         account_cache_repo, credential_account_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -381,7 +380,6 @@ mod jvm {
       client_secret: JvmString<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
       credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
    ) -> JvmToken<'local> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
       use super::AppRepository;
@@ -389,7 +387,7 @@ mod jvm {
       get_token(
          &mut env, instance, code, client_id, client_secret,
          AppRepository::ANDROID_REDIRECT_URI,
-         account_cache_repo, credential_account_cache_repo, instance_cache_repo
+         account_cache_repo, credential_account_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -401,18 +399,16 @@ mod jvm {
       client_secret: JvmString<'local>,
       redirect_uri: &str,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
-      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> anyhow::Result<JvmToken<'local>> {
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
-      use crate::cache;
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
       let account_cache_repo            = Repository::of(env, &account_cache_repo);
       let credential_account_cache_repo = Repository::of(env, &credential_account_cache_repo);
 
-      let instance_cache = cache::instance::clone_from_jvm(env, &instance, &instance_cache_repo)?;
+      let instance_cache = Cache::clone_from_jvm(env, &instance);
 
       let code = String::clone_from_jvm(env, &code);
       let client_id = String::clone_from_jvm(env, &client_id);
@@ -432,13 +428,12 @@ mod jvm {
       _obj: JObject<'local>,
       token: JvmToken<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
-      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> JvmCache<'local, JvmCredentialAccount<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
       get_credential_account(
-         &mut env, token, account_cache_repo, credential_account_cache_repo, instance_cache_repo
+         &mut env, token, account_cache_repo, credential_account_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -448,13 +443,12 @@ mod jvm {
       _obj: JObject<'local>,
       token: JvmToken<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
-      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> JvmCache<'local, JvmCredentialAccount<'local>> {
       use ext_panoptiqon::unwrap_or_throw::UnwrapOrThrow;
 
       get_credential_account(
-         &mut env, token, account_cache_repo, credential_account_cache_repo, instance_cache_repo
+         &mut env, token, account_cache_repo, credential_account_cache_repo
       ).unwrap_or_throw_io_exception(&mut env)
    }
 
@@ -462,21 +456,17 @@ mod jvm {
       env: &mut JNIEnv<'local>,
       token: JvmToken<'local>,
       account_cache_repo: JvmRepository<'local, JvmAccount<'local>>,
-      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>,
-      instance_cache_repo: JvmRepository<'local, JvmInstance<'local>>
+      credential_account_cache_repo: JvmRepository<'local, JvmCredentialAccount<'local>>
    ) -> anyhow::Result<JvmCache<'local, JvmCredentialAccount<'local>>> {
       use mastodon_entity::token::Token;
       use panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm};
-      use crate::cache;
       use super::AppRepository;
 
       let mut app_repository = AppRepository::new(env);
       let account_cache_repo            = Repository::of(env, &account_cache_repo);
       let credential_account_cache_repo = Repository::of(env, &credential_account_cache_repo);
 
-      let instance = token.instance(env);
-      let instance = cache::instance::clone_from_jvm(env, &instance, &instance_cache_repo)?;
-      let token = Token::clone_from_jvm(env, &token, instance);
+      let token = Token::clone_from_jvm(env, &token);
       let credential_account = app_repository.get_credential_account(
          &token, &account_cache_repo, &credential_account_cache_repo
       )?;
@@ -987,10 +977,10 @@ mod test {
                                        follower_count: None,
                                        followee_count: None,
                                     },
-                                    *token.account.as_ref().unwrap().get().account.get().moved_to.as_ref().unwrap().get()
+                                    *token.account.get().account.get().moved_to.as_ref().unwrap().get()
                                  );
 
-                                 token.account.as_ref().unwrap().get().account.get().moved_to.clone()
+                                 token.account.get().account.get().moved_to.clone()
                               },
                               is_suspended: Some(false),
                               is_limited: Some(false),
@@ -1000,10 +990,10 @@ mod test {
                               follower_count: Some(100),
                               followee_count: Some(1000),
                            },
-                           *token.account.as_ref().unwrap().get().account.get()
+                           *token.account.get().account.get()
                         );
 
-                        token.account.as_ref().unwrap().get().account.clone()
+                        token.account.get().account.clone()
                      },
                      raw_profile_note: Some("note".to_string()),
                      raw_profile_fields: vec![
@@ -1019,7 +1009,7 @@ mod test {
                      follow_request_count: Some(1),
                      role: None,
                   },
-                  *token.account.as_ref().unwrap().get()
+                  *token.account.get()
                );
 
                token.account.clone()
