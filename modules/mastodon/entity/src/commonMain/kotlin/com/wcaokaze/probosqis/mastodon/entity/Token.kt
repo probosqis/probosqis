@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.ext.panoptiqon.CacheSerializer
 import com.wcaokaze.probosqis.foundation.credential.Credential
 import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.datetime.Instant
@@ -62,10 +63,10 @@ private object AccountCacheSerializer : KSerializer<Cache<CredentialAccount>?> {
 
 @Serializable
 data class Token(
-   @Serializable(with = InstanceCacheSerializer::class)
+   @Serializable(CacheSerializer::class)
    val instance: Cache<Instance>,
-   @Serializable(with = AccountCacheSerializer::class)
-   val account: Cache<CredentialAccount>?,
+   @Serializable(CacheSerializer::class)
+   val account: Cache<CredentialAccount>,
    val accountId: Account.Id,
    val accessToken: String,
    val tokenType: String,
@@ -74,7 +75,7 @@ data class Token(
 ): Credential() {
    constructor(
       instance: Cache<Instance>,
-      account: Cache<CredentialAccount>?,
+      account: Cache<CredentialAccount>,
       rawInstanceUrl: String,
       rawLocalId: String,
       accessToken: String,
@@ -90,6 +91,9 @@ data class Token(
       scope,
       Instant.fromEpochMilliseconds(createdAtEpochMillis),
    )
+
+   override val id: String
+      get() = accountId.toString()
 
    val rawInstanceUrl: String
       get() = accountId.instanceUrl.raw

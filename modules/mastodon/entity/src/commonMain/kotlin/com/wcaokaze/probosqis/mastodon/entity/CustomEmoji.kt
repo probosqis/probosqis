@@ -17,9 +17,13 @@
 package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.ext.panoptiqon.CacheSerializer
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CustomEmoji(
+   @Serializable(CacheSerializer::class)
    val instance: Cache<Instance>,
    val shortcode: String,
    val imageUrl: Url,

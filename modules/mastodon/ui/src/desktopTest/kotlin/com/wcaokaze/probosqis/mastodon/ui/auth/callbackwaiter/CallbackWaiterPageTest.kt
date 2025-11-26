@@ -410,7 +410,7 @@ class CallbackWaiterPageTest {
    private fun token(instance: Cache<Instance>): Token {
       return Token(
          instance,
-         account = null,
+         account = Cache(credentialAccount(instance)),
          Account.Id(Url("https://example.com/"), Account.LocalId("account id")),
          "access token",
          "token type",

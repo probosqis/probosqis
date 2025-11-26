@@ -17,10 +17,12 @@
 package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
+@Serializable
 data class MediaAttachment(
    val id: Id,
    val url: Url?,
@@ -65,16 +67,20 @@ data class MediaAttachment(
    val dummy: Unit?
       get() = null
 
+   @Serializable
    @JvmInline
    value class Id(val raw: String)
 
+   @Serializable
    sealed class Metadata {
+      @Serializable
       data class Image(
          val originalSize: ImageSize?,
          val smallSize: ImageSize?,
          val focus: ImageFocus?,
       ) : Metadata()
 
+      @Serializable
       data class Video(
          val originalSize: VideoSize?,
          val smallSize: ImageSize?,
@@ -85,6 +91,7 @@ data class MediaAttachment(
          val audioChannels: String?,
       ) : Metadata()
 
+      @Serializable
       data class Gifv(
          val originalSize: VideoSize?,
          val smallSize: ImageSize?,
@@ -92,6 +99,7 @@ data class MediaAttachment(
          val fps: Long?,
       ) : Metadata()
 
+      @Serializable
       data class Audio(
          val originalSize: AudioSize?,
          val length: String?,
@@ -101,16 +109,19 @@ data class MediaAttachment(
       ) : Metadata()
    }
 
+   @Serializable
    data class ImageSize(
       val width: Long,
       val height: Long,
    )
 
+   @Serializable
    data class ImageFocus(
       val x: Double,
       val y: Double,
    )
 
+   @Serializable
    data class VideoSize(
       val width: Long?,
       val height: Long?,
@@ -141,6 +152,7 @@ data class MediaAttachment(
          get() = null
    }
 
+   @Serializable
    data class AudioSize(
       val duration: Duration?,
       val bitrate: Long?,

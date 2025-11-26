@@ -17,31 +17,27 @@
 package com.wcaokaze.probosqis.foundation.error
 
 import com.wcaokaze.probosqis.app.pagedeck.PageStackRepository
-import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
+import com.wcaokaze.probosqis.panoptiqon.Repository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.panoptiqon.loadCache
-import com.wcaokaze.probosqis.panoptiqon.saveCache
 import java.io.File
-import java.io.IOException
 
 class DesktopPErrorListRepository(
    appDataDir: File,
    allErrorSerializers: List<PErrorListRepository.PErrorSerializer<*>>,
    allPageSerializers: List<PageStackRepository.PageSerializer<*>>
 ) : AbstractPErrorListRepository(allErrorSerializers, allPageSerializers) {
-   private val file = File(appDataDir, "MrVA3boZqIa78Man")
+   private val panoptiqonRepository
+       = createPErrorListRepository(appDataDir.absolutePath)
 
-   /** @throws IOException */
-   @TemporaryCacheApi
-   override fun saveErrorList(
-      errorList: List<RaisedError>
-   ): WritableCache<List<RaisedError>> {
-      return saveCache(errorList, file, json)
+   override fun savePanoptiqon(json: ErrorListJson): WritableCache<ErrorListJson> {
+      return panoptiqonRepository.save(json)
    }
 
-   /** @throws IOException */
-   @TemporaryCacheApi
-   override fun loadErrorList(): WritableCache<List<RaisedError>> {
-      return loadCache(file, json)
+   override fun loadPanoptiqon(): WritableCache<ErrorListJson> {
+      return panoptiqonRepository.load(Unit)
    }
 }
+
+private external fun createPErrorListRepository(
+   dataDirPath: String
+): Repository<Unit, ErrorListJson>

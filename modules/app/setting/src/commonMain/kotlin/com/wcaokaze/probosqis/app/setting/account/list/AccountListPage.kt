@@ -81,6 +81,7 @@ class AccountListPageState : PPageState<AccountListPage>() {
          credentialLoadState = withContext (Dispatchers.IO) {
             try {
                val credentials = credentialRepository.loadAllCredentials()
+                  .value
                   .map { credentialCache ->
                      val credential = credentialCache.value as Token
 

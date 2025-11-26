@@ -16,9 +16,13 @@
 
 package com.wcaokaze.probosqis.mastodon.entity
 
+import com.wcaokaze.probosqis.ext.panoptiqon.CacheSerializer
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Role(
+   @Serializable(CacheSerializer::class)
    val instance: Cache<Instance>,
    val id: Id?,
    val name: String?,
@@ -26,6 +30,7 @@ data class Role(
    val permissions: String?,
    val isHighlighted: Boolean?,
 ) {
+   @Serializable
    @JvmInline
    value class Id(val value: String)
 

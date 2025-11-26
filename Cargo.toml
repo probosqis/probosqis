@@ -16,7 +16,9 @@
 members = [
     "modules/app/core",
     "modules/foundation/appinfo",
+    "modules/foundation/credential",
     "modules/foundation/entity",
+    "modules/foundation/error",
     "modules/ext/kotlinTest",
     "modules/ext/panoptiqon",
     "modules/ext/reqwest",
@@ -49,7 +51,9 @@ reqwest.features = ["rustls-tls", "charset", "http2", "blocking", "json"]
 percent-encoding = "2.3.1"
 
 foundation_appinfo = { path = "modules/foundation/appinfo" }
+foundation_credential = { path = "modules/foundation/credential" }
 foundation_entity = { path = "modules/foundation/entity" }
+foundation_error = { path = "modules/foundation/error" }
 ext_kotlintest = { path = "modules/ext/kotlinTest" }
 ext_panoptiqon = { path = "modules/ext/panoptiqon" }
 ext_reqwest = { path = "modules/ext/reqwest" }

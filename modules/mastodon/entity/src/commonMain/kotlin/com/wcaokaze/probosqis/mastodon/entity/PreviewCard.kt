@@ -17,8 +17,11 @@
 package com.wcaokaze.probosqis.mastodon.entity
 
 import com.wcaokaze.probosqis.ext.kotlin.Url
+import com.wcaokaze.probosqis.ext.panoptiqon.CacheSerializer
 import com.wcaokaze.probosqis.panoptiqon.Cache
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class PreviewCard(
    val url: Url?,
    val title: String?,
@@ -84,6 +87,7 @@ data class PreviewCard(
    val dummy: Unit?
       get() = null
 
+   @Serializable
    @JvmInline
    value class Type(val raw: String) {
       companion object {
@@ -94,9 +98,11 @@ data class PreviewCard(
       }
    }
 
+   @Serializable
    data class Author(
       val name: String?,
       val url: Url?,
+      @Serializable(CacheSerializer::class)
       val account: Cache<Account>?,
    ) {
       constructor(

@@ -42,6 +42,8 @@ checksum = "b3d1d046238990b9cf5bcde22a3fb3584ee5cf65fb2765f454ed428c7a0063da"
 name = "app_core"
 version = "0.0.0"
 dependencies = [
+ "foundation_credential",
+ "foundation_error",
  "mastodon_repository",
  "nodeinfo_repository",
 ]
@@ -213,6 +215,18 @@ name = "foundation_appinfo"
 version = "0.0.0"
 
 [[package]]
+name = "foundation_credential"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "ext_panoptiqon",
+ "jni",
+ "panoptiqon",
+ "percent-encoding",
+ "serde",
+]
+
+[[package]]
 name = "foundation_entity"
 version = "0.0.0"
 dependencies = [
@@ -223,6 +237,17 @@ dependencies = [
  "percent-encoding",
  "serde",
  "url",
+]
+
+[[package]]
+name = "foundation_error"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "ext_panoptiqon",
+ "jni",
+ "panoptiqon",
+ "serde",
 ]
 
 [[package]]

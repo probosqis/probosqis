@@ -32,7 +32,7 @@ use {
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Token {
    pub instance: Cache<Instance>,
-   pub account: Option<Cache<CredentialAccount>>,
+   pub account: Cache<CredentialAccount>,
    pub account_id: AccountId,
    pub access_token: String,
    pub token_type: String,
@@ -62,8 +62,8 @@ convert_jvm_helper! {
                jvm_getter_method: "getInstance",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
-      fn account<'local>(..) -> Option<Cache<CredentialAccount>>
-         where jvm_type: JvmNullable<'local, JvmCache<'local, JvmCredentialAccount<'local>>>,
+      fn account<'local>(..) -> Cache<CredentialAccount>
+         where jvm_type: JvmCache<'local, JvmCredentialAccount<'local>>,
                jvm_getter_method: "getAccount",
                jvm_return_type: "Lcom/wcaokaze/probosqis/panoptiqon/Cache;";
 
@@ -116,26 +116,14 @@ impl<'local> CloneIntoJvm<'local, JvmToken<'local>> for Token {
 }
 
 #[cfg(feature = "jvm")]
-impl<'local> JvmToken<'local> {
-   pub fn instance(
-      &self,
-      env: &mut JNIEnv<'local>
-   ) -> JvmCache<'local, JvmInstance<'local>> {
-      HELPER.instance_jvm_type(env, self)
-   }
-}
-
-#[cfg(feature = "jvm")]
-// impl<'local> CloneFromJvm<'local, JvmToken<'local>> for Token {
-impl<'local> Token {
-   pub fn clone_from_jvm(
+ impl<'local> CloneFromJvm<'local, JvmToken<'local>> for Token {
+   fn clone_from_jvm(
       env: &mut JNIEnv<'local>,
-      jvm_instance: &JvmToken<'local>,
-      instance: Cache<Instance>
+      jvm_instance: &JvmToken<'local>
    ) -> Token {
       use crate::account::AccountLocalId;
 
-   // let instance                = HELPER.instance               (env, jvm_instance);
+      let instance                = HELPER.instance               (env, jvm_instance);
       let account                 = HELPER.account                (env, jvm_instance);
       let raw_instance_url        = HELPER.raw_instance_url       (env, jvm_instance);
       let raw_local_id            = HELPER.raw_local_id           (env, jvm_instance);

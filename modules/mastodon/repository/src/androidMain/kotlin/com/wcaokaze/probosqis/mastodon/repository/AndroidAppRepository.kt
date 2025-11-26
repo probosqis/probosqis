@@ -61,7 +61,7 @@ class AndroidAppRepository(
          code,
          application.clientId     ?: throw IOException(),
          application.clientSecret ?: throw IOException(),
-         accountCacheRepository, credentialAccountCacheRepository, instanceCacheRepository
+         accountCacheRepository, credentialAccountCacheRepository
       )
    }
 
@@ -71,20 +71,18 @@ class AndroidAppRepository(
       clientId: String,
       clientSecret: String,
       accountCacheRepo: Repository<Account.Id, Account>,
-      credentialAccountCacheRepo: Repository<Account.Id, CredentialAccount>,
-      instanceCacheRepo: Repository<Url, Instance>
+      credentialAccountCacheRepo: Repository<Account.Id, CredentialAccount>
    ): Token
 
    override fun getCredentialAccount(token: Token): Cache<CredentialAccount> {
       return getCredentialAccount(
-         token, accountCacheRepository, credentialAccountCacheRepository, instanceCacheRepository
+         token, accountCacheRepository, credentialAccountCacheRepository
       )
    }
 
    private external fun getCredentialAccount(
       token: Token,
       accountCacheRepo: Repository<Account.Id, Account>,
-      credentialAccountCacheRepo: Repository<Account.Id, CredentialAccount>,
-      instanceCacheRepo: Repository<Url, Instance>
+      credentialAccountCacheRepo: Repository<Account.Id, CredentialAccount>
    ): Cache<CredentialAccount>
 }
