@@ -223,7 +223,6 @@ object Main {
             get(named("statusRepository")),
             get(named("noCredentialStatusRepository")),
             get(named("noCredentialPollCacheRepository")),
-            get(named("instanceRepository"))
          )
       }
    }
