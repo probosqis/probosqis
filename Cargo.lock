@@ -49,6 +49,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "app_pagedeck"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "ext_panoptiqon",
+ "jni",
+ "panoptiqon",
+ "serde",
+]
+
+[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
