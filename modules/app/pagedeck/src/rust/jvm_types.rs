@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-pub mod page_stack_repository;
+#![cfg(feature = "jvm")]
 
-#[cfg(feature = "jvm")]
-pub mod jvm_types;
+use panoptiqon::jvm_type;
+
+jvm_type! {
+   JvmSerializedPageStack,
+}

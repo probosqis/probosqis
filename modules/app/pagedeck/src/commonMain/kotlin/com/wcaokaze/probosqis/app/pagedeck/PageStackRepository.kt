@@ -75,3 +75,8 @@ abstract class AbstractPageStackRepository
       }
    }
 }
+
+data class SerializedPageStack(
+   val id: Long,
+   val json: String
+)
