@@ -42,3 +42,23 @@ extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_Panoptiqon_loadById<'lo
 ) -> JvmCache<'local, JvmErased<'local>> {
    PANOPTIQON.load_jvm(&mut env, &id).unwrap_or_throw_io_exception(&mut env)
 }
+
+#[cfg(feature="jvm")]
+#[no_mangle]
+extern "C" fn Java_com_wcaokaze_probosqis_ext_panoptiqon_Panoptiqon_clearInMemoryDb<'local>(
+   mut env: JNIEnv<'local>,
+   _obj: JObject<'local>
+) {
+   #[cfg(feature = "testable")]
+   {
+      PANOPTIQON.clear_in_memory_db();
+   }
+
+   #[cfg(not(feature = "testable"))]
+   {
+      env.throw_new(
+         "java/lang/IllegalStateException",
+         "clearInMemoryDb is available only from tests."
+      ).unwrap();
+   }
+}

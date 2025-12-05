@@ -20,6 +20,7 @@ edition = "2021"
 path = "src/rust/lib.rs"
 
 [features]
+testable = []
 jvm = ["dep:jni", "panoptiqon/jvm"]
 jni-test = ["jvm", "panoptiqon/jni-test"]
 
