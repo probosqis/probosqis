@@ -21,6 +21,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
+import com.wcaokaze.probosqis.ext.panoptiqon.Panoptiqon
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.File
@@ -78,6 +79,8 @@ class PageStackRepositoryTest {
 
    @BeforeTest
    fun beforeTest() {
+      Panoptiqon.clearInMemoryDb()
+
       pageStackRepository = createPageStackRepository(
          listOf(
             pageSerializer<IntPage>(),
