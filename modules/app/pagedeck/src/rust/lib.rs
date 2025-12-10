@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+pub mod page_deck_repository;
 pub mod page_stack_repository;
 
 #[cfg(feature = "jvm")]

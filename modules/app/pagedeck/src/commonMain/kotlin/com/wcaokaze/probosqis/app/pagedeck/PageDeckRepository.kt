@@ -182,3 +182,7 @@ abstract class AbstractPageDeckRepository
       override fun asCache(): Cache<PageDeck> = this
    }
 }
+
+data class SerializedPageDeck(
+   val json: String
+)
