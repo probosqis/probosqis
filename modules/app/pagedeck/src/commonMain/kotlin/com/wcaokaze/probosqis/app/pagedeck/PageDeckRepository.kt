@@ -127,44 +127,62 @@ abstract class AbstractPageDeckRepository
       }
    }
 
-   abstract fun saveSerializableDeck(
-      deck: SerializablePageDeck
-   ): WritableCache<SerializablePageDeck>
+   abstract fun savePanoptiqon(
+      deck: SerializedPageDeck
+   ): WritableCache<SerializedPageDeck>
 
-   abstract fun loadSerializableDeck(): WritableCache<SerializablePageDeck>
+   abstract fun loadPanoptiqon(): WritableCache<SerializedPageDeck>
 
    override fun savePageDeck(pageDeck: PageDeck): WritableCache<PageDeck> {
       val serializable = pageDeck.toSerializable()
-      val serializableCache = saveSerializableDeck(serializable)
-      return PageDeckCache(serializableCache)
+      val serializedPageDeck = SerializedPageDeck(
+         json.encodeToString(serializable)
+      )
+
+      val serializedPageDeckCache = savePanoptiqon(serializedPageDeck)
+      return PageDeckCache(json, serializedPageDeckCache)
    }
 
    override fun loadPageDeck(): WritableCache<PageDeck> {
-      val serializableCache = loadSerializableDeck()
-      return PageDeckCache(serializableCache)
+      val serializedPageDeckCache = loadPanoptiqon()
+      return PageDeckCache(json, serializedPageDeckCache)
    }
 
    private class PageDeckCache(
-      private val serializableCache: WritableCache<SerializablePageDeck>
+      private val json: Json,
+      private val origin: WritableCache<SerializedPageDeck>
    ) : Cache<PageDeck>, WritableCache<PageDeck> {
+      private fun map(value: SerializedPageDeck): PageDeck {
+         val serializablePageDeck: SerializablePageDeck
+            = json.decodeFromString(value.json)
+         return serializablePageDeck.toPageDeck()
+      }
+
+      private fun reverseMap(value: PageDeck): SerializedPageDeck {
+         val serializablePageDeck = value.toSerializable()
+         return SerializedPageDeck(
+            json.encodeToString(serializablePageDeck)
+         )
+      }
+
       // XXX: 本来、
       //     derivedStateOf { serializableCache.asState().value.toPageDeck() }
       // 等としてキャッシュの変更を検知すべきだが、そうするとvalueのセット時等に
       // キャッシュが変更されて即座にtoPageDeck()が再実行されてしまう
       @InternalCacheApi
-      override val state = mutableStateOf(serializableCache.value.toPageDeck())
+      override val state = mutableStateOf(map(origin.value))
 
       @InternalCacheApi
       override val mutableState = object : MutableState<PageDeck> {
          override var value: PageDeck
             get() = state.value
             set(value) {
-               serializableCache.value = value.toSerializable()
+               origin.value = reverseMap(value)
             }
 
          override fun component1() = state.value
          override fun component2(): (PageDeck) -> Unit {
-            return { serializableCache.value = it.toSerializable() }
+            return { origin.value = reverseMap(it) }
          }
       }
 
@@ -176,7 +194,7 @@ abstract class AbstractPageDeckRepository
          get() = state.value
          set(value) {
             state.value = value
-            serializableCache.value = value.toSerializable()
+            origin.value = reverseMap(value)
          }
 
       override fun asCache(): Cache<PageDeck> = this

@@ -21,7 +21,9 @@ use panoptiqon::cache::CacheContent;
 #[cfg(feature = "jvm")]
 use {
    ext_panoptiqon::convert_jvm_helper,
+   ext_panoptiqon::PANOPTIQON,
    jni::JNIEnv,
+   jni::objects::{JObject, JString},
    panoptiqon::convert_jvm::{CloneFromJvm, CloneIntoJvm},
    panoptiqon::jvm_types::{JvmRepository, JvmString, JvmUnit},
    crate::jvm_types::JvmSerializedPageDeck,
@@ -84,4 +86,44 @@ impl<'local> CloneFromJvm<'local, JvmSerializedPageDeck<'local>> for SerializedP
       let json = SERIALIZED_PAGE_DECK_HELPER.json(env, jvm_instance);
       SerializedPageDeck { json }
    }
+}
+
+#[cfg(feature = "jvm")]
+#[no_mangle]
+extern "C" fn Java_com_wcaokaze_probosqis_app_pagedeck_AndroidPageDeckRepository_createPanoptiqonRepository<'local>(
+   mut env: JNIEnv<'local>,
+   _obj: JObject<'local>,
+   data_dir_path: JString<'local>
+) -> JvmRepository<'local, JvmSerializedPageDeck<'local>> {
+   use panoptiqon::jvm_repository_creator::JvmRepositoryCreator;
+
+   let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
+
+   let repo = PANOPTIQON.new_repository::<SerializedPageDeck>(
+      &mut env,
+      Path::new(&data_dir_path).join("pageDeck")
+   );
+
+   let repository_creator = JvmRepositoryCreator::new(&mut env);
+   repository_creator.create_jvm_wrapper(&mut env, repo)
+}
+
+#[cfg(feature = "jvm")]
+#[no_mangle]
+extern "C" fn Java_com_wcaokaze_probosqis_app_pagedeck_DesktopPageDeckRepository_createPanoptiqonRepository<'local>(
+   mut env: JNIEnv<'local>,
+   _obj: JObject<'local>,
+   data_dir_path: JString<'local>
+) -> JvmRepository<'local, JvmSerializedPageDeck<'local>> {
+   use panoptiqon::jvm_repository_creator::JvmRepositoryCreator;
+
+   let data_dir_path: String = env.get_string(&data_dir_path).unwrap().into();
+
+   let repo = PANOPTIQON.new_repository::<SerializedPageDeck>(
+      &mut env,
+      Path::new(&data_dir_path).join("pageDeck")
+   );
+
+   let repository_creator = JvmRepositoryCreator::new(&mut env);
+   repository_creator.create_jvm_wrapper(&mut env, repo)
 }
