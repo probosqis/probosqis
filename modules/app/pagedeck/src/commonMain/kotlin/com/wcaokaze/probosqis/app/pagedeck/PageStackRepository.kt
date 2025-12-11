@@ -19,16 +19,12 @@ package com.wcaokaze.probosqis.app.pagedeck
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.ext.panoptiqon.MappedWritableCache
-import com.wcaokaze.probosqis.panoptiqon.Cache
-import com.wcaokaze.probosqis.panoptiqon.RepositoryCacheSerializer
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.panoptiqon.WritableRepositoryCacheSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.PolymorphicModuleBuilder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 
@@ -67,11 +63,6 @@ abstract class AbstractPageStackRepository
             for (s in allPageSerializers) {
                subclass(s)
             }
-         }
-
-         polymorphic(Cache::class) {
-            subclass(RepositoryCacheSerializer)
-            subclass(WritableRepositoryCacheSerializer)
          }
       }
    }
