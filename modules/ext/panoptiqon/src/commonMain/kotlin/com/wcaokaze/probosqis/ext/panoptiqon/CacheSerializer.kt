@@ -20,5 +20,8 @@ import com.wcaokaze.probosqis.panoptiqon.Cache
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.serialization.KSerializer
 
+/**
+ * [MappedCache]のシリアライズは不可能
+ */
 expect class CacheSerializer<T>         : KSerializer<Cache<T>>
 expect class WritableCacheSerializer<T> : KSerializer<WritableCache<T>>
