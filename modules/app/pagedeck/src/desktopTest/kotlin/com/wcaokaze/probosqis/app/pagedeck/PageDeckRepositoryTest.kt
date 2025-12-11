@@ -26,6 +26,7 @@ import com.wcaokaze.probosqis.ext.panoptiqon.Panoptiqon
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.io.File
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -53,14 +54,16 @@ class PageDeckRepositoryTest {
    fun beforeTest() {
       Panoptiqon.clearInMemoryDb()
 
-      pageStackRepository = createPageStackRepository(
+      pageStackRepository = DesktopPageStackRepository(
+         File("test/PageDeckRepositoryTest/PageStack"),
          listOf(
             pageSerializer<IntPage>(),
             pageSerializer<StringPage>(),
          )
       )
 
-      pageDeckRepository = createPageDeckRepository(
+      pageDeckRepository = DesktopPageDeckRepository(
+         File("test/PageDeckRepositoryTest/PageDeck"),
          pageStackRepository
       )
    }

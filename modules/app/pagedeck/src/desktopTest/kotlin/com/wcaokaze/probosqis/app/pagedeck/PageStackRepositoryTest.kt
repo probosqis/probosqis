@@ -25,7 +25,6 @@ import com.wcaokaze.probosqis.ext.panoptiqon.Panoptiqon
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.File
-import java.io.IOException
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,25 +32,6 @@ import kotlin.test.assertFails
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-
-private val testDir = File(".pageStackRepositoryTest")
-
-internal fun createPageStackRepository(
-   allPageSerializers: List<PageStackRepository.PageSerializer<*>>
-): PageStackRepository {
-   if (testDir.exists()) {
-      if (!testDir.deleteRecursively()) { throw IOException() }
-   }
-   if (!testDir.mkdir()) { throw IOException() }
-
-   return DesktopPageStackRepository(testDir, allPageSerializers)
-}
-
-internal fun createPageDeckRepository(
-   pageStackRepository: PageStackRepository
-): PageDeckRepository {
-   return DesktopPageDeckRepository(testDir, pageStackRepository)
-}
 
 class PageStackRepositoryTest {
    init {
@@ -72,7 +52,8 @@ class PageStackRepositoryTest {
    fun beforeTest() {
       Panoptiqon.clearInMemoryDb()
 
-      pageStackRepository = createPageStackRepository(
+      pageStackRepository = DesktopPageStackRepository(
+         File("test/PageStackRepositoryTest"),
          listOf(
             pageSerializer<IntPage>(),
             pageSerializer<StringPage>(),
