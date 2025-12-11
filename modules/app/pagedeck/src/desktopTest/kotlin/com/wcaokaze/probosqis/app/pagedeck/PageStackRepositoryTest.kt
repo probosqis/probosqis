@@ -26,7 +26,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.File
 import java.io.IOException
-import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -54,14 +53,6 @@ internal fun createPageDeckRepository(
    return DesktopPageDeckRepository(testDir, pageStackRepository)
 }
 
-internal fun deletePageStackRepository() {
-   testDir.deleteRecursively()
-}
-
-internal fun deleteRepositories() {
-   testDir.deleteRecursively()
-}
-
 class PageStackRepositoryTest {
    init {
       loadNativeLib()
@@ -87,11 +78,6 @@ class PageStackRepositoryTest {
             pageSerializer<StringPage>(),
          )
       )
-   }
-
-   @AfterTest
-   fun afterTest() {
-      deletePageStackRepository()
    }
 
    @Test

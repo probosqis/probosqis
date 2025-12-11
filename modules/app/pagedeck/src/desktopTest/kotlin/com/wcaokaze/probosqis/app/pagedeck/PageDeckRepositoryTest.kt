@@ -26,7 +26,6 @@ import com.wcaokaze.probosqis.ext.panoptiqon.Panoptiqon
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -64,11 +63,6 @@ class PageDeckRepositoryTest {
       pageDeckRepository = createPageDeckRepository(
          pageStackRepository
       )
-   }
-
-   @AfterTest
-   fun afterTest() {
-      deleteRepositories()
    }
 
    @Test
