@@ -14,18 +14,8 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.ext.panoptiqon
+pub mod page_deck_repository;
+pub mod page_stack_repository;
 
-import com.wcaokaze.probosqis.panoptiqon.CacheId
-import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import org.jetbrains.annotations.TestOnly
-
-object Panoptiqon {
-   external fun loadById(cacheId: CacheId): WritableCache<*>
-
-   /**
-    * @throws IllegalStateException テストコード以外から呼び出した場合
-    */
-   @TestOnly
-   external fun clearInMemoryDb()
-}
+#[cfg(feature = "jvm")]
+pub mod jvm_types;

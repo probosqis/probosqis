@@ -20,11 +20,11 @@ import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
+import com.wcaokaze.probosqis.ext.panoptiqon.Panoptiqon
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.File
-import java.io.IOException
-import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,34 +33,11 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-private val testDir = File(".pageStackRepositoryTest")
-
-internal fun createPageStackRepository(
-   allPageSerializers: List<PageStackRepository.PageSerializer<*>>
-): PageStackRepository {
-   if (testDir.exists()) {
-      if (!testDir.deleteRecursively()) { throw IOException() }
-   }
-   if (!testDir.mkdir()) { throw IOException() }
-
-   return DesktopPageStackRepository(testDir, allPageSerializers)
-}
-
-internal fun createPageDeckRepository(
-   pageStackRepository: PageStackRepository
-): PageDeckRepository {
-   return DesktopPageDeckRepository(testDir, pageStackRepository)
-}
-
-internal fun deletePageStackRepository() {
-   testDir.deleteRecursively()
-}
-
-internal fun deleteRepositories() {
-   testDir.deleteRecursively()
-}
-
 class PageStackRepositoryTest {
+   init {
+      loadNativeLib()
+   }
+
    @Serializable
    @SerialName("com.wcaokaze.probosqis.app.pagedeck.IntPage")
    class IntPage(val i: Int) : Page()
@@ -73,17 +50,15 @@ class PageStackRepositoryTest {
 
    @BeforeTest
    fun beforeTest() {
-      pageStackRepository = createPageStackRepository(
+      Panoptiqon.clearInMemoryDb()
+
+      pageStackRepository = DesktopPageStackRepository(
+         File("test/PageStackRepositoryTest"),
          listOf(
             pageSerializer<IntPage>(),
             pageSerializer<StringPage>(),
          )
       )
-   }
-
-   @AfterTest
-   fun afterTest() {
-      deletePageStackRepository()
    }
 
    @Test

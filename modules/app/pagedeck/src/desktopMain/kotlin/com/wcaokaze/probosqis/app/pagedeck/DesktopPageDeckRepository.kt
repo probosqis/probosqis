@@ -16,25 +16,28 @@
 
 package com.wcaokaze.probosqis.app.pagedeck
 
-import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
+import com.wcaokaze.probosqis.panoptiqon.Repository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.panoptiqon.loadCache
-import com.wcaokaze.probosqis.panoptiqon.saveCache
 import java.io.File
 
 class DesktopPageDeckRepository(
    appDataDir: File,
    pageStackRepository: PageStackRepository
 ) : AbstractPageDeckRepository(pageStackRepository) {
-   private val file = File(appDataDir, "U61Jfjj954X8OrvZ")
+   private val panoptiqonRepository
+       = createPanoptiqonRepository(appDataDir.absolutePath)
 
-   @TemporaryCacheApi
-   override fun saveSerializableDeck(deck: SerializablePageDeck): WritableCache<SerializablePageDeck> {
-      return saveCache(deck, file, json)
+   override fun savePanoptiqon(
+      deck: SerializedPageDeck
+   ): WritableCache<SerializedPageDeck> {
+      return panoptiqonRepository.save(deck)
    }
 
-   @TemporaryCacheApi
-   override fun loadSerializableDeck(): WritableCache<SerializablePageDeck> {
-      return loadCache(file, json)
+   override fun loadPanoptiqon(): WritableCache<SerializedPageDeck> {
+      return panoptiqonRepository.load(Unit)
    }
+
+   private external fun createPanoptiqonRepository(
+      dataDirPath: String
+   ): Repository<Unit, SerializedPageDeck>
 }

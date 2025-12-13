@@ -16,46 +16,28 @@
 
 package com.wcaokaze.probosqis.app.pagedeck
 
-import com.wcaokaze.probosqis.capsiqum.page.PageStack
-import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
+import com.wcaokaze.probosqis.panoptiqon.Repository
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.panoptiqon.loadCache
-import com.wcaokaze.probosqis.panoptiqon.saveCache
 import java.io.File
-import java.io.IOException
 
 class AndroidPageStackRepository(
    appDataDir: File,
    allPageSerializers: List<PageStackRepository.PageSerializer<*>>
 ) : AbstractPageStackRepository(allPageSerializers) {
-   private val dir = File(appDataDir, "L9h1Qx3xvfo0M0kX")
-      .also { dir ->
-         if (dir.exists()) {
-            require(dir.isDirectory)
-         } else {
-            if (!dir.mkdirs()) { throw IOException() }
-         }
-      }
+   private val panoptiqonRepository
+      = createPanoptiqonRepository(appDataDir.absolutePath)
 
-   /** @throws IOException */
-   @TemporaryCacheApi
-   override fun savePageStack(pageStack: PageStack): WritableCache<PageStack> {
-      val fileName = pageStack.id.value.toString(16)
-      val file = File(dir, fileName)
-      return saveCache(pageStack, file, json)
+   override fun savePanoptiqon(
+      pageStack: SerializedPageStack
+   ): WritableCache<SerializedPageStack> {
+      return panoptiqonRepository.save(pageStack)
    }
 
-   /** @throws IOException */
-   @TemporaryCacheApi
-   override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack> {
-      val fileName = id.value.toString(16)
-      val file = File(dir, fileName)
-      return loadCache(file, json)
+   override fun loadPanoptiqon(id: Long): WritableCache<SerializedPageStack> {
+      return panoptiqonRepository.load(id)
    }
 
-   override fun deleteAllPageStacks() {
-      for (file in dir.listFiles() ?: emptyArray()) {
-         file.deleteRecursively()
-      }
-   }
+   private external fun createPanoptiqonRepository(
+      dataDirPath: String
+   ): Repository<Long, SerializedPageStack>
 }
