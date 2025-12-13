@@ -54,7 +54,6 @@ import com.wcaokaze.probosqis.foundation.page.PPageComposable
 import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.entity.Token
-import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -70,7 +69,6 @@ class AccountListPage : PPage()
 @Stable
 class AccountListPageState : PPageState<AccountListPage>() {
    private val credentialRepository: CredentialRepository by inject()
-   private val appRepository: AppRepository by inject()
 
    var credentialLoadState: LoadState<List<Token>>
       by mutableStateOf(LoadState.Loading)
@@ -83,14 +81,7 @@ class AccountListPageState : PPageState<AccountListPage>() {
                val credentials = credentialRepository.loadAllCredentials()
                   .value
                   .map { credentialCache ->
-                     val credential = credentialCache.value as Token
-
-                     val credentialAccount
-                        = appRepository.getCredentialAccount(credential)
-
-                     credential.copy(
-                        account = credentialAccount,
-                     )
+                     credentialCache.value as Token
                   }
 
                LoadState.Success(credentials)
