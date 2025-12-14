@@ -151,20 +151,7 @@ private fun AccountList(
                itemsIndexed(state.data) { index, accountItemState ->
                   Column {
                      // TODO :modules:mastodon:uiとかにあるべき
-                     AccountItem(accountItemState)
-
-                     AnimatedVisibility(
-                        visible = accountItemState.isExpanded,
-                        label = "account subitem expansion"
-                     ) {
-                        HorizontalDivider()
-
-                        HomeTimelineItem(
-                           onClick = {
-                              onHomeTimelineItemClick(accountItemState.credential)
-                           }
-                        )
-                     }
+                     AccountItem(accountItemState, onHomeTimelineItemClick)
 
                      if (index < state.data.lastIndex) {
                         HorizontalDivider()
@@ -181,38 +168,16 @@ private fun AccountList(
 }
 
 @Composable
-private fun AccountItem(state: AccountItemState) {
+private fun AccountItem(
+   state: AccountItemState,
+   onHomeTimelineItemClick: (Token) -> Unit
+) {
+   Column {
       DropdownMenuItem(
          text = {
-            Row(
-               verticalAlignment = Alignment.CenterVertically
-            ) {
-               val credentialAccount = state.credential.account!!.value
-               val account = credentialAccount.account.value
-               val username = account.username
-
-               val displayName = account.displayName ?: account.username
-               if (displayName != null) {
-                  Text(
-                     displayName,
-                     overflow = TextOverflow.Ellipsis,
-                     maxLines = 1,
-                     style = MaterialTheme.typography.titleMedium
-                  )
-               }
-
-               if (displayName != null && username != null) {
-                  Spacer(Modifier.width(4.dp))
-               }
-
-               if (username != null) {
-                  Text(
-                     "@$username",
-                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                     overflow = TextOverflow.Ellipsis,
-                     maxLines = 1,
-                     style = MaterialTheme.typography.bodyMedium
-                  )
+            when (val credential = state.credential) {
+               is Token -> {
+                  MastodonAccountItem(credential)
                }
             }
          },
@@ -230,6 +195,67 @@ private fun AccountItem(state: AccountItemState) {
          },
          onClick = { state.isExpanded = !state.isExpanded }
       )
+
+      AnimatedVisibility(
+         visible = state.isExpanded,
+         label = "account subitem expansion"
+      ) {
+         HorizontalDivider()
+
+         when (val credential = state.credential) {
+            is Token -> {
+               MastodonAccountExpandedItems(credential, onHomeTimelineItemClick)
+            }
+         }
+      }
+   }
+}
+
+@Composable
+private fun MastodonAccountItem(token: Token) {
+   Row(
+      verticalAlignment = Alignment.CenterVertically
+   ) {
+      val credentialAccount = token.account.value
+      val account = credentialAccount.account.value
+      val username = account.username
+
+      val displayName = account.displayName ?: account.username
+      if (displayName != null) {
+         Text(
+            displayName,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+            style = MaterialTheme.typography.titleMedium
+         )
+      }
+
+      if (displayName != null && username != null) {
+         Spacer(Modifier.width(4.dp))
+      }
+
+      if (username != null) {
+         Text(
+            "@$username",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+            style = MaterialTheme.typography.bodyMedium
+         )
+      }
+   }
+}
+
+@Composable
+private fun MastodonAccountExpandedItems(
+   token: Token,
+   onHomeTimelineItemClick: (Token) -> Unit
+) {
+   HomeTimelineItem(
+      onClick = {
+         onHomeTimelineItemClick(token)
+      }
+   )
 }
 
 @Composable
