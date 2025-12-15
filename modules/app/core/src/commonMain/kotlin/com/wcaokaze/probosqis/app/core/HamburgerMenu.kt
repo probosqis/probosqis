@@ -52,11 +52,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.app.setting.account.list.AccountListPage
+import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.ext.compose.LoadState
 import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import org.koin.core.component.KoinComponent
@@ -98,8 +101,7 @@ internal class AccountItemState(
 @Composable
 internal fun HamburgerMenu(
    state: HamburgerMenuState,
-   onHomeTimelineItemClick: (Token) -> Unit,
-   onSettingItemClick: () -> Unit
+   onRequestAddColumn: (Page) -> Unit
 ) {
    LaunchedEffect(Unit) {
       state.fetchCredentials()
@@ -108,7 +110,7 @@ internal fun HamburgerMenu(
    ModalDrawerSheet {
       AccountList(
          state.credentialLoadState,
-         onHomeTimelineItemClick,
+         onRequestAddColumn,
          modifier = Modifier
             .fillMaxWidth()
             .weight(1f)
@@ -119,7 +121,9 @@ internal fun HamburgerMenu(
       DropdownMenuItem(
          leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
          text = { Text(Strings.App.hamburgerMenuSettingItem) },
-         onClick = onSettingItemClick
+         onClick = {
+            onRequestAddColumn(AccountListPage())
+         }
       )
 
       Spacer(Modifier.height(40.dp))
@@ -129,7 +133,7 @@ internal fun HamburgerMenu(
 @Composable
 private fun AccountList(
    credentialLoadState: LoadState<ImmutableList<AccountItemState>>,
-   onHomeTimelineItemClick: (Token) -> Unit,
+   onRequestAddColumn: (Page) -> Unit,
    modifier: Modifier = Modifier
 ) {
    Crossfade(
@@ -151,7 +155,7 @@ private fun AccountList(
                itemsIndexed(state.data) { index, accountItemState ->
                   Column {
                      // TODO :modules:mastodon:uiとかにあるべき
-                     AccountItem(accountItemState, onHomeTimelineItemClick)
+                     AccountItem(accountItemState, onRequestAddColumn)
 
                      if (index < state.data.lastIndex) {
                         HorizontalDivider()
@@ -170,7 +174,7 @@ private fun AccountList(
 @Composable
 private fun AccountItem(
    state: AccountItemState,
-   onHomeTimelineItemClick: (Token) -> Unit
+   onRequestAddColumn: (Page) -> Unit
 ) {
    Column {
       DropdownMenuItem(
@@ -204,7 +208,7 @@ private fun AccountItem(
 
          when (val credential = state.credential) {
             is Token -> {
-               MastodonAccountExpandedItems(credential, onHomeTimelineItemClick)
+               MastodonAccountExpandedItems(credential, onRequestAddColumn)
             }
          }
       }
@@ -249,11 +253,11 @@ private fun MastodonAccountItem(token: Token) {
 @Composable
 private fun MastodonAccountExpandedItems(
    token: Token,
-   onHomeTimelineItemClick: (Token) -> Unit
+   onRequestAddColumn: (Page) -> Unit
 ) {
    HomeTimelineItem(
       onClick = {
-         onHomeTimelineItemClick(token)
+         onRequestAddColumn(HomeTimelinePage(token))
       }
    )
 }

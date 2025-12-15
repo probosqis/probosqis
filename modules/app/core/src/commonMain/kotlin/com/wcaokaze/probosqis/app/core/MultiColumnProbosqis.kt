@@ -52,13 +52,11 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeck
 import com.wcaokaze.probosqis.app.pagedeck.MultiColumnPageDeckState
 import com.wcaokaze.probosqis.app.pagedeck.navigateToPage
-import com.wcaokaze.probosqis.app.setting.account.list.AccountListPage
 import com.wcaokaze.probosqis.ext.compose.layout.safeDrawing
 import com.wcaokaze.probosqis.foundation.error.PErrorActionButton
 import com.wcaokaze.probosqis.foundation.error.PErrorList
 import com.wcaokaze.probosqis.foundation.error.PErrorListState
 import com.wcaokaze.probosqis.foundation.resources.Strings
-import com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -84,15 +82,9 @@ fun MultiColumnProbosqis(
       drawerContent = {
          HamburgerMenu(
             state.hamburgerMenuState,
-            onHomeTimelineItemClick = { token ->
+            onRequestAddColumn = { page ->
                coroutineScope.launch {
-                  state.pageDeckState.addColumn(HomeTimelinePage(token))
-                  drawerState.close()
-               }
-            },
-            onSettingItemClick = {
-               coroutineScope.launch {
-                  state.pageDeckState.addColumn(AccountListPage())
+                  state.pageDeckState.addColumn(page)
                   drawerState.close()
                }
             }
