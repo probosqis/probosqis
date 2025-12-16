@@ -44,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -55,11 +56,12 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.setting.account.list.AccountListPage
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.ext.compose.LoadState
+import com.wcaokaze.probosqis.foundation.credential.Credential
 import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.entity.Token
-import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage
+import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import org.koin.core.component.KoinComponent
@@ -68,22 +70,30 @@ import org.koin.core.component.inject
 @Stable
 internal class HamburgerMenuState : KoinComponent {
    private val credentialRepository: CredentialRepository by inject()
-   private val appRepository: AppRepository by inject()
 
-   var credentialLoadState: LoadState<ImmutableList<AccountItemState>>
+   private var credentialLoadState: LoadState<Cache<List<Cache<Credential>>>>
       by mutableStateOf(LoadState.Loading)
-      private set
+
+   val accountItemStates: LoadState<ImmutableList<AccountItemState>> by derivedStateOf {
+      when (val credential = credentialLoadState) {
+         is LoadState.Success -> {
+            val accountItemStates
+               = credential.data.value.map { AccountItemState(it) }
+
+            LoadState.Success(accountItemStates.toImmutableList())
+         }
+         is LoadState.Loading -> {
+            LoadState.Loading
+         }
+         is LoadState.Error -> {
+            LoadState.Error(credential.exception)
+         }
+      }
+   }
 
    fun fetchCredentials() {
       credentialLoadState = try {
-         val credentials = credentialRepository.loadAllCredentials()
-            .value
-            .map { credentialCache ->
-               val credential = credentialCache.value as Token
-               AccountItemState(credential)
-            }
-            .toImmutableList()
-
+         val credentials = credentialRepository.loadAllCredentials().asCache()
          LoadState.Success(credentials)
       } catch (e: Exception) {
          LoadState.Error(e)
@@ -93,7 +103,7 @@ internal class HamburgerMenuState : KoinComponent {
 
 @Stable
 internal class AccountItemState(
-   val credential: Token
+   val credential: Cache<Credential>
 ) {
    var isExpanded by mutableStateOf(false)
 }
@@ -109,7 +119,7 @@ internal fun HamburgerMenu(
 
    ModalDrawerSheet {
       AccountList(
-         state.credentialLoadState,
+         state.accountItemStates,
          onRequestAddColumn,
          modifier = Modifier
             .fillMaxWidth()
@@ -179,7 +189,7 @@ private fun AccountItem(
    Column {
       DropdownMenuItem(
          text = {
-            when (val credential = state.credential) {
+            when (val credential = state.credential.value) {
                is Token -> {
                   MastodonAccountItem(credential)
                }
@@ -206,7 +216,7 @@ private fun AccountItem(
       ) {
          HorizontalDivider()
 
-         when (val credential = state.credential) {
+         when (val credential = state.credential.value) {
             is Token -> {
                MastodonAccountExpandedItems(credential, onRequestAddColumn)
             }
