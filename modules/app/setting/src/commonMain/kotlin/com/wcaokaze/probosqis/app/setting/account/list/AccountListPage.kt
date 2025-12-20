@@ -135,34 +135,7 @@ private fun AccountListPageContent(
             ) {
                items(state.data) { token ->
                   Column {
-                     Column(
-                        modifier = Modifier
-                           .fillMaxWidth()
-                           .padding(horizontal = 16.dp, vertical = 8.dp)
-                     ) {
-                        val credentialAccount = token.account!!.value
-                        val account = credentialAccount.account.value
-                        val username = account.username
-
-                        val displayName = account.displayName ?: account.username
-                        if (displayName != null) {
-                           Text(
-                              displayName,
-                              style = MaterialTheme.typography.titleMedium
-                           )
-                        }
-
-                        if (displayName != null && username != null) {
-                           Spacer(Modifier.height(4.dp))
-                        }
-
-                        if (username != null) {
-                           Text(
-                              "@$username",
-                              style = MaterialTheme.typography.bodyMedium
-                           )
-                        }
-                     }
+                     MastodonAccountItem(token)
 
                      HorizontalDivider()
                   }
@@ -176,6 +149,38 @@ private fun AccountListPageContent(
          is LoadState.Error -> {
             Text("エラーだよ")
          }
+      }
+   }
+}
+
+@Composable
+private fun MastodonAccountItem(token: Token) {
+   Column(
+      modifier = Modifier
+         .fillMaxWidth()
+         .padding(horizontal = 16.dp, vertical = 8.dp)
+   ) {
+      val credentialAccount = token.account.value
+      val account = credentialAccount.account.value
+      val username = account.username
+
+      val displayName = account.displayName ?: account.username
+      if (displayName != null) {
+         Text(
+            displayName,
+            style = MaterialTheme.typography.titleMedium
+         )
+      }
+
+      if (displayName != null && username != null) {
+         Spacer(Modifier.height(4.dp))
+      }
+
+      if (username != null) {
+         Text(
+            "@$username",
+            style = MaterialTheme.typography.bodyMedium
+         )
       }
    }
 }
