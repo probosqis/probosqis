@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.setting.Setting
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.LoadState
+import com.wcaokaze.probosqis.foundation.credential.Credential
 import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.page.PPage
 import com.wcaokaze.probosqis.foundation.page.PPageComposable
@@ -55,6 +56,7 @@ import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.entity.Token
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
+import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -70,7 +72,7 @@ class AccountListPage : PPage()
 class AccountListPageState : PPageState<AccountListPage>() {
    private val credentialRepository: CredentialRepository by inject()
 
-   var credentialLoadState: LoadState<List<Token>>
+   var credentialLoadState: LoadState<Cache<List<Cache<Credential>>>>
       by mutableStateOf(LoadState.Loading)
       private set
 
@@ -78,12 +80,7 @@ class AccountListPageState : PPageState<AccountListPage>() {
       pageStateScope.launch {
          credentialLoadState = withContext (Dispatchers.IO) {
             try {
-               val credentials = credentialRepository.loadAllCredentials()
-                  .value
-                  .map { credentialCache ->
-                     credentialCache.value as Token
-                  }
-
+               val credentials = credentialRepository.loadAllCredentials().asCache()
                LoadState.Success(credentials)
             } catch (e: Exception) {
                LoadState.Error(e)
@@ -117,7 +114,7 @@ val accountListPageComposable = PPageComposable<AccountListPage, AccountListPage
 
 @Composable
 private fun AccountListPageContent(
-   credentialLoadState: LoadState<List<Token>>,
+   credentialLoadState: LoadState<Cache<List<Cache<Credential>>>>,
    onAddAccountItemClick: () -> Unit
 ) {
    Crossfade(credentialLoadState) { state ->
@@ -133,9 +130,13 @@ private fun AccountListPageContent(
             LazyColumn(
                modifier = Modifier.fillMaxSize()
             ) {
-               items(state.data) { token ->
+               items(state.data.value) { credentialCache ->
                   Column {
-                     MastodonAccountItem(token)
+                     when (val credential = credentialCache.value) {
+                        is Token -> {
+                           MastodonAccountItem(credential)
+                        }
+                     }
 
                      HorizontalDivider()
                   }
