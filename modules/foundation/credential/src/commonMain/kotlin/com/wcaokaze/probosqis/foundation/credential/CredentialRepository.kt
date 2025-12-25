@@ -159,4 +159,6 @@ private class CredentialListCache(
 
 private operator fun CredentialList.plus(
    cache: Cache<SerializedCredential>
-) = CredentialList(credentials + cache)
+) = CredentialList(
+   credentials.filter { it.id != cache.id } + cache
+)

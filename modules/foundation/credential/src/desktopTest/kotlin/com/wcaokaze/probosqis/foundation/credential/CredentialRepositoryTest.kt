@@ -126,4 +126,43 @@ class CredentialRepositoryTest {
          credentialRepository.loadAllCredentials().value.map { it.value }
       )
    }
+
+   @Test
+   fun save_distinct() {
+      val credentialRepository = CredentialRepository()
+
+      credentialRepository.saveCredential(StringCredential("1"))
+      assertEquals(
+         listOf(
+            StringCredential("1"),
+         ),
+         credentialRepository.loadAllCredentials().value.map { it.value }
+      )
+
+      credentialRepository.saveCredential(StringCredential("1"))
+      assertEquals(
+         listOf(
+            StringCredential("1"),
+         ),
+         credentialRepository.loadAllCredentials().value.map { it.value }
+      )
+
+      credentialRepository.saveCredential(IntCredential(1))
+      assertEquals(
+         listOf(
+            StringCredential("1"),
+            IntCredential(1),
+         ),
+         credentialRepository.loadAllCredentials().value.map { it.value }
+      )
+
+      credentialRepository.saveCredential(IntCredential(1))
+      assertEquals(
+         listOf(
+            StringCredential("1"),
+            IntCredential(1),
+         ),
+         credentialRepository.loadAllCredentials().value.map { it.value }
+      )
+   }
 }
