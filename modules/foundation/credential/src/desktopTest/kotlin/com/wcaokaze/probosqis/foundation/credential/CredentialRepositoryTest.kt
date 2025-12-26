@@ -46,20 +46,20 @@ class CredentialRepositoryTest {
    private val intCredentialSerializer
       = credentialSerializer<IntCredential> { "int" + it.id }
 
-   private inner class CredentialRepository : AbstractCredentialRepository(
+   private inner class CredentialRepository(
+      private val panoptiqonCredentialRepository: Repository<String, SerializedCredential>,
+      private val panoptiqonCredentialListRepository: Repository<Unit, CredentialList>
+   ) : AbstractCredentialRepository(
       allCredentialSerializers = listOf(
          stringCredentialSerializer,
          intCredentialSerializer,
       )
    ) {
-      private val panoptiqonCredentialRepository: Repository<String, SerializedCredential>
-      private val panoptiqonCredentialListRepository: Repository<Unit, CredentialList>
-
-      init {
-         val repositories = createRepositories()
-         panoptiqonCredentialRepository     = repositories.first
-         panoptiqonCredentialListRepository = repositories.second
-      }
+      constructor(
+         repositories: Pair<Repository<String, SerializedCredential>, Repository<Unit, CredentialList>>
+      ) : this(
+         repositories.first, repositories.second
+      )
 
       override fun savePanoptiqon(
          credential: SerializedCredential
@@ -76,23 +76,27 @@ class CredentialRepositoryTest {
       override fun loadAllCredentialsPanoptiqon(): WritableCache<CredentialList> {
          return panoptiqonCredentialListRepository.load(Unit)
       }
-
-      private external fun createRepositories(
-      ): Pair<Repository<String, SerializedCredential>, Repository<Unit, CredentialList>>
    }
 
    @Test
    fun loadAllCredentials_emptyIfFileNotFound() {
-      val credentialRepository = CredentialRepository()
+      val credentialRepository = CredentialRepository(
+         `loadAllCredentials_emptyIfFileNotFound$createRepositories`()
+      )
       assertEquals(
          emptyList(),
          credentialRepository.loadAllCredentials().value
       )
    }
 
+   private external fun `loadAllCredentials_emptyIfFileNotFound$createRepositories`(
+   ): Pair<Repository<String, SerializedCredential>, Repository<Unit, CredentialList>>
+
    @Test
    fun saveLoad() {
-      val credentialRepository = CredentialRepository()
+      val credentialRepository = CredentialRepository(
+         `saveLoad$createRepositories`()
+      )
 
       assertEquals(
          emptyList(),
@@ -127,9 +131,14 @@ class CredentialRepositoryTest {
       )
    }
 
+   private external fun `saveLoad$createRepositories`(
+   ): Pair<Repository<String, SerializedCredential>, Repository<Unit, CredentialList>>
+
    @Test
    fun save_distinct() {
-      val credentialRepository = CredentialRepository()
+      val credentialRepository = CredentialRepository(
+         `save_distinct$createRepositories`()
+      )
 
       credentialRepository.saveCredential(StringCredential("1"))
       assertEquals(
@@ -165,4 +174,7 @@ class CredentialRepositoryTest {
          credentialRepository.loadAllCredentials().value.map { it.value }
       )
    }
+
+   private external fun `save_distinct$createRepositories`(
+   ): Pair<Repository<String, SerializedCredential>, Repository<Unit, CredentialList>>
 }
