@@ -237,6 +237,7 @@ extern "C" fn Java_com_wcaokaze_probosqis_foundation_credential_DesktopCredentia
 
 #[cfg(feature = "jni-test")]
 mod jni_tests {
+   use std::sync::LazyLock;
    use jni::JNIEnv;
    use jni::objects::JObject;
    use panoptiqon::jvm_type::JvmType;
@@ -246,11 +247,10 @@ mod jni_tests {
    use crate::jvm_types::{JvmCredentialList, JvmSerializedCredential};
 
    fn create_repositories<'local>(
-      env: &mut JNIEnv<'local>
+      env: &mut JNIEnv<'local>,
+      panoptiqon: &Panoptiqon
    ) -> JvmPair<'local, JvmRepository<'local, JvmSerializedCredential<'local>>, JvmRepository<'local, JvmCredentialList<'local>>> {
       use panoptiqon::jvm_repository_creator::JvmRepositoryCreator;
-
-      let panoptiqon = Panoptiqon::new();
 
       let credential_epo = panoptiqon.new_repository::<SerializedCredential>(
          env,
@@ -274,27 +274,39 @@ mod jni_tests {
       unsafe { JvmPair::from_j_object(j_object) }
    }
 
+   #[allow(non_upper_case_globals)]
+   static loadAllCredentials_emptyIfFileNotFound_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
+
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_foundation_credential_CredentialRepositoryTest_loadAllCredentials_1emptyIfFileNotFound_00024createRepositories<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
    ) -> JvmPair<'local, JvmRepository<'local, JvmSerializedCredential<'local>>, JvmRepository<'local, JvmCredentialList<'local>>> {
-      create_repositories(&mut env)
+      create_repositories(&mut env, &loadAllCredentials_emptyIfFileNotFound_panoptiqon)
    }
+
+   #[allow(non_upper_case_globals)]
+   static saveLoad_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_foundation_credential_CredentialRepositoryTest_saveLoad_00024createRepositories<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
    ) -> JvmPair<'local, JvmRepository<'local, JvmSerializedCredential<'local>>, JvmRepository<'local, JvmCredentialList<'local>>> {
-      create_repositories(&mut env)
+      create_repositories(&mut env, &saveLoad_panoptiqon)
    }
+
+   #[allow(non_upper_case_globals)]
+   static save_distinct_panoptiqon: LazyLock<Panoptiqon>
+      = LazyLock::new(|| Panoptiqon::new());
 
    #[no_mangle]
    extern "C" fn Java_com_wcaokaze_probosqis_foundation_credential_CredentialRepositoryTest_save_1distinct_00024createRepositories<'local>(
       mut env: JNIEnv<'local>,
       _obj: JObject<'local>
    ) -> JvmPair<'local, JvmRepository<'local, JvmSerializedCredential<'local>>, JvmRepository<'local, JvmCredentialList<'local>>> {
-      create_repositories(&mut env)
+      create_repositories(&mut env, &save_distinct_panoptiqon)
    }
 }
