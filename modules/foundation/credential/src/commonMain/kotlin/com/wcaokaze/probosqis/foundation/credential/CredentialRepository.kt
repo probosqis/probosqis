@@ -84,7 +84,13 @@ abstract class AbstractCredentialRepository
          val serializedCredential = SerializedCredential(id, credentialJson)
          val credentialCache = savePanoptiqon(serializedCredential).asCache()
 
-         val credentialListCache = loadAllCredentialsPanoptiqon()
+         val credentialListCache = try {
+            loadAllCredentialsPanoptiqon()
+         } catch (_: Exception) {
+            val emptyList = CredentialList(emptyList())
+            saveAllCredentialsPanoptiqon(emptyList)
+         }
+
          credentialListCache.value += credentialCache
       }
    }
