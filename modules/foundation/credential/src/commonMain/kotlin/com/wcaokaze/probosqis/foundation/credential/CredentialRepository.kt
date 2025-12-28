@@ -29,20 +29,17 @@ import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 
 inline fun <reified C : Credential> credentialSerializer(
-   noinline fileNameSupplier: (C) -> String
 ): CredentialRepository.CredentialSerializer<C> {
    return CredentialRepository.CredentialSerializer(
       C::class,
-      serializer(),
-      fileNameSupplier
+      serializer()
    )
 }
 
 interface CredentialRepository {
    data class CredentialSerializer<C : Credential>(
       val credentialClass: KClass<C>,
-      val serializer: KSerializer<C>,
-      val fileNameSupplier: (C) -> String
+      val serializer: KSerializer<C>
    )
 
    fun saveCredential(credential: Credential)
@@ -116,19 +113,6 @@ abstract class AbstractCredentialRepository
    ): WritableCache<CredentialList>
 
    protected abstract fun loadAllCredentialsPanoptiqon(): WritableCache<CredentialList>
-
-   protected fun getFileNameFor(credential: Credential): String {
-      fun <C : Credential> impl(credential: C): String {
-         @Suppress("UNCHECKED_CAST")
-         val serializer = allCredentialSerializers
-            .single { it.credentialClass == credential::class }
-            as CredentialRepository.CredentialSerializer<C>
-
-         return serializer.fileNameSupplier(credential)
-      }
-
-      return impl(credential)
-   }
 }
 
 data class SerializedCredential(

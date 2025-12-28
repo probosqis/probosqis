@@ -40,11 +40,8 @@ class CredentialRepositoryTest {
          get() = token.toString()
    }
 
-   private val stringCredentialSerializer
-      = credentialSerializer<StringCredential> { "string" + it.id }
-
-   private val intCredentialSerializer
-      = credentialSerializer<IntCredential> { "int" + it.id }
+   private val stringCredentialSerializer = credentialSerializer<StringCredential>()
+   private val intCredentialSerializer    = credentialSerializer<IntCredential>()
 
    private inner class CredentialRepository(
       private val panoptiqonCredentialRepository: Repository<String, SerializedCredential>,
