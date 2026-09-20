@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+pub use app_pagedeck;
 pub use foundation_error;
 pub use mastodon_repository;
 pub use nodeinfo_repository;

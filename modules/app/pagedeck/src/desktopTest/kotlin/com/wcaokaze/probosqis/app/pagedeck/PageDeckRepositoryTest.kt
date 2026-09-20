@@ -21,10 +21,12 @@ import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.ext.kotlintest.loadNativeLib
+import com.wcaokaze.probosqis.ext.panoptiqon.Panoptiqon
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.test.AfterTest
+import java.io.File
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,6 +35,10 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class PageDeckRepositoryTest {
+   init {
+      loadNativeLib()
+   }
+
    @Serializable
    @SerialName("com.wcaokaze.probosqis.capsiqum.IntPage")
    class IntPage(val i: Int) : Page()
@@ -46,21 +52,20 @@ class PageDeckRepositoryTest {
 
    @BeforeTest
    fun beforeTest() {
-      pageStackRepository = createPageStackRepository(
+      Panoptiqon.clearInMemoryDb()
+
+      pageStackRepository = DesktopPageStackRepository(
+         File("test/PageDeckRepositoryTest/PageStack"),
          listOf(
             pageSerializer<IntPage>(),
             pageSerializer<StringPage>(),
          )
       )
 
-      pageDeckRepository = createPageDeckRepository(
+      pageDeckRepository = DesktopPageDeckRepository(
+         File("test/PageDeckRepositoryTest/PageDeck"),
          pageStackRepository
       )
-   }
-
-   @AfterTest
-   fun afterTest() {
-      deleteRepositories()
    }
 
    @Test

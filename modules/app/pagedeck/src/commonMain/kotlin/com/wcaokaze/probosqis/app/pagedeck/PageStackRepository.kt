@@ -18,16 +18,13 @@ package com.wcaokaze.probosqis.app.pagedeck
 
 import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
-import com.wcaokaze.probosqis.panoptiqon.Cache
-import com.wcaokaze.probosqis.panoptiqon.RepositoryCacheSerializer
+import com.wcaokaze.probosqis.ext.panoptiqon.MappedWritableCache
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.panoptiqon.WritableRepositoryCacheSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.PolymorphicModuleBuilder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 
@@ -67,11 +64,54 @@ abstract class AbstractPageStackRepository
                subclass(s)
             }
          }
-
-         polymorphic(Cache::class) {
-            subclass(RepositoryCacheSerializer)
-            subclass(WritableRepositoryCacheSerializer)
-         }
       }
+   }
+
+   override fun savePageStack(pageStack: PageStack): WritableCache<PageStack> {
+      val serializedPageStack = SerializedPageStack(
+         pageStack.id.value,
+         json.encodeToString(pageStack)
+      )
+      val pageStackCache = savePanoptiqon(serializedPageStack)
+      return PageStackCache(json, pageStackCache)
+   }
+
+   override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack> {
+      val pageStackCache = loadPanoptiqon(id.value)
+      return PageStackCache(json, pageStackCache)
+   }
+
+   override fun deleteAllPageStacks() {
+      // NOP
+      // Panoptiqonがいつか消去するであろうことを期待する
+   }
+
+   protected abstract fun savePanoptiqon(
+      pageStack: SerializedPageStack
+   ): WritableCache<SerializedPageStack>
+
+   protected abstract fun loadPanoptiqon(
+      id: Long
+   ): WritableCache<SerializedPageStack>
+}
+
+data class SerializedPageStack(
+   val id: Long,
+   val json: String
+)
+
+private class PageStackCache(
+   private val json: Json,
+   origin: WritableCache<SerializedPageStack>
+) : MappedWritableCache<SerializedPageStack, PageStack>(origin) {
+   override fun map(value: SerializedPageStack): PageStack {
+      return json.decodeFromString(value.json)
+   }
+
+   override fun reverseMap(value: PageStack): SerializedPageStack {
+      return SerializedPageStack(
+         value.id.value,
+         json.encodeToString(value)
+      )
    }
 }

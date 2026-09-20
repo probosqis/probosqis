@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.ext.panoptiqon
+#![cfg(feature = "jvm")]
 
-import com.wcaokaze.probosqis.panoptiqon.CacheId
-import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import org.jetbrains.annotations.TestOnly
+use panoptiqon::jvm_type;
 
-object Panoptiqon {
-   external fun loadById(cacheId: CacheId): WritableCache<*>
-
-   /**
-    * @throws IllegalStateException テストコード以外から呼び出した場合
-    */
-   @TestOnly
-   external fun clearInMemoryDb()
+jvm_type! {
+   JvmSerializedPageDeck,
+   JvmSerializedPageStack,
 }

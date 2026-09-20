@@ -48,14 +48,15 @@ import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.app.setting.Setting
 import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.ext.compose.LoadState
+import com.wcaokaze.probosqis.foundation.credential.Credential
 import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.page.PPage
 import com.wcaokaze.probosqis.foundation.page.PPageComposable
 import com.wcaokaze.probosqis.foundation.page.PPageState
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.entity.Token
-import com.wcaokaze.probosqis.mastodon.repository.AppRepository
 import com.wcaokaze.probosqis.mastodon.ui.auth.urlinput.UrlInputPage
+import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -70,9 +71,8 @@ class AccountListPage : PPage()
 @Stable
 class AccountListPageState : PPageState<AccountListPage>() {
    private val credentialRepository: CredentialRepository by inject()
-   private val appRepository: AppRepository by inject()
 
-   var credentialLoadState: LoadState<List<Token>>
+   var credentialLoadState: LoadState<Cache<List<Cache<Credential>>>>
       by mutableStateOf(LoadState.Loading)
       private set
 
@@ -80,19 +80,7 @@ class AccountListPageState : PPageState<AccountListPage>() {
       pageStateScope.launch {
          credentialLoadState = withContext (Dispatchers.IO) {
             try {
-               val credentials = credentialRepository.loadAllCredentials()
-                  .value
-                  .map { credentialCache ->
-                     val credential = credentialCache.value as Token
-
-                     val credentialAccount
-                        = appRepository.getCredentialAccount(credential)
-
-                     credential.copy(
-                        account = credentialAccount,
-                     )
-                  }
-
+               val credentials = credentialRepository.loadAllCredentials().asCache()
                LoadState.Success(credentials)
             } catch (e: Exception) {
                LoadState.Error(e)
@@ -126,7 +114,7 @@ val accountListPageComposable = PPageComposable<AccountListPage, AccountListPage
 
 @Composable
 private fun AccountListPageContent(
-   credentialLoadState: LoadState<List<Token>>,
+   credentialLoadState: LoadState<Cache<List<Cache<Credential>>>>,
    onAddAccountItemClick: () -> Unit
 ) {
    Crossfade(credentialLoadState) { state ->
@@ -142,34 +130,11 @@ private fun AccountListPageContent(
             LazyColumn(
                modifier = Modifier.fillMaxSize()
             ) {
-               items(state.data) { token ->
+               items(state.data.value) { credentialCache ->
                   Column {
-                     Column(
-                        modifier = Modifier
-                           .fillMaxWidth()
-                           .padding(horizontal = 16.dp, vertical = 8.dp)
-                     ) {
-                        val credentialAccount = token.account!!.value
-                        val account = credentialAccount.account.value
-                        val username = account.username
-
-                        val displayName = account.displayName ?: account.username
-                        if (displayName != null) {
-                           Text(
-                              displayName,
-                              style = MaterialTheme.typography.titleMedium
-                           )
-                        }
-
-                        if (displayName != null && username != null) {
-                           Spacer(Modifier.height(4.dp))
-                        }
-
-                        if (username != null) {
-                           Text(
-                              "@$username",
-                              style = MaterialTheme.typography.bodyMedium
-                           )
+                     when (val credential = credentialCache.value) {
+                        is Token -> {
+                           MastodonAccountItem(credential)
                         }
                      }
 
@@ -185,6 +150,38 @@ private fun AccountListPageContent(
          is LoadState.Error -> {
             Text("エラーだよ")
          }
+      }
+   }
+}
+
+@Composable
+private fun MastodonAccountItem(token: Token) {
+   Column(
+      modifier = Modifier
+         .fillMaxWidth()
+         .padding(horizontal = 16.dp, vertical = 8.dp)
+   ) {
+      val credentialAccount = token.account.value
+      val account = credentialAccount.account.value
+      val username = account.username
+
+      val displayName = account.displayName ?: account.username
+      if (displayName != null) {
+         Text(
+            displayName,
+            style = MaterialTheme.typography.titleMedium
+         )
+      }
+
+      if (displayName != null && username != null) {
+         Spacer(Modifier.height(4.dp))
+      }
+
+      if (username != null) {
+         Text(
+            "@$username",
+            style = MaterialTheme.typography.bodyMedium
+         )
       }
    }
 }

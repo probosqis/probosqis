@@ -65,7 +65,6 @@ import org.koin.compose.KoinApplication
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.io.File
-import java.net.URLEncoder
 
 object Main {
    init {
@@ -194,11 +193,7 @@ object Main {
          DesktopCredentialRepository(
             appDataDir,
             allCredentialSerializers = listOf(
-               credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token> { token ->
-                  val encodedUrl = URLEncoder.encode(token.accountId.instanceUrl.raw, "UTF-8")
-                  val localId = token.accountId.local.value
-                  "mastodon_${encodedUrl}_$localId"
-               },
+               credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token>(),
             )
          )
       }

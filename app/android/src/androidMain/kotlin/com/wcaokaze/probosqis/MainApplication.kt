@@ -58,7 +58,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import java.net.URLEncoder
 
 class MainApplication : Application() {
    init {
@@ -195,11 +194,7 @@ class MainApplication : Application() {
          AndroidCredentialRepository(
             get(named("appDataDir")),
             allCredentialSerializers = listOf(
-               credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token> { token ->
-                  val encodedUrl = URLEncoder.encode(token.accountId.instanceUrl.raw, "UTF-8")
-                  val localId = token.accountId.local.value
-                  "mastodon_${encodedUrl}_$localId"
-               },
+               credentialSerializer<com.wcaokaze.probosqis.mastodon.entity.Token>(),
             ),
          )
       }

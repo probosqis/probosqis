@@ -21,6 +21,7 @@ path = "src/rust/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
+app_pagedeck.workspace = true
 foundation_error.workspace = true
 foundation_credential.workspace = true
 nodeinfo_repository.workspace = true

@@ -76,8 +76,7 @@ abstract class AbstractCallbackWaiterPageState : PPageState<CallbackWaiterPage>(
             credentialAccountLoadState = withContext(Dispatchers.IO) {
                val application = appRepository.loadAppCache(page.instanceBaseUrl)
                token = appRepository.getToken(application.value, code)
-               // TODO: Token.accountが非nullになったあとRepositoryを叩く必要はなくなる
-               val credentialAccount = appRepository.getCredentialAccount(token).value
+               val credentialAccount = token.account.value
                val credentialAccountIcon
                   = accountRepository.getAccountIcon(credentialAccount.account.value)
 

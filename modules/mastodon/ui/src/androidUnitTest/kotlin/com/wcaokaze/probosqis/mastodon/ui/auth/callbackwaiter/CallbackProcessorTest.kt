@@ -71,10 +71,11 @@ class CallbackProcessorTest {
    fun repositoryCalled() {
       val appRepository: AppRepository = mockk {
          every { loadAppCache(any()) } returns Cache(mockk())
-         every { getToken(any(), any()) } returns mockk()
-         every { getCredentialAccount(any()) } returns Cache(mockk {
-            every { account } returns Cache(mockk())
-         })
+         every { getToken(any(), any()) } returns mockk {
+            every { account } returns Cache(mockk {
+               every { account } returns Cache(mockk())
+            })
+         }
       }
 
       val accountRepository: AccountRepository = mockk {
@@ -121,7 +122,6 @@ class CallbackProcessorTest {
       rule.runOnIdle {
          verify { appRepository.loadAppCache(Url("https://example.com/")) }
          verify { appRepository.getToken(any(), "abcdefghijk") }
-         verify { appRepository.getCredentialAccount(any()) }
          verify { accountRepository.getAccountIcon(any()) }
          verify { credentialRepository.saveCredential(any()) }
       }

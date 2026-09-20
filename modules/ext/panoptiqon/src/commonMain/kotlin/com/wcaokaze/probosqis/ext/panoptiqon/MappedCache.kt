@@ -30,6 +30,13 @@ inline fun <T, R> Cache<T>.map(crossinline op: (T) -> R): Cache<R> {
    }
 }
 
+/**
+ * `Cache<T>` の[中身][Cache.value]に変換関数を適用し、 `Cache<R>` として
+ * 振る舞うインスタンス。
+ *
+ * `Cache<R>` のサブタイプであるものの[CacheSerializer]でのシリアライズが
+ * 不可能となる点に注意
+ */
 @Stable
 abstract class MappedCache<in T, out R>(
    private val origin: Cache<T>

@@ -44,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -52,11 +53,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.app.setting.account.list.AccountListPage
+import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.ext.compose.LoadState
+import com.wcaokaze.probosqis.foundation.credential.Credential
 import com.wcaokaze.probosqis.foundation.credential.CredentialRepository
 import com.wcaokaze.probosqis.foundation.resources.Strings
 import com.wcaokaze.probosqis.mastodon.entity.Token
-import com.wcaokaze.probosqis.mastodon.repository.AppRepository
+import com.wcaokaze.probosqis.mastodon.ui.timeline.home.HomeTimelinePage
+import com.wcaokaze.probosqis.panoptiqon.Cache
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import org.koin.core.component.KoinComponent
@@ -65,22 +70,30 @@ import org.koin.core.component.inject
 @Stable
 internal class HamburgerMenuState : KoinComponent {
    private val credentialRepository: CredentialRepository by inject()
-   private val appRepository: AppRepository by inject()
 
-   var credentialLoadState: LoadState<ImmutableList<AccountItemState>>
+   private var credentialLoadState: LoadState<Cache<List<Cache<Credential>>>>
       by mutableStateOf(LoadState.Loading)
-      private set
+
+   val accountItemStates: LoadState<ImmutableList<AccountItemState>> by derivedStateOf {
+      when (val credential = credentialLoadState) {
+         is LoadState.Success -> {
+            val accountItemStates
+               = credential.data.value.map { AccountItemState(it) }
+
+            LoadState.Success(accountItemStates.toImmutableList())
+         }
+         is LoadState.Loading -> {
+            LoadState.Loading
+         }
+         is LoadState.Error -> {
+            LoadState.Error(credential.exception)
+         }
+      }
+   }
 
    fun fetchCredentials() {
       credentialLoadState = try {
-         val credentials = credentialRepository.loadAllCredentials()
-            .value
-            .map { credentialCache ->
-               val credential = credentialCache.value as Token
-               AccountItemState(credential)
-            }
-            .toImmutableList()
-
+         val credentials = credentialRepository.loadAllCredentials().asCache()
          LoadState.Success(credentials)
       } catch (e: Exception) {
          LoadState.Error(e)
@@ -90,7 +103,7 @@ internal class HamburgerMenuState : KoinComponent {
 
 @Stable
 internal class AccountItemState(
-   val credential: Token
+   val credential: Cache<Credential>
 ) {
    var isExpanded by mutableStateOf(false)
 }
@@ -98,8 +111,7 @@ internal class AccountItemState(
 @Composable
 internal fun HamburgerMenu(
    state: HamburgerMenuState,
-   onHomeTimelineItemClick: (Token) -> Unit,
-   onSettingItemClick: () -> Unit
+   onRequestAddColumn: (Page) -> Unit
 ) {
    LaunchedEffect(Unit) {
       state.fetchCredentials()
@@ -107,8 +119,8 @@ internal fun HamburgerMenu(
 
    ModalDrawerSheet {
       AccountList(
-         state.credentialLoadState,
-         onHomeTimelineItemClick,
+         state.accountItemStates,
+         onRequestAddColumn,
          modifier = Modifier
             .fillMaxWidth()
             .weight(1f)
@@ -119,7 +131,9 @@ internal fun HamburgerMenu(
       DropdownMenuItem(
          leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
          text = { Text(Strings.App.hamburgerMenuSettingItem) },
-         onClick = onSettingItemClick
+         onClick = {
+            onRequestAddColumn(AccountListPage())
+         }
       )
 
       Spacer(Modifier.height(40.dp))
@@ -129,7 +143,7 @@ internal fun HamburgerMenu(
 @Composable
 private fun AccountList(
    credentialLoadState: LoadState<ImmutableList<AccountItemState>>,
-   onHomeTimelineItemClick: (Token) -> Unit,
+   onRequestAddColumn: (Page) -> Unit,
    modifier: Modifier = Modifier
 ) {
    Crossfade(
@@ -151,20 +165,7 @@ private fun AccountList(
                itemsIndexed(state.data) { index, accountItemState ->
                   Column {
                      // TODO :modules:mastodon:uiとかにあるべき
-                     AccountItem(accountItemState)
-
-                     AnimatedVisibility(
-                        visible = accountItemState.isExpanded,
-                        label = "account subitem expansion"
-                     ) {
-                        HorizontalDivider()
-
-                        HomeTimelineItem(
-                           onClick = {
-                              onHomeTimelineItemClick(accountItemState.credential)
-                           }
-                        )
-                     }
+                     AccountItem(accountItemState, onRequestAddColumn)
 
                      if (index < state.data.lastIndex) {
                         HorizontalDivider()
@@ -181,38 +182,16 @@ private fun AccountList(
 }
 
 @Composable
-private fun AccountItem(state: AccountItemState) {
+private fun AccountItem(
+   state: AccountItemState,
+   onRequestAddColumn: (Page) -> Unit
+) {
+   Column {
       DropdownMenuItem(
          text = {
-            Row(
-               verticalAlignment = Alignment.CenterVertically
-            ) {
-               val credentialAccount = state.credential.account!!.value
-               val account = credentialAccount.account.value
-               val username = account.username
-
-               val displayName = account.displayName ?: account.username
-               if (displayName != null) {
-                  Text(
-                     displayName,
-                     overflow = TextOverflow.Ellipsis,
-                     maxLines = 1,
-                     style = MaterialTheme.typography.titleMedium
-                  )
-               }
-
-               if (displayName != null && username != null) {
-                  Spacer(Modifier.width(4.dp))
-               }
-
-               if (username != null) {
-                  Text(
-                     "@$username",
-                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                     overflow = TextOverflow.Ellipsis,
-                     maxLines = 1,
-                     style = MaterialTheme.typography.bodyMedium
-                  )
+            when (val credential = state.credential.value) {
+               is Token -> {
+                  MastodonAccountItem(credential)
                }
             }
          },
@@ -230,6 +209,67 @@ private fun AccountItem(state: AccountItemState) {
          },
          onClick = { state.isExpanded = !state.isExpanded }
       )
+
+      AnimatedVisibility(
+         visible = state.isExpanded,
+         label = "account subitem expansion"
+      ) {
+         HorizontalDivider()
+
+         when (val credential = state.credential.value) {
+            is Token -> {
+               MastodonAccountExpandedItems(credential, onRequestAddColumn)
+            }
+         }
+      }
+   }
+}
+
+@Composable
+private fun MastodonAccountItem(token: Token) {
+   Row(
+      verticalAlignment = Alignment.CenterVertically
+   ) {
+      val credentialAccount = token.account.value
+      val account = credentialAccount.account.value
+      val username = account.username
+
+      val displayName = account.displayName ?: account.username
+      if (displayName != null) {
+         Text(
+            displayName,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+            style = MaterialTheme.typography.titleMedium
+         )
+      }
+
+      if (displayName != null && username != null) {
+         Spacer(Modifier.width(4.dp))
+      }
+
+      if (username != null) {
+         Text(
+            "@$username",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+            style = MaterialTheme.typography.bodyMedium
+         )
+      }
+   }
+}
+
+@Composable
+private fun MastodonAccountExpandedItems(
+   token: Token,
+   onRequestAddColumn: (Page) -> Unit
+) {
+   HomeTimelineItem(
+      onClick = {
+         onRequestAddColumn(HomeTimelinePage(token))
+      }
+   )
 }
 
 @Composable
