@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 wcaokaze
+ * Copyright 2025-2026 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,10 +85,30 @@ abstract class MappedWritableCache<T, R>(
 
    @InternalCacheApi
    override val mutableState = object : MutableState<R> {
+      private var valueCache: Pair<T, R>? = null
+
       override var value: R
-         get() = map(origin.value)
+         get() {
+            val (unmappedValueCache, mappedValueCache) = valueCache ?: run {
+               val unmapped = origin.value
+               val mapped = map(origin.value)
+               valueCache = Pair(unmapped, mapped)
+               return mapped
+            }
+
+            val unmapped = origin.value
+            if (unmapped == unmappedValueCache) { return mappedValueCache }
+
+            val mapped = map(origin.value)
+            if (mapped == mappedValueCache) { return mappedValueCache }
+
+            valueCache = Pair(unmapped, mapped)
+            return mapped
+         }
          set(value) {
-            origin.value = reverseMap(value)
+            val unmapped = reverseMap(value)
+            valueCache = Pair(unmapped, value)
+            origin.value = unmapped
          }
 
       override fun component1() = value
